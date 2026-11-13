@@ -1,0 +1,76 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/staticEditor/veStaticRenderView.lua",
+  "module": "Vues de rendu du Static Editor de l'éditeur de véhicule. Chaque fenêtre « Static Render View##N » possède deux RenderViews (la vue principale et un petit gizmo d'axes), en mode 3D ou orthographique (Left -X, Right +X, Back -Y, Front +Y, Bottom -Z, Top +Z). Le fichier gère la caméra (déplacement clavier, souris), la grille dessinée au debugDrawer, les flèches d'axes cliquables, le menu contextuel et la sauvegarde des vues dans settings/vehicleEditorStatic/staticRenderView.json. D'autres extensions (vePartTree) s'en servent pour obtenir le rayon de la souris dans la vue principale.",
+  "notes": [
+    "Constantes de caméra : vitesse de base 5 en perspective et 2 en orthographique, multiplicateur « rapide » 2,5 ; la grille fait 10 m avec des cases de 0,25 m.",
+    "Les fonctions moveLeft/moveRight/moveForward/moveBackward(val) et setCameraSpeed(s) sont prévues pour être appelées par des actions de clavier (keybindings) : val est la valeur de l'axe ou de la touche (0 relâché, 1 appuyé). setCameraSpeed(s) fixe camSpeedMult = s * (2.5 - 1) + 1.",
+    "Les vues n'existent que tant que leur fenêtre est ouverte : une fenêtre fermée détruit ses RenderViews (« hacky way » d'après le code) ; à la sortie de l'éditeur statique (onEditorHeadlessChange avec enabled = false) les réglages sont sauvegardés et toutes les vues détruites.",
+    "Le mode « headless » concerné est vEditor.EDITOR_NAMES[vEditor.EDITOR_MODE_STATIC].",
+    "Bug : l'extension exporte onDeserialize (sans « d ») alors que le moteur appelle onDeserialized ; ce hook est donc ignoré (il est vide de toute façon). onSerialize sauvegarde les réglages et renvoie nil.",
+    "Le texte « Mode: ... » est dessiné en haut à gauche de chaque vue par onPreRender via debugDrawer:drawTextAdvanced."
+  ],
+  "functions": {
+    "createRenderViewUI": {
+      "desc": "Crée une nouvelle vue de rendu (fenêtre + RenderViews) : réutilise la première entrée dont la fenêtre est masquée ou supprimée, sinon crée une nouvelle entrée, enregistre la fenêtre (400x600, outil vehicleEditor) si besoin, l'affiche et sauvegarde les réglages. Appelée par le menu View > Add View de veToolbar."
+    },
+    "destroyAllRenderViews": {
+      "desc": "Détruit tous les objets RenderView (principal et gizmo) de toutes les vues, sans fermer les fenêtres ImGui. Appelée à la sortie de l'éditeur.",
+      "internal": true
+    },
+    "getMainRenderViewMouseRay": {
+      "desc": "Renvoie le rayon de la souris dans la vue principale de la fenêtre survolée (rv:getUnprojectedRayPosDir sur les coordonnées de la souris converties dans le viewport), ou nil si aucune fenêtre n'est survolée ou si la souris n'est pas sur l'image.",
+      "returns": [{"type": "any", "desc": "résultat de RenderView:getUnprojectedRayPosDir(x, y), utilisé par vePartTree comme (ok, position, direction) ; nil si hors vue"}]
+    },
+    "moveBackward": {
+      "desc": "Définit l'intensité du déplacement caméra vers l'arrière (camMove.backward). Pensé pour une action de clavier.",
+      "params": {"val": {"type": "number", "desc": "valeur de l'entrée (0 relâché, positif appuyé)"}}
+    },
+    "moveForward": {
+      "desc": "Définit l'intensité du déplacement caméra vers l'avant (camMove.forward).",
+      "params": {"val": {"type": "number", "desc": "valeur de l'entrée"}}
+    },
+    "moveLeft": {
+      "desc": "Définit l'intensité du déplacement caméra vers la gauche (camMove.left).",
+      "params": {"val": {"type": "number", "desc": "valeur de l'entrée"}}
+    },
+    "moveRight": {
+      "desc": "Définit l'intensité du déplacement caméra vers la droite (camMove.right).",
+      "params": {"val": {"type": "number", "desc": "valeur de l'entrée"}}
+    },
+    "setCameraSpeed": {
+      "desc": "Fixe le multiplicateur de vitesse de la caméra : camSpeedMult = s * (camFastSpeedMult - 1) + 1, avec camFastSpeedMult = 2.5.",
+      "params": {"s": {"type": "number", "desc": "0 pour la vitesse normale, 1 pour la vitesse rapide (2,5x)"}}
+    },
+    "onDeserialize": {
+      "desc": "Fonction vide exportée sous le nom onDeserialize (probable faute de frappe pour onDeserialized, donc jamais appelée par le moteur).",
+      "params": {"data": {"type": "any", "desc": "non utilisé"}},
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Hook de l'éditeur appelé à chaque frame : lit les entrées caméra, puis pour chaque vue ouvre la fenêtre, crée les RenderViews au besoin (getOrCreateView, enterFocusObjectsMode) et dessine le contenu ; détruit les RenderViews d'une fenêtre fermée.",
+      "params": {"dt": {"type": "number", "desc": "delta de temps (s) utilisé pour le déplacement de la caméra"}},
+      "internal": true
+    },
+    "onEditorHeadlessChange": {
+      "desc": "Hook de l'éditeur appelé quand un outil headless est activé ou désactivé. Pour l'éditeur statique, à la sortie : sauvegarde les réglages et détruit les RenderViews.",
+      "params": {
+        "enabled": {"type": "boolean", "desc": "true à l'entrée dans l'outil, false à la sortie"},
+        "toolName": {"type": "string", "desc": "nom de l'outil concerné"}
+      },
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook de l'éditeur appelé à l'initialisation : recharge les vues sauvegardées depuis settings/vehicleEditorStatic/staticRenderView.json.",
+      "internal": true
+    },
+    "onPreRender": {
+      "desc": "Hook appelé chaque frame avant le rendu : dessine la grille (debugDrawer), le texte du mode de vue et les flèches d'axes de chaque vue ouverte.",
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook appelé avant un rechargement Lua : sauvegarde les réglages des vues dans le fichier de settings et renvoie nil.",
+      "returns": [{"type": "nil", "desc": "rien à restaurer"}],
+      "internal": true
+    }
+  }
+}

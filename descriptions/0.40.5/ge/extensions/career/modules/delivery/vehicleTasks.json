@@ -1,0 +1,106 @@
+{
+  "path": "lua/ge/extensions/career/modules/delivery/vehicleTasks.lua",
+  "module": "Exécute les tâches de livraison de véhicules et de remorques acceptées en carrière. Chaque offre devient un taskData avec une suite d'étapes (coupleTrailer ou enterVehicle, bringToDestination, confirmDropOff), un index d'étape actif et un chemin GPS (core_groundMarkers). onUpdate fait avancer les étapes selon la position et les attelages, gère la fin de livraison (suppression du véhicule, retrait de la tâche), l'abandon (amende) et calcule les récompenses détaillées (dégâts, détours, retards, organisation prêteuse, niveau de branche, précision de stationnement).",
+  "notes": [
+    "Étapes générées par expandTasks : trailerDropOff = coupleTrailer, bringToDestination (backOn='unCouple'), confirmDropOff ; vehicleDropOff = enterVehicle, bringToDestination (backOn='exitVehicle'), confirmDropOff.",
+    "Bug probable : expandTasks écrit backOn = 'unCouple' (C majuscule) alors que processActiveTask teste 'uncouple' : le retour en arrière à la désolidarisation d'une remorque ne se déclenche jamais.",
+    "L'étape putIntoParkingSpot est gérée par processActiveTask (checkParking, forwardOn 'unCouple'/'exitVehicle') et par tasklist, mais expandTasks ne la génère jamais dans cette version. Là aussi forwardOn est comparé à 'unCouple' alors que tasklist teste 'uncouple'.",
+    "Seuil d'arrivée à destination : 20 m (distance au carré 400) entre le véhicule et le parking.",
+    "Récompenses : >= 25 % de pièces cassées = argent perdu entièrement et réputation x-2 ; au-delà du seuil de pièces cassées (valueCalculator) = réduction linéaire ; sinon +5 % d'argent. Bonus « pas de détour » (distance < 1.2x la distance d'origine) et « pas de retard » (temps < distance/12 + 30 s) : +15 % d'argent + 10, +12.5 % de réputation, seulement si aucune pièce cassée en excès.",
+    "Les bonus de précision de stationnement sont calculés une seconde fois ici (au lieu de precisionParking.calculateVehiclePrecisionParking) et le bonus logistique est basé sur originalRewards['logistics'].",
+    "Les handlers onCouplerAttached/onCouplerDetached sont dans un bloc commenté : ils ne sont pas exportés.",
+    "navigateToTask change le chemin GPS : une seule destination est suivie à la fois (la dernière tâche ajoutée)."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : util_stepHandler."},
+    "debugName": {"type": "string", "desc": "Nom du menu de debug : 'Delivery > Trailer Tasks'."},
+    "debugOrder": {"type": "number", "desc": "Ordre dans le menu de debug (12)."}
+  },
+  "functions": {
+    "onCareerActivated": {
+      "desc": "Hook appelé à l'activation de la carrière : mémorise les extensions de livraison et util_stepHandler.",
+      "internal": true
+    },
+    "addVehicleTask": {
+      "desc": "Crée le taskData d'une offre (étapes selon le type d'offre, index actif 1, horodatage de départ), l'ajoute à la liste, met à jour la tasklist et lance la navigation vers la première étape.",
+      "params": {
+        "vehId": {"type": "integer", "desc": "Identifiant du véhicule ou de la remorque."},
+        "offer": {"type": "table", "desc": "Offre acceptée (task.type 'trailerDropOff' ou 'vehicleDropOff')."}
+      }
+    },
+    "onTrailerAttached": {
+      "desc": "Hook appelé quand une remorque est attelée : met à jour les organisations prêteuses (loaner) de chaque tâche de véhicule.",
+      "params": {
+        "objId1": {"type": "integer", "desc": "Premier véhicule."},
+        "objId2": {"type": "integer", "desc": "Second véhicule."}
+      },
+      "internal": true
+    },
+    "getVehicleDataWithRewardsSummary": {
+      "desc": "Prépare les données de récompense des véhicules prêts à être déposés (étape confirmDropOff) pour l'écran de dépôt : lit les pièces cassées et l'odomètre, calcule originalRewards/breakdown/adjustedRewards, puis appelle progress.openDropOffScreenGatheringComplete. Renvoie la liste formatée (finished passe à true plus tard).",
+      "returns": [{"type": "table", "desc": "Liste d'offres formatées pour l'UI."}]
+    },
+    "canDropOffCargoAtPsPath": {
+      "desc": "Compte les véhicules et remorques dont l'étape active est confirmDropOff à cette place de parking.",
+      "params": {"psPath": {"type": "string", "desc": "Chemin de la place de parking."}},
+      "returns": [
+        {"type": "integer", "desc": "Nombre de véhicules."},
+        {"type": "integer", "desc": "Nombre de remorques."}
+      ]
+    },
+    "finishTasks": {
+      "desc": "Termine les tâches des offres données : mémorise la place de dépôt, lit pièces cassées et odomètre, calcule les récompenses, puis marque finished. Le véhicule est supprimé et la tâche retirée à une mise à jour ultérieure (processFinished).",
+      "params": {"offerIds": {"type": "table", "desc": "Liste d'identifiants d'offres."}},
+      "returns": [{"type": "table", "desc": "Liste des taskData concernés (finished mis à jour de façon asynchrone)."}]
+    },
+    "getFineForAbandon": {
+      "desc": "Calcule l'amende d'abandon : -(argent de l'offre) x facteur de pénalité de la livraison, et la pénalité de réputation de l'organisation (événement discardDeliveryVehicle).",
+      "params": {"taskData": {"type": "table", "desc": "Tâche de véhicule."}},
+      "returns": [{"type": "table<string, number>", "desc": "Montants à ajouter (négatifs) : money et éventuellement <org>Reputation."}]
+    },
+    "getFineForAbandonAllVehicleTasks": {
+      "desc": "Somme des amendes d'abandon de toutes les tâches de véhicules.",
+      "returns": [{"type": "table<string, number>", "desc": "Montants cumulés par attribut."}]
+    },
+    "abandonAllVehicleTasks": {
+      "desc": "Supprime les véhicules de toutes les tâches (le joueur repasse à pied si dans l'un d'eux) et vide la liste, sans appliquer d'amende."
+    },
+    "getTargetDestinationsForActiveTasks": {
+      "desc": "Liste les destinations de toutes les étapes de toutes les tâches.",
+      "returns": [{"type": "table", "desc": "Liste de destinations (psPath, facId…)."}]
+    },
+    "isVehicleDeliveryVehicle": {
+      "desc": "Indique si ce véhicule est le véhicule d'une tâche de livraison en cours.",
+      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "returns": [{"type": "boolean", "desc": "true si oui."}]
+    },
+    "giveBackDeliveryVehicle": {
+      "desc": "Marque la tâche du véhicule comme rendue (giveBack) ; processGiveBack supprimera le véhicule, appliquera l'amende et affichera un message.",
+      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule."}}
+    },
+    "getVehicleTasks": {
+      "desc": "Renvoie la liste (référence) des tâches de véhicules en cours.",
+      "returns": [{"type": "table", "desc": "Liste de taskData."}]
+    },
+    "getVehicleTaskForOffer": {
+      "desc": "Cherche la tâche correspondant à une offre.",
+      "params": {"offer": {"type": "table", "desc": "Offre (champ id)."}},
+      "returns": [{"type": "table|nil", "desc": "taskData ou nil."}]
+    },
+    "navigateToNextTask": {
+      "desc": "Relance le chemin GPS vers l'étape active de la dernière tâche de la liste."
+    },
+    "onUpdate": {
+      "desc": "Hook par image : fait avancer ou reculer les étapes selon la position, l'attelage et le véhicule contrôlé, traite les tâches terminées et rendues, retire les tâches finies, quitte le mode livraison si besoin et met à jour la navigation.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+      },
+      "internal": true
+    },
+    "drawDebugMenu": {
+      "desc": "Fenêtre ImGui de debug « Trailer Tasks Debug » qui affiche vehicleTasks avec dumps."
+    }
+  }
+}

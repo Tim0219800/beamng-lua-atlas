@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/raceRecoveryUsed.lua",
+  "module": "Nœud flowgraph « Race Recovery Used » (catégorie logic, tag scenario). Signale quand un véhicule a utilisé un recovery dans la course (events.recovered). Sorties : flow, impulse (impulsion), recoveriesUsed (nombre total de recoveries du véhicule) et recoveredTo (point de recovery utilisé, nil sinon).",
+  "notes": ["La pin flow n'est jamais remise à false par ce nœud une fois passée à true (seule impulse est remise à false chaque frame).", "work() indexe race.states[vehId] sans test d'existence."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Lit les events du véhicule et remplit flow, impulse, recoveredTo et recoveriesUsed.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+      }
+    }
+  }
+}

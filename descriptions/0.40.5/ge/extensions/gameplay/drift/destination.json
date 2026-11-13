@@ -1,0 +1,84 @@
+{
+  "path": "lua/ge/extensions/gameplay/drift/destination.lua",
+  "module": "Suivi d'itinéraire du mode drift (« A vers B »). setRacePath charge un chemin de course (gameplay/race/path) depuis un fichier JSON, éventuellement inversé, et en extrait les points. Chaque frame, il calcule la distance restante le long de ce chemin, la distance à la route prévue, si le véhicule roule à contresens, et cumule la distance parcourue à contresens : au-delà d'un seuil (10 m par défaut) wrongWayFail passe à true. Un moddeur de mission de drift lit ces valeurs pour afficher la progression ou faire échouer la mission.",
+  "usage": "gameplay_drift_destination.setRacePath({filePath = '/levels/west_coast_usa/race/driftRoute.race.json', reverse = false, maxWrongWayDist = 15})\nlocal reste = gameplay_drift_destination.getRemainingDist()",
+  "notes": [
+    "Le véhicule suivi est celui de gameplay_drift_drift.getVehId() (une seule voiture), contrairement à bounds.lua qui gère plusieurs véhicules.",
+    "setRacePath complète data en place : reverse = false, maxWrongWayDist = 10 (defaultMaxWrongWayDist), disableWrongWayAndDist = false. Sans data.filePath, il logue un warning et ne fait rien.",
+    "Contresens : vitesse > 0.5 m/s et produit scalaire (direction du segment, vitesse) <= 0 ; désactivé si disableWrongWayAndDist. Le hook onDriftWrongWay est émis à chaque frame tant que le véhicule est à contresens.",
+    "wrongWayFail passe à true avec 0,2 s de délai (job asynchrone) pour laisser la priorité au message de reset du véhicule ; il revient à false dès que le véhicule n'est plus à contresens.",
+    "reset() remet remainingDist, la distance de contresens cumulée et la dernière position à zéro mais ne remet pas wrongWayFail ni goingWrongWay à false.",
+    "getRemainingDist, getGoingWrongWay et getWrongWayFail valent nil tant qu'aucun chemin n'est chargé ou calculé.",
+    "Les distances sont en mètres."
+  ],
+  "fields": {},
+  "functions": {
+    "getDisableWrongWayAndDist": {
+      "desc": "Indique si la détection de contresens et le calcul de distance sont désactivés (valeur passée à setRacePath).",
+      "params": {},
+      "returns": [{"type": "boolean|nil", "desc": "disableWrongWayAndDist, nil avant setRacePath."}]
+    },
+    "getDistToIntendedRoad": {
+      "desc": "Distance (m) du véhicule au segment de route prévu le plus proche.",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Distance, 0 par défaut."}]
+    },
+    "getDriftDebugInfo": {
+      "desc": "Table de configuration du debug de l'extension : {default = false, canBeChanged = true}.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Infos de debug."}]
+    },
+    "getGC": {
+      "desc": "Garbage Lua produit par la dernière frame mesurée par le profileur.",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Quantité de garbage."}]
+    },
+    "getGoingWrongWay": {
+      "desc": "Indique si le véhicule roule actuellement à contresens.",
+      "params": {},
+      "returns": [{"type": "boolean|nil", "desc": "true si contresens."}]
+    },
+    "getPathData": {
+      "desc": "Objet chemin de course chargé (gameplay/race/path).",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Chemin, nil avant setRacePath."}]
+    },
+    "getRemainingDist": {
+      "desc": "Distance restante (m) le long du chemin jusqu'au dernier point.",
+      "params": {},
+      "returns": [{"type": "number|nil", "desc": "Distance restante."}]
+    },
+    "getWaypoints": {
+      "desc": "Positions des points du chemin (dans l'ordre de parcours, inversées si reverse).",
+      "params": {},
+      "returns": [{"type": "vec3[]|nil", "desc": "Liste de positions."}]
+    },
+    "getWrongWayFail": {
+      "desc": "Vrai quand la distance cumulée à contresens dépasse maxWrongWayDist.",
+      "params": {},
+      "returns": [{"type": "boolean|nil", "desc": "Échec contresens."}]
+    },
+    "onUpdate": {
+      "desc": "Hook par frame : met à jour distance restante, contresens et échec de contresens (rien si gameplay_drift_drift n'a pas de position de véhicule).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleResetted": {
+      "desc": "Hook : véhicule réinitialisé ; remet la dernière position à zéro pour ne pas compter le saut de reset comme distance.",
+      "params": {"vehicleId": {"type": "integer", "desc": "ID du véhicule réinitialisé."}},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet à zéro la distance restante, la distance cumulée à contresens et la dernière position (pas wrongWayFail).",
+      "params": {},
+      "returns": []
+    },
+    "setRacePath": {
+      "desc": "Charge le chemin de course depuis data.filePath (JSON), l'inverse si data.reverse, applique autoConfig et extrait les positions des points de passage triés.",
+      "params": {"data": {"type": "table", "desc": "{filePath = string, reverse = boolean|nil, maxWrongWayDist = number|nil (défaut 10), disableWrongWayAndDist = boolean|nil}."}},
+      "returns": []
+    }
+  }
+}

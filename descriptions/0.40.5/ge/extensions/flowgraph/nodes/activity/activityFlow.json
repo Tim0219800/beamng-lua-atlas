@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/activity/activityFlow.lua",
+  "module": "Nœud flowgraph « Activity Flow » (catégorie logic, tag activity). Point d'entrée d'un graphe de mission : sort du flux une fois au démarrage (pin « started »), à chaque frame tant que l'activité est en cours (« update »), puis une fois à l'arrêt (« stopped »). Pins cachés de sortie : dtReal, dtSim, dtRaw (delta times). Sans activité associée (graphe autonome), il fonctionne sur onUpdate ; avec une activité, il est piloté par le gestionnaire de missions.",
+  "notes": [
+    "legacyPins renomme les anciens pins de sortie start -> started et stop -> stopped.",
+    "Le code écrit encore dans self.pinOut.start/stop (anciens noms) ; cela passe grâce au renommage des legacyPins.",
+    "Écrit aussi les delta times dans self.mgr.dtReal, dtSim et dtRaw.",
+    "Au changement d'état 'stopped' avec activité : déclenche stopped puis appelle gameplay_missions_missionManager.stop."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "start": {"desc": "Met le flux de « started » à vrai (update et stopped à faux) et déclenche le nœud.", "internal": true},
+        "onExecutionStarted": {"desc": "Hook : au démarrage du graphe, si une activité existe et n'est pas en cours, la démarre via gameplay_missions_missionManager.start ; sans activité, appelle start().", "internal": true},
+        "onStartActivity": {"desc": "Hook appelé au démarrage de l'activité ; appelle start().", "internal": true},
+        "update": {"desc": "Met à jour dtReal/dtSim/dtRaw (pins et gestionnaire), active « update » et déclenche le nœud.", "params": {"dtReal": {"type": "number", "desc": "delta temps réel (s)"}, "dtSim": {"type": "number", "desc": "delta temps simulé (s)"}, "dtRaw": {"type": "number", "desc": "delta temps brut (s)"}}, "internal": true},
+        "onUpdate": {"desc": "Hook par frame ; n'appelle update que si le graphe n'a pas d'activité.", "internal": true},
+        "onUpdateActivity": {"desc": "Hook par frame envoyé par l'activité ; appelle update.", "internal": true},
+        "stop": {"desc": "Active le flux « stopped » et déclenche le nœud.", "internal": true},
+        "changedRunningState": {"desc": "Hook : quand le graphe passe à 'stopped', déclenche stop() et arrête la mission (si activité en cours).", "params": {"newState": {"type": "string", "desc": "nouvel état d'exécution"}}, "internal": true},
+        "onStopActivity": {"desc": "Hook appelé à l'arrêt de l'activité ; appelle stop().", "internal": true},
+        "drawMiddle": {"desc": "Éditeur : affiche si une activité est associée et la fin de son id.", "internal": true},
+        "drawTooltip": {"desc": "Éditeur : infobulle indiquant l'id de l'activité ou le mode de compatibilité limitée.", "internal": true}
+      }
+    }
+  }
+}

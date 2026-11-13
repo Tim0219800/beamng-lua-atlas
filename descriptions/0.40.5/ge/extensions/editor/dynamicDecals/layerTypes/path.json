@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/layerTypes/path.lua",
+  "module": "Type de calque « Path » de l'outil Dynamic Decals : des decals posés le long d'un chemin (points de contrôle interpolés en linéaire ou en courbe de Bézier), éventuellement orientés selon la courbure, ou remplacés par les caractères d'un texte avec une police (atlas généré par le module fonts). Fournit la section « Path Properties » (orientation, type de chemin, police, texte, étapes d'interpolation ; ordre 80), la GUI d'inspecteur du type path, des boutons de barre d'actions « Finish path layer » et « Remove last path layer data point » (visibles seulement pendant la création d'un chemin) et les pages de doc.",
+  "notes": [
+    "La barre d'actions n'affiche ses boutons que si api.getEnablePathLayer() et api.hasActivePathLayer() sont vrais ; ils appellent api.finishPathLayer() et api.removeLastPathLayerPoint().",
+    "Quand un texte est défini, le champ d'étapes d'interpolation est désactivé (les caractères remplacent les decals interpolés).",
+    "Dans l'inspecteur, les dataPoints et les positions de caractères sont tracés dans le monde (debugDrawer:drawSphere et drawTextAdvanced avec l'index).",
+    "La page « Properties » liste api.properties[\"Path Layer\"] ; son bouton « Highlight » ouvre la section « Decal Properties » et surligne le widget correspondant."
+  ],
+  "functions": {
+    "registerEditorPreferences": {
+      "desc": "Ne déclare aucune préférence (corps commenté).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : récupère les modules liés (dont fonts), enregistre la section « Path Properties » (avec bouton d'aide), la GUI d'inspecteur du type path, l'élément de barre d'actions « path layer » (ordre 40) et les pages de documentation.",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

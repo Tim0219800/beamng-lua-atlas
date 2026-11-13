@@ -1,0 +1,76 @@
+{
+  "path": "lua/ge/extensions/util/lawnMower.lua",
+  "module": "Tondeuse à gazon pilotée par les props JBeam (côté GE uniquement). Il cherche dans le JBeam analysé de chaque véhicule les props portant l'option mowerRadius et, tant que le plateau de coupe est bas et à plat au-dessus d'un terrain, coupe l'herbe dans le masque de surface partagé (util_surfaceMaskWheels) en traçant un disque puis des segments, et lance des particules de brins d'herbe sur les matériaux de terrain dont le nom contient « grass ». Aucun Lua côté véhicule n'est nécessaire. La partie JBeam déclare \"gameEngineExtensions\": {\"util_lawnMower\": true} pour charger l'extension automatiquement.",
+  "usage": "-- Dans la partie JBeam de la tondeuse :\n-- \"gameEngineExtensions\": {\"util_lawnMower\": true},\n-- \"props\": [[\"func\",\"mesh\",\"idRef:\",\"idX:\",\"idY:\",\"baseRotation\",\"rotation\",\"translation\"],\n--   [\"mower_deck\",\"deck.dae\",\"deck_ref\",\"deck_x\",\"deck_y\",{\"x\":0,\"y\":0,\"z\":0},{\"x\":0,\"y\":0,\"z\":0},{\"x\":0,\"y\":0,\"z\":0},{\"mowerRadius\":0.9,\"mowerGroundDistance\":0.4}]]\nextensions.util_lawnMower.toggle()",
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions requises : util_surfaceMaskWheels (service de masque) et core_vehicle_manager (données JBeam analysées)"},
+    "enabled": {"type": "boolean", "desc": "Active ou non la coupe ; true après onExtensionLoaded"}
+  },
+  "notes": [
+    "Options de prop : mowerRadius (m, obligatoire, rayon du passage coupé) ; mowerGroundDistance (m, défaut 0,5 : hauteur maximale du centre du plateau au-dessus du terrain pour couper).",
+    "Le plateau coupe seulement s'il est bas ET posé à plat : le plan défini par les nœuds idRef/idX/idY doit être à peu près parallèle au terrain (|cos| >= 0,85, environ 31 degrés). Pour que relever ou replier le plateau coupe la coupe, il doit être monté sur de vrais nœuds physiques ; une simple animation de prop n'est pas détectée.",
+    "Le centre de coupe est le centroïde de idRef, idX, idY (repli sur idRef seul si idX/idY manquent).",
+    "Mise à jour toutes les 0,05 s. Seuls le véhicule joueur et les tondeuses proches (fenêtre du clipmap) coupent ; la fenêtre est centrée sur le véhicule joueur (setCenter).",
+    "Les brins d'herbe ne sont lancés qu'à la première coupe d'une cellule de 0,5 m (cache mownCells), sur matériau « grass » (heuristique sur le nom). Le masque est sur GPU et ne peut pas être relu.",
+    "Un déplacement de plus de 10 m entre deux mises à jour est traité comme une téléportation (pas de trait) ; sous 0,2 m rien n'est tracé."
+  ],
+  "functions": {
+    "onPreRender": {
+      "desc": "Hook appelé chaque frame avant le rendu : si activé et si des tondeuses existent, centre le clipmap du masque et fait couper chaque tondeuse (toutes les 0,05 s). Supprime l'état des véhicules disparus.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta de temps réel en secondes"},
+        "dtSim": {"type": "number", "desc": "Delta de temps de simulation en secondes (prioritaire pour le chronomètre)"}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSpawned": {
+      "desc": "Hook appelé quand un véhicule apparaît (ou est réapparu après un changement de pièce) : relit ses props JBeam à la recherche de mowerRadius.",
+      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule"}},
+      "returns": [],
+      "internal": true
+    },
+    "onClientStartMission": {
+      "desc": "Hook appelé au démarrage d'un niveau : vide les caches de cellules coupées, de matériaux d'herbe et d'objet terrain.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook appelé quand un véhicule est détruit : oublie ses tondeuses.",
+      "params": {"vehId": {"type": "integer", "desc": "Identifiant du véhicule"}},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Appelé au chargement : active la tondeuse et scanne les véhicules déjà présents.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "setEnabled": {
+      "desc": "Active ou désactive la coupe et remet le chronomètre à zéro.",
+      "params": {"enabled": {"type": "boolean", "desc": "true pour activer"}},
+      "returns": [],
+      "internal": false
+    },
+    "toggle": {
+      "desc": "Inverse l'état activé/désactivé.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onSerialize": {
+      "desc": "Hook de sérialisation avant un rechargement d'extensions : sauvegarde l'état enabled.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{enabled = boolean}"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook de désérialisation après rechargement : restaure l'état enabled.",
+      "params": {"data": {"type": "table|nil", "desc": "Données renvoyées par onSerialize"}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

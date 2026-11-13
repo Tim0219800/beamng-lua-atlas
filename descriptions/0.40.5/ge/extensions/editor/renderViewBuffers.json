@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/editor/renderViewBuffers.lua",
+  "module": "Outil de debug de l'éditeur (menu Debug > « NamedTextureTarget Viewer ») pour prévisualiser les render buffers (NamedTexTargets) avec imgui : liste filtrable à gauche, aperçu à droite avec zoom/déplacement (molette, glisser), choix du canal (RGBA, R, G, B) et réinitialisation de la vue par double-clic. Utile pour inspecter les cibles de rendu, par exemple les shadow maps.",
+  "notes": [
+    "La liste des textures disponibles est rafraîchie quand la fenêtre passe de masquée à visible.",
+    "onWindowMenuItem est local (non exporté)."
+  ],
+  "functions": {
+    "onEditorGui": {"desc": "Hook : dessine la fenêtre (liste + aperçu) et rafraîchit la liste des cibles à l'ouverture.", "internal": true},
+    "onEditorInitialized": {"desc": "Hook : ajoute l'entrée de menu Debug et enregistre la fenêtre (1100x700).", "internal": true}
+  }
+}

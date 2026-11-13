@@ -4,6 +4,8 @@
 
 **Accès :** `require("client/postFx/caustics")`
 
+Post-effet de caustiques sous l'eau. Crée (s'ils n'existent pas) le state block PFX_CausticsStateBlock (mélange additif), le shader PFX_CausticsShader (caustics.cs.hlsl) et le PostEffect « CausticsPFX », désactivé par défaut, qui lit le prepass, la profondeur et deux textures caustics_1.png / caustics_2.png. Il est activé et désactivé par les callbacks de UnderwaterFogPostFx (voir fog.lua). Aucune fonction exportée.
+
 ## Appels vers le moteur (C++)
 
 - `scenetree.` `findObject`

@@ -1,0 +1,49 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleDetailViewer.lua",
+  "module": "Outil d'éditeur « Vehicle Detail Viewer » (menu Window > Vehicles, aussi F11 > Window > Experimental). Ouvre des fenêtres imgui qui affichent des vues orthographiques du véhicule joueur (Left, Right, Top, Bottom, Front, Back) rendues dans une texture via RenderViewManagerInstance, avec zoom, déplacement par glisser et double-clic de remise à zéro. Chaque vue est calée sur la boîte englobante orientée du véhicule (getSpawnWorldOOBB). Les dispositions peuvent être sauvegardées dans /settings/vehicleDetails/*.vehicleDetailSetting.json (défaut : default.vehicleDetailSetting.json).",
+  "notes": [
+    "Aucun rendu n'a lieu tant que l'utilisateur n'a pas choisi l'entrée de menu (detailViewerActive) ; quand la dernière fenêtre est fermée, toutes les vues sont détruites.",
+    "Le plan de coupe lointain est fixé à 10 m (farClip) et l'échelle à 200 pixels par mètre.",
+    "Les vues sont recréées à chaque apparition de véhicule (onVehicleSpawned remet `views` à nil) ; seul le véhicule joueur est affiché.",
+    "onSerialize détruit les vues de rendu et convertit les pointeurs imgui en données simples avant rechargement Lua ; onDeserialized les reconvertit."
+  ],
+  "fields": {},
+  "functions": {
+    "onEditorInitialized": {
+      "desc": "Ajoute l'entrée de menu 'Vehicle Detail Viewer' (groupe Vehicles) qui active l'outil.",
+      "internal": true
+    },
+    "onPreRender": {
+      "desc": "Appelé chaque frame avant le rendu : crée les modèles de vues pour le véhicule joueur, charge la disposition par défaut, dessine chaque fenêtre de vue et déclenche le rendu orthographique ; nettoie quand tout est fermé.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+      },
+      "internal": true
+    },
+    "onVehicleSpawned": {
+      "desc": "Appelé quand un véhicule apparaît : oublie les vues pour les recréer avec le nouveau véhicule.",
+      "params": {"vehicleId": {"type": "integer", "desc": "ID du véhicule."}},
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Avant rechargement Lua : détruit les vues de rendu et renvoie {views} sans les objets non sérialisables.",
+      "returns": [{"type": "table", "desc": "{views = table}"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Restaure les vues et recrée les pointeurs imgui windowOpen. Aussi utilisé pour charger un fichier de disposition.",
+      "params": {"data": {"type": "table|nil", "desc": "Table de onSerialize ou contenu du fichier de disposition."}},
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Appelé au chargement de l'extension : affiche un message et liste les fichiers de disposition disponibles.",
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Appelé au déchargement : détruit les vues de rendu restantes.",
+      "internal": true
+    }
+  }
+}

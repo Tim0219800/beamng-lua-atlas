@@ -1,0 +1,28 @@
+{
+  "path": "lua/ge/extensions/gameplay/freeformDelivery/hints.lua",
+  "module": "Gère les indices (hints) du mode de livraison libre : chaque hint de la livraison (id, targetAreaIds, message, subtext) s'affiche comme message dans la liste de tâches (SetTasklistTask) tant que le joueur se trouve dans l'une de ses zones cibles (zone, location ou parkingSpot), puis disparaît (DiscardTasklistItem) quand il en sort. Appelé par gameplay_freeformDelivery_freeformDelivery, pas par le moteur.",
+  "notes": [
+    "Un hint sans id ou sans targetAreaIds est ignoré (avertissement loggué). Le message par défaut est la clé missions.freeformDelivery.common.hint.fallback.",
+    "Détection : joueur en véhicule = gameplay_freeformDelivery_utils.checkVehicleInArea ; joueur à pied = test manuel (containsPoint2D pour zone, distance <= rayon pour location, boîte orientée pour parkingSpot).",
+    "Les tâches de la tasklist ont l'id « hint_<id> » et le type message.",
+    "Le paramètre profiler de update est facultatif : il sert à y ajouter des sections de mesure (p:add)."
+  ],
+  "functions": {
+    "setup": {
+      "desc": "Initialise les hints à partir de delivery.hints et mémorise la livraison active. Logge le nombre de hints chargés.",
+      "params": {"delivery": {"type": "table", "desc": "Livraison chargée (hints, targetAreas, sites)."}}
+    },
+    "update": {
+      "desc": "À appeler à chaque frame : affiche les hints dont une zone cible contient le joueur et masque les autres. Sans effet si aucune livraison n'est active ou si la position du joueur est inconnue.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (inutilisé)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulé (inutilisé)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (inutilisé)."},
+        "profiler": {"type": "table|nil", "desc": "LuaProfiler facultatif pour mesurer les sections."}
+      }
+    },
+    "cleanup": {
+      "desc": "Retire tous les hints affichés de la tasklist et oublie la livraison active."
+    }
+  }
+}

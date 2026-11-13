@@ -1,0 +1,59 @@
+{
+  "path": "lua/ge/extensions/editor/levelValidator.lua",
+  "module": "Outil « Level Validator » de l'éditeur (menu Window > Debug). Le bouton « Find issues » lance un job qui cherche dans le niveau les objets dupliqués, flottants (non plantés sur le terrain), les splines mal configurées (moins de 2 nœuds) et les échelles nulles ou quasi nulles, pour les objets de scène et les éléments de forêt. Les résultats sont triables, ignorables, et certains corrigeables (suppression des doublons, sans undo possible). Les résultats peuvent être lus par d'autres modules via getLevelLogs.",
+  "usage": "editor_levelValidator.startLevelValidation()\nlocal agg = editor_levelValidator.getLevelLogsAggregated()",
+  "notes": [
+    "Préférence levelValidator.general.extendedLogs : affiche des erreurs supplémentaires dans la liste.",
+    "Dans startLevelValidation, getLevelLogs() est appelé mais cette fonction locale est définie plus bas dans le fichier (ligne ~894) : à cet endroit c'est la globale getLevelLogs qui est visée, donc nil. Avec extendedLogs activé, l'appel échoue (bug probable du jeu).",
+    "Niveaux de log : I, W, E, D. Types internes : duplicate, floating, spline, scale.",
+    "onEditorAfterSaveLevel est vide (l'appel automatique à startLevelValidation est commenté)."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "{\"core_forest\"}."}
+  },
+  "functions": {
+    "startLevelValidation": {"desc": "Lance la validation du niveau dans un job (core_jobsystem, période 0.04) et passe l'état à « recherche en cours ».", "params": {}},
+    "getLevelLogs": {"desc": "Renvoie la liste brute des problèmes trouvés (entrées avec logLevel, type, objectId, message…).", "params": {}, "returns": [{"type": "table", "desc": "levelLogs."}]},
+    "getLevelLogsAggregated": {
+      "desc": "Renvoie les problèmes regroupés par type lisible (Duplicated Object, Floating Object, Spline Misconfigured, Duplicated Forest Item, Floating Forest Item, et « Zero or Near-Zero Scale »). Chaque entrée est enrichie du nom et de la position de l'objet, et d'une position/rotation de caméra (15 m derrière l'objet).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{elementsByType = {[i] = {type, count, elements}}}."}]
+    },
+    "onEditorInitialized": {"desc": "Enregistre la fenêtre « levelValidator » et l'entrée de menu « Level Validator » (groupe Debug).", "params": {}, "internal": true},
+    "onExtensionLoaded": {"desc": "Hook de chargement : écrit un log Debug « initialized ».", "params": {}, "internal": true},
+    "onEditorGui": {"desc": "Dessine la fenêtre de l'outil (bouton Find issues, liste filtrable et triable, actions).", "params": {}, "internal": true},
+    "onEditorRegisterPreferences": {
+      "desc": "Enregistre la catégorie de préférences levelValidator.general (extendedLogs, columnSizes caché).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "internal": true
+    },
+    "onClientStartMission": {"desc": "Appelé au démarrage d'un niveau : réinitialise les dimensions du terrain, les logs et l'état de vérification.", "params": {}, "internal": true},
+    "onEditorAfterSaveLevel": {
+      "desc": "Appelé après la sauvegarde du niveau. Corps vide.",
+      "params": {"state": {"type": "any", "desc": "Non utilisé."}},
+      "internal": true
+    },
+    "onEditorPreferenceValueChanged": {
+      "desc": "Si extendedLogs change, vide les résultats et réinitialise l'état de vérification.",
+      "params": {
+        "path": {"type": "string", "desc": "Chemin de la préférence."},
+        "value": {"type": "any", "desc": "Nouvelle valeur."}
+      },
+      "internal": true
+    }
+  },
+  "classes": {
+    "sortingFunctions": {
+      "desc": "Comparateurs de tri des colonnes de la liste de résultats (a et b sont deux entrées de log).",
+      "functions": {
+        "LogLevel": {"desc": "Tri par logLevel (chaîne).", "params": {"a": {"type": "table", "desc": "Entrée de log."}, "b": {"type": "table", "desc": "Entrée de log."}}, "returns": [{"type": "boolean", "desc": "a avant b."}]},
+        "Code": {"desc": "Tri par uniqueErrorCode (0 si absent).", "params": {"a": {"type": "table", "desc": "Entrée de log."}, "b": {"type": "table", "desc": "Entrée de log."}}, "returns": [{"type": "boolean", "desc": "a avant b."}]},
+        "Description": {"desc": "Tri par message.", "params": {"a": {"type": "table", "desc": "Entrée de log."}, "b": {"type": "table", "desc": "Entrée de log."}}, "returns": [{"type": "boolean", "desc": "a avant b."}]},
+        "Origin": {"desc": "Tri par champ origin (chaîne vide si absent).", "params": {"a": {"type": "table", "desc": "Entrée de log."}, "b": {"type": "table", "desc": "Entrée de log."}}, "returns": [{"type": "boolean", "desc": "a avant b."}]},
+        "ObjectName": {"desc": "Tri par nom de l'objet a.object (chaîne vide si absent).", "params": {"a": {"type": "table", "desc": "Entrée de log."}, "b": {"type": "table", "desc": "Entrée de log."}}, "returns": [{"type": "boolean", "desc": "a avant b."}]},
+        "File": {"desc": "Tri par champ filename.", "params": {"a": {"type": "table", "desc": "Entrée de log."}, "b": {"type": "table", "desc": "Entrée de log."}}, "returns": [{"type": "boolean", "desc": "a avant b."}]},
+        "Line": {"desc": "Tri par champ lineNumber (0 si absent).", "params": {"a": {"type": "table", "desc": "Entrée de log."}, "b": {"type": "table", "desc": "Entrée de log."}}, "returns": [{"type": "boolean", "desc": "a avant b."}]}
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/editor/api/dynamicDecals/sidecarFileMigration.lua",
+  "module": "Migration des fichiers « sidecar » des textures de decals dynamiques. Passe un sidecar de la version 1 à la version 2 : supprime le champ path et remplace le type sdf (obsolète) par le booléen isSdfCompatible.",
+  "notes": [
+    "Types de texture connus : greyscale=0, color=1, sdf=2 (obsolète), fillTexture=3.",
+    "Seule la migration v1 -> v2 existe ; une donnée d'une autre version est laissée intacte."
+  ],
+  "functions": {
+    "migrate": {
+      "desc": "Modifie la table en place : si data.version == 1, la passe en version 2 (path = nil, isSdfCompatible = (type == sdf)).",
+      "params": {"data": {"type": "table", "desc": "Contenu du sidecar décodé"}},
+      "returns": []
+    }
+  }
+}

@@ -4,11 +4,19 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/fireRallyEvent")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Rally Mode Fire Rally Event » (catégorie once_instant, tag rally). Déclenche un évènement rally : appelle extensions.hook('on' .. eventType, {show = show}) et guihooks.trigger(eventType, {show = show}). Entrées : eventType (string, nom de l'évènement sans le préfixe « on ») et show (bool, défaut true, afficher l'UI correspondante).
+
+## Remarques
+
+- Si eventType est nil, la concaténation 'on'..nil provoque une erreur Lua.
+
 ## Classe `C`
+
+Classe du nœud.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:workOnce()` |  | 20 |
+| `C:workOnce()` | Appelle le hook d'extension et le guihook correspondant à eventType avec {show = …}. | 20 |
 
 ## Hooks émis
 

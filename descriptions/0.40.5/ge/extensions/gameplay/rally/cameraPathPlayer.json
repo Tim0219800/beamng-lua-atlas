@@ -1,0 +1,34 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/cameraPathPlayer.lua",
+  "module": "Lit une trajectoire de caméra qui suit la route du rallye. À partir des points d'une 'snaproad' (pointsForCameraPath), il construit un chemin de caméra (copie adaptée de core_paths.loadPath) et le joue avec core_paths.playPath. Paramètres fixes dans play : 40 m avant, 20 m après, 2 m de hauteur, FOV 70, vitesse de lecture 80 km/h. Le module renvoie un constructeur : require(...)(snaproad).",
+  "notes": [
+    "Le temps de chaque marqueur = distance cumulée / vitesse de lecture (m/s) : la caméra avance à vitesse constante, indépendamment de l'espacement des points.",
+    "Dans loadPath, 'movingStart or true' et 'movingEnd or true' valent toujours true (une valeur false serait ignorée).",
+    "La fonction locale loadPath renvoie une table de chemin sans l'enregistrer (addPath est commenté)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Lecteur de chemin caméra renvoyé par le constructeur du module.",
+      "functions": {
+        "init": {
+          "desc": "Mémorise la snaproad utilisée pour produire les points du chemin.",
+          "params": {"snaproad": {"type": "table", "desc": "Objet fournissant pointsForCameraPath(metersBefore, metersAfter)."}},
+          "returns": [],
+          "internal": true
+        },
+        "play": {
+          "desc": "Demande les points à la snaproad (40 m avant, 20 m après), construit le chemin caméra et le lance avec core_paths.playPath. Ne fait rien si aucun point n'est renvoyé.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "stop": {
+          "desc": "Arrête le chemin caméra en cours (core_paths.stopCurrentPath).",
+          "params": {},
+          "returns": [],
+          "internal": false
+        }
+      }
+    }
+  }
+}

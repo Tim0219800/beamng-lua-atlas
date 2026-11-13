@@ -4,14 +4,18 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/drivingStats")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Traffic Driving Stats » (once_p_duration). Suit la route et le comportement de conduite d'un véhicule (vehId, sinon véhicule joueur) avec gameplay/traffic/roadTracking. Sorties : n1/n2 (nœuds de la route), roadOffset, roadXnorm/roadYnorm, speedRatio (vitesse / limite), collisions, faultOverSpeed/WrongWay/Reckless (0 à 1) et timers associés.
+
 ## Classe `C`
+
+Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:_executionStopped()` |  | 40 |
-| `C:init()` |  | 36 |
-| `C:onNodeReset()` |  | 44 |
-| `C:work()` |  | 49 |
+| `C:_executionStopped()` | Réinitialise le nœud (appelle onNodeReset). | 40 |
+| `C:init()` | Réinitialise le nœud (appelle onNodeReset). | 36 |
+| `C:onNodeReset()` | Oublie le véhicule et le suivi en cours. | 44 |
+| `C:work()` | Crée ou met à jour l'objet roadTracking pour le véhicule (onUpdate avec dtSim) et recopie ses valeurs sur les sorties. | 49 |
 
 ## Appels vers le moteur (C++)
 

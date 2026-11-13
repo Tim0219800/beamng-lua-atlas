@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/delivery/loadDelivery.lua",
+  "module": "Nœud flowgraph « Load Delivery » (catégorie once_f_duration, livraison). Charge un fichier de livraison, prépare véhicules et routes et met le joueur dans le bon véhicule ; l'installation prend quelques frames. Utiliser ensuite Start Delivery. Pins d'entrée : flow, reset (caché), deliveryPath (défaut 'delivery.delivery.json'). Sorties : flow, success, isLoaded.",
+  "notes": ["Si missionTypeData.deliveryPath existe dans l'activité, il remplace deliveryPath quand celui-ci est vide ou égal à la valeur par défaut.", "Le chemin est résolu avec mgr:getRelativeAbsolutePath."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise les sorties et l'état de durée à 'inactive'.", "internal": true},
+        "_executionStopped": {"desc": "Appelle reset.", "internal": true},
+        "onNodeReset": {"desc": "Appelle reset.", "internal": true},
+        "reset": {"desc": "Remet les sorties à faux et l'état à 'inactive'."},
+        "workOnce": {"desc": "Résout le chemin, appelle freeformDelivery.load et passe en état 'started' ; journalise les erreurs."},
+        "work": {"desc": "En état 'started', attend isLoaded() puis active success, isLoaded et flow ('finished') ; ensuite maintient flow."}
+      }
+    }
+  }
+}

@@ -4,11 +4,19 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/ui/raceRecoveriesUsed")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Set UI Race Recovery » (catégorie repeat_instant, auteur BeamNG, durée) : met à jour l'app UI du compteur de récupérations (reset véhicule). Entrées : « cur » (number ou string), « max ». Texte envoyé via 'RaceRecoveryCounterSet' (ex. « Recoveries Used: 2 / 5 ») ; réinitialisé avec 'RaceRecoveryCounterReset'.
+
+## Remarques
+
+- Le texte « Recoveries Used » est en dur (non traduit).
+
 ## Classe `C`
+
+Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:work()` |  | 25 |
+| `C:work()` | Envoie le compteur si cur et le flux d'entrée sont actifs, sinon réinitialise. | 25 |
 
 **Évènements UI (guihooks.trigger) :** `RaceRecoveryCounterReset`, `RaceRecoveryCounterSet`
 

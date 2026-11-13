@@ -1,0 +1,46 @@
+{
+  "path": "lua/ge/extensions/util/screenshotCreator/framing/legacy.lua",
+  "module": "Mode de cadrage « Legacy (pre-r186184) » du créateur de captures : calcule la position et l'orientation de la caméra pour qu'un véhicule tienne dans l'image, avec l'ancienne méthode (FOV fixe de 20°). Il s'enregistre auprès de util_screenshotCreator_framingManager via le hook onScreenshotCreatorCollectFramingModes (id « legacy », ordre 50). Il retient les nœuds du véhicule (hors antennes, drapeaux, nœuds non collidables et nœuds sous le sol), cherche par dichotomie la distance de caméra minimale qui garde tous les points d'extrémité dans les marges, puis relève la caméra si elle passe sous 0,75 m au-dessus du point le plus bas.",
+  "usage": "local res, err = util_screenshotCreator_framing_legacy.resolve({vehicle = be:getPlayerVehicle(0), resolution = {500, 281}})\nif res then core_camera.setPosRot(0, res.pos.x, res.pos.y, res.pos.z, res.rot.x, res.rot.y, res.rot.z, res.rot.w) end",
+  "notes": [
+    "FOV fixe à 20° (champ fov du résultat) ; context.fov est ignoré par ce mode.",
+    "Résolution par défaut {500, 281}, plan proche par défaut 0,1.",
+    "Les marges ne sont appliquées que si context.useFramingMargins (ou context.useMargins) vaut true. Sans context.margin, elles ne sont lues dans les réglages que pour la résolution par défaut 500x281, sinon la marge est nulle.",
+    "Hauteur minimale de la caméra : 0,75 m au-dessus du nœud le plus bas ; au besoin l'élévation est augmentée (jusqu'à 85°), sauf si context.fixedRotation est fourni.",
+    "Le champ boundBy de framingData indique le côté (left/right/top/bottom) qui limite le cadrage, ou « fallback »."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : core_vehicle_manager, util_screenshotCreator_settings, util_screenshotCreator_thumbnailConfig."}
+  },
+  "functions": {
+    "resolve": {
+      "desc": "Calcule la caméra de cadrage legacy pour context.vehicle. Renvoie une table {pos, rot, fov = 20, name = \"legacy camera\", debugData, framingData}, ou nil et un message d'erreur si context.vehicle manque.",
+      "params": {
+        "context": {"type": "table", "desc": "Contexte de cadrage : vehicle (obligatoire), resolution ({largeur, hauteur}), aspectRatio, nearPlane, fixedRotation (quat imposé), configName, useFramingMargins/useMargins (boolean), margin ({left,right,top,bottom,extraBottom})."}
+      },
+      "returns": [
+        {"type": "table|nil", "desc": "Résultat de cadrage (pos: vec3, rot: quat, fov, name, debugData, framingData)."},
+        {"type": "string|nil", "desc": "Message d'erreur."}
+      ]
+    },
+    "frame": {
+      "desc": "Alias de resolve (même fonction).",
+      "params": {"context": {"type": "table", "desc": "Voir resolve."}},
+      "returns": [{"type": "table|nil", "desc": "Voir resolve."}, {"type": "string|nil", "desc": "Message d'erreur."}]
+    },
+    "getVehicleFramingData": {
+      "desc": "Construit les données géométriques de cadrage d'un véhicule : boîte englobante orientée selon les axes de référence, centre, demi-étendues, point visé, direction de caméra et points d'extrémité (jusqu'à 100 nœuds max et 100 min par axe). Ne calcule pas la distance de caméra.",
+      "params": {
+        "vehicle": {"type": "table", "desc": "Objet véhicule."},
+        "fixedRotation": {"type": "quat|nil", "desc": "Orientation de caméra imposée ; sinon calculée à partir de la direction (-0.75, -0.66, 0.07) dans le repère du véhicule."},
+        "configName": {"type": "string|nil", "desc": "Nom de configuration passé à thumbnailConfig.getReferenceAxes pour choisir les axes de référence."}
+      },
+      "returns": [{"type": "table", "desc": "framingData (bb, center, axis0..2, halfExtents, floorZ, lookAtPoint, camRot, camRight/Forward/Up, framingPoints…)."}]
+    },
+    "onScreenshotCreatorCollectFramingModes": {
+      "desc": "Hook appelé par framingManager lors de la collecte des modes. Ajoute à la liste le mode {id = \"legacy\", label = \"Legacy (pre-r186184)\", order = 50, fixedFov = 20, supportsFixedRotation = true, resolve}.",
+      "params": {"modes": {"type": "table[]", "desc": "Liste à compléter."}},
+      "internal": true
+    }
+  }
+}

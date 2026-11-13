@@ -1,0 +1,85 @@
+{
+  "path": "lua/ge/extensions/editor/main.lua",
+  "module": "Cœur du World Editor : définit la globale `editor` (editor = M). Il charge toutes les extensions de lua/ge/extensions/editor/ (celles qui contiennent « M.onEditor » ou « M.onExtension », sauf editor_main), initialise les modules editor/api/*, gère les préférences (settings/editor/preferences.json), l'état (settings/editor/currentState.json) et l'activation/désactivation de l'éditeur (caméra libre, action maps, CEF masqué, layout, audio). Les autres extensions d'éditeur ajoutent leurs fonctions à la table `editor`.",
+  "usage": "editor_main.toggleActive()          -- ouvre/ferme l'éditeur\neditor.logInfo(\"message\")\nlocal v = editor.getPreference(\"camera.general.freeCameraMoveSpeed\")",
+  "notes": [
+    "setEditorActive ne bascule pas immédiatement : il pose une requête traitée dans onUpdate après 3 frames d'écran de chargement (splash).",
+    "La fermeture de l'éditeur est refusée (retour silencieux) si editor.anyToolDirty() est vrai.",
+    "Mode sans échec (safeMode) : seules les extensions de la liste safeModeExtensionNames sont chargées.",
+    "Une extension peut être désactivée via settings/editor/extensions.json (clé = nom court, champ disabled).",
+    "editor.setPreference et editor.getPreference ne sont définis qu'après le premier loadPreferences().",
+    "Le même script gère aussi le lancement automatique avec l'argument -worldEditor (onFirstUpdate) et la réactivation après un rechargement Lua (onSerialize/onDeserialized)."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "{\"core_camera\"}."},
+    "initialized": {"type": "boolean", "desc": "Vrai quand les extensions d'éditeur sont chargées et initialisées."},
+    "active": {"type": "boolean", "desc": "Vrai quand l'éditeur est actif (ouvert)."},
+    "safeMode": {"type": "boolean|nil", "desc": "Vrai si l'éditeur a été lancé en mode sans échec."},
+    "extensionNames": {"type": "table<integer, string>", "desc": "Noms (editor_xxx) des extensions d'éditeur actuellement chargées."},
+    "allExtensionNames": {"type": "table<integer, string>", "desc": "Noms courts de toutes les extensions d'éditeur trouvées sur disque."},
+    "additionalActionMaps": {"type": "table", "desc": "Action maps supplémentaires empilées à l'activation et dépilées à la désactivation de l'éditeur."},
+    "preferencesRegistry": {"type": "any", "desc": "Registre des préférences (editor/api/preferencesRegistry)."}
+  },
+  "functions": {
+    "log": {"desc": "Écrit un message de niveau Info dans le log, tag « editor ».", "params": {"msg": {"type": "string", "desc": "Message."}}},
+    "logInfo": {"desc": "Alias de log (niveau Info, tag « editor »).", "params": {"msg": {"type": "string", "desc": "Message."}}},
+    "logDebug": {"desc": "Message de niveau Debug, tag « editor ».", "params": {"msg": {"type": "string", "desc": "Message."}}},
+    "logError": {"desc": "Message de niveau Error, tag « editor ».", "params": {"msg": {"type": "string", "desc": "Message."}}},
+    "logWarn": {"desc": "Message de niveau Warning, tag « editor ».", "params": {"msg": {"type": "string", "desc": "Message."}}},
+    "loadPreferences": {"desc": "Recharge les préférences depuis settings/editor/preferences.json, définit editor.setPreference/getPreference et migre les anciennes préférences.", "params": {}},
+    "savePreferences": {"desc": "Écrit les préférences dans settings/editor/preferences.json.", "params": {}},
+    "loadExtensionsSettings": {"desc": "Lit settings/editor/extensions.json dans editor.extensionsSettings (table vide si absent).", "params": {}},
+    "saveExtensionsSettings": {"desc": "Écrit editor.extensionsSettings dans settings/editor/extensions.json.", "params": {}},
+    "loadEditorExtension": {
+      "desc": "Charge une extension d'éditeur à chaud : enregistre ses préférences, puis appelle ses onEditorRegisterApi, onEditorInitialized et onEditorActivated.",
+      "params": {"name": {"type": "string", "desc": "Nom de l'extension, par ex. « editor_monOutil »."}},
+      "returns": [{"type": "table|nil", "desc": "La table de l'extension, ou nil si le chargement a échoué."}]
+    },
+    "loadEditorExtensions": {
+      "desc": "Charge plusieurs extensions d'éditeur d'un coup (préférences enregistrées avant, puis hooks RegisterApi/Initialized/Activated pour chacune).",
+      "params": {"names": {"type": "table<integer, string>", "desc": "Noms des extensions."}}
+    },
+    "unloadEditorExtension": {
+      "desc": "Décharge une extension d'éditeur chargée : appelle son onEditorDeactivated puis onEditorShutdown, puis extensions.unload.",
+      "params": {"extName": {"type": "string", "desc": "Nom de l'extension chargée."}}
+    },
+    "initializeModules": {"desc": "Charge et initialise les modules editor/api/* (gui, core, assets, camera, dataBlock, decal, gizmo, material, navigation, object, roadRiver, sketch, terrain, forest, proceduralContentGenerator), puis émet onEditorModulesInitialized. Sans effet si déjà fait.", "params": {}, "internal": true},
+    "saveState": {
+      "desc": "Sauvegarde l'état de l'éditeur : émet onEditorSaveState(state) puis écrit le JSON. Sans effet si l'éditeur n'a pas été initialisé dans cette session.",
+      "params": {"filePath": {"type": "string|nil", "desc": "Fichier cible ; settings/editor/currentState.json par défaut."}}
+    },
+    "loadState": {
+      "desc": "Lit le fichier d'état de l'éditeur (avertit si la version du format diffère).",
+      "params": {"filePath": {"type": "string|nil", "desc": "Fichier source ; settings/editor/currentState.json par défaut."}},
+      "returns": [{"type": "table", "desc": "L'état lu, ou une table vide."}]
+    },
+    "setEditorActive": {
+      "desc": "Demande l'activation ou la désactivation de l'éditeur ; appliquée dans onUpdate après quelques frames de splash.",
+      "params": {
+        "activate": {"type": "boolean", "desc": "true pour ouvrir, false pour fermer."},
+        "safeMode": {"type": "boolean|nil", "desc": "true pour démarrer en mode sans échec."}
+      }
+    },
+    "toggleActive": {
+      "desc": "Inverse l'état actif de l'éditeur (via setEditorActive).",
+      "params": {"safeMode": {"type": "boolean|nil", "desc": "Mode sans échec à l'ouverture."}}
+    },
+    "isEditorActive": {"desc": "Indique si l'éditeur est actif.", "params": {}, "returns": [{"type": "boolean", "desc": "editor.active."}]},
+    "shutdown": {"desc": "Ferme l'éditeur, émet onEditorShutdown, décharge toutes les extensions d'éditeur et remet initialized/active à false.", "params": {}},
+    "onClientStartMission": {"desc": "Appelé au démarrage d'un niveau : remet initialized et modulesInitialized à false et réapplique l'état actif courant.", "params": {}, "internal": true},
+    "onClientEndMission": {"desc": "Appelé à la fin d'un niveau : sauvegarde l'état, réaffiche les apps (ShowApps), propose de sauvegarder si modifié, puis shutdown().", "params": {}, "internal": true},
+    "onPreWindowClose": {"desc": "Appelé avant la fermeture de la fenêtre du jeu : editor.checkDirtyAndSave() si disponible.", "params": {}, "internal": true},
+    "onPreExit": {"desc": "Appelé avant la sortie du jeu. Corps vide.", "params": {}, "internal": true},
+    "onExit": {"desc": "Appelé à la sortie du jeu : met editor.active à false et sauvegarde l'état.", "params": {}, "internal": true},
+    "onExtensionLoaded": {"desc": "Hook de chargement. Corps vide.", "params": {}, "internal": true},
+    "onExtensionUnloaded": {"desc": "Appelé au déchargement : editor.shutdown().", "params": {}, "internal": true},
+    "onUpdate": {"desc": "Appelé chaque frame : traite la requête d'activation/désactivation (affiche l'image de chargement editorSplash.png pendant 3 frames, puis applique).", "params": {}, "internal": true},
+    "onSerialize": {"desc": "Appelé avant un rechargement Lua : sauvegarde caméra, état actif, dirty, headless, mode d'édition, positions des fenêtres et préférence cleanExit ; désactive l'éditeur.", "params": {}, "returns": [{"type": "table", "desc": "Données restituées à onDeserialized."}], "internal": true},
+    "onDeserialized": {
+      "desc": "Appelé après un rechargement Lua : restaure active/dirty/headless/mode d'édition et expose les données dans editor_main.serializedData.",
+      "params": {"data": {"type": "table", "desc": "Table renvoyée par onSerialize."}},
+      "internal": true
+    },
+    "onFirstUpdate": {"desc": "Appelé à la première mise à jour : réactive l'éditeur s'il l'était avant le rechargement, et l'ouvre automatiquement si le jeu a été lancé avec -worldEditor.", "params": {}, "internal": true}
+  }
+}

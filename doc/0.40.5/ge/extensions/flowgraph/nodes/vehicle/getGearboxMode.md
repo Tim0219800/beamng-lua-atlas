@@ -4,15 +4,19 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/vehicle/getGearboxMode")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud « Get Gearboxmode » (catégorie `once_f_duration`). Demande au contrôleur `mainController` du véhicule son `gearboxMode` (par `core_vehicleBridge.requestValue`) et le renvoie sur la sortie `value` (any). Pin d'entrée : `vehId` (défaut : joueur). État de durée : inactive/started/finished.
+
 ## Classe `C`
+
+Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:_executionStarted()` |  | 27 |
-| `C:init()` |  | 24 |
-| `C:onNodeReset()` |  | 31 |
-| `C:work()` |  | 49 |
-| `C:workOnce()` |  | 36 |
+| `C:_executionStarted()` | Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro. | 27 |
+| `C:init()` | Constructeur du nœud, appelé à sa création par l'éditeur/gestionnaire de flowgraph ; initialise l'état interne. | 24 |
+| `C:onNodeReset()` | Efface la réponse reçue et passe en durée `inactive`. | 31 |
+| `C:work()` | Quand la réponse est arrivée, la copie sur `value` et passe en `finished`. | 49 |
+| `C:workOnce()` | Envoie la requête `mainController/gearboxMode` au véhicule et passe en `started`. | 36 |
 
 ## Appels vers le moteur (C++)
 

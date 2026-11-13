@@ -1,0 +1,25 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/trafficSignalsSettings.lua",
+  "module": "Nœud flowgraph « Traffic Signals Settings » (once_instant, dépend de core_trafficSignals). Pins : signalsActive (core_trafficSignals.setActive) et simpleLights (debugLevel 1 si vrai, sinon 0 : visuels simples des états). À l'arrêt, réactive les signaux et remet debugLevel à 0.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Réactive les signaux et remet core_trafficSignals.debugLevel à 0.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Applique signalsActive et simpleLights si non nil.",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "arguments transmis par le moteur (non utilisés)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

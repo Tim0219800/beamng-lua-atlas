@@ -1,0 +1,32 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/logic/rateLimit.lua",
+  "module": "Noeud flowgraph 'Flow Interval' (categorie logic, fichier rateLimit). Laisse passer une impulsion de flux a intervalle regulier tant que le flux d'entree est actif. 'input' est une frequence (Hz) ou, si asDuration est vrai, une duree (s) ; 'reverseHit' decide si l'impulsion tombe en fin ou debut de cycle. dt optionnel, sinon mgr.dtSim.",
+  "notes": [
+    "legacyPins renomme fps et interval vers 'frequency', un pin qui n'existe pas dans le schema (le pin s'appelle 'input').",
+    "fps = |input| : une valeur 0 donnerait une division par zero (1/fps) en mode frequence.",
+    "work plante si input est nil (math.abs(nil))."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "time=0, prevFps=-1.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Remet time et prevFps a leur valeur initiale.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Barre de progression du cycle.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Reinitialise le minuteur au reset ou quand input change ; avec du flux, decremente time de dt ; quand time <= 0, ajoute 1/fps (ou input en mode duree) et emet flow=true cette frame, sinon false.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

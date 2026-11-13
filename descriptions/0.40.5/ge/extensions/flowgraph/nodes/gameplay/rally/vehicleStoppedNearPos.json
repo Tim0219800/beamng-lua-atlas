@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.lua",
+  "module": "Nœud flowgraph « Stopped Near Position? » (catégorie repeat, icône timer, comportement once + duration, tag rally). Vérifie qu'un véhicule est à l'arrêt (vitesse < 0,1 m/s) à moins de radius mètres d'une position pendant au moins duration secondes. Entrées : flow, reset (impulsion), vehId, pos (vec3 ou table), duration (0,5 s par défaut), radius (4 m par défaut). Sorties : flow (vrai une fois la durée atteinte), impulse (impulsion à ce moment). Le chrono avance avec dtReal et repart de zéro si le véhicule bouge dans la zone. Diffuse chaque frame l'état de proximité à l'UI via onRallyDataUpdated (activeState vehicleProximity avec isNear, distance, isStopped, timer, duration).",
+  "notes": ["La distance est mesurée depuis le centre avant du véhicule (RallyUtil.getVehFrontCenter).", "Position cible et rayon sont mis en cache à la première lecture.", "Avec le drapeau de debug 'stopZones' de gameplay_rallyLoop, dessine la zone (sphère) et le point directeur du véhicule."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise chrono, cible et intervalle de hook (0,1 s, non utilisé ensuite).", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
+        "_executionStarted": {"desc": "Remet à zéro chrono, état et cache.", "internal": true},
+        "updateTimer": {"desc": "Avance le chrono (dtReal) ; à la durée atteinte, arrête le chrono et émet l'impulsion.", "internal": true},
+        "drawMiddle": {"desc": "Affiche une barre de progression du chrono.", "params": {"builder": {"type": "table", "desc": "Constructeur de nœud."}, "style": {"type": "table", "desc": "Style."}}, "internal": true},
+        "updateVehicleData2": {"desc": "Met à jour position avant et vitesse du véhicule suivi depuis map.objects.", "internal": true},
+        "isStopped": {"desc": "Vrai si la vitesse du véhicule est inférieure à 0,1 m/s.", "returns": [{"type": "boolean", "desc": "Véhicule à l'arrêt."}]},
+        "isNearPosition": {"desc": "Teste si le centre avant du véhicule est dans le rayon de la position cible.", "returns": [{"type": "boolean", "desc": "Dans la zone."}, {"type": "number|nil", "desc": "Distance en m."}]},
+        "drawDebugStopZone": {"desc": "Dessine la sphère de la zone d'arrêt si le drapeau de debug stopZones est actif.", "internal": true},
+        "drawDebugVehiclePoint": {"desc": "Dessine le point directeur du véhicule (couleur selon dedans/dehors) si stopZones est actif.", "params": {"inside": {"type": "boolean", "desc": "Véhicule dans la zone."}}, "internal": true},
+        "work": {"desc": "Gère reset et chrono, diffuse la proximité à l'UI et met à jour flow/impulse.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+      }
+    }
+  }
+}

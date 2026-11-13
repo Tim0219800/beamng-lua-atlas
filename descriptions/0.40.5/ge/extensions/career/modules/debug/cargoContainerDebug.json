@@ -1,0 +1,74 @@
+{
+  "path": "lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua",
+  "module": "Outil de debug « Vehicle > Cargo Containers ». Interroge tous les véhicules actifs (core_vehicleBridge.requestValue 'getCargoContainers'), affiche leurs conteneurs de cargaison (volume, densité, capacité, cluster de nœuds) et permet d'y envoyer volume/densité ou de les remplir à un débit réglable (flow rate). Peut être ouvert hors carrière.",
+  "usage": "extensions.load(\"career/modules/debug/cargoContainerDebug\")\ncareer_modules_debug_cargoContainerDebug.show()",
+  "notes": [
+    "Débit de remplissage : volume += flowRate * maxRate * dt (litres), borné à [0, capacity].",
+    "drawFlowRate peut pousser/retirer l'actionMap 'Refueling'.",
+    "Faute de frappe probable : container.currenDensity (au lieu de currentDensity) est lu pour initialiser la densité, qui vaut donc toujours 1 par défaut.",
+    "onInstabilityDetected est le même handler que onVehicleDestroyed."
+  ],
+  "fields": {
+    "debugOrder": {"type": "number", "desc": "Ordre de tri dans la fenêtre de debug (11)."},
+    "debugName": {"type": "string", "desc": "'Vehicle > Cargo Containers'."},
+    "vehCargoData": {"type": "table[]", "desc": "Liste, triée par vehId, des véhicules avec leurs conteneurs : {vehId, name, containers, vehPos, clusterGeneration…}."}
+  },
+  "functions": {
+    "getData": {
+      "desc": "Demande à chaque véhicule actif la liste de ses conteneurs et remplit M.vehCargoData quand tous ont répondu (asynchrone). Renvoie une table vide si core_vehicleBridge est absent.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "{} si core_vehicleBridge est absent, sinon rien."}]
+    },
+    "updateVehicle": {
+      "desc": "Rafraîchit les données d'un véhicule : cluster de nœuds (si la génération a changé), position du véhicule et de chaque conteneur. Renvoie false si le véhicule n'existe plus.",
+      "params": {"data": {"type": "table", "desc": "Entrée de vehCargoData."}},
+      "returns": [{"type": "boolean", "desc": "false si le véhicule est introuvable."}]
+    },
+    "drawVehicle": {
+      "desc": "Dessine en ImGui le tableau d'un véhicule et de ses conteneurs avec champs de saisie volume/densité et case de remplissage au débit.",
+      "params": {"data": {"type": "table", "desc": "Entrée de vehCargoData."}},
+      "returns": [],
+      "internal": true
+    },
+    "drawFlowRate": {
+      "desc": "Dessine les curseurs Flow Rate (0..1) et Max Fill Rate (L/s), la case d'actionMap 'Refueling', et applique le remplissage aux conteneurs marqués.",
+      "params": {"dt": {"type": "number", "desc": "Delta de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "onChangeFlowRate": {
+      "desc": "Hook (ex. action d'entrée) qui fixe le flow rate, borné à [0, 1].",
+      "params": {"factor": {"type": "number", "desc": "Nouveau facteur de débit."}},
+      "returns": []
+    },
+    "drawDebugMenu": {
+      "desc": "Dessine la fenêtre 'Cargo Container Debug' : bouton de rafraîchissement, flow rate, et pour chaque véhicule updateVehicle puis drawVehicle (supprime ceux qui n'existent plus).",
+      "params": {"dt": {"type": "number", "desc": "Delta de temps."}},
+      "returns": [],
+      "internal": true
+    },
+    "show": {
+      "desc": "Ouvre l'outil hors carrière : branche drawDebugMenu sur onUpdate (hookUpdate) et lance getData.",
+      "params": {},
+      "returns": []
+    },
+    "onVehicleResetted": {
+      "desc": "Hook : retire les données du véhicule réinitialisé et force un nouveau getData.",
+      "params": {"id": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook : retire les données du véhicule détruit.",
+      "params": {"id": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [],
+      "internal": true
+    },
+    "onInstabilityDetected": {
+      "desc": "Hook : même traitement que onVehicleDestroyed.",
+      "params": {"id": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

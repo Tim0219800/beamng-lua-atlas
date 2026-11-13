@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/reloadCollision.lua",
+  "module": "Noeud flowgraph « Reload Collision » (once_instant). Recharge les données de collision du niveau une seule fois via be:reloadCollision(). Aucun pin.",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "workOnce": {
+          "desc": "Appelle be:reloadCollision().",
+          "internal": false
+        }
+      }
+    }
+  }
+}

@@ -4,11 +4,27 @@
 
 **Accès :** extension `util_renderComponentsAPI` : `extensions.load("util_renderComponentsAPI")`, puis la globale `util_renderComponentsAPI`
 
+Petit module d'aide pour l'interface des composants de rendu : liste les fichiers PNG de correction colorimétrique (LUT) présents dans art/postfx, utilisables pour le post-traitement.
+
+## Exemple
+
+```lua
+dump(extensions.util_renderComponentsAPI.getColorCorrections())
+```
+
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `util_renderComponentsAPI.getColorCorrections()` | get available color corrections files | 7 |
+| `util_renderComponentsAPI.getColorCorrections()` | Liste les fichiers *.png du dossier art/postfx (non récursif). | 7 |
+
+### Détail des paramètres
+
+#### `util_renderComponentsAPI.getColorCorrections()`
+
+Liste les fichiers *.png du dossier art/postfx (non récursif).
+
+- **renvoie** : table[] Liste de tables {filename = chemin du PNG}
 
 ## Appels vers le moteur (C++)
 

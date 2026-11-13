@@ -1,0 +1,22 @@
+{
+  "path": "lua/common/libs/lua-websockets/websocket/tools.lua",
+  "module": "Utilitaires de lua-websockets : lecture/écriture d'entiers 8/16/32 bits en gros-boutiste, SHA-1 (via la bibliothèque 'crypto' si présente, sinon une implémentation en Lua), base64 (via le module luasocket 'mime'), analyse d'URL ws:// et génération de la clé Sec-WebSocket-Key.",
+  "notes": [
+    "Le module appelle math.randomseed(os.time()) au chargement : cela réinitialise la graine aléatoire globale (effet de bord sur math.random pour tout le reste de la VM).",
+    "Utilise require'mime' (nom global, pas un chemin libs/) ; il faut que ce module soit trouvable."
+  ],
+  "fields": {
+    "base64": {"type": "table", "desc": "Table avec encode(data) -> chaîne base64 (mime.b64)."},
+    "sha1": {"type": "function", "desc": "Fonction SHA-1 : crypto.digest si disponible, sinon l'implémentation maison ; renvoie 20 octets bruts."},
+    "write_int8": {"type": "function", "desc": "Alias de string.char : écrit un ou plusieurs octets."}
+  },
+  "functions": {
+    "read_int8": {"desc": "Lit un octet.", "params": {"str": {"type": "string", "desc": "Source."}, "pos": {"type": "integer|nil", "desc": "Position (défaut 1)."}}, "returns": [{"type": "integer", "desc": "Nouvelle position."}, {"type": "integer", "desc": "Valeur."}]},
+    "read_int16": {"desc": "Lit un entier 16 bits gros-boutiste.", "params": {"str": {"type": "string", "desc": "Source."}, "pos": {"type": "integer|nil", "desc": "Position."}}, "returns": [{"type": "integer", "desc": "Nouvelle position."}, {"type": "integer", "desc": "Valeur."}]},
+    "read_int32": {"desc": "Lit un entier 32 bits gros-boutiste.", "params": {"str": {"type": "string", "desc": "Source."}, "pos": {"type": "integer|nil", "desc": "Position."}}, "returns": [{"type": "integer", "desc": "Nouvelle position."}, {"type": "integer", "desc": "Valeur."}]},
+    "write_int16": {"desc": "Écrit un entier 16 bits gros-boutiste sur 2 octets.", "params": {"v": {"type": "integer", "desc": "Valeur."}}, "returns": [{"type": "string", "desc": "2 octets."}]},
+    "write_int32": {"desc": "Écrit un entier 32 bits gros-boutiste sur 4 octets.", "params": {"v": {"type": "integer", "desc": "Valeur."}}, "returns": [{"type": "string", "desc": "4 octets."}]},
+    "parse_url": {"desc": "Décompose une URL ws:// ou wss://. Port par défaut 80 (ws) ou 443 (wss) ; uri par défaut '/'. Lève une erreur si l'URL est invalide.", "params": {"url": {"type": "string", "desc": "URL."}}, "returns": [{"type": "string", "desc": "Protocole en minuscules."}, {"type": "string", "desc": "Hôte."}, {"type": "integer", "desc": "Port."}, {"type": "string", "desc": "URI."}]},
+    "generate_key": {"desc": "Génère une clé Sec-WebSocket-Key : 16 octets aléatoires (math.random) en base64.", "returns": [{"type": "string", "desc": "Clé."}]}
+  }
+}

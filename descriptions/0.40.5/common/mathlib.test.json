@@ -1,0 +1,29 @@
+{
+  "path": "lua/common/mathlib.test.lua",
+  "module": "Tests unitaires de mathlib (vec3, quat, helpers scalaires, courbes, géométrie, StackVec3/push3), à exécuter avec testFramework/TestManager. Contient aussi des tests de performance en boucle et des tests « sans garbage » qui vérifient que les opérations en place n'allouent pas de mémoire. Lancement : `require('testFramework/TestManager'):runTestFiles('mathlib')` dans la console GE. Utile à un moddeur comme catalogue d'exemples d'utilisation des fonctions mathlib.",
+  "usage": "require('testFramework/TestManager'):runTestFiles('mathlib')",
+  "notes": [
+    "Chaque fonction prend un contexte `ctx` fourni par TestManager et n'est pas destinée à être appelée directement.",
+    "Constante EPS = 1e-6 pour les comparaisons de flottants ; assertVec3 compare x, y, z et assertFinite rejette NaN et ±inf.",
+    "Les tests « Perf » font 10000 itérations ; les tests « NoGarbage » imposent un budget d'allocation (allowGarbage 0 à 1024 octets, checkGarbage(0))."
+  ],
+  "functions": {
+    "testMathlibVec3Core": {"desc": "Teste les constructeurs de vec3, l'arithmétique de base, la normalisation et les helpers.", "params": {"ctx": {"type": "table", "desc": "Contexte de test (TestManager)."}}, "internal": true},
+    "testMathlibVec3Geom": {"desc": "Teste les méthodes géométriques de vec3 : distances, coordonnées barycentriques, projection, base orthonormée, mutateurs.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
+    "testMathlibVec3NoiseAndHelpers": {"desc": "Teste les générateurs de bruit/aléatoire de vec3 et les helpers d'axes et de lignes.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
+    "testMathlibPush3": {"desc": "Teste StackVec3 (push3) : parité avec les opérations vec3 de base.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
+    "testMathlibQuat": {"desc": "Teste la construction de quaternions, l'algèbre, l'interpolation et les conversions.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
+    "testMathlibGeneric": {"desc": "Teste les helpers scalaires génériques : signe, clamp, interpolation, médianes, bornes.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
+    "testMathlibCurves": {"desc": "Teste les helpers d'interpolation de courbes (familles spline, Catmull-Rom, Bézier).", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
+    "testMathlibGeom": {"desc": "Teste les familles de helpers de chevauchement, d'inclusion et d'intersection géométriques.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
+    "testMathlibSpecialValuesAndOddities": {"desc": "Teste le comportement sur NaN, infini et division par zéro dans les helpers mathématiques.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
+    "testPerfVec3Batch": {"desc": "Benchmark : arithmétique vec3 (dot, length, cross, normalized, somme) sur 10000 itérations.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
+    "testPerfQuatBatch": {"desc": "Benchmark : opérations de quaternions sur 10000 itérations.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
+    "testPerfScalarBatch": {"desc": "Benchmark : helpers mathématiques scalaires en boucle serrée.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
+    "testPerfGeometryBatch": {"desc": "Benchmark : requêtes géométriques représentatives en boucle serrée.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
+    "testNoGarbageScalarMathHelpers": {"desc": "Vérifie que la boucle de helpers scalaires (sign, clamp, lerp, smoothstep, biasFun…) n'alloue rien (budget 512 octets, checkGarbage(0)).", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
+    "testNoGarbageVec3InPlace": {"desc": "Vérifie que les opérations vec3 en place (setAdd2, setSub, setScaled, setComponentMul, setLerp, setCross) n'allouent rien.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
+    "testNoGarbageQuatInPlace": {"desc": "Vérifie que les opérations de quaternion en place (setMul2, setInvMul2, setMulInv2, normalize) n'allouent rien.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true},
+    "testNoGarbageScalarSingleShot": {"desc": "Vérifie que clamp, lerp, inverseLerp et smoothstep appelés une seule fois n'allouent aucune mémoire (budget 0).", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "internal": true}
+  }
+}

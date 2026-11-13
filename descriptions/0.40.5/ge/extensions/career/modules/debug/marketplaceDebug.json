@@ -1,0 +1,26 @@
+{
+  "path": "lua/ge/extensions/career/modules/debug/marketplaceDebug.lua",
+  "module": "Onglet de debug carrière « Marketplace ». Affiche les véhicules de l'inventaire (et s'ils sont en vente via career_modules_marketplace.findVehicleListing), les annonces en cours avec leurs offres (valeur, écart, durée restante) et boutons Accept/Decline, plus un bouton 'Generate Random Offer'.",
+  "notes": [
+    "Bug probable : drawDebugMenu lit les variables globales listedVehicles et offerTTL, qui ne sont définies nulle part dans ce fichier (nil) ; la section 'Current Listings' provoque une erreur ou n'affiche rien d'utile si elles ne sont pas globales ailleurs.",
+    "Outil de développement ; debugOrder = 0."
+  ],
+  "fields": {
+    "debugOrder": {"type": "number", "desc": "Ordre de tri (0)."},
+    "debugName": {"type": "string", "desc": "'Marketplace'."}
+  },
+  "functions": {
+    "drawDebugMenu": {
+      "desc": "Dessine les sections 'Vehicle Inventory', 'Current Listings' (offres avec Accept/Decline via career_modules_marketplace.acceptOffer/declineOffer) et le bouton 'Generate Random Offer' (generateOffer).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onCareerActivated": {
+      "desc": "Hook de carrière ; corps vide.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

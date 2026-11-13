@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/isWalkingEnabled.lua",
+  "module": "Nœud flowgraph « Is Walking Enabled » (catégorie repeat_instant). Indique si le joueur a le droit d'entrer dans un véhicule ou d'en sortir lui-même, d'après gameplay_walk.isTogglingEnabled(). Sorties : allowed (flow si autorisé), denied (flow sinon) et value (bool, caché). S'exécute à chaque frame.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Chaque frame : lit gameplay_walk.isTogglingEnabled() et met à jour value, allowed et denied.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+      }
+    }
+  }
+}

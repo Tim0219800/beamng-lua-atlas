@@ -1,0 +1,126 @@
+{
+  "path": "lua/ge/extensions/gameplay/tutorial/damageTracker.lua",
+  "module": "Suit les dégâts du véhicule pendant le tutoriel de carrière (et le time trial). Il s'appuie sur gameplay_util_crashDetection pour détecter la fin d'un crash, attend que le véhicule ralentisse (ou un délai maximum), puis affiche une fenêtre d'information (career_modules_tutorialPopups) et une tâche « réparer » ou « redémarrer » dans la liste de tâches. La tâche disparaît quand le véhicule est réparé ou réinitialisé.",
+  "usage": "gameplay_tutorial_damageTracker.setTrackedVehicleId(vehId)\ngameplay_tutorial_damageTracker.setEnabled(true)",
+  "notes": [
+    "Dépend de gameplay_util_crashDetection (M.dependencies).",
+    "Attente avant la fenêtre : jusqu'à 5 s (1,5 s en time trial) ou dès que la vitesse <= 3 km/h.",
+    "Après une sortie de limites (onCareerTutorialOutOfBoundsStarted), les dégâts sont ignorés pendant 8 s.",
+    "Identifiants de fenêtre : 'v2/damagedVehicleTimeTrial', 'v2/damagedVehicle' (tutoriel actif), 'v2/damagedVehicleCareer' ; chacune ne s'affiche qu'une fois par session du module.",
+    "BUG : onVehicleResetted est défini deux fois ; la seconde définition (plus simple, sans cas time trial) écrase la première, donc la gestion time trial de la première n'est jamais exécutée.",
+    "Le module ne détecte les crashs que pour le véhicule suivi (trackedVehId) ; en time trial, il suit automatiquement le véhicule du joueur."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant celle-ci : { 'gameplay_util_crashDetection' }."}
+  },
+  "functions": {
+    "setRepairGoal": {
+      "desc": "Définit la tâche « réparer » affichée après un crash (table de tâche pour la liste de tâches). nil restaure la tâche par défaut.",
+      "params": {"goal": {"type": "table|nil", "desc": "Table de tâche ({id, type, label, subtext, actionItems, done})."}},
+      "returns": []
+    },
+    "setDefaultRepairGoal": {
+      "desc": "Restaure la tâche de réparation par défaut (id 'tutorial_repairVehicleGoal', action toggleRadialMenuMulti).",
+      "params": {},
+      "returns": []
+    },
+    "setDamagePopupHandler": {
+      "desc": "Remplace l'ouverture de la fenêtre de dégâts de carrière par un handler personnalisé, appelé avec l'id de la fenêtre. Une valeur non fonctionnelle retire le handler.",
+      "params": {"handler": {"type": "function|nil", "desc": "function(popupId) appelée à la place de career_modules_tutorialPopups.introPopup."}},
+      "returns": []
+    },
+    "setTrackedVehicleId": {
+      "desc": "Fixe l'id du véhicule à suivre (pris en compte au prochain ensureTrackedVehicle, par exemple dans onUpdate).",
+      "params": {"vehicleId": {"type": "integer|nil", "desc": "Id du véhicule, nil pour ne rien suivre."}},
+      "returns": []
+    },
+    "claimNextDamagePopup": {
+      "desc": "Marque un crash comme déjà pris en charge par l'appelant : la prochaine fenêtre de dégâts sera sautée, mais la tâche de réparation restera due.",
+      "params": {},
+      "returns": []
+    },
+    "showRepairTask": {
+      "desc": "Affiche la tâche de réparation (ou de redémarrage en time trial) si le suivi est actif, qu'un crash a eu lieu et que le véhicule n'a pas encore été réparé.",
+      "params": {},
+      "returns": []
+    },
+    "setEnabled": {
+      "desc": "Active ou désactive le suivi des dégâts. À la désactivation : arrête le suivi du véhicule et retire toutes les tâches ; à l'activation : suit le véhicule et affiche la tâche si nécessaire.",
+      "params": {"value": {"type": "boolean", "desc": "true pour activer."}},
+      "returns": []
+    },
+    "debugTriggerCrash": {
+      "desc": "Simule un crash (debug) : marque hadCrash et déclenche l'attente de la fenêtre de dégâts.",
+      "params": {},
+      "returns": []
+    },
+    "cleanup": {
+      "desc": "Désactive le suivi et remet à zéro tout l'état du module (véhicule configuré, tâche, handler, drapeaux de fenêtres déjà affichées).",
+      "params": {},
+      "returns": []
+    },
+    "getHadCrash": {
+      "desc": "Indique si un crash a été détecté depuis la dernière remise à zéro.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si un crash a eu lieu."}]
+    },
+    "onUpdate": {
+      "desc": "Hook de mise à jour : s'assure que le bon véhicule est suivi, puis, si une fenêtre de dégâts est en attente, l'affiche quand le véhicule est quasi arrêté ou après le délai maximum.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel."},
+        "dtSim": {"type": "number", "desc": "Delta temps de simulation."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (utilisé pour le délai d'attente)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleCrashEnded": {
+      "desc": "Hook de crashDetection appelé à la fin d'un crash. Si le véhicule suivi est concerné (et que les dégâts ne sont pas supprimés), programme l'affichage de la fenêtre de dégâts.",
+      "params": {"crashData": {"type": "table", "desc": "Données du crash ; crashData.vehId = véhicule concerné."}},
+      "returns": [],
+      "internal": true
+    },
+    "onCareerTutorialOutOfBoundsStarted": {
+      "desc": "Hook appelé quand le joueur sort des limites : ignore les dégâts pendant 8 s, annule crash en attente et tâche de réparation.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onCareerTutorialOutOfBoundsEnded": {
+      "desc": "Hook appelé au retour dans les limites : hors time trial, si le véhicule suivi a des dégâts, réaffiche la tâche de réparation.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onClientStartMission": {
+      "desc": "Hook de début de mission : assure que le véhicule suivi est à jour si le suivi est actif.",
+      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau (non utilisé)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onRecoveryPromptRepairHereUsed": {
+      "desc": "Hook appelé quand le joueur choisit de réparer sur place : marque le véhicule comme réparé et retire les tâches.",
+      "params": {"invVehId": {"type": "integer", "desc": "Id du véhicule d'inventaire (non utilisé)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleRepaired": {
+      "desc": "Hook appelé après réparation d'un véhicule : si un crash avait eu lieu, retire les tâches de réparation.",
+      "params": {"invVehId": {"type": "integer", "desc": "Id du véhicule d'inventaire (non utilisé)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onRecoveryPromptButtonPressed": {
+      "desc": "Hook de la fenêtre de récupération : si le bouton 'restartMission' est pressé en time trial après un crash, marque comme réparé et retire les tâches.",
+      "params": {"buttonId": {"type": "string", "desc": "Identifiant du bouton pressé."}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleResetted": {
+      "desc": "Hook appelé quand un véhicule est réinitialisé : si c'est le véhicule suivi et que le suivi est actif, marque comme réparé et retire les tâches. (Définition effective : la seconde du fichier, qui écrase la première.)",
+      "params": {"vehicleId": {"type": "integer", "desc": "Id du véhicule réinitialisé."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

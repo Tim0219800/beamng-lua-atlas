@@ -1,0 +1,47 @@
+{
+  "path": "lua/ge/extensions/editor/util/vehicleFilterUtil.lua",
+  "module": "Élément d'interface de l'éditeur de missions (via editorElementHelper) pour définir un filtre de véhicules : un filtre de base (whiteList/blackList) hérité par des « réglages de probabilité », une limite maxVehicles, un attribut de population, et les options Allow Auxiliary Vehicles / Allow Loaded Trailers. À partir des filtres il génère une liste d'options de véhicules (modèle, config) grâce à `extensions/util/configListGenerator`. Le module renvoie un constructeur : `require('editor/util/vehicleFilterUtil')(element)`.",
+  "notes": [
+    "L'`element` stocke l'état : baseFilter {whiteList, blackList}, probabilitySettings, manualAdditions, manualRemovals, maxVehicles, popAttribute ('Population' par défaut), allowAuxiliaryVehicles, allowLoadedTrailers, filterByProp, filterUiData, cachedVehicleOptions.",
+    "initialize() scanne tous les modèles et configs de core_vehicles.getModelsData() pour construire les filtres disponibles. Filtres reconnus : Drivetrain, Config Type, Body Style, Transmission, Weight, Top Speed, 0-100 km/h, 0-60 mph, Power, Torque, Weight/Power, Years, Value, Brand, Country, Region, Source, Type, Derby Class, Performance Class, Off-Road Score, Propulsion, Fuel Type, Induction Type, Commercial Class.",
+    "Filtres de type 'range' (Value, Weight, Top Speed, 0-100 km/h, 0-60 mph, Power, Torque, Weight/Power, Off-Road Score, Years) avec min/max ; les autres sont de type 'set' avec une option supplémentaire 'Other...'. Source propose seulement Mod/Official.",
+    "La valeur 'Powerglow' est ignorée lors de la collecte des valeurs de propriété.",
+    "Ancien format de sauvegarde (tableau de configs avec model/config) : détecté dans setContainer() et ignoré, les réglages repartent vides.",
+    "init() lève une erreur (error) si `extensions/util/configListGenerator` ne peut pas être chargé.",
+    "Les commentaires du code indiquent que la configuration du filtre est enregistrée dans additionalAttributes plutôt que dans ctd."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Instance liée à un `element` d'éditeur.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur : mémorise l'élément et charge (une fois) le module configListGenerator.",
+          "params": {"element": {"type": "table", "desc": "Définition de l'élément UI (fieldName, _id, …)."}},
+          "internal": true
+        },
+        "initialize": {
+          "desc": "Prépare une seule fois les données de filtre (filterByProp, filterUiData), initialise baseFilter/probabilitySettings et génère la liste initiale d'options de véhicules.",
+          "internal": true
+        },
+        "setContainer": {
+          "desc": "Restaure le filtre depuis ctd[element.fieldName] (copie profonde) ou les valeurs par défaut, puis vide tous les caches pour régénération.",
+          "params": {
+            "ctd": {"type": "table", "desc": "Données du conteneur."},
+            "container": {"type": "table", "desc": "Conteneur parent (non utilisé)."}
+          }
+        },
+        "draw": {
+          "desc": "Dessine l'éditeur de filtre complet (options d'éligibilité, filtre de base, réglages de probabilité, ajouts/retraits manuels, aperçu des véhicules résultants).",
+          "params": {
+            "ctd": {"type": "table", "desc": "Données du conteneur."},
+            "container": {"type": "table", "desc": "Conteneur parent."},
+            "labelFn": {"type": "function", "desc": "Fonction appelée avec l'élément pour dessiner son libellé."}
+          },
+          "returns": [{"type": "boolean", "desc": "true si une valeur a été modifiée."}]
+        }
+      }
+    }
+  }
+}

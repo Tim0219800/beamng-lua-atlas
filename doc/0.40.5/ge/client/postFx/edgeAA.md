@@ -4,6 +4,8 @@
 
 **Accès :** `require("client/postFx/edgeAA")`
 
+Détection de contours pour l'anti-aliasing par arêtes. Crée le state block PFX_DefaultEdgeAAStateBlock, le shader PFX_EdgeAADetectShader (edgeDetect.cs.hlsl) et le PostEffect « EdgeDetectPostEffect » (activé, résolution 0,5x0,5, cible #edge, avant ObjTranslucentBin) qui lit #prepass[RT0] et la profondeur. Aucune fonction exportée.
+
 ## Appels vers le moteur (C++)
 
 - `scenetree.` `findObject`

@@ -1,0 +1,38 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/math/accumulator.lua",
+  "module": "Noeud flowgraph 'Accumulator' (categorie repeat_instant). Additionne la valeur du pin 'value' (1 par defaut) a une somme interne a chaque frame ou le pin 'add' a du flux ; 'reset' remet la somme a data.resetValue (0). Sorties : 'result' (somme) et impulsion 'changed'.",
+  "notes": [
+    "La description du pin reset dit qu'il 'a priorite sur add', mais si les deux sont actifs la valeur est d'abord remise a zero puis incrementee."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "currentSum=0, resetValue=0.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Remet la somme a resetValue et met a jour result.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Remet la somme a resetValue et met a jour result.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Applique reset, puis ajoute value si add est actif (changed=true), ecrit result.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Remet la somme a resetValue.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche la somme courante.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

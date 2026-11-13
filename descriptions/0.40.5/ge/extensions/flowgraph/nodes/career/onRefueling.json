@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/career/onRefueling.lua",
+  "module": "Nœud flowgraph « On Refueling » (catégorie repeat_instant, couleur/icône ui). Détecte les évènements de ravitaillement en carrière. Sorties : openedMenu, tankFilled, paidPrice, closedMenu (impulsions d'une frame), currentlyFueling (flow tant que le plein est en cours, via career_modules_fuel.isCurrentlyFueling) et tankPercent (number, énergie actuelle / énergie max sommées sur tous les réservoirs).",
+  "notes": ["tankPercent n'est pas mis à jour si getFuelData() renvoie nil (garde sa dernière valeur) ; division par max sans protection si max vaut 0.", "Utilise career_modules_fuel : nécessite la carrière."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Crée la table de drapeaux.", "internal": true},
+        "work": {"desc": "Chaque frame : remet à faux les pins flow, applique les drapeaux, met à jour currentlyFueling et tankPercent, efface les drapeaux.", "params": {"args": {"type": "any", "desc": "non utilisé"}}},
+        "onRefuelingStartTransaction": {"desc": "Hook : lève openedMenu.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
+        "onRefuelingStopFueling": {"desc": "Hook : lève tankFilled.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
+        "onPaidRefuelling": {"desc": "Hook : lève paidPrice.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
+        "onRefuelingEndTransaction": {"desc": "Hook : lève closedMenu.", "internal": true}
+      }
+    }
+  }
+}

@@ -4,12 +4,16 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/debug/debugSphere")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Debug Sphere » (catégorie repeat_instant, tags util/draw). Dessine chaque frame une sphère de débogage (debugDrawer:drawSphere). Entrées : pos (vec3, requis), radius (caché, 1 sur le pin, 0.25 si nil), color (caché, rose {0.91,0.05,0.48,0.5} par défaut).
+
 ## Classe `C`
+
+Classe du nœud.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:init()` |  | 23 |
-| `C:work()` |  | 26 |
+| `C:init()` | Vide. | 23 |
+| `C:work()` | Si pos est défini, dessine la sphère. | 26 |
 
 ## Appels vers le moteur (C++)
 

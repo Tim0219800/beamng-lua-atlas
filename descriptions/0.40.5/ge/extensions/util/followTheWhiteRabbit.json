@@ -1,0 +1,25 @@
+{
+  "path": "lua/ge/extensions/util/followTheWhiteRabbit.lua",
+  "module": "Petit easter egg (référence à Matrix) : une fois chargée, l'extension crée un contexte de console « neo », l'active et affiche un mini jeu d'aventure textuel. Dans ce contexte, la commande « throttle » répond « You crash. Game over. » ; les autres commandes sont ignorées.",
+  "usage": "extensions.load('util_followTheWhiteRabbit')",
+  "notes": [
+    "Le contexte de console reste sur 'neo' après le chargement ; il n'y a pas de code de sortie dans ce fichier."
+  ],
+  "functions": {
+    "onExtensionLoaded": {
+      "desc": "Appelé au chargement de l'extension : désactive l'horodatage des logs de la console, ajoute et active le contexte 'neo' puis affiche le texte d'introduction.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onConsoleExecuteCommand": {
+      "desc": "Hook appelé quand une commande est exécutée dans la console. Ignore tout contexte autre que 'neo' ; pour la commande 'throttle', affiche « You crash. Game over. ».",
+      "params": {
+        "context": {"type": "string", "desc": "Contexte de console actif"},
+        "cmd": {"type": "string", "desc": "Commande saisie"}
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

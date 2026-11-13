@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/editor/util/customFieldsUtil.lua",
+  "module": "Aide d'éditeur : widget imgui pour éditer des tags et des champs personnalisés (nom, valeur, type) d'un objet de type gameplay/util/customFields. Le module renvoie un constructeur : require('/lua/ge/extensions/editor/util/customFieldsUtil')(name, fields, options). Utile à un moddeur d'outil d'éditeur qui veut afficher la liste de tags et la table de champs, avec ajout et suppression.",
+  "usage": "local cf = require('/lua/ge/extensions/editor/util/customFieldsUtil')('monOutil', monObjetCustomFields, {presetTags = {'a','b'}})\n-- à chaque frame, dans une fenêtre imgui :\ncf:widget()",
+  "notes": ["Les options ne remplacent que les attributs déjà existants (if self[k]) : enableTags, enableFields, tagsText, fieldsText, presetTags, allowedTypes.", "Types autorisés par défaut : string et number (le code mentionne aussi boolean, vec3, quat).", "Si fields est nil, un nouvel objet gameplay/util/customFields est créé."],
+  "classes": {
+    "C": {
+      "desc": "Instance du widget de champs personnalisés.",
+      "functions": {
+        "init": {"desc": "Initialise le widget : nom unique (utilisé dans les identifiants imgui), textes, drapeaux enableTags/enableFields, liste presetTags, types autorisés ; applique les options puis setFields et refresh.", "params": {"name": {"type": "string|nil", "desc": "Nom unique de l'instance, défaut « Custom Fields »."}, "fields": {"type": "table|nil", "desc": "Objet customFields à éditer."}, "options": {"type": "table|nil", "desc": "Surcharges des attributs existants."}}, "internal": true},
+        "refresh": {"desc": "Réinitialise les zones de saisie (nom, valeur, tag) et le type courant à « string »."},
+        "setFields": {"desc": "Définit l'objet customFields édité (en crée un vide si nil).", "params": {"fields": {"type": "table|nil", "desc": "Objet customFields."}}},
+        "drawCustomFields": {"desc": "Dessine la table des champs (Nom, Valeur, Type, bouton Remove) et la ligne d'ajout avec choix du type et bouton Add."},
+        "drawTags": {"desc": "Dessine la liste des tags (clic : popup « Remove Tag »), la saisie d'un tag, le combo des presetTags et le bouton Add Tag."},
+        "addTag": {"desc": "Ajoute le tag saisi aux fields (ignoré si vide) puis vide la zone de saisie."},
+        "widget": {"desc": "Dessine les tags puis les champs, selon enableTags et enableFields."},
+        "onActivate": {"desc": "Callback pour le mode d'édition ; vide.", "internal": true},
+        "onDeactivate": {"desc": "Callback pour le mode d'édition ; vide.", "internal": true}
+      }
+    }
+  }
+}

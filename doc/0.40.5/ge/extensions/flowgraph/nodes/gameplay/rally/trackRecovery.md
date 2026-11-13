@@ -4,11 +4,20 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/trackRecovery")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Rally Mode Track Recovery » (catégorie repeat_instant, tag rally). Suit les retournements et recoveries : à chaque frame, calcule recoveryType parmi 'flip', 'recovery', 'restart' (la dernière pin active l'emporte) et appelle extensions.hook('onRallyVehicleRecovery', recoveryType). Entrées flow : flip, recovery, restart.
+
+## Remarques
+
+- Le hook est appelé à chaque frame, y compris avec recoveryType = nil quand aucune pin n'est active.
+- La description de la pin restart est « A recovery » (copier-coller).
+
 ## Classe `C`
+
+Classe du nœud.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:work()` |  | 22 |
+| `C:work()` | Détermine le type de recovery et émet le hook onRallyVehicleRecovery. | 22 |
 
 ## Hooks émis
 

@@ -1,0 +1,154 @@
+{
+  "path": "lua/ge/extensions/gameplay/tutorial/setup.lua",
+  "module": "Mise en place de la scène du didacticiel : préfabs, sites (zones de stationnement), véhicule du didacticiel (sunburst2, config apmTutorial_sunburst), placement du joueur à pied, blocage d'actions d'entrée, et réinitialisation « hors limites » avec fondu d'écran. Utilisé par gameplay_tutorial_runtime et par les étapes ; il ne retient que l'id du véhicule, pas l'objet.",
+  "notes": [
+    "Le fichier de sites chargé est /gameplay/tutorials/tutorialZones.sites.json ; les points utilisés sont tutorialCarStart, playerWalkingStart, dragPlayerStart et dragCarStart.",
+    "Les préfabs sont chargés depuis gameplay/tutorials/<id>.prefab.json et nommés <id>Prefab.",
+    "La réinitialisation hors limites passe par ui_fadeScreen : le callback est exécuté quand onScreenFadeState reçoit l'état 2.",
+    "Le véhicule du didacticiel est gelé (setFreeze), boîte en mode realistic, contact coupé à l'apparition.",
+    "Les boîtes de vitesses sont bloquées par défaut (blockedActions) ; unblockGearActions() les libère.",
+    "Le message d'avertissement hors zone est écrit en anglais en dur et n'est pas passé par le système de traduction."
+  ],
+  "fields": {
+    "tutorialVehicleId": {"type": "integer|nil", "desc": "Id du véhicule du didacticiel (nil avant spawn et après cleanup). Les étapes utilisent getObjectByID dessus."},
+    "vehicleSetupComplete": {"type": "boolean", "desc": "true quand le véhicule est prêt et le joueur placé (fin de setupPlayer)."},
+    "loadingScreenFadeoutComplete": {"type": "boolean", "desc": "true après onLoadingScreenFadeout."},
+    "outOfBoundsSystemActive": {"type": "boolean", "desc": "true après activateOutOfBoundsSystem()."},
+    "tutorialSites": {"type": "table|nil", "desc": "Sites chargés (parkingSpots, etc.) ; nil tant que loadTutorialSites n'a pas réussi."},
+    "blockedActions": {"type": "table<string, boolean>", "desc": "Actions d'entrée individuelles bloquées (gear1..8, gearN, gearR, shiftUp, shiftDown, setShifterMode : toutes à true par défaut)."},
+    "blockedActionsTemplates": {"type": "table<string, boolean>", "desc": "Groupes d'actions (aiControls, bigMap, freeCam, resetPhysics, walkingMode, vehicleSwitching…) bloqués quand la valeur est true."}
+  },
+  "functions": {
+    "setOutOfBoundsResetAllowed": {
+      "desc": "Autorise ou non la réinitialisation hors limites (à autoriser une fois les pop-ups d'accueil fermés).",
+      "params": {"allowed": {"type": "boolean", "desc": "true pour autoriser."}},
+      "returns": [],
+      "internal": false
+    },
+    "isOutOfBoundsResetAllowed": {
+      "desc": "Indique si la réinitialisation hors limites est autorisée.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": ""}],
+      "internal": false
+    },
+    "setOutOfBoundsResetHandler": {
+      "desc": "Définit le callback de réinitialisation propre à l'étape courante (sinon placePlayerBackToParkingStart est utilisé).",
+      "params": {"resetCallback": {"type": "function|nil", "desc": "Fonction sans argument."}},
+      "returns": [],
+      "internal": false
+    },
+    "activateOutOfBoundsSystem": {
+      "desc": "Active le système de limites de zone (outOfBoundsSystemActive = true).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "spawnPrefab": {
+      "desc": "Fait apparaître un préfab dans MissionGroup (canSave = false) et le mémorise pour le nettoyage.",
+      "params": {
+        "prefabPath": {"type": "string", "desc": "Chemin du fichier prefab."},
+        "pos": {"type": "vec3", "desc": "Position."},
+        "rot": {"type": "quat", "desc": "Rotation."},
+        "name": {"type": "string|nil", "desc": "Nom de l'objet ; généré (tutorial_prefab_…) si absent."}
+      },
+      "returns": [{"type": "userdata|nil", "desc": "Objet préfab, nil en cas d'échec."}],
+      "internal": false
+    },
+    "setActivePrefabs": {
+      "desc": "Active ou désactive des préfabs de gameplay/tutorials/ selon une table id -> booléen ; ne touche que ceux dont l'état change. Recharge la collision si quelque chose a changé.",
+      "params": {"prefabStates": {"type": "table<string, boolean>", "desc": "Id de préfab -> actif ou non."}},
+      "returns": [],
+      "internal": false
+    },
+    "cleanup": {
+      "desc": "Remet tout à zéro : drapeaux, handlers de reset, préfabs créés (supprimés, collision rechargée) et tutorialVehicleId.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "loadTutorialSites": {
+      "desc": "Charge le fichier de sites du didacticiel via gameplay_sites_sitesManager.loadSites et le stocke dans tutorialSites.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Sites chargés, nil en cas d'échec."}],
+      "internal": false
+    },
+    "setupVehicles": {
+      "desc": "Remet à false les drapeaux de préparation, puis fait apparaître le véhicule du didacticiel et appelle setupPlayer une fois prêt.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onLoadingScreenFadeout": {
+      "desc": "Hook appelé à la fin du fondu de l'écran de chargement ; passe loadingScreenFadeoutComplete à true.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "setupPlayer": {
+      "desc": "Met le joueur en mode marche à la position playerWalkingStart (ou à une position par défaut codée en dur) puis le replace au point de départ ; passe vehicleSetupComplete à true.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "spawnTutorialVehicle": {
+      "desc": "Fait apparaître la sunburst2 du didacticiel au site tutorialCarStart (sans y entrer), enregistre son id, règle la boîte en realistic, gèle le véhicule et coupe le contact, puis appelle thenFunction.",
+      "params": {"thenFunction": {"type": "function|nil", "desc": "Appelée quand le véhicule a répondu à la requête mainController/gearboxMode."}},
+      "returns": [{"type": "userdata|nil", "desc": "Objet véhicule, nil si l'apparition a échoué."}],
+      "internal": false
+    },
+    "unblockGearActions": {
+      "desc": "Met toutes les actions de vitesse de blockedActions à false et réapplique le filtre.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "placePlayerBackToParkingStart": {
+      "desc": "Téléporte le joueur : à pied, au site playerWalkingStart ; en véhicule, le véhicule du didacticiel à tutorialCarStart, et fait monter le joueur dedans s'il n'y est pas.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "runOutOfBoundsResetWithFade": {
+      "desc": "Lance un fondu d'écran de 0,3 s ; le callback sera exécuté à l'état 2 du fondu. Ignoré si un reset est déjà en attente.",
+      "params": {"resetCallback": {"type": "function|nil", "desc": "Callback de reset ; placePlayerBackToParkingStart si nil."}},
+      "returns": [],
+      "internal": false
+    },
+    "runCurrentStepOutOfBoundsReset": {
+      "desc": "Lance le reset hors limites avec le handler de l'étape courante, sinon avec le placement au point de départ.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "showOutOfBoundsWarning": {
+      "desc": "Affiche pendant 3 s une tâche message « Please stay inside of the evaluation zone. » dans la liste de tâches de l'interface (SetTasklistTask puis DiscardTasklistItem).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onScreenFadeState": {
+      "desc": "Hook appelé lors des changements d'état du fondu d'écran ; à l'état 2 et si un reset est en attente, exécute le callback, arrête le fondu et affiche l'avertissement.",
+      "params": {"state": {"type": "integer", "desc": "État du fondu (2 = écran complètement noirci, déduit du code)."}},
+      "returns": [],
+      "internal": true
+    },
+    "placePlayerAtDragStart": {
+      "desc": "Met le joueur à pied et le téléporte au site dragPlayerStart (ou 6 m derrière dragCarStart), orienté vers l'avant.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "placePlayerBackInTutorialVehicle": {
+      "desc": "Remet le joueur dans le véhicule du didacticiel s'il marche ou conduit autre chose.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setupBlockedActions": {
+      "desc": "Construit la liste d'actions bloquées (modèles de groupes à true + actions individuelles à true) et l'enregistre comme groupe tutorialBlockedActions du filtre d'actions du joueur 0.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

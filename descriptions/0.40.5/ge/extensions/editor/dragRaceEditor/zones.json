@@ -1,0 +1,47 @@
+{
+  "path": "lua/ge/extensions/editor/dragRaceEditor/zones.lua",
+  "module": "Éditeur de zones du drag race (zone d'un strip ou zone d'une voie), sur le même principe que les frontières du crawl editor. Il s'appuie sur la classe gameplay/sites/zone : sélection de sommets à la souris, ajout/insertion de sommets, déplacement et rotation avec le gizmo d'axes de l'éditeur, accrochage optionnel au terrain, undo/redo via editor.history. init() renvoie une instance d'éditeur ; zoneFromData/zoneToData convertissent entre table sérialisée et objet Zone.",
+  "usage": "local zones = require('/lua/ge/extensions/editor/dragRaceEditor/zones')\nlocal ed = zones.init()\ned:setZone(zones.zoneFromData(strip.stripZone), {type='stripZone', strip=strip})\n-- chaque frame : ed:draw(mouseInfo)\ned:syncBack()",
+  "notes": ["Raccourcis : Maj+clic ajoute un sommet (le premier clic ajoute un sommet si la zone est vide), Alt+clic insère au milieu d'une arête, Ctrl+clic ajoute un sommet à la sélection.", "La cible (target) est {type='stripZone', strip=…} ou {type='laneZone', strip=…, lane=…} ; syncBack écrit la zone sérialisée dans strip.stripZone ou lane.zone et marque le strip _dirty.", "Dans dragging(), le décalage du gizmo est divisé par 2 (posOffset = delta/2) : comportement tel quel dans le code, à vérifier si les sommets semblent suivre le gizmo à moitié vitesse.", "snapToTerrain est actif par défaut (hauteur via core_terrain.getTerrainHeight)."],
+  "fields": {
+    "zoneFromData": {"type": "function", "desc": "Alias de C.zoneFromData."},
+    "zoneToData": {"type": "function", "desc": "Alias de C.zoneToData."}
+  },
+  "functions": {
+    "init": {
+      "desc": "Crée et renvoie une instance d'éditeur de zone (classe C) initialisée.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "instance avec les méthodes setZone, clearZone, syncBack, draw…"}]
+    }
+  },
+  "classes": {
+    "C": {
+      "desc": "Éditeur de zone renvoyé par init(). Champs : zone, target, currentVertices (sommets sélectionnés), currentPlane, snapToTerrain.",
+      "functions": {
+        "zoneFromData": {"desc": "Fonction statique : construit une Zone depuis une table sérialisée (copie profonde ; vertices et customFields par défaut vides, donc zone vide autorisée).", "params": {"data": {"type": "table|nil", "desc": "strip.stripZone ou lane.zone"}}, "returns": [{"type": "table|nil", "desc": "instance Zone, nil si data est nil"}]},
+        "zoneToData": {"desc": "Fonction statique : sérialise une Zone via zone:onSerialize().", "params": {"zone": {"type": "table|nil", "desc": "instance Zone"}}, "returns": [{"type": "table|nil", "desc": "table sérialisée"}]},
+        "init": {"desc": "Initialise les champs (aucune zone, snapToTerrain=true).", "params": {}, "internal": true},
+        "setZone": {"desc": "Définit la zone éditée et sa cible ; réinitialise la sélection de sommets.", "params": {"zoneInstance": {"type": "table", "desc": "Zone"}, "target": {"type": "table", "desc": "{type, strip, lane}"}}},
+        "clearZone": {"desc": "Oublie la zone et la cible courantes.", "params": {}},
+        "syncBack": {"desc": "Réécrit la zone dans strip.stripZone ou lane.zone, marque le strip _dirty et signale des modifications non sauvées. Sans effet si pas de zone ou de cible.", "params": {}},
+        "findVert": {
+          "desc": "Cherche parmi des objets {pos, index} celui touché par le rayon souris (rayon de sélection = distance caméra/40) le plus proche de la caméra ; dessine aussi les sphères (orange si déjà sélectionné).",
+          "params": {"mouseInfo": {"type": "table", "desc": "camPos, rayDir…"}, "objects": {"type": "table", "desc": "objets avec pos"}},
+          "returns": [{"type": "table|nil", "desc": "objet touché"}]
+        },
+        "dropToTerrain": {
+          "desc": "Projette une position sur la hauteur du terrain (core_terrain.getTerrainHeight).",
+          "params": {"pos": {"type": "vec3", "desc": "position"}},
+          "returns": [{"type": "vec3", "desc": "nouvelle position"}, {"type": "boolean", "desc": "true si core_terrain existe"}]
+        },
+        "tryInsert": {"desc": "Cherche le milieu d'arête survolé ; au clic, insère un sommet à cet endroit (action d'historique « Insert Zone Vertex »). Demande au moins 2 sommets.", "params": {"mouseInfo": {"type": "table", "desc": "info souris"}}},
+        "input": {"desc": "Gère la saisie souris : ajout de sommet (Maj ou zone vide), insertion (Alt), sinon sélection simple ou multiple (Ctrl) de sommets.", "params": {"mouseInfo": {"type": "table", "desc": "info souris"}}},
+        "updateTransform": {"desc": "Place le gizmo d'axes au centroïde des sommets sélectionnés (ou au point du plan courant).", "params": {}},
+        "beginDrag": {"desc": "Début de déplacement du gizmo : mémorise les positions de départ.", "params": {}, "internal": true},
+        "dragging": {"desc": "Pendant le déplacement du gizmo : translate (avec accrochage terrain) ou fait pivoter les sommets sélectionnés autour de leur centroïde.", "params": {}, "internal": true},
+        "endDragging": {"desc": "Fin du déplacement : recale au terrain si activé et enregistre l'action d'historique « Manipulate Zone Vertices ».", "params": {}, "internal": true},
+        "draw": {"desc": "À appeler chaque frame en mode édition de zone : met à jour/affiche le gizmo, traite la saisie et dessine la zone en debug.", "params": {"mouseInfo": {"type": "table", "desc": "info souris (voir input.getMouseInfo)"}}}
+      }
+    }
+  }
+}

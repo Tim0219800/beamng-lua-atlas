@@ -1,0 +1,47 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/sites/fileSites.lua",
+  "module": "Nœud flowgraph « File Sites » (catégorie once_p_duration, tags scenario). Charge un fichier .sites.json via gameplay_sites_sitesManager.loadSites et le finalise. Pin d'entrée : file ; pin de sortie : sitesData (table de type sitesData) à brancher sur les nœuds Sites (location, zone, parking spot…). L'éditeur propose d'ouvrir le Sites Editor et de coder en dur le fichier actuellement ouvert. En cas d'échec, erreur de nœud « Failed to find sites file ».",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Appelé à l'arrêt de l'exécution du projet flowgraph ; libère l'état interne.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui).",
+          "internal": true
+        },
+        "init": {
+          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "internal": true,
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "gestionnaire flowgraph"
+            }
+          }
+        },
+        "onNodeReset": {
+          "desc": "Oublie les sites chargés pour forcer un nouveau chargement.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Appelé après la création des pins du nœud ; sert à ajuster les pins (modèles de valeurs, filtres de fichiers, clés dynamiques).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Au premier appel, résout le chemin (avec ou sans extension .sites.json), charge et finalise les sites, puis publie la table sur sitesData. Les appels suivants ne font rien tant que self.sites est défini.",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "arguments transmis par le moteur (non utilisés)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "path": "lua/ge/extensions/gameplay/util/routeGenerator.lua",
+  "module": "Génère procéduralement un parcours de course sur le graphe routier de la carte (map.getMap().nodes). Une marche aléatoire guidée (angle préféré selon la fluidité demandée, évitement des demi-tours et des culs-de-sac, ratios cible trail/dirt/tarmac selon la praticabilité) produit un chemin, qui est lissé, ré-échantillonné tous les 8 m, puis réduit à des checkpoints par Douglas-Peucker, décalés avant les virages serrés et validés par A* pour que le marqueur au sol suive bien la route générée. Un moddeur l'appelle avec une position de départ et une distance cible.",
+  "usage": "local chemin, checkpoints, rayons, normales, distance = gameplay_util_routeGenerator.generateRaceRoute(vec3(x, y, z), 5000, dirDepart, nil, 2)\nlocal depart = gameplay_util_routeGenerator.pickRandomRoadPoint()",
+  "notes": [
+    "Phases : 1 marche dans le graphe, 1.5 suppression des petites déviations sur routes qui se chevauchent (déviation < 15 m), 1.75 ré-échantillonnage à 8 m, 2 sélection RDP (tolérance 30 m, espacement mini 30 m), 2.5 décalage des checkpoints avant les virages > 45°, 3 validation A* des marqueurs au sol.",
+    "Valeurs par défaut : minDrivability 0,35 ; fluidité 2 (bornée à 1..3 : 1 = virages marqués, 3 = quasi droit) ; anticipation (lookAheadDistance) 300 m ; distance entre checkpoints 130 m ; rayon de checkpoint borné entre 4 et 13 m.",
+    "Les liens dont la drivability est inférieure à minDrivability sont ignorés ; les routes à sens unique ne sont parcourues que dans leur sens.",
+    "Classification des bandes : drivability < bandBoundaries[1] = trail, <= bandBoundaries[2] = dirt, sinon tarmac. targetRatios est une table {trail, dirt, tarmac} de proportions.",
+    "L'appel réinitialise le générateur aléatoire global (math.randomseed(seed or os.time())) : avec la même seed et la même carte, le résultat est reproductible, mais l'état aléatoire global du jeu est modifié.",
+    "Renvoie nil si la carte n'a aucun nœud ou si aucun nœud de départ connecté n'est trouvé.",
+    "Si `job` est fourni (job du jobsystem), la fonction appelle job.yield() entre les phases : elle doit alors tourner dans une coroutine du jobsystem.",
+    "Le premier point (départ du joueur) n'est pas renvoyé comme checkpoint."
+  ],
+  "fields": {
+    "defaultMinDrivability": {"type": "number", "desc": "0,35. Le routage du marqueur au sol doit utiliser la même valeur, sinon la phase 3 valide un itinéraire que le joueur n'aura jamais."},
+    "drivabilityPenalty": {"type": "number", "desc": "10. Pénalité de praticabilité à utiliser avec le routage de marqueur au sol."},
+    "maxCheckpointRadius": {"type": "number", "desc": "13 (m). Rayon maximal d'un checkpoint généré."}
+  },
+  "functions": {
+    "generateRaceRoute": {
+      "desc": "Génère un parcours de la longueur demandée à partir d'une position, avec checkpoints, rayons et normales.",
+      "params": {
+        "startPos": {"type": "vec3", "desc": "Position de départ."},
+        "targetDistanceMeters": {"type": "number", "desc": "Longueur visée du parcours (m)."},
+        "startDir": {"type": "vec3|nil", "desc": "Direction de départ, pour choisir le sens de la route ; sinon le nœud connecté le plus proche."},
+        "minDrivability": {"type": "number|nil", "desc": "Praticabilité minimale des liens (0,35 par défaut)."},
+        "routeSmoothness": {"type": "integer|nil", "desc": "1 à 3 (2 par défaut) ; plus c'est haut, plus le tracé est droit."},
+        "lookAheadDistance": {"type": "number|nil", "desc": "Distance d'anticipation en m (300 par défaut)."},
+        "job": {"type": "table|nil", "desc": "Job du jobsystem pour yield entre les phases."},
+        "seed": {"type": "integer|nil", "desc": "Graine aléatoire (os.time() par défaut)."},
+        "targetRatios": {"type": "table<string, number>|nil", "desc": "Proportions visées {trail, dirt, tarmac}."},
+        "bandBoundaries": {"type": "number[]|nil", "desc": "Deux seuils de drivability séparant trail/dirt/tarmac."},
+        "checkpointDistance": {"type": "number|nil", "desc": "Distance cible entre checkpoints en m (130 par défaut)."}
+      },
+      "returns": [
+        {"type": "vec3[]|nil", "desc": "Positions du chemin parcouru (grossier), nil en cas d'échec."},
+        {"type": "vec3[]", "desc": "Positions des checkpoints."},
+        {"type": "number[]", "desc": "Rayons des checkpoints (m)."},
+        {"type": "vec3[]", "desc": "Normales (direction de passage, horizontale) des checkpoints."},
+        {"type": "number", "desc": "Distance totale parcourue (m)."}
+      ],
+      "internal": false
+    },
+    "pickRandomRoadPoint": {
+      "desc": "Choisit une position aléatoire : un nœud routier au hasard, sinon un point au hasard dans la boîte du terrain, sinon l'origine.",
+      "params": {},
+      "returns": [{"type": "vec3", "desc": "Position choisie."}],
+      "internal": false
+    }
+  }
+}

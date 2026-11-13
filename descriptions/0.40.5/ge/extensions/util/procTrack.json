@@ -1,0 +1,216 @@
+{
+  "path": "lua/ge/extensions/util/procTrack.lua",
+  "module": "Générateur procédural de parcours de type gymkhana, utilisé par les scénarios de génération de piste. À partir de rectangles de départ (params.startingRects), il découpe la zone avec util/rectangleGen pour obtenir un graphe de points clés, cherche un chemin aléatoire qui les traverse (parcours en profondeur avec retour arrière), le transforme en tracé sinueux (virages, boucles, lignes droites), puis crée dans le niveau, sous un SimGroup « GymkhanaArena », la route (DecalRoad), des plots, des portes, des anneaux de béton, des barils et des waypoints BeamNGWaypoint pour le scénario courant. Une graine (seed) rend la piste reproductible ; elle peut aussi s'exprimer sous forme de mots (intToWords/wordsToInt). Les objets utilisent des modèles du niveau driver_training.",
+  "usage": "local p = extensions.util_procTrack.getDefaultParams()\np.populateFunction = function(params, scenarioParam) --[[ remplir params.startingRects ]] end\np.decoration.afterFunction = function(scenarioParam) end\nextensions.util_procTrack.makeGymkhana(p)",
+  "notes": [
+    "L'appelant doit fournir params.populateFunction(params, scenarionParam) (qui remplit params.startingRects, rootX/rootY/rootZ, etc.) et params.decoration.afterFunction(scenarionParam) ; le nom du champ est écrit « scenarionParam » (faute de frappe conservée dans le code).",
+    "Les paramètres par défaut : zone de racine (rootX, rootY, rootZ, rootAngleRad), limites de tentatives (nodeCreationCounter 5, pathCounter 15), rectModeParams (minXDist/minYDist 15 m, minNodes 6, maxNodes 27, density 0,85 pour 1000 m2, fixNodes), path (minRadius 2,5, pylonRadiusThreshold 6, probabilités de boucle et de porte, closed, lapCount), decoration (gateHeight 3, gateWidth 4,5).",
+    "Le nombre de nœuds vaut (nombre de rectangles noSplit) + surface / (1000 / density) + un aléa entre randomMin et randomMax, borné entre minNodes et maxNodes. Au-delà de 27 la génération peut devenir extrêmement longue (commentaire du code).",
+    "La recherche de chemin est un parcours en profondeur avec retour arrière sur un problème de chemin hamiltonien (NP-complet) : le pire cas est très coûteux.",
+    "La graine est un entier : sans seed, elle est tirée avec os.time puis math.random. math.randomseed(params.seed) est appelé dans checkParams.",
+    "La génération modifie le niveau (création de SimGroup, DecalRoad, TSStatic, waypoints, be:reloadCollision()) et le scénario courant (scenario.nodes, scenario.lapConfig) ; elle supprime l'ancien groupe GymkhanaArena.",
+    "Avec debug.neighbours = true (valeur par défaut) des routes de débogage blanches relient les nœuds voisins ; debug.rects est également true par défaut.",
+    "makeBarrel concatène skin sans valeur par défaut : un skin nil provoquerait une erreur Lua.",
+    "Les coordonnées locales (x, y, z) passées à getPosition sont tournées de rootAngleRad puis décalées de rootX/rootY/rootZ."
+  ],
+  "functions": {
+    "getDefaultParams": {
+      "desc": "Renvoie une nouvelle table de paramètres par défaut pour un gymkhana (voir notes).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Paramètres par défaut"}],
+      "internal": false
+    },
+    "reGenerate": {
+      "desc": "Régénère toute la piste en reprenant populateFunction, scenarionParam et afterFunction des paramètres courants, avec la graine donnée. makeGymkhana doit avoir été appelée avant.",
+      "params": {"seed": {"type": "integer|nil", "desc": "Nouvelle graine (nil : une graine aléatoire est tirée)"}},
+      "returns": [],
+      "internal": false
+    },
+    "makeGymkhana": {
+      "desc": "Fonction principale : valide les paramètres, génère les points, le chemin, la route, les plots/portes, les waypoints du scénario, puis appelle decoration.afterFunction et affiche un message avec la graine.",
+      "params": {"inParams": {"type": "table", "desc": "Paramètres (voir getDefaultParams)"}},
+      "returns": [],
+      "internal": false
+    },
+    "checkParams": {
+      "desc": "Vérifie et complète les paramètres : fixe la graine, appelle populateFunction, calcule la densité et le nombre de nœuds cible (borné par minNodes et maxNodes) et charge util/rectangleGen.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "makeBaseNodePositions": {
+      "desc": "Génère le graphe de points clés (via rectangleGen.getGraph) et, si debug.neighbours est vrai, dessine des routes de débogage entre voisins.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Graphe {nodes, start, finish}"}],
+      "internal": false
+    },
+    "makePath": {
+      "desc": "Cherche un chemin aléatoire dans le graphe, par parcours en profondeur avec retour arrière. Utilise les nœuds de départ/arrivée (drapeaux de rectangles, sinon les plus proches de params.start/finish). En mode circuit fermé, choisit un voisin du départ qui ne coupe pas le graphe.",
+      "params": {"graph": {"type": "table", "desc": "Graphe de makeBaseNodePositions"}},
+      "returns": [{"type": "table|nil", "desc": "Liste de nœuds du chemin, ou nil si aucun chemin trouvé"}],
+      "internal": false
+    },
+    "currentEdgeNotOK": {
+      "desc": "Teste si l'ajout de la prochaine arête depuis le nœud courant est interdit.",
+      "params": {
+        "current": {"type": "table", "desc": "Nœud courant"},
+        "path": {"type": "table", "desc": "Chemin en cours"},
+        "nodes": {"type": "table", "desc": "Nœuds du graphe"},
+        "finishNode": {"type": "table|nil", "desc": "Nœud d'arrivée"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si l'arête n'est pas autorisée"}],
+      "internal": false
+    },
+    "edgeCreatesSplitGraph": {
+      "desc": "Teste si l'ajout de nextNode au chemin couperait le graphe restant en parties non reliées.",
+      "params": {
+        "path": {"type": "table", "desc": "Chemin en cours"},
+        "nextNode": {"type": "table", "desc": "Nœud candidat"},
+        "nodes": {"type": "table", "desc": "Nœuds du graphe"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si le graphe serait scindé"}],
+      "internal": false
+    },
+    "isInList": {
+      "desc": "Teste si un élément est présent dans une liste.",
+      "params": {
+        "list": {"type": "table", "desc": "Liste"},
+        "element": {"type": "any", "desc": "Élément cherché"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si présent"}],
+      "internal": false
+    },
+    "createWindingPath": {
+      "desc": "Extrait du chemin les informations de tracé (angles, distances, normales), détermine les rayons et les types de nœuds (droite, courbe, boucle, porte) puis calcule les points de route.",
+      "params": {"path": {"type": "table", "desc": "Chemin de makePath"}},
+      "returns": [{"type": "table", "desc": "Nœuds avec leurs points de route (points)"}],
+      "internal": false
+    },
+    "getBaseInformationFromPath": {
+      "desc": "Extrait du chemin les informations de base : angles, distances, normales, etc.",
+      "params": {"path": {"type": "table", "desc": "Chemin de makePath"}},
+      "returns": [{"type": "table", "desc": "Nœuds enrichis"}],
+      "internal": false
+    },
+    "determineInOutAngle": {
+      "desc": "Détermine les angles d'entrée et de sortie autour des cercles (virages).",
+      "params": {"nodes": {"type": "table", "desc": "Nœuds du tracé"}},
+      "returns": [],
+      "internal": false
+    },
+    "getPathRoadNodes": {
+      "desc": "Calcule tous les points nécessaires pour créer la route autour des nœuds.",
+      "params": {"nodes": {"type": "table", "desc": "Nœuds du tracé"}},
+      "returns": [],
+      "internal": false
+    },
+    "createWindingRoad": {
+      "desc": "Crée les objets DecalRoad de la route (matériaux tread_marks_clean et road_orange_markings) dans le groupe GymkhanaArena.",
+      "params": {"nodes": {"type": "table", "desc": "Nœuds avec points de route"}},
+      "returns": [],
+      "internal": false
+    },
+    "decorateStartAndFinish": {
+      "desc": "Décore les nœuds de départ et d'arrivée.",
+      "params": {"nodes": {"type": "table", "desc": "Nœuds du tracé"}},
+      "returns": [],
+      "internal": false
+    },
+    "createPylons": {
+      "desc": "Crée les plots, portes et anneaux de béton aux nœuds (cercle ou plot central selon le rayon, porte pour une ligne droite ou un rayon nul).",
+      "params": {"nodes": {"type": "table", "desc": "Nœuds du tracé"}},
+      "returns": [],
+      "internal": false
+    },
+    "createWaypointsForScenario": {
+      "desc": "Crée les positions et angles des waypoints (objets BeamNGWaypoint directionnels) et remplit scenario.nodes / scenario.lapConfig du scénario courant.",
+      "params": {"nodes": {"type": "table", "desc": "Nœuds du tracé"}},
+      "returns": [],
+      "internal": false
+    },
+    "dist": {
+      "desc": "Distance euclidienne 2D du point (a, b) au point (x, y).",
+      "params": {
+        "a": {"type": "number", "desc": "X du premier point"},
+        "b": {"type": "number", "desc": "Y du premier point"},
+        "x": {"type": "number", "desc": "X du second point"},
+        "y": {"type": "number", "desc": "Y du second point"}
+      },
+      "returns": [{"type": "number", "desc": "Distance"}],
+      "internal": false
+    },
+    "makePylon": {
+      "desc": "Crée un plot (TSStatic barriersegment du niveau driver_training) à une position locale du parcours.",
+      "params": {
+        "pos": {"type": "number[]", "desc": "Position locale {x, y, z}"},
+        "size": {"type": "number|number[]|nil", "desc": "Échelle : nombre (hauteur, largeur 0,33) ou {x, y, z} (défaut {0.33, 0.33, 1})"},
+        "rot": {"type": "number|nil", "desc": "Rotation locale en degrés (défaut 0)"},
+        "skin": {"type": "string|nil", "desc": "Suffixe du nom de modèle (défaut vide)"}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "makeGate": {
+      "desc": "Crée une porte (TSStatic gate.dae) à une position locale.",
+      "params": {
+        "pos": {"type": "number[]", "desc": "Position locale {x, y, z}"},
+        "rot": {"type": "number|nil", "desc": "Rotation locale en degrés (défaut 0)"}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "makeConcreteRing": {
+      "desc": "Crée un anneau de béton (TSStatic ring_2m.dae) de rayon donné (minimum 1).",
+      "params": {
+        "pos": {"type": "number[]", "desc": "Position locale {x, y, z}"},
+        "radius": {"type": "number", "desc": "Rayon (échelle X et Y)"}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "makeBarrel": {
+      "desc": "Crée un baril de signalisation (TSStatic barrelmarker_<skin>.dae), tourné de 180 degrés en plus de rot.",
+      "params": {
+        "pos": {"type": "number[]", "desc": "Position locale {x, y, z}"},
+        "rot": {"type": "number|nil", "desc": "Rotation locale en degrés (défaut 0)"},
+        "skin": {"type": "string", "desc": "Suffixe du modèle (obligatoire)"}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getRotationDeg": {
+      "desc": "Convertit un angle local (degrés) en angle global en retirant la rotation de la racine du parcours.",
+      "params": {"dd": {"type": "number", "desc": "Angle local en degrés"}},
+      "returns": [{"type": "number", "desc": "Angle global en degrés"}],
+      "internal": false
+    },
+    "getPosition": {
+      "desc": "Transforme une position locale du parcours en position globale (rotation de rootAngleRad puis décalage de rootX, rootY, rootZ).",
+      "params": {
+        "xx": {"type": "number", "desc": "X local"},
+        "yy": {"type": "number", "desc": "Y local"},
+        "zz": {"type": "number", "desc": "Z local"}
+      },
+      "returns": [{"type": "table", "desc": "{x, y, z} global"}],
+      "internal": false
+    },
+    "getSeed": {
+      "desc": "Renvoie la graine de la piste courante.",
+      "params": {},
+      "returns": [{"type": "integer|nil", "desc": "Graine, ou nil si aucune piste générée"}],
+      "internal": false
+    },
+    "wordsToInt": {
+      "desc": "Convertit une suite de mots de 5 lettres (graine sous forme de mots) en entier.",
+      "params": {"word": {"type": "string", "desc": "Mots concaténés (5 lettres chacun)"}},
+      "returns": [{"type": "integer", "desc": "Graine entière"}],
+      "internal": false
+    },
+    "intToWords": {
+      "desc": "Convertit une graine entière en suite de mots de 5 lettres concaténés (base de la taille de la liste de mots).",
+      "params": {"int": {"type": "integer", "desc": "Graine"}},
+      "returns": [{"type": "string", "desc": "Mots concaténés"}],
+      "internal": false
+    }
+  }
+}

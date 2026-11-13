@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/moveVehicleToStartposition.lua",
+  "module": "Nœud flowgraph « Move Veh to Start Position » (catégorie repeat_instant, tags scenario et race). Déplace (et répare par défaut) un véhicule sur une position de départ d'un pathData. Choix de la position : pin id si fournie, sinon selon reverse/rolling parmi defaultStartPosition, reverseStartPosition, rollingStartPosition, rollingReverseStartPosition ; la pin name, si renseignée, prend le dessus (findStartPositionByName). Entrées : vehId, name, lowPrecision, pathData, id, reverse, rolling, repair. Sorties : pos (vec3), rot (quat), exists (bool).",
+  "notes": ["Si la position est introuvable, un avertissement est loggé (mgr:logEvent) et exists reste faux.", "Dans le code, la pin repair contient la faute « hidde = true » : elle n'est donc pas cachée.", "L'ancienne pin vehID est redirigée vers vehId (legacyPins)."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise self.path et désactive clearOutPinsOnStart.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
+        "_executionStarted": {"desc": "Oublie le chemin mémorisé.", "internal": true},
+        "work": {"desc": "Choisit la position de départ, appelle sp:moveResetVehicleTo(vehId, lowPrecision, repair) et écrit pos/rot en sortie.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+      }
+    }
+  }
+}

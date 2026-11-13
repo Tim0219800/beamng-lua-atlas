@@ -1,0 +1,52 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/followWaypoints.lua",
+  "module": "Nœud « AI Follow Waypoints » (couleur ai, once_f_duration). Fait suivre à un véhicule une liste de waypoints du navgraph avec ai.driveUsingPath et détecte la fin des tours. Entrées : navgraphPath (table, ou aiPath dedans), vehId (sans valeur = joueur), lapCount (caché, 1), stopAtFinish (caché, true : s'arrête précisément au dernier waypoint). Sortie : finalWp (caché, nom du dernier waypoint). Pin hérité : waypointData devenu navgraphPath. Tags : ai, path, route, waypoint, race.",
+  "notes": [
+    "Dans drawMiddle, finalWp.value est concaténé sans tostring : une valeur nil provoquerait une erreur."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Appelle onNodeReset.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Appelle onNodeReset.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Vide le chemin, remet les compteurs de tours à zéro, efface finalWp et passe à l'état « inactive ».",
+          "internal": true
+        },
+        "getVeh": {
+          "desc": "Renvoie le véhicule dont l'id est donné en entrée, ou le véhicule du joueur (getPlayerVehicle(0)) sans entrée.",
+          "internal": false
+        },
+        "workOnce": {
+          "desc": "Lit le chemin, calcule lapCount, finalWp (dernier waypoint) et envoie ai.driveUsingPath({wpTargetList, wpSpeeds, noOfLaps, aggression = 1}) ; en multi-tours, ajoute le premier waypoint à la fin ; sans stopAtFinish, fixe la vitesse du dernier waypoint à 100. Passe l'état à « started ».",
+          "internal": true
+        },
+        "work": {
+          "desc": "Pendant « started », compte un tour quand le véhicule passe dans le rayon du dernier waypoint, réarme quand il est plus proche du premier ; passe à « finished » quand lapsDone == lapCount.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche l'état, le nombre de waypoints et la cible finale.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "Constructeur de nœud."
+            },
+            "style": {
+              "type": "table",
+              "desc": "Style du nœud."
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

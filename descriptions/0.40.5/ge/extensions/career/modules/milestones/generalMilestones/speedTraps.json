@@ -1,0 +1,26 @@
+{
+  "path": "lua/ge/extensions/career/modules/milestones/generalMilestones/speedTraps.lua",
+  "module": "Jalons liés aux radars (gameplay_speedTraps) en carrière : record de vitesse atteinte devant un radar (velocitySpeedTrapMilestone, paliers 70, 90, 120, 150, 180 et 220 km/h stockés en m/s) et nombre total de déclenchements de radar par le joueur (speedTrapTriggerCounterMilestone, 10 paliers de 15 déclenchements). Les jalons par radar individuel et « tous les radars » sont désactivés (code commenté).",
+  "notes": [
+    "Bug : `M.onGeneralMilestoneClaimed = registerStastisticCallback` référence une variable qui n'existe pas dans ce fichier (copier-coller de statistic.lua) : elle vaut nil, le champ exporté est donc nil.",
+    "Le compteur de déclenchements ne s'arrête pas à maxStep (10) : getTarget(step) = step*15 n'est jamais nil, donc triggerCount continue d'augmenter et notificationStep aussi.",
+    "onSpeedTrapTriggered ignore les radars sans speedLimit et ceux déclenchés par un autre véhicule que le véhicule joueur 0.",
+    "Les vitesses sont en m/s (km/h / 3.6)."
+  ],
+  "functions": {
+    "onGeneralMilestonesCollect": {
+      "desc": "Hook : crée les deux jalons actifs (record de vitesse et compteur) avec leur sauvegarde (maxVelocityReachedByPlayer, triggerCount) et les ajoute à milestonesList.",
+      "params": {"milestonesList": {"type": "table[]", "desc": "Liste à compléter."}},
+      "internal": true
+    },
+    "onSpeedTrapTriggered": {
+      "desc": "Hook appelé quand un radar se déclenche : met à jour le record de vitesse du joueur, notifie tous les paliers de vitesse franchis, et incrémente le compteur de déclenchements.",
+      "params": {
+        "speedTrapData": {"type": "table", "desc": "Données du radar (speedLimit, subjectID...)."},
+        "playerSpeed": {"type": "number", "desc": "Vitesse mesurée en m/s."},
+        "overSpeed": {"type": "number", "desc": "Excès de vitesse (non utilisé ici)."}
+      },
+      "internal": true
+    }
+  }
+}

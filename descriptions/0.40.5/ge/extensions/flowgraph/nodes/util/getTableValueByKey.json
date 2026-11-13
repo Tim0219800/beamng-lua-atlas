@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/getTableValueByKey.lua",
+  "module": "Nœud « Get Table Value By Key » (repeat_instant). Lit une valeur dans une table à partir d'une clé (string ou number). Entrées : value (table), key. Sortie : value (any).",
+  "notes": [
+    "Si la clé est absente ou vaut false, la sortie garde sa valeur précédente au lieu d'être vidée.",
+    "Les pins d'entrée et de sortie s'appellent tous deux « value »."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "work": {
+          "desc": "Si la table est connectée, écrit table[key] dans la sortie value seulement si le résultat est non nil/false ; sinon met la sortie à nil.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

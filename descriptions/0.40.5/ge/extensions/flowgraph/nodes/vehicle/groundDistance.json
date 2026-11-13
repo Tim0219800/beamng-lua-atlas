@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/groundDistance.lua",
+  "module": "Nœud « Distance From Ground » (catégorie `repeat_instant`, tags gameplay/utils). Mesure la distance entre le point le plus bas de la boîte englobante orientée du véhicule (`getSpawnWorldOOBB`, 8 coins) et le terrain en dessous (`be:getSurfaceHeightBelow`). Pins d'entrée : `vehId`, `zOffset` (caché, défaut 10 : hauteur de départ du rayon). Sortie : `lowestDistance` (number, mètres). Option `data.drawDebug` pour afficher les valeurs.",
+  "notes": [
+    "Si aucun rayon ne touche le sol, `lowestDistance` vaut `math.huge`.",
+    "`vehId` est obligatoire (pas de repli sur le joueur)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur ; `data.drawDebug = false`.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Lance un rayon vers le bas depuis chaque coin de l'OOBB et met la plus petite distance au sol dans `lowestDistance`.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

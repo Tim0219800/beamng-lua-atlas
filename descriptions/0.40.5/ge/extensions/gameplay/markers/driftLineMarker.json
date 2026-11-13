@@ -1,0 +1,55 @@
+{
+  "path": "lua/ge/extensions/gameplay/markers/driftLineMarker.lua",
+  "module": "Marqueur de ligne de départ des défis de drift en freeroam. Il n'affiche rien lui-même : il rend visibles les objets de scène nommés (markerObjects) à l'installation, les cache au nettoyage, et, quand le véhicule du joueur entre dans le rayon de la ligne, appelle gameplay_drift_freeroam_driftSpots.detectStart(lineId). Le module renvoie {create, cluster}.",
+  "notes": [
+    "cluster : un cluster par POI (pas de fusion), id 'driftLineMarker#<poi.id>'. Lit poi.markerInfo.driftLineMarker.{pos, radius, startDir, markerObjects} et poi.lineId ; visibilityRadius = 0.",
+    "setup suppose cluster.startDir non nil (calcule la gauche et la droite de la ligne) ; sans startDir, la fonction échoue, alors que drawOnMinimap prévoit ce cas.",
+    "interactWhileMoving est ignorée quand le joueur marche (interactData.isWalking).",
+    "Les méthodes update, hide, show et createObjects sont vides.",
+    "clearObjects suppose self.cluster défini (setup appelé avant)."
+  ],
+  "functions": {
+    "create": {
+      "desc": "Fabrique un marqueur de ligne de drift (instance de C).",
+      "params": {"...": {"type": "any", "desc": "Arguments transmis à C:init (non utilisés)."}},
+      "returns": [{"type": "table", "desc": "Instance de marqueur."}],
+      "internal": false
+    },
+    "cluster": {
+      "desc": "Transforme chaque POI driftLineMarker en un cluster distinct et l'ajoute à allClusters.",
+      "params": {
+        "pois": {"type": "table[]", "desc": "POI avec markerInfo.driftLineMarker."},
+        "allClusters": {"type": "table[]", "desc": "Liste de clusters complétée en place."}
+      },
+      "internal": true
+    }
+  },
+  "classes": {
+    "C": {
+      "desc": "Marqueur de ligne de départ de drift.",
+      "functions": {
+        "init": {"desc": "Attribue un id incrémental à l'instance.", "internal": true},
+        "createObjects": {"desc": "Ne fait rien.", "internal": true},
+        "clearObjects": {"desc": "Cache (setHidden(true)) les objets de scène listés dans cluster.markerObjects.", "internal": false},
+        "hide": {"desc": "Ne fait rien.", "internal": false},
+        "show": {"desc": "Ne fait rien.", "internal": false},
+        "update": {"desc": "Ne fait rien (le dessin de debug est commenté).", "internal": true},
+        "setup": {
+          "desc": "Mémorise cluster, pos, radius, lineId et startDir, calcule les extrémités gauche et droite de la ligne (à 0.7 fois le rayon) et rend visibles les objets de markerObjects.",
+          "params": {"cluster": {"type": "table", "desc": "Cluster issu de cluster()."}},
+          "internal": true
+        },
+        "interactWhileMoving": {
+          "desc": "Appelée chaque frame : si le joueur est en véhicule dans le rayon, déclenche gameplay_drift_freeroam_driftSpots.detectStart(lineId).",
+          "params": {"interactData": {"type": "table", "desc": "Données de frame : isWalking, vehPos."}},
+          "internal": false
+        },
+        "drawOnMinimap": {
+          "desc": "Dessine sur la minimap une ligne entre les extrémités (ou un cercle si startDir est nil) en bleu (72,125,249).",
+          "params": {"td": {"type": "table", "desc": "Données de dessin (non utilisées)."}},
+          "internal": false
+        }
+      }
+    }
+  }
+}

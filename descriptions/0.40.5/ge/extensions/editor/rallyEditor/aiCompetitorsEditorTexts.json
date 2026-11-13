@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/editor/rallyEditor/aiCompetitorsEditorTexts.lua",
+  "module": "Table de textes (libellés, titres de sections, infobulles) en anglais de l'onglet « AI Competitors » de l'éditeur de rallye. Aucun code : le module ne contient que des chaînes lues par aiCompetitorsTab et aiCompetitorsEditorPlot. Utile pour retrouver le sens de chacun des 26 paramètres généraux du modèle et des traits d'un concurrent.",
+  "notes": [
+    "Dans l'interface, le trait « skill » du modèle est présenté sous le nom « Pace » (driverTraitTooltips.Pace).",
+    "Le temps de référence est, selon le texte d'aide, remplacé en jeu par le temps de la barre « silver »."
+  ],
+  "fields": {
+    "windowDescription": {"type": "string", "desc": "Titre de l'onglet : « AI Competitors Configuration »."},
+    "playerReferenceHelp": {"type": "string", "desc": "Aide du temps de référence de la spéciale (secondes), base du modèle et de l'aperçu."},
+    "driverTraitTooltips": {"type": "table<string, string>", "desc": "Infobulles des traits Pace, Consistency, Risk."},
+    "generalGroupPresentation": {"type": "table<integer, {title: string, blurb: string}>", "desc": "Titre et description des 6 groupes de paramètres généraux (même ordre que generalParamGroups du modèle)."},
+    "generalParamLabels": {"type": "table<string, string>", "desc": "Libellé affiché de chaque paramètre général (clé = nom snake_case)."},
+    "generalParamTooltips": {"type": "table<string, string>", "desc": "Infobulle de chaque paramètre général."},
+    "outcomeLabels": {"type": "table<integer, string>", "desc": "Libellés courts des 5 résultats : Clean, Push, Minor incident, Major incident, DNF."},
+    "competitorNavigationTooltip": {"type": "string", "desc": "Infobulle du sélecteur de concurrent (la sauvegarde écrit toute la liste)."},
+    "chart": {"type": "table<string, string>", "desc": "Textes du graphique : title, subtitle, legendHint, axisLabel, plotTooSmall."},
+    "previewSection": {"type": "table<string, string>", "desc": "Titre et sous-titre de la section Preview."},
+    "globalSection": {"type": "table<string, string>", "desc": "Titre et sous-titre de la section Global parameters."},
+    "referenceSection": {"type": "table<string, string>", "desc": "Textes de la section temps de référence et pilotes (title, subtitle, referenceTimeLabel)."},
+    "driverPreviewSection": {"type": "table<string, string>", "desc": "Textes de la section Driver preview (title, subtitle, emptyCompetitors)."},
+    "toolbar": {"type": "table<string, string>", "desc": "Textes de la barre d'outils : header, configPathPrefix, reload, save."}
+  }
+}

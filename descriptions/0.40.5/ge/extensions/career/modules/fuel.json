@@ -1,0 +1,97 @@
+{
+  "path": "lua/ge/extensions/career/modules/fuel.lua",
+  "module": "Transaction de ravitaillement du mode carrière à une station-service. startTransaction ouvre l'écran career.refueling, lit les réservoirs du véhicule du joueur (energyStorage), puis onUpdate fait monter l'énergie des réservoirs actifs au débit choisi, calcule le prix (prix de la station par unité, remise d'assurance éventuelle) et envoie les données à l'UI (initialFuelingData, updateFuelData). payPrice débite l'argent (ou rien pour un véhicule de travail, payé par l'entreprise), uiCancelTransaction restaure les niveaux de départ.",
+  "notes": [
+    "Unités internes en joules ; l'UI reçoit des litres (gasoline, diesel, kerosine), des kg (n2o) ou des kWh (electricEnergy) via les facteurs MJ par unité : gasoline 31.125, diesel 36.112, kerosine 34.4, n2o 8.3, electricEnergy 3.6.",
+    "Débit maximal 50 000 000 J/s (maxFuelFlowRate) multiplié par le facteur de onChangeFlowRate ; l'électrique charge à un tiers de ce débit.",
+    "Seuls les réservoirs dont le type est connu et proposé par la station (freeroam_facilities_fuelPrice.getFuelPrice non nil) sont affichés, sauf si debugIgnoreStationFuelTypeRestriction est vrai.",
+    "Le ravitaillement ne démarre que si le véhicule roule à moins de 1 m/s ; si la vitesse dépasse 2 m/s pendant la transaction, onUpdate annule la transaction.",
+    "Un véhicule d'inventaire avec loanType == 'work' ne paie pas (message « paidByCompany »).",
+    "minimumRefuelingCheck : électrique = recharge complète ; liquide <= 1 % = remis à 5 % ; message d'urgence affiché. Utile après une panne sèche.",
+    "Hooks émis : onRefuelingStartTransaction, onRefuelingStopFueling(tank), onRefuelingEndTransaction, onPaidRefuelling(price).",
+    "payPrice débloque le succès VEHICLE_REFUELLED deux fois (avant et après endTransaction) ; sans conséquence, mais redondant. Dans payPrice, le hook onPaidRefuelling reçoit overallPrice déjà remis à 0 par endTransaction.",
+    "En build non shipping, onUpdate affiche une fenêtre ImGui de debug « Fueling » avec boutons Start/Stop/Pay."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : career_career."}
+  },
+  "functions": {
+    "startTransaction": {
+      "desc": "Démarre une transaction pour le véhicule actuel de l'inventaire à la station donnée : active l'action map 'Refueling', coupe le contact (setIgnitionLevel 0), ouvre l'écran career.refueling et émet onRefuelingStartTransaction. Ne fait rien sans véhicule actuel d'inventaire.",
+      "params": {"_gasStation": {"type": "table", "desc": "Station-service ; doit contenir facility (id, name)."}}
+    },
+    "requestRefuelingTransactionData": {
+      "desc": "Demande au véhicule du joueur ses réservoirs (energyStorage) ; à la réponse, filtre les réservoirs, prépare les données et envoie initialFuelingData à l'UI."
+    },
+    "getFuelData": {
+      "desc": "Renvoie la liste des réservoirs retenus pour la transaction (energyType, name, currentEnergy, maxEnergy en joules).",
+      "returns": [{"type": "table|nil", "desc": "Liste de réservoirs, nil hors transaction."}]
+    },
+    "getFuelingData": {
+      "desc": "Renvoie, par réservoir, l'énergie ajoutée (fueledEnergy, joules) et le prix (price) de la transaction en cours.",
+      "returns": [{"type": "table", "desc": "Liste de {price, fueledEnergy}."}]
+    },
+    "isCurrentlyFueling": {
+      "desc": "Indique si au moins un réservoir est en train d'être rempli.",
+      "returns": [{"type": "boolean", "desc": "true si un remplissage est actif."}]
+    },
+    "payPrice": {
+      "desc": "Paye le total (ne fait rien si le prix est nul ou si le joueur n'a pas assez d'argent), arrête le remplissage, enregistre la dépense (career_modules_playerAttributes, statistique career/fuel/paidPrice.money), termine la transaction et émet onPaidRefuelling."
+    },
+    "onChangeFlowRate": {
+      "desc": "Hook/action d'entrée (gâchette de la pompe) : règle le débit en fraction 0 à 1 du maximum et démarre le remplissage du réservoir ; un facteur 0 l'arrête et remet le débit au maximum.",
+      "params": {
+        "factor": {"type": "number", "desc": "Fraction du débit maximal, bornée à [0, 1]."},
+        "tankIndex": {"type": "integer|nil", "desc": "Réservoir visé ; par défaut le réservoir sélectionné."}
+      }
+    },
+    "uiButtonStartFueling": {
+      "desc": "Appelé par l'UI : commence à remplir tous les réservoirs d'un type d'énergie.",
+      "params": {"energyType": {"type": "string", "desc": "gasoline, diesel, kerosine, n2o ou electricEnergy."}}
+    },
+    "uiButtonStopFueling": {
+      "desc": "Appelé par l'UI : arrête le remplissage des réservoirs d'un type (tous si nil) et applique les niveaux au véhicule.",
+      "params": {"energyType": {"type": "string|nil", "desc": "Type d'énergie."}}
+    },
+    "uiButtonStartFuelingTank": {
+      "desc": "Appelé par l'UI : sélectionne puis commence à remplir un réservoir précis.",
+      "params": {"index": {"type": "integer", "desc": "Indice (à partir de 1) dans la liste des réservoirs."}}
+    },
+    "uiButtonStopFuelingTank": {
+      "desc": "Appelé par l'UI : arrête le remplissage d'un réservoir précis.",
+      "params": {"index": {"type": "integer", "desc": "Indice du réservoir."}}
+    },
+    "uiSetSelectedTankIndex": {
+      "desc": "Appelé par l'UI : change le réservoir sélectionné (ignoré pendant un remplissage ou si l'indice est invalide).",
+      "params": {"index": {"type": "integer", "desc": "Indice du réservoir."}}
+    },
+    "uiCancelTransaction": {
+      "desc": "Annule la transaction : restaure les niveaux d'énergie de départ sur le véhicule, sans payer, et termine la transaction (retour à l'écran 'play', sauvegarde auto ou mise à jour des conditions de pièces)."
+    },
+    "sendUpdateDataToUI": {
+      "desc": "Envoie à l'UI (guihook 'updateFuelData') énergie actuelle, énergie ajoutée, prix, état actif par réservoir, prix total, possibilité de payer (canPay) et débit relatif."
+    },
+    "minimumRefuelingCheck": {
+      "desc": "Évite la panne sèche totale : pour chaque réservoir du véhicule, recharge à fond l'électrique, ou remet un réservoir quasi vide (<= 1 %) à 5 %, avec un message d'urgence.",
+      "params": {"vehId": {"type": "integer|nil", "desc": "Véhicule ; par défaut le véhicule actuel de l'inventaire."}}
+    },
+    "onUpdate": {
+      "desc": "Hook par image : annule la transaction si le véhicule bouge à plus de 2 m/s, fait avancer les réservoirs actifs (énergie, prix arrondi au centime), arrête un réservoir plein, envoie les données à l'UI toutes les 0,1 s, ajuste le son de pompe, et affiche la fenêtre ImGui de debug hors build shipping.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps de simulation (s)."}
+      },
+      "internal": true
+    },
+    "onCareerActive": {
+      "desc": "Hook appelé quand la carrière devient active ou inactive : crée les sources audio (essence et électrique) si actif.",
+      "params": {"active": {"type": "boolean", "desc": "true à l'activation."}},
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook de fin de niveau : oublie les identifiants des sons de ravitaillement.",
+      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}},
+      "internal": true
+    }
+  }
+}

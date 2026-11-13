@@ -1,0 +1,111 @@
+{
+  "path": "lua/ge/extensions/util/forestGenerator.lua",
+  "module": "Utilitaire pour créer, modifier, lister et supprimer des objets de la forêt (système Forest) du niveau chargé : arbres, buissons, rochers, etc. Au chargement, il lit l'objet forêt du niveau (core_forest.getForestObject()) et indexe les templates de ForestItemData par nom interne. Un moddeur ou un script d'éditeur s'en sert pour semer de la végétation de façon aléatoire (rectangle avec bruit bleu, ou disque) ou pour déplacer/supprimer des éléments.",
+  "usage": "local fg = extensions.util_forestGenerator\nlocal types = fg.getForestItemTypes()\nfg.createRandomForestRadial({types[1]}, 50, vec3(0,0,0), 30)",
+  "notes": [
+    "initForest() est exécuté dès le chargement du fichier : si aucun niveau (scenetree.MissionGroup) ou aucun objet forêt n'existe à ce moment, forestData reste nil et les autres fonctions échouent. Appeler initForest() de nouveau après le chargement du niveau.",
+    "Les angles de rotation sont en degrés, autour de l'axe Z uniquement. La position Z est ajustée à la hauteur du terrain s'il existe un terrain (core_terrain.getTerrain()).",
+    "createRandomForestRect/Radial insèrent le résultat de createForestItem dans la table : si un type est introuvable, createForestItem renvoie nil (rien n'est inséré, mais l'erreur est loguée par createForestItem).",
+    "clearForest ne supprime pas les éléments templates (celui dont la clé est celle du dictionnaire)."
+  ],
+  "functions": {
+    "initForest": {
+      "desc": "(Ré)initialise forestData depuis l'objet forêt du niveau, reconstruit le dictionnaire des templates par nom interne et la liste triée des types. Avertit (log W) si le niveau ou l'objet forêt est absent.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "createForestItem": {
+      "desc": "Crée un élément de forêt à partir d'un template.",
+      "params": {
+        "itemType": {"type": "string", "desc": "Nom interne du template (voir getForestItemTypes)"},
+        "pos": {"type": "vec3|nil", "desc": "Position monde (défaut vec3())"},
+        "rotDeg": {"type": "number|nil", "desc": "Rotation en degrés autour de Z (défaut 0)"},
+        "scl": {"type": "number|nil", "desc": "Échelle uniforme (défaut 1)"}
+      },
+      "returns": [{"type": "userdata|nil", "desc": "Élément créé, ou nil si le template n'existe pas (erreur loguée)"}],
+      "internal": false
+    },
+    "createRandomForestRect": {
+      "desc": "Crée amount éléments aléatoires dans un rectangle autour de pos. Les positions XY suivent un bruit bleu (getBlueNoise2d), le type est choisi au hasard dans itemTypeArray, la rotation par pas, l'échelle entre minScl et maxScl.",
+      "params": {
+        "itemTypeArray": {"type": "string[]|nil", "desc": "Types possibles (défaut : tous les templates)"},
+        "amount": {"type": "integer", "desc": "Nombre d'éléments à créer"},
+        "pos": {"type": "vec3|nil", "desc": "Centre de référence (défaut 0,0,0)"},
+        "minX": {"type": "number|nil", "desc": "Décalage minimal en X par rapport à pos (défaut -100)"},
+        "maxX": {"type": "number|nil", "desc": "Décalage maximal en X (défaut 100)"},
+        "minY": {"type": "number|nil", "desc": "Décalage minimal en Y (défaut -100)"},
+        "maxY": {"type": "number|nil", "desc": "Décalage maximal en Y (défaut 100)"},
+        "rotSteps": {"type": "number|nil", "desc": "Nombre de pas de rotation sur 360° (défaut 360, minimum 1)"},
+        "minScl": {"type": "number|nil", "desc": "Échelle minimale (défaut 0.75)"},
+        "maxScl": {"type": "number|nil", "desc": "Échelle maximale (défaut 1.25)"}
+      },
+      "returns": [{"type": "table", "desc": "Liste des éléments créés"}],
+      "internal": false
+    },
+    "createRandomForestRadial": {
+      "desc": "Crée amount éléments aléatoires dans un disque de rayon radius autour de pos (getRandomPointInCircle).",
+      "params": {
+        "itemTypeArray": {"type": "string[]|nil", "desc": "Types possibles (défaut : tous les templates)"},
+        "amount": {"type": "integer", "desc": "Nombre d'éléments à créer"},
+        "pos": {"type": "vec3|nil", "desc": "Centre du disque (défaut 0,0,0)"},
+        "radius": {"type": "number|nil", "desc": "Rayon en mètres (défaut 50)"},
+        "rotSteps": {"type": "number|nil", "desc": "Nombre de pas de rotation sur 360° (défaut 360)"},
+        "minScl": {"type": "number|nil", "desc": "Échelle minimale (défaut 0.75)"},
+        "maxScl": {"type": "number|nil", "desc": "Échelle maximale (défaut 1.25)"}
+      },
+      "returns": [{"type": "table", "desc": "Liste des éléments créés"}],
+      "internal": false
+    },
+    "updateForestItem": {
+      "desc": "Met à jour la position, la rotation Z et l'échelle d'un élément existant (forestData:updateItem).",
+      "params": {
+        "item": {"type": "userdata", "desc": "Élément de forêt existant"},
+        "pos": {"type": "vec3", "desc": "Nouvelle position"},
+        "rotDeg": {"type": "number|nil", "desc": "Rotation Z en degrés (défaut 0)"},
+        "scl": {"type": "number|nil", "desc": "Échelle (défaut 1)"}
+      },
+      "returns": [{"type": "userdata", "desc": "Élément mis à jour (retour de updateItem)"}],
+      "internal": false
+    },
+    "getForestItemTypes": {
+      "desc": "Renvoie la liste triée des noms internes des templates de forêt.",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Types d'éléments"}],
+      "internal": false
+    },
+    "getForestItemDict": {
+      "desc": "Renvoie le dictionnaire nom interne -> élément template.",
+      "params": {},
+      "returns": [{"type": "table<string, userdata>", "desc": "Templates"}],
+      "internal": false
+    },
+    "getForestItemsPolygon": {
+      "desc": "Renvoie les éléments situés dans un polygone 2D (projeté sur XY) ; sans polygone, renvoie tous les éléments.",
+      "params": {"polygon": {"type": "vec3[]|nil", "desc": "Sommets du polygone"}},
+      "returns": [{"type": "table", "desc": "Éléments de forêt"}],
+      "internal": false
+    },
+    "getForestItemsRadius": {
+      "desc": "Renvoie les éléments situés dans un cercle autour d'une position.",
+      "params": {
+        "pos": {"type": "vec3|nil", "desc": "Centre (défaut : position de la caméra)"},
+        "radius": {"type": "number|nil", "desc": "Rayon en mètres (défaut 20)"}
+      },
+      "returns": [{"type": "table", "desc": "Éléments de forêt"}],
+      "internal": false
+    },
+    "deleteForestItem": {
+      "desc": "Supprime un élément de la forêt.",
+      "params": {"item": {"type": "userdata", "desc": "Élément à supprimer"}},
+      "returns": [],
+      "internal": false
+    },
+    "clearForest": {
+      "desc": "Supprime tous les éléments de la forêt sauf les templates, puis rappelle initForest().",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

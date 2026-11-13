@@ -1,0 +1,92 @@
+{
+  "path": "lua/ge/extensions/editor/api/forest.lua",
+  "module": "API de l'éditeur pour manipuler les éléments de forêt (arbres, rochers… instanciés via ForestData). initialize(editor) ajoute sur editor des fonctions pour ajouter, retirer, mettre à jour, tourner et sélectionner des ForestItem. Les fonctions qui modifient la forêt mettent editor.forestDirty = true et appellent editor.setDirty().",
+  "notes": [
+    "updateForestItem et rotateForestSelection remplacent l'item : il faut utiliser l'objet renvoyé (updateItem renvoie un nouvel item).",
+    "rotateForestSelection n'agit que sur editor.selection.forestItem ; une seule sélection tourne autour de son axe (ou du monde selon editor.getAxisGizmoAlignment()), plusieurs tournent autour de centerPoint.",
+    "rotateForestSelection ne marque pas forestDirty lui-même.",
+    "Le commentaire de createForestItem dit « from where to remove the item » pour forestData (copié-collé), il s'agit en fait de la forêt où l'item est créé."
+  ],
+  "functions": {
+    "initialize": {
+      "desc": "Installe les fonctions de ce module sur l'objet editor.",
+      "params": {"editorInstance": {"type": "table", "desc": "Objet editor"}},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {
+    "editor": {
+      "desc": "Fonctions ajoutées à l'objet editor par initialize.",
+      "functions": {
+        "rotateForestSelection": {
+          "desc": "Applique une rotation delta aux items de forêt sélectionnés à partir de leurs transformations d'origine.",
+          "params": {
+            "forestData": {"type": "userdata", "desc": "ForestData (C++) contenant les items"},
+            "deltaEulerRotation": {"type": "vec3", "desc": "Rotation d'Euler à ajouter"},
+            "centerPoint": {"type": "vec3", "desc": "Centre de rotation (sélection multiple)"},
+            "originalTransforms": {"type": "table<integer, MatrixF>", "desc": "Transformations avant rotation, dans l'ordre de la sélection"}
+          },
+          "returns": []
+        },
+        "addForestItem": {
+          "desc": "Ajoute un ForestItem existant à la forêt.",
+          "params": {
+            "forestData": {"type": "userdata", "desc": "ForestData"},
+            "item": {"type": "userdata", "desc": "ForestItem à ajouter"}
+          },
+          "returns": []
+        },
+        "removeForestItem": {
+          "desc": "Retire un ForestItem de la forêt.",
+          "params": {
+            "forestData": {"type": "userdata", "desc": "ForestData"},
+            "item": {"type": "userdata", "desc": "ForestItem à retirer"}
+          },
+          "returns": []
+        },
+        "createForestItem": {
+          "desc": "Crée un nouvel item en prenant un item existant comme modèle, avec une transformation et une échelle.",
+          "params": {
+            "forestData": {"type": "userdata", "desc": "ForestData"},
+            "itemData": {"type": "userdata", "desc": "Données stockées d'un ForestItem existant"},
+            "transform": {"type": "MatrixF", "desc": "Nouvelle transformation"},
+            "scale": {"type": "number", "desc": "Nouvelle échelle"}
+          },
+          "returns": [{"type": "userdata", "desc": "Le ForestItem créé"}]
+        },
+        "updateForestItem": {
+          "desc": "Met à jour les informations d'une instance (données, transformation, échelle, uid).",
+          "params": {
+            "forestData": {"type": "userdata", "desc": "ForestData"},
+            "key": {"type": "any", "desc": "Clé de l'item"},
+            "keyPos": {"type": "vec3", "desc": "Position d'origine de l'item"},
+            "newData": {"type": "userdata", "desc": "Données stockées de l'item"},
+            "newTrans": {"type": "MatrixF", "desc": "Nouvelle transformation"},
+            "newScale": {"type": "number", "desc": "Nouvelle échelle"},
+            "newUid": {"type": "any", "desc": "Identifiant unique"}
+          },
+          "returns": [{"type": "userdata", "desc": "Le ForestItem mis à jour"}]
+        },
+        "setForestItemCustomData": {
+          "desc": "Définit la donnée personnalisée opaque d'un item.",
+          "params": {
+            "forestData": {"type": "userdata", "desc": "ForestData"},
+            "key": {"type": "any", "desc": "Clé de l'item"},
+            "customData": {"type": "number", "desc": "Valeur empaquetée (-1 = aucune)"}
+          },
+          "returns": [{"type": "userdata", "desc": "Le ForestItem"}]
+        },
+        "setForestItemSelected": {
+          "desc": "Marque un item comme sélectionné ou non (ne marque pas la forêt modifiée).",
+          "params": {
+            "forestData": {"type": "userdata", "desc": "ForestData"},
+            "key": {"type": "any", "desc": "Clé de l'item"},
+            "selected": {"type": "boolean", "desc": "État de sélection (déduit du code)"}
+          },
+          "returns": [{"type": "any", "desc": "Résultat de forestData:setItemSelected"}]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "path": "lua/ge/extensions/util/compileImposters.lua",
+  "module": "Outil de build hors-ligne : pour une liste de niveaux, démarre chaque niveau en freeroam, attend qu'il soit chargé puis déclenche la compilation des imposters (Engine.Render.updateImposters(true)). Un compteur lié aux logs de la console sert à attendre que le moteur ait fini de travailler. Si la durée dépasse 6000 frames sans fin de job, le jeu s'arrête (shutdown(0)).",
+  "usage": "util_compileImposters.compileImposters({'west_coast_usa', 'italy'})",
+  "notes": [
+    "L'extension se met en déchargement manuel (setExtensionUnloadMode) dans onInit.",
+    "Séquence par niveau : attente de core_levels et freeroam_freeroam, attente de l'activation des mods (onModManagerReady), 10 s, démarrage du niveau (essais toutes les 8 s), 120 s, attente d'une période sans log, updateImposters, 20 s, nouvelle attente sans log.",
+    "logCooldown : fixé à 6000 à chaque ligne de log (onConsoleLog), décrémenté à chaque frame (onPreRender) ; les attentes se terminent quand il atteint 0.",
+    "Un seul job à la fois : un second appel pendant un traitement logue une erreur et renvoie false. Sinon la fonction ne renvoie rien.",
+    "Une valeur de frame est remise à 0 aux étapes ; si frame dépasse 6000 sans être remis à 0, le jeu s'arrête (délai d'attente dépassé)."
+  ],
+  "functions": {
+    "compileImposters": {
+      "desc": "Lance le traitement d'une file de niveaux dans un job (un job à la fois).",
+      "params": {"queue": {"type": "string[]", "desc": "Noms de niveaux à traiter (passés à freeroam_freeroam.startFreeroamByName)."}},
+      "returns": [{"type": "boolean|nil", "desc": "false si un traitement est déjà en cours, sinon nil."}]
+    },
+    "onInit": {
+      "desc": "Hook d'initialisation : passe l'extension en déchargement manuel.",
+      "internal": true
+    },
+    "onPreRender": {
+      "desc": "Hook appelé avant chaque rendu : décompte logCooldown et surveille le délai maximal (6000 frames) pendant un traitement.",
+      "params": {"dt": {"type": "number", "desc": "Durée de la frame (s)."}},
+      "internal": true
+    },
+    "onModManagerReady": {
+      "desc": "Hook appelé quand le gestionnaire de mods est prêt : autorise la suite du job.",
+      "params": {"mod": {"type": "any", "desc": "Non utilisé."}},
+      "internal": true
+    },
+    "onConsoleLog": {
+      "desc": "Hook appelé à chaque ligne de log ; remet logCooldown à 6000 (le moteur est considéré actif).",
+      "params": {
+        "timer": {"type": "any", "desc": "Horodatage (non utilisé)."},
+        "lvl": {"type": "string", "desc": "Niveau de log."},
+        "origin": {"type": "string", "desc": "Origine du log."},
+        "line": {"type": "string", "desc": "Texte du log."}
+      },
+      "internal": true
+    }
+  }
+}

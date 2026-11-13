@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/telemetry/trackers/physics.lua",
+  "module": "Suiveur de télémétrie physique : rapporte les instabilités physiques avec assez de contexte pour les reproduire (évènement « physicsInstability » : modèle, config, mod d'origine, niveau, vitesse de simulation, nombre de véhicules, position et somme des dégâts de sections du véhicule) puis demande l'écriture du rapport.",
+  "notes": [
+    "Ce suiveur ne fait qu'observer : il ne met jamais instabilityHandled, donc n'interfère pas avec ce qui traite l'instabilité.",
+    "Si telemetry_vehicleInfo ne connaît pas le véhicule, rien n'est envoyé."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "telemetry_core."}
+  },
+  "functions": {
+    "onInstabilityDetected": {"desc": "Hook appelé quand une instabilité physique est détectée sur un véhicule : construit et envoie l'évènement, puis appelle telemetry_core.triggerReportWrite().", "params": {"vid": {"type": "integer", "desc": "Id du véhicule instable."}, "returnData": {"type": "table", "desc": "Table de retour des gestionnaires d'instabilité (non utilisée ici)."}}, "returns": [], "internal": true},
+    "onExtensionLoaded": {"desc": "Hook appelé au chargement : déchargement manuel.", "params": {}, "returns": [], "internal": true}
+  }
+}

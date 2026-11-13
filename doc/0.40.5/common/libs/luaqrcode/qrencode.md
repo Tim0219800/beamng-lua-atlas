@@ -4,49 +4,46 @@
 
 **Accès :** `require("libs/luaqrcode/qrencode")`
 
-The qrcode library is licensed under the 3-clause BSD license (aka "new BSD")
-To get in contact with the author, mail to <gundlach@speedata.de>.
-Please report bugs on the [github project page](http://speedata.github.com/luaqrcode/).
- Copyright (c) 2012, Patrick Gundlach
- All rights reserved.
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are met:
-   * Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in the
-     documentation and/or other materials provided with the distribution.
-   * Neither the name of the <organization> nor the
-     names of its contributors may be used to endorse or promote products
-     derived from this software without specific prior written permission.
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
- DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-Overall workflow
-The steps to generate the qrcode, assuming we already have the codeword:
-1. Determine version, ec level and mode (=encoding) for codeword
-1. Encode data
-1. Arrange data and calculate error correction code
-1. Generate 8 matrices with different masks and calculate the penalty
-1. Return qrcode with least penalty
-Each step is of course more or less complex and needs further description
-Helper functions
-We start with some helper functions
- To calculate xor we need to do that bitwise. This helper table speeds up the num-to-bit
- part a bit (no pun intended)
+luaqrcode (Patrick Gundlach / speedata, licence BSD 3 clauses) : générateur de QR codes en Lua pur. Il choisit la plus petite version (1 à 40) et le mode (numérique, alphanumérique, binaire), encode les données, calcule la correction d'erreur Reed-Solomon, génère les 8 masques et garde celui dont la pénalité est la plus faible. Il ne dessine rien : il renvoie une matrice de modules que le moddeur affiche lui-même (par exemple en UI ou texture).
+
+## Exemple
+
+```lua
+local qr = require('libs/luaqrcode/qrencode')
+local ok, matrix = qr.qrcode('https://beamng.com')
+if ok then
+  for x = 1, #matrix do for y = 1, #matrix do
+    local noir = matrix[x][y] > 0
+  end end
+end
+```
+
+## Remarques
+
+- Valeurs de la matrice : positif = module noir, négatif = module blanc (1/-1 pour les données, 2/-2 pour les motifs obligatoires). La matrice est indexée matrix[x][y], en base 1, taille carrée de 4 * version + 17 ; [1][1] est en haut à gauche.
+- qrcode renvoie (true, matrice) en cas de succès, (false, message) si les données arrangées ne sont pas un multiple de 8 bits ; les autres cas d'échec (texte trop long pour la version 40, etc.) peuvent lever une erreur (déduit du code).
+- Le paramètre mode n'est pas implémenté : le passer déclenche assert(false, 'not implemented') dans get_version_eclevel_mode_bistringlength. Le mode est choisi automatiquement : numérique si que des chiffres, alphanumérique pour [0-9A-Z $%*./:+-], sinon binaire.
+- Niveaux de correction ec_level : 1 à 4 (L, M, Q, H). Sans valeur, la fonction prend le niveau le plus élevé qui tient dans la plus petite version.
+- Le fichier contient un bloc 'if testing' qui exporte des fonctions internes si la globale testing est définie ; sinon seul qrcode est exporté.
+- Utilise le module 'bit' (LuaJIT BitOp).
 
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `libs_luaqrcode_qrencode.qrcode(str, ec_level, mode)` | The main function. We connect everything together. Remember from above:<br>1. Determine version, ec level and mode (=encoding) for codeword<br>1. Encode data<br>1. Arrange data and calculate error correction code<br>1. Generate 8 matrices with different masks and calculate the penalty<br>1. Return qrcode with least penalty<br> If ec_level or mode is given, use the ones for generating the qrcode. (mode is not implemented yet) | 1220 |
+| `libs_luaqrcode_qrencode.qrcode(str, ec_level, mode)` | Génère le QR code d'une chaîne : détermine version, niveau de correction et mode, encode les données, ajoute la correction d'erreur, puis choisit le masque de moindre pénalité. | 1220 |
+
+### Détail des paramètres
+
+#### `libs_luaqrcode_qrencode.qrcode(str, ec_level, mode)`
+
+Génère le QR code d'une chaîne : détermine version, niveau de correction et mode, encode les données, ajoute la correction d'erreur, puis choisit le masque de moindre pénalité.
+
+- `str` (*string*) : Texte à encoder.
+- `ec_level` (*integer|nil*) : Niveau de correction demandé, 1 à 4 (L, M, Q, H). Facultatif.
+- `mode` (*integer|nil*) : Non implémenté : ne pas fournir (provoque une assertion).
+- **renvoie** : boolean true si la génération a réussi.
+- **renvoie** : table<integer, table<integer, integer>>|string Matrice [x][y] des modules (positif = noir), ou message d'erreur si le premier retour est false.
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/luaqrcode/qrencode.lua`.*

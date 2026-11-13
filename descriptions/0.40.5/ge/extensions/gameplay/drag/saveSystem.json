@@ -1,0 +1,136 @@
+{
+  "path": "lua/ge/extensions/gameplay/drag/saveSystem.lua",
+  "module": "Chargement et sauvegarde des données de drag. Lit les pistes (fichiers *.strip.json et *.dragSettings.json, ou ancien format converti), reconstruit couloirs, waypoints, zones et timers, synchronise les waypoints avec les objets BeamNGWaypoint de la scène, précalcule le point d'arrêt IA, et fait apparaître/supprime les prefabs (arbre, panneaux, décorations, chemins). Gère aussi les fichiers du joueur : meilleurs temps par véhicule (carnet de dial) et historique des tickets, dans le dossier settings/ de l'utilisateur.",
+  "notes": [
+    "Fichiers écrits : settings/dragDialBest.json (meilleurs temps par hash de config), settings/dragDialHistory.jsonl (une ligne JSON par course, ajoutée en fin de fichier) et settings/dragDialTimes.json (ancien fichier, relu et migré une fois). Copie de sauvegarde carrière : <dossier de save>/dragDialTimes.json.",
+    "Les clés du carnet sont des hash du fichier de config du véhicule (FS:hashFile sur pc_file) ou 'vehicle_<id>' si indisponible ; time_1_4 sert de valeur de repli (10 s par défaut).",
+    "DEFAULT_TIMERS : reactionTime (0.178 m), time_60 (60 pi), time_330, time_1_8, time_1000, time_1_4 (important), velAt_1_8, velAt_1_4 ; distances en mètres (402.336 m = 1/4 de mile).",
+    "Les waypoints de couloir sont nommés <stripId>_wp_<type>_<couloir> dans la scène ; ceux de la piste <stripId>_<type>. Ils doivent exister dans le niveau (prefab) : le module ne les crée pas, il les renomme si besoin et relit leur transform.",
+    "Phases par défaut d'une piste : stage (dependency), countdown (dependency), race, stop. Valeurs par défaut : dragType 'headsUpRace', context 'freeroam', arbre '.500'.",
+    "normalizeTimersConfig ne conserve pas shortLabel : les timers fournis par un fichier dragSettings perdent ce champ (utilisé par le ticket), contrairement à DEFAULT_TIMERS.",
+    "Le point d'arrêt automatique de l'IA (autoStopName) est cherché dans le graphe de navigation à plus de 350 m de la ligne d'arrivée, sauf si la piste définit un waypoint drag_stop.",
+    "onCareerActive ne fait rien."
+  ],
+  "fields": {
+    "DEFAULT_TIMERS": {"type": "table[]", "desc": "Timers par défaut d'une piste : {id, label, labelKey, shortLabel, type = 'distanceTimer'|'velocity', distance (m), important}."}
+  },
+  "functions": {
+    "convertLegacyData": {
+      "desc": "Convertit l'ancien format de piste (stripInfo, strip.lanes) en structure actuelle (strip, lanes, waypoints), ajoute les timers par défaut et synchronise les waypoints avec la scène.",
+      "params": {"legacyData": {"type": "table", "desc": "Données dans l'ancien format."}},
+      "returns": [{"type": "table|nil", "desc": "Données converties, nil si legacyData est nil."}]
+    },
+    "ensureDialCache": {
+      "desc": "Charge une seule fois par session le carnet de dial (settings/dragDialTimes.json, historique .jsonl, overlay des meilleurs temps) et migre l'ancien historique hors du JSON principal.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Cache indexé par hash de config véhicule ({time_1_4, ..., history})."}]
+    },
+    "generateHashFromFile": {
+      "desc": "Hash stable de la config du véhicule (hash du fichier .pc) servant de clé pour dial et historique ; mis en cache. Retourne 'vehicle_<id>' si les détails ou le fichier sont indisponibles.",
+      "params": {"vehicleId": {"type": "integer|nil", "desc": "ID du véhicule (défaut : véhicule du joueur 0)."}},
+      "returns": [{"type": "string", "desc": "Hash ou clé de repli."}]
+    },
+    "getAllLanes": {
+      "desc": "Tous les couloirs de toutes les pistes (*.strip.json) du niveau courant, avec _stripId et _stripName ajoutés.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Couloirs."}]
+    },
+    "getAllStrips": {
+      "desc": "Données brutes de toutes les pistes *.strip.json du dossier dragstrips du niveau courant (avec _filePath).",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Pistes."}]
+    },
+    "getCurrentLevelDragPath": {
+      "desc": "Chemin /levels/<niveau>/dragstrips/ du niveau courant.",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "Chemin, nil (log E) si le niveau est inconnu."}]
+    },
+    "getCurrentSavePath": {
+      "desc": "Chemin de sauvegarde carrière courant.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "Chemin, chaîne vide hors carrière."}]
+    },
+    "getDialTimes": {
+      "desc": "Meilleurs temps par hash de config, sans l'historique ; time_1_4 vaut au moins 10 par défaut.",
+      "params": {},
+      "returns": [{"type": "table<string, table>", "desc": "Table hash vers {time_1_4, autres timers}."}]
+    },
+    "getHistory": {
+      "desc": "Historique des tickets enregistrés. Avec id, filtre sur la piste correspondante du niveau courant (par id de dragSettings, nom de fichier ou id de strip).",
+      "params": {"id": {"type": "string|nil", "desc": "Identifiant de piste/installation ; nil = tout l'historique."}},
+      "returns": [{"type": "table", "desc": "{history = tickets[]}."}]
+    },
+    "getRecentHistory": {
+      "desc": "Les count derniers tickets toutes pistes confondues, du plus récent au plus ancien (stripInfo.timestamp).",
+      "params": {"count": {"type": "integer", "desc": "Nombre maximum de tickets."}},
+      "returns": [{"type": "table[]", "desc": "Tickets."}]
+    },
+    "laneWaypointSceneName": {
+      "desc": "Nom canonique dans la scène d'un waypoint de couloir : <stripId>_wp_<type>_<couloir> (le « _wp_ » évite la collision avec les feux d'arbre).",
+      "params": {"stripId": {"type": "string", "desc": "Identifiant de piste."}, "wpType": {"type": "string", "desc": "Type de waypoint (stage, endLine...)."}, "laneIndex": {"type": "integer", "desc": "Indice du couloir."}},
+      "returns": [{"type": "string", "desc": "Nom d'objet."}]
+    },
+    "loadCompleteDragRaceData": {
+      "desc": "Charge une piste complète depuis un fichier .strip.json : couloirs (waypoints, boundary, zone, stageToEndNormalized), waypoints de piste, zone de piste, phases/prefabs/timers par défaut ; puis synchronise avec la scène.",
+      "params": {"stripId": {"type": "string", "desc": "Chemin du fichier strip JSON."}},
+      "returns": [{"type": "table|nil", "desc": "Données complètes, nil (log E) en cas d'échec de lecture."}]
+    },
+    "loadDragStripData": {
+      "desc": "Charge un fichier de réglages de piste : format modulaire (champ stripId pointant vers un .strip.json, plus dragType, context, phases, prefabs, timers) ou ancien format converti par convertLegacyData.",
+      "params": {"filepath": {"type": "string", "desc": "Chemin du fichier JSON (.dragSettings.json)."}},
+      "returns": [{"type": "table|nil", "desc": "Données de piste ou nil."}]
+    },
+    "loadPrefabs": {
+      "desc": "Fait apparaître dans la scène les prefabs utilisés de data.prefabs (christmasTree, displaySign, decorations, paths) à l'origine et stocke leur prefabId.",
+      "params": {"data": {"type": "table", "desc": "Données de piste avec prefabs[clé] = {isUsed, path, treeType}."}},
+      "returns": []
+    },
+    "onCareerActive": {
+      "desc": "Hook de carrière activée ; ne fait rien.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onSaveCurrentProfile": {
+      "desc": "Hook : à la sauvegarde du profil, copie le carnet de dial dans le dossier de sauvegarde (saveDialFile).",
+      "params": {"currentSavePath": {"type": "string|nil", "desc": "Dossier de sauvegarde courant."}},
+      "returns": [],
+      "internal": true
+    },
+    "resolveAutoStopWaypoints": {
+      "desc": "Précalcule pour chaque couloir le nom du nœud de navigation où l'IA doit s'arrêter (lane.autoStopName), à plus de 350 m de la ligne d'arrivée. Ne fait rien si la piste a un waypoint drag_stop ou si le graphe n'existe pas.",
+      "params": {"dragData": {"type": "table", "desc": "Données de piste."}},
+      "returns": []
+    },
+    "saveDialFile": {
+      "desc": "Écrit le carnet de dial dans <dir>/dragDialTimes.json.",
+      "params": {"dir": {"type": "string", "desc": "Dossier cible."}},
+      "returns": [{"type": "boolean", "desc": "Succès de l'écriture."}]
+    },
+    "saveDialTimes": {
+      "desc": "Pour chaque racer jouable, met à jour son meilleur temps (timer important) si battu, et ajoute le ticket à l'historique (mémoire et fichier .jsonl, avec configHash par pilote). Écrit settings/dragDialBest.json si un record change.",
+      "params": {"dragData": {"type": "table", "desc": "Données de course courantes."}, "timeslip": {"type": "table|nil", "desc": "Ticket à enregistrer dans l'historique."}},
+      "returns": []
+    },
+    "saveLane": {
+      "desc": "Écrit un couloir en JSON (mise en forme lisible).",
+      "params": {"lane": {"type": "table", "desc": "Couloir."}, "filePath": {"type": "string", "desc": "Fichier cible."}},
+      "returns": [{"type": "boolean", "desc": "Succès."}]
+    },
+    "saveStrip": {
+      "desc": "Écrit une piste en JSON après avoir renommé les waypoints de chaque couloir selon laneWaypointSceneName.",
+      "params": {"strip": {"type": "table", "desc": "Piste (id, lanes avec waypoints[] ayant un type)."}, "filePath": {"type": "string", "desc": "Fichier cible."}},
+      "returns": [{"type": "boolean", "desc": "Succès."}]
+    },
+    "syncDragStripWaypointsWithSceneTree": {
+      "desc": "Pour chaque waypoint de couloir et de piste, retrouve le BeamNGWaypoint de la scène à son nom canonique, le renomme si besoin, relit sa position/rotation/échelle, et calcule lane.stageToEndNormalized. Rebuild le graphe de navigation (map.reset) si un renommage a eu lieu.",
+      "params": {"dragData": {"type": "table", "desc": "Données de piste (strip.id requis)."}},
+      "returns": []
+    },
+    "unloadPrefabs": {
+      "desc": "Supprime de la scène les prefabs utilisés (par prefabId) et efface prefabId.",
+      "params": {"data": {"type": "table", "desc": "Données de piste avec prefabs."}},
+      "returns": []
+    }
+  }
+}

@@ -4,13 +4,17 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/ui/showApps")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Show Apps » (catégorie once_instant, auteur BeamNG) : affiche ou masque les apps de l'UI (hook 'ShowApps'). Entrée « value » (bool).
+
 ## Classe `C`
+
+Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:_afterTrigger()` |  | 31 |
-| `C:_executionStarted()` |  | 23 |
-| `C:workOnce()` |  | 27 |
+| `C:_afterTrigger()` | Envoie 'ShowApps' avec la valeur mémorisée. | 31 |
+| `C:_executionStarted()` | Efface la demande en attente. | 23 |
+| `C:workOnce()` | Mémorise la valeur. | 27 |
 
 **Évènements UI (guihooks.trigger) :** `ShowApps`
 

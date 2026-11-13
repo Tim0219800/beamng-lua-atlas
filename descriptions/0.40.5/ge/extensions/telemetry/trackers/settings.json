@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/telemetry/trackers/settings.lua",
+  "module": "Suiveur de télémétrie des réglages : enregistre les réglages déclarés du jeu (settings.impl.defaults) avec leur valeur courante et leur valeur par défaut, pour lire framerate et plantages en regard de ce que le joueur a demandé. Les adresses locales, chemins et listes/préréglages créés par l'utilisateur sont exclus. Un changement est rapporté au démarrage suivant ; un jeu inchangé est renvoyé tous les surveyIntervalHours (7 jours par défaut).",
+  "notes": [
+    "Réglages jamais rapportés : IngameConsoleLogBlacklist/Whitelist, WinConsoleLogBlacklist/Whitelist, mpCustomServiceURL, protocols_motionSim_address, protocols_outgauge_address, rallyCodriverVoicepackMRU, shaderGenCachePath, userColorPresets, userPaintPresets.",
+    "La reconnaissance d'un changement utilise un SHA-256 d'une sérialisation canonique (clés triées) des réglages et des valeurs par défaut ; l'empreinte est stockée avec la dernière enquête dans surveys/settingsSurvey.json (sa date de modification est la date d'envoi).",
+    "L'évènement s'appelle « settings » (surveyVersion 2) et contient settings et defaults."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "telemetry_core."}
+  },
+  "functions": {
+    "onExtensionLoaded": {"desc": "Hook appelé au chargement : passe en déchargement manuel, collecte les réglages et envoie l'enquête si elle est due ou si les réglages ont changé.", "params": {}, "returns": [], "internal": true}
+  }
+}

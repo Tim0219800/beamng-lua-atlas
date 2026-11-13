@@ -1,0 +1,11 @@
+{
+  "path": "lua/ge/extensions/ui/menuRouteLifecycleCallbacks.lua",
+  "module": "Petite extension qui relie des événements du jeu à la navigation de l'interface. Actuellement elle ne contient qu'un hook : à l'entrée en mode photo, elle ouvre la route « pause.photomode » via ui_router.",
+  "functions": {
+    "onPhotomodeEnter": {
+      "desc": "Hook appelé à l'entrée en mode photo ; navigue vers la route « pause.photomode » de l'interface.",
+      "returns": [{"type": "any", "desc": "Résultat de ui_router.navigate (déduit du code)."}],
+      "internal": true
+    }
+  }
+}

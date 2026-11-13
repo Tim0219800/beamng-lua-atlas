@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/career/addToInventory.lua",
+  "module": "Nœud flowgraph « Add To Inventory » (catégorie once_instant, couleur/icône career). Ajoute le véhicule d'id donné à l'inventaire du joueur via career_modules_inventory.addVehicle. Entrée : vehId (number). Positionne une erreur de nœud si le module carrière n'est pas chargé ou si aucun id n'est donné. Recopie le flux d'entrée sur la sortie.",
+  "notes": ["Le module d'inventaire n'existe qu'en mode carrière."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Vide.", "internal": true},
+        "workOnce": {"desc": "Ajoute le véhicule à l'inventaire ou signale une erreur, puis copie flow vers la sortie."}
+      }
+    }
+  }
+}

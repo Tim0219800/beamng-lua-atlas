@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.lua",
+  "module": "Nœud flowgraph « Race End Screen » (pas de catégorie définie). Affiche l'écran de fin de course (route UI scenario.quickrace.end) avec des boutons personnalisables. Entrées : flow, reset (impulsion), title, text (string ou table), vehId (véhicule dont on montre les stats détaillées), stats (table 'endStats'), plus une pin string par bouton défini dans l'éditeur (le libellé ; vide = bouton omis). Sorties : une pin flow par bouton, vraie pour celui cliqué. Le premier bouton non-retry est actif par défaut. Les temps détaillés viennent de core_hotlapping.getTimeInfo() et les meilleurs scores de state.raceComepleteHighscores.",
+  "notes": ["Options data : includeRetryButton (true, déclenche extensions.hook('onResetGameplay')) et includeScenarioButton (false, ajoute le bouton 'openScenarios').", "Par défaut un seul bouton 'cont' est créé, avec le libellé « Continue ».", "Le nom d'état « raceComepleteHighscores » (faute de frappe) est celui utilisé dans tout le code des nœuds de highscores.", "Le code contient un reste de commentaire fermé par « ]] » dans openDialogue (code commenté mal nettoyé).", "Le clic d'un bouton exécute une commande Lua retrouvant le nœud via core_flowgraphManager.getManagerGraphNode(mgrId, graphId, nodeId)."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise l'état (open, done, options) et les options data.", "internal": true},
+        "postInit": {"desc": "Crée le bouton par défaut 'cont' avec le libellé « Continue ».", "internal": true},
+        "_executionStarted": {"desc": "Met toutes les sorties à false et remet open/done à false.", "internal": true},
+        "drawCustomProperties": {"desc": "Panneau éditeur : renommer, supprimer, ajouter (« add ») ou retirer (« rem ») des boutons.", "returns": [{"type": "string|nil", "desc": "Raison de la modification."}], "internal": true},
+        "updateButtons": {"desc": "Recrée les pins d'entrée string et de sortie flow pour chaque bouton de self.options en préservant les liens existants.", "internal": true},
+        "_onSerialize": {"desc": "Sauvegarde la liste options.", "params": {"res": {"type": "table", "desc": "Table de sérialisation."}}, "internal": true},
+        "_onDeserialized": {"desc": "Relit options puis appelle updateButtons.", "params": {"nodeData": {"type": "table", "desc": "Données sérialisées."}}, "internal": true},
+        "_executionStopped": {"desc": "Ferme le dialogue s'il est ouvert et réinitialise l'état.", "internal": true},
+        "_afterTrigger": {"desc": "Vide.", "internal": true},
+        "reset": {"desc": "Remet done et open à false.", "internal": true},
+        "buttonPushed": {"desc": "Appelé par le clic d'un bouton : met à vrai la sortie du bouton, ferme le dialogue et marque done.", "params": {"action": {"type": "string", "desc": "Nom du bouton cliqué."}}, "internal": true},
+        "getCmd": {"desc": "Construit la chaîne de commande Lua exécutée par l'UI pour appeler buttonPushed(action).", "params": {"action": {"type": "string", "desc": "Nom du bouton."}}, "returns": [{"type": "string", "desc": "Code Lua à exécuter."}]},
+        "onResetGameplay": {"desc": "Hook : si l'écran est ouvert avec le bouton Retry, le ferme et marque done (log d'information).", "internal": true},
+        "closeDialogue": {"desc": "Navigue vers la route UI 'play' et marque l'écran fermé.", "internal": true},
+        "onClientEndMission": {"desc": "Hook de fin de mission : marque open = false.", "internal": true},
+        "openDialogue": {"desc": "Construit les boutons et les stats (titre, temps détaillés, highscores) puis navigue vers scenario.quickrace.end.", "internal": true},
+        "closed": {"desc": "Marque done = true (fermeture signalée par l'UI).", "internal": true},
+        "work": {"desc": "Gère reset et ouvre le dialogue au premier flux tant que done est faux.", "internal": true}
+      }
+    }
+  }
+}

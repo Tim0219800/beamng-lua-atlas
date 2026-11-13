@@ -1,0 +1,38 @@
+{
+  "path": "lua/ge/extensions/editor/missionEditor/previewChecker.lua",
+  "module": "Panneau « Preview » de l'éditeur de missions. Il vérifie la présence et la taille de l'image d'aperçu (preview.png/jpg/jpeg, attendue en 1920x1080, <= 1024 ko) et de la vignette (thumbnail.*, carrée entre 200 et 400 px, <= 100 ko) dans le dossier de la mission, affiche des infobulles avec les images et signale les problèmes à l'onglet Issues. Le module renvoie un constructeur : require(...)(missionEditor).",
+  "notes": [
+    "Bug : dans draw, le test de taille de la vignette compare deux fois size.y à 200 (size.y == 200 and size.y == 200) ; size.x n'est pas vérifié pour l'icône verte. getMissionIssues, lui, vérifie bien une vignette carrée entre 200 et 400 px, donc les deux contrôles ne concordent pas.",
+    "Si aucune vignette n'est trouvée mais que l'aperçu existe, l'aperçu sert de vignette (avertissement « Using Preview as Thumbnail! »).",
+    "La préférence missionEditor.general.alwaysShowScreenshots affiche en permanence les deux images dans le panneau."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance du panneau. Champs : missionEditor, mission, previewFile, previewFound, previewImage, thumbFile, thumbFound, thumbImage (objets texObj de ui/imguiUtils).",
+      "functions": {
+        "init": {
+          "desc": "Constructeur.",
+          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "internal": true
+        },
+        "setMission": {
+          "desc": "Définit la mission courante et relance checkPreview.",
+          "params": {"mission": {"type": "table", "desc": "Mission courante."}},
+          "internal": true
+        },
+        "checkPreview": {
+          "desc": "Détermine les fichiers d'aperçu et de vignette (mission.previewFile / thumbnailFile ou gameplay_missions_missions.getMissionPreviewFilepath / getThumbnailFilepath), indique s'ils sont trouvés et charge leurs textures."
+        },
+        "getMissionIssues": {
+          "desc": "Appelle setMission(m) puis renvoie les problèmes : fichier manquant (error), dimensions ou poids hors limites (warning).",
+          "params": {"m": {"type": "table", "desc": "Mission à vérifier."}},
+          "returns": [{"type": "table[]", "desc": "Liste d'éléments {label, severity}."}]
+        },
+        "draw": {
+          "desc": "Dessine les icônes d'état, les aperçus au survol, le bouton d'ouverture du dossier de la mission et la case « Always show Preview ».",
+          "internal": true
+        }
+      }
+    }
+  }
+}

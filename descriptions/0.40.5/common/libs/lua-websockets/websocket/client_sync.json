@@ -1,0 +1,21 @@
+{
+  "path": "lua/common/libs/lua-websockets/websocket/client_sync.lua",
+  "module": "Backend client WebSocket synchrone (bloquant) de lua-websockets, basé sur luasocket. Le module renvoie une fonction constructeur (aussi accessible par websocket.client.new). L'objet est étendu par websocket/sync, ce qui lui donne connect, send, receive et close. À utiliser pour un client WebSocket simple dans un script Lua du jeu.",
+  "usage": "local newClient = require('libs/lua-websockets/websocket/client_sync')\nlocal ws = newClient({timeout = 1})\nlocal ok, protocole = ws:connect('ws://127.0.0.1:8080', 'echo')\nif ok then ws:send('hello'); local msg, opcode = ws:receive() end",
+  "notes": [
+    "Bug/limitation : la variable locale ssl est fixée à nil (le require de luasec est commenté). dohandshake appelle ssl.wrap, donc une URL 'wss://' provoque une erreur Lua.",
+    "Les appels sont bloquants (timeout facultatif via ws.timeout)."
+  ],
+  "classes": {
+    "client": {
+      "desc": "Objet renvoyé par le constructeur new(ws). ws est une table d'options facultative (timeout en secondes). connect/send/receive/close proviennent de websocket/sync.",
+      "functions": {
+        "sock_connect": {"desc": "Crée un socket TCP luasocket, applique ws.timeout et se connecte. Renvoie nil et l'erreur en cas d'échec.", "params": {"host": {"type": "string", "desc": "Hôte."}, "port": {"type": "integer", "desc": "Port."}}, "internal": true},
+        "sock_send": {"desc": "Envoie des données sur le socket (luasocket send).", "internal": true},
+        "sock_receive": {"desc": "Lit des données sur le socket (luasocket receive).", "internal": true},
+        "sock_close": {"desc": "Ferme le socket.", "internal": true},
+        "dohandshake": {"desc": "Enveloppe le socket avec ssl.wrap puis lance la négociation TLS. Inutilisable en pratique car ssl vaut nil.", "params": {"ssl_params": {"type": "table", "desc": "Paramètres TLS."}}, "internal": true}
+      }
+    }
+  }
+}

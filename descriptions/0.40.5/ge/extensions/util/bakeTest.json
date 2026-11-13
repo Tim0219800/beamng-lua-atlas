@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/util/bakeTest.lua",
+  "module": "Outil de développement interne : après le démarrage d'une mission, il lance le « baker » de matériaux GPU (bakeShapeMaterialsPBR) puis l'export glTF (exportShapeToGltf) sur une liste figée de 10 bâtiments du niveau west_coast_usa, pour valider la chaîne de bout en bout. Les résultats (atlas PNG et fichier .gltf) sont écrits dans /temp/bakeTest/<nom>/.",
+  "usage": "-lua \"extensions.load('util/bakeTest')\"",
+  "notes": [
+    "Cuisson en 4096 px avec une marge (gutter) de 16 px. Une attente de 60 frames suit le démarrage de la mission pour laisser les shaders se compiler ; un mesh est traité par frame (onUpdate).",
+    "Un journal [i/n] est écrit pour chaque mesh (OK ou FAIL), puis un bilan « bakeTest DONE: n ok, m failed ».",
+    "Dépend de fonctions moteur globales (bakeShapeMaterialsPBR, exportShapeToGltf) et de fichiers .dae du niveau west_coast_usa."
+  ],
+  "functions": {
+    "onClientPostStartMission": {
+      "desc": "Hook appelé après le démarrage d'une mission : arme le traitement et lance une attente de 60 frames.",
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque frame : après l'attente, traite un mesh par frame (cuisson puis export glTF) jusqu'à la fin de la liste.",
+      "internal": true
+    }
+  }
+}

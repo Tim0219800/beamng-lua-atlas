@@ -1,0 +1,41 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/logic/wait.lua",
+  "module": "Noeud flowgraph 'Wait' (categorie logic, behaviour duration+once). Quand le flux arrive, attend 'duration' secondes (3 par defaut) avant de sortir du flux ; necessite un flux d'entree continu. Pin 'reset' (impulsion), 'useDtSim' (utilise dtSim au lieu de dtReal). Sorties : flow (apres l'attente) et impulsion 'impulse' une seule fois.",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "timer=0, running=false.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Remet timer et running a zero.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Migre l'ancien champ 'duration' vers le pin code en dur 'duration'.",
+          "internal": true
+        },
+        "updateTimer": {
+          "desc": "Si en cours, ajoute dtSim ou dtReal au timer ; a la fin arrete et emet l'impulsion.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Barre de progression et bouton Reset.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Gere flux/reset, appelle updateTimer ; flow = (timer >= duration) ET flux d'entree.",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "any",
+              "desc": "non utilise"
+            }
+          }
+        }
+      }
+    }
+  }
+}

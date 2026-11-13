@@ -1,0 +1,56 @@
+{
+  "path": "lua/common/libs/copas/copas/semaphore.lua",
+  "module": "Sous-module de la bibliothèque tierce Copas : sémaphore à compteur pour coroutines Copas. take demande des ressources (et attend si elles manquent), give en rend. Le module renvoie la table semaphore.",
+  "usage": "local sem = require(\"libs/copas/copas/semaphore\").new(3, 3, 5)\nsem:take()\n-- travail limité à 3 coroutines en parallèle\nsem:give()",
+  "notes": [
+    "new lève une erreur si max < 1 ou si le timeout est négatif ; le timeout par défaut est de 10 s ; start vaut 0 par défaut.",
+    "give plafonne à max et renvoie l'erreur « too many » en cas de dépassement."
+  ],
+  "fields": {
+    "__index": {"type": "table", "desc": "Métatable des objets sémaphore."}
+  },
+  "functions": {
+    "new": {
+      "desc": "Crée un sémaphore.",
+      "params": {
+        "max": {"type": "integer", "desc": "Nombre maximal de ressources (doit être supérieur à 0)"},
+        "start": {"type": "integer|nil", "desc": "Ressources disponibles au départ (défaut 0)"},
+        "seconds": {"type": "number|nil", "desc": "Timeout par défaut en secondes (défaut 10)"}
+      },
+      "returns": [{"type": "table", "desc": "Le sémaphore"}]
+    },
+    "give": {
+      "desc": "Rend des ressources au sémaphore (et réveille les coroutines en attente).",
+      "params": {
+        "self": {"type": "table", "desc": "Le sémaphore"},
+        "given": {"type": "integer|nil", "desc": "Nombre de ressources (défaut 1)"}
+      },
+      "returns": [
+        {"type": "boolean|nil", "desc": "true en cas de succès"},
+        {"type": "string|nil", "desc": "\"too many\" si le maximum est dépassé (le compteur est plafonné)"}
+      ]
+    },
+    "take": {
+      "desc": "Demande des ressources ; attend (en cédant la main) tant qu'il n'y en a pas assez. Avec timeout = 0, réussit ou échoue tout de suite avec « timeout ».",
+      "params": {
+        "self": {"type": "table", "desc": "Le sémaphore"},
+        "requested": {"type": "integer|nil", "desc": "Nombre demandé (défaut 1)"},
+        "timeout": {"type": "number|nil", "desc": "Délai en secondes (défaut : celui du sémaphore)"}
+      },
+      "returns": [
+        {"type": "boolean|nil", "desc": "true en cas de succès"},
+        {"type": "string|nil", "desc": "Erreur, ex. \"timeout\""}
+      ]
+    },
+    "get_count": {
+      "desc": "Nombre de ressources actuellement disponibles.",
+      "params": {"self": {"type": "table", "desc": "Le sémaphore"}},
+      "returns": [{"type": "integer", "desc": "Compteur"}]
+    },
+    "get_wait": {
+      "desc": "Manque total de ressources demandées par les coroutines en attente.",
+      "params": {"self": {"type": "table", "desc": "Le sémaphore"}},
+      "returns": [{"type": "integer", "desc": "Déficit total"}]
+    }
+  }
+}

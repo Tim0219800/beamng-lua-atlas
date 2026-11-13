@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/drivingStats.lua",
+  "module": "Nœud flowgraph « Traffic Driving Stats » (once_p_duration). Suit la route et le comportement de conduite d'un véhicule (vehId, sinon véhicule joueur) avec gameplay/traffic/roadTracking. Sorties : n1/n2 (nœuds de la route), roadOffset, roadXnorm/roadYnorm, speedRatio (vitesse / limite), collisions, faultOverSpeed/WrongWay/Reckless (0 à 1) et timers associés.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Réinitialise le nœud (appelle onNodeReset).",
+          "internal": true
+        },
+        "init": {
+          "desc": "Réinitialise le nœud (appelle onNodeReset).",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Oublie le véhicule et le suivi en cours.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Crée ou met à jour l'objet roadTracking pour le véhicule (onUpdate avec dtSim) et recopie ses valeurs sur les sorties.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

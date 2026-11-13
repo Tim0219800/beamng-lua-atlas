@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/editor/flowgraph/properties.lua",
+  "module": "Fenêtre « Properties » (fg_properties) de l'éditeur Flowgraph : inspecteur du nœud sélectionné (ou du graphe courant). Elle affiche un en-tête coloré avec renommage/couleurs personnalisés, les propriétés spécifiques du nœud (node:drawCustomProperties), sa table data, ses pins d'entrée (valeur codée en dur, modèles, visibilité) et de sortie (valeur courante _value), et les propriétés du graphe (nom, tags de macro…). Chaque changement ajoute une entrée d'historique via fgEditor.addHistory.",
+  "notes": [
+    "_drawInputField gère number (float/int, input ou slider selon pin.numericSetup, bornes min/max appliquées), string et autres types ; les valeurs ImGui sont mises en cache dans item._cdata.",
+    "La variable locale `previousNode` (upvalue du fichier) sert à appeler showProperties/hideProperties sur le nœud précédemment sélectionné ; self.previousNode (init) n'est pas utilisé ensuite.",
+    "Seul le cas « un seul nœud sélectionné » affiche les propriétés du nœud.",
+    "Les entrées sont désactivées (BeginDisabled) quand mgr.allowEditing est faux.",
+    "Dans _drawDataTable avec keysEditable, le callback de renommage de clé appelle saveCallback avec v[k] déjà mis à nil (valeur nil)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe de la fenêtre (windowName 'fg_properties', windowDescription 'Properties').",
+      "functions": {
+        "init": {"desc": "Enregistre la fenêtre (visible par défaut) et charge la texture d'en-tête art/imgui_node_header.png.", "internal": true},
+        "_drawInputField": {"desc": "Dessine un champ d'édition adapté au type de valeur et appelle saveCallback quand la saisie est validée.", "params": {"path": {"type": "string", "desc": "Identifiant unique du champ."}, "cdata": {"type": "table", "desc": "Cache des valeurs ImGui."}, "type": {"type": "string", "desc": "Type Lua de la valeur ('number', 'string', 'boolean'…)."}, "v": {"type": "any", "desc": "Valeur courante."}, "savePath": {"type": "string", "desc": "Chemin transmis au callback."}, "saveCallback": {"type": "function", "desc": "function(savePath, newValue)."}, "enterOnly": {"type": "boolean|nil", "desc": "Valider seulement avec Entrée (déduit du nom)."}, "padRight": {"type": "number|nil", "desc": "Marge droite en pixels."}, "pin": {"type": "table|nil", "desc": "Pin concerné (numericSetup)."}}},
+        "_drawDataTable": {"desc": "Dessine une table de données en deux colonnes clé/valeur (clés triées), ou une seule ligne si la seule clé est 'value'.", "params": {"path": {"type": "string", "desc": "Préfixe d'identifiants."}, "cdata": {"type": "table", "desc": "Cache ImGui."}, "v": {"type": "table", "desc": "Table éditée."}, "savePath": {"type": "string", "desc": "Chemin de base."}, "saveCallback": {"type": "function|nil", "desc": "function(savePath, newValue)."}, "keysEditable": {"type": "boolean|nil", "desc": "Permettre le renommage des clés."}}},
+        "customPropertyColor": {"desc": "Dessine un sélecteur de couleur RGBA pour une propriété personnalisée et l'écrit dans item[customName] à la fin de l'édition.", "params": {"item": {"type": "table", "desc": "Nœud ou graphe."}, "customName": {"type": "string", "desc": "Nom du champ couleur."}, "cdata": {"type": "table", "desc": "Tableau ImGui de 4 flottants."}}, "returns": [{"type": "string|nil", "desc": "Raison d'historique si modifié."}]},
+        "initCustomProperties": {"desc": "Prépare les champs d'édition du nom et des couleurs (customColor/color, iconColor) d'un élément.", "params": {"item": {"type": "table", "desc": "Nœud ou graphe."}}},
+        "drawItemHeader": {"desc": "Dessine l'en-tête coloré de l'élément avec son nom et le bouton de modification (mode_edit) du nom et des couleurs.", "params": {"item": {"type": "table", "desc": "Nœud ou graphe."}}},
+        "getFirstAllowedType": {"desc": "Renvoie le premier type (ordre alphabétique) autorisé d'une table de types ; 'number' si types est nil, 'bool' si aucun.", "params": {"types": {"type": "table<string, boolean>|nil", "desc": "Types autorisés."}}, "returns": [{"type": "string", "desc": "Nom de type."}]},
+        "drawCustomInPins": {"desc": "Dessine la section « Input Pins » éditable pour les nœuds à pins d'entrée personnalisés (allowCustomInPins).", "params": {"item": {"type": "table", "desc": "Nœud."}}},
+        "drawCustomOutPins": {"desc": "Dessine la section de pins de sortie éditable (allowCustomOutPins).", "params": {"item": {"type": "table", "desc": "Nœud."}}},
+        "drawHardTemplates": {"desc": "Dessine le combo « ... » proposant des modèles de valeur codée en dur pour un pin (sélection de fichier si pin.allowFiles, chemin relatif au dossier du projet).", "params": {"pin": {"type": "table", "desc": "Pin d'entrée."}, "item": {"type": "table", "desc": "Nœud."}}},
+        "drawInPins": {"desc": "Dessine la section « Input Pins » : visibilité, icône de type, nom, valeur codée en dur ou lien.", "params": {"item": {"type": "table", "desc": "Nœud."}}},
+        "drawOutPins": {"desc": "Dessine la section « Output Pins » : visibilité (masquable si non lié), type, nom et valeur courante (pin._value).", "params": {"item": {"type": "table", "desc": "Nœud."}}},
+        "drawItemProperties": {"desc": "Dessine la table data de l'élément puis ses pins d'entrée et de sortie (éditables ou non).", "params": {"itemType": {"type": "string", "desc": "Type d'élément (non utilisé directement)."}, "item": {"type": "table", "desc": "Nœud."}}},
+        "draw": {"desc": "Dessine la fenêtre : surligne les liens des nœuds sélectionnés, gère le changement de sélection, affiche le nœud sélectionné ou les propriétés du graphe.", "params": {"dt": {"type": "number", "desc": "Delta temps réel (s), passé à node:drawCustomProperties."}}, "internal": true},
+        "unselect": {"desc": "Appelle hideProperties sur le nœud précédemment affiché et réinitialise les états d'édition. Appelée à la fermeture de la fenêtre.", "internal": true},
+        "showAvailableMacroTags": {"desc": "Liste les tags de macro du projet (mgr.macroTags) avec renommage et suppression."},
+        "drawGraphProperties": {"desc": "Dessine les propriétés d'un graphe (nom, avec mise à jour du nœud intégré pour une macro, etc.).", "params": {"graph": {"type": "table", "desc": "Graphe courant."}}}
+      }
+    }
+  }
+}

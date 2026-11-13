@@ -1,0 +1,54 @@
+{
+  "path": "lua/ge/extensions/ui/multiseat/generalSettings.lua",
+  "module": "Fournisseur de réglages « general » de la fenêtre de réglages multiseat. Il déclare les champs : même véhicule pour tous, rassembler les véhicules, replacer tous les joueurs, couleur automatique, marqueurs de joueurs et disposition de l'écran partagé pour 2 à 9+ joueurs ; puis il gère leurs actions, changements, validation et application via les hooks onXxxMultiseatGameSetting(s).",
+  "notes": [
+    "Réglages écrits dans settings : multiseatAutomaticColor et multiseatLayout2 à multiseatLayout9 (9 = « 9+ », seule la valeur « automatic » est acceptée). Le réglage multiseatTags (marqueurs) est écrit tout de suite (applyMode = immediate).",
+    "Une disposition « shared » stockée est convertie en « automatic » à l'affichage et refusée à la validation.",
+    "Raisons de refus de validation : missing_general_multiseat_settings, invalid_player_marker_mode, invalid_automatic_color_mode, invalid_multiseat_layout.",
+    "Après application, les champs gatherVehicles et reseatAllPlayers sont remis à leur valeur neutre (« » et false) via result.valueOverrides."
+  ],
+  "functions": {
+    "onGetMultiseatGameSettings": {
+      "desc": "Ajoute à providers le fournisseur « general » (placement afterVehicles, applyMode apply) avec tous ses champs.",
+      "params": {"providers": {"type": "table[]", "desc": "Liste de fournisseurs de réglages à compléter."}},
+      "internal": true
+    },
+    "onMultiseatGameSettingAction": {
+      "desc": "Gère l'action du champ sameVehicleForEveryone : « selector » ouvre le sélecteur de véhicule pour tous les joueurs, sinon le véhicule choisi est préparé pour tous. Le résultat est écrit dans result.success. Ignoré pour les autres fournisseurs.",
+      "params": {
+        "providerId": {"type": "string", "desc": "Identifiant du fournisseur (« general »)."},
+        "fieldId": {"type": "string", "desc": "Identifiant du champ."},
+        "result": {"type": "table", "desc": "Table de résultat (success)."},
+        "value": {"type": "any", "desc": "Valeur choisie."}
+      },
+      "internal": true
+    },
+    "onMultiseatGameSettingChanged": {
+      "desc": "Réagit à un changement de champ : automaticColor est préparé pour tous les joueurs ; showPlayerMarkers est appliqué immédiatement (core_multiseat.setPlayerMarkersEnabled, sinon réglage multiseatTags).",
+      "params": {
+        "providerId": {"type": "string", "desc": "Identifiant du fournisseur."},
+        "fieldId": {"type": "string", "desc": "Identifiant du champ."},
+        "value": {"type": "any", "desc": "Nouvelle valeur."}
+      },
+      "internal": true
+    },
+    "onValidateMultiseatGameSettings": {
+      "desc": "Valide les réglages préparés : présence du fournisseur, booléens showPlayerMarkers et automaticColor, dispositions valides pour chaque nombre de joueurs. Écrit result.success = false et result.reason en cas d'erreur.",
+      "params": {
+        "stagedSettings": {"type": "table", "desc": "Réglages préparés par fournisseur."},
+        "_activeSettings": {"type": "table", "desc": "Réglages actifs (non utilisé)."},
+        "result": {"type": "table", "desc": "Table de résultat (success, reason)."}
+      },
+      "internal": true
+    },
+    "onApplyMultiseatGameSettings": {
+      "desc": "Enregistre couleur automatique et dispositions, rafraîchit render_splitScreen, rassemble les véhicules (gatherVehicles) et replace les joueurs (reseatAllPlayers) si demandé, puis remet ces deux champs à zéro via result.valueOverrides.",
+      "params": {
+        "stagedSettings": {"type": "table", "desc": "Réglages préparés par fournisseur."},
+        "_activeSettings": {"type": "table", "desc": "Réglages actifs (non utilisé)."},
+        "result": {"type": "table", "desc": "Table de résultat (valueOverrides)."}
+      },
+      "internal": true
+    }
+  }
+}

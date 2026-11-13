@@ -1,0 +1,81 @@
+{
+  "path": "lua/ge/extensions/career/modules/loanerVehicles.lua",
+  "module": "Véhicules prêtés (loaners) par les organisations de livraison en carrière. Il construit les offres affichées dans l'UI (formatLoanerOfferForUi), gère la sélection puis le spawn de véhicules prêtés via une séquence util_stepHandler (fondu, spawn, placement sur une place de parking, ajout à l'inventaire avec owned = false, fondu retour), le retour des véhicules et une surveillance : un véhicule « work » laissé à plus de 100 m pendant 300 s est rendu automatiquement.",
+  "notes": [
+    "Réglages : walkAwayRadius 100 m, comeBackRadius 95 m, walkAwayTimeLimit 300 s, avertissement à 60 s restantes.",
+    "Un véhicule loaner est ajouté à l'inventaire avec owningOrganization (facility.associatedOrganization) et loanType (offer.loanType, \"work\").",
+    "Rendre un véhicule work endommagé (inventoryVehNeedsRepair) coûte la réputation returnLoanerDamaged (-20) de l'organisation et affiche un toast.",
+    "Offre non disponible si : pas de place libre, déjà un loaner non-remorque de cette organisation (limite 1, y compris ceux en attente de spawn), réputation insuffisante, ou niveau de livraison (branche delivery) insuffisant. Une offre déjà cochée reste activée.",
+    "Kilométrage proposé : mileage de l'offre selon le niveau de réputation, plus environ 5,8 * (1 ± 10 %) par seconde écoulée depuis la création de la sauvegarde (soit 500 km par jour selon le commentaire du code).",
+    "Bug : M.spawnAndLoanVehicle = spawnAndLoanVehicle référence une variable non définie : le champ vaut nil.",
+    "spawnAllOffers : la dernière étape ne traite que la première offre de markedForSpawningLoaners (next) pour orienter la caméra, puis vide la liste.",
+    "onUpdate utilise `break` après chaque action : un seul véhicule est traité par frame."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : util_stepHandler."},
+    "spawnAndLoanVehicle": {"type": "nil", "desc": "Toujours nil : variable inexistante dans le fichier (bug)."}
+  },
+  "functions": {
+    "markForSpawning": {
+      "desc": "Bascule la sélection d'une offre : l'ajoute à la liste des loaners à faire apparaître, ou la retire si elle y était déjà.",
+      "params": {"offer": {"type": "table", "desc": "Offre (id, model, config, sourceFacility, loanType, vehMileage)."}},
+      "internal": false
+    },
+    "unmarkAllForSpawning": {
+      "desc": "Vide la liste des offres sélectionnées.",
+      "params": {},
+      "internal": false
+    },
+    "spawnAllOffers": {
+      "desc": "Fait apparaître toutes les offres sélectionnées avec un fondu : spawn, initialisation des conditions de pièces (kilométrage), placement sur la meilleure place de parking (remorques ou non), ajout à l'inventaire. Ne fait rien si rien n'est sélectionné.",
+      "params": {},
+      "internal": false
+    },
+    "returnVehicle": {
+      "desc": "Rend un véhicule prêté : met à jour les conditions de pièces s'il est présent dans le monde, applique la pénalité de réputation si le véhicule work est endommagé, puis le retire de l'inventaire et appelle callback.",
+      "params": {
+        "inventoryId": {"type": "integer", "desc": "Id d'inventaire du véhicule."},
+        "callback": {"type": "function|nil", "desc": "Appelée une fois le véhicule retiré."}
+      },
+      "internal": false
+    },
+    "getLoanedVehiclesByOrg": {
+      "desc": "Liste (copies profondes avec miniature) les véhicules de l'inventaire prêtés par l'organisation donnée.",
+      "params": {"organizationId": {"type": "string", "desc": "Id de l'organisation."}},
+      "returns": [{"type": "table[]", "desc": "Infos de véhicules."}],
+      "internal": false
+    },
+    "getLoaningOrgsOfVehicle": {
+      "desc": "Renvoie les organisations propriétaires du véhicule et, s'il est attelé, du véhicule tracteur non-remorque.",
+      "params": {"vehId": {"type": "integer", "desc": "Id d'objet du véhicule."}},
+      "returns": [{"type": "table<string, boolean>", "desc": "Ensemble des ids d'organisations."}],
+      "internal": false
+    },
+    "formatSpawnedLoanersForUi": {
+      "desc": "Prépare pour l'UI la liste des loaners déjà dans l'inventaire : part de l'organisation (loanerCut), nom, kilométrage, type véhicule/remorque, capacité en fluides.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Entrées d'UI (isSpawnedLoaner = true)."}],
+      "internal": false
+    },
+    "formatLoanerOfferForUi": {
+      "desc": "Prépare pour l'UI les offres de prêt d'une installation : disponibilité (enabled), raison d'indisponibilité, infos de déblocage, kilométrage, capacité, miniature.",
+      "params": {"facility": {"type": "table", "desc": "Installation de livraison (associatedOrganization, loanerTrailerSpots, loanerNonTrailerSpots, id)."}},
+      "returns": [{"type": "table[]|nil", "desc": "Offres, nil si l'organisation est inconnue."}],
+      "internal": false
+    },
+    "onVehicleAdded": {
+      "desc": "Hook appelé à l'ajout d'un véhicule à l'inventaire : débloque l'étape d'attente de la séquence de spawn.",
+      "params": {"id": {"type": "integer", "desc": "Id du véhicule."}},
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook de frame : surveille l'éloignement des véhicules work (avertissement, puis retour automatique après le délai).",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Temps de simulation (s)."},
+        "dtRaw": {"type": "number", "desc": "Temps brut (s)."}
+      },
+      "internal": true
+    }
+  }
+}

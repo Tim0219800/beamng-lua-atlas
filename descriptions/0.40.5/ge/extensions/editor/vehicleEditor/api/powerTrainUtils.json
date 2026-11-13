@@ -1,0 +1,34 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/api/powerTrainUtils.lua",
+  "module": "Fonctions d'affichage imgui partagées par l'inspecteur de transmission du Vehicle Editor (vePowerTrain). Elles montrent les données jbeam d'un périphérique (arbre récursif) et ses données live (vitesses angulaires, couples, rapports, embrayage…), avec des champs spécifiques selon le type de device (combustionEngine, differential, shaft, manualGearbox, frictionClutch, torqueConverter, automaticGearbox, cvtGearbox, dctGearbox).",
+  "notes": [
+    "Les valeurs `device` viennent de powertrain.serializeDevicesInfo() côté véhicule, copiées dans vEditor.powertrainDevices.",
+    "showJbeamData lit vEditor.vdata.powertrain[deviceID] ; deviceID est l'index Lua 0-based utilisé par vePowerTrain.",
+    "Pour manualGearbox, la boucle `for i=0,#device.gearDamages` utilise l'opérateur # sur une table qui peut commencer à 0."
+  ],
+  "functions": {
+    "displayLivedataByType": {
+      "desc": "Affiche en deux colonnes les champs live propres au type du device (par exemple engineLoad pour un moteur, diffAngle/outputAV2/outputTorque2 pour un différentiel, clutchAngle/lockSpring pour un embrayage).",
+      "params": {
+        "deviceType": {"type": "string", "desc": "Type du device (device.type)."},
+        "device": {"type": "table", "desc": "Données live sérialisées du device."}
+      },
+      "internal": false
+    },
+    "displayLivedata": {
+      "desc": "Affiche les données live communes : inputAV, outputAV1/2, outputTorque1/2, isBroken, mode, virtualMassAV, isPhysicallyDisconnected, gearRatio, cumulativeGearRatio, cumulativeInertia.",
+      "params": {"device": {"type": "table", "desc": "Données live sérialisées du device."}},
+      "internal": false
+    },
+    "showJbeamData": {
+      "desc": "Affiche dans un nœud d'arbre 'All jbeam data' toutes les données jbeam du device vEditor.vdata.powertrain[deviceID].",
+      "params": {"deviceID": {"type": "integer", "desc": "Index du device dans vdata.powertrain (0-based)."}},
+      "internal": false
+    },
+    "initialize": {
+      "desc": "Affecte la globale `vEditor` à l'instance donnée.",
+      "params": {"editorInstance": {"type": "table", "desc": "Instance de l'éditeur (normalement editor_veMain)."}},
+      "internal": true
+    }
+  }
+}

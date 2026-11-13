@@ -1,0 +1,17 @@
+{
+  "path": "lua/vehicle/extensions/profiling/vmdef.lua",
+  "module": "Bibliothèque tierce : jit.vmdef de LuaJIT (Mike Pall), fichier généré (« DO NOT EDIT ») qui contient les tables de noms de la VM LuaJIT : noms des bytecodes, des instructions IR du compilateur de traces, des fonctions rapides intégrées, des erreurs de trace, etc. Il est utilisé par les outils de LuaJIT (profileur, dump de traces). Aucune fonction : uniquement des données en lecture seule.",
+  "notes": [
+    "Les noms de bytecodes (bcnames) et d'IR (irnames) sont des chaînes à colonnes de largeur fixe de 6 caractères, pas des tables.",
+    "Fichier généré par LuaJIT : ne pas le modifier ; il doit correspondre à la version de LuaJIT embarquée."
+  ],
+  "fields": {
+    "bcnames": {"type": "string", "desc": "Noms des opcodes de bytecode LuaJIT concaténés, 6 caractères par nom."},
+    "irnames": {"type": "string", "desc": "Noms des instructions IR du compilateur de traces concaténés, 6 caractères par nom."},
+    "irfpm": {"type": "table<integer, string>", "desc": "Fonctions mathématiques de l'opération IR FPMATH (floor, ceil, trunc, sqrt, exp, exp2, log, log2, log10, sin, cos, tan, other), indexées à partir de 0."},
+    "irfield": {"type": "table<integer, string>", "desc": "Noms des champs d'objets internes lus par l'IR (str.len, func.env, tab.meta, tab.array, cdata.ptr…), indexés à partir de 0."},
+    "ircall": {"type": "table", "desc": "Noms des fonctions C appelées depuis l'IR (CALL), indexés à partir de 0."},
+    "traceerr": {"type": "table", "desc": "Messages d'erreur d'abandon de trace du compilateur JIT, indexés à partir de 0."},
+    "ffnames": {"type": "table", "desc": "Noms des fonctions rapides intégrées (fast functions) de LuaJIT."}
+  }
+}

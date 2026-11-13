@@ -1,0 +1,50 @@
+{
+  "path": "lua/ge/extensions/telemetry/hardwareChanges.test.lua",
+  "module": "Tests unitaires de telemetry/hardwareChanges (runTestFiles(\"hardwareChanges\")).",
+  "functions": {
+    "testControllerSnapshotFiltersNonControllerDevices": {
+      "desc": "Vérifie que l'instantané ne garde que wheel, joystick, gamepad et xinput (4 entrées sur 8 périphériques).",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testConnectionChangesContainAddedAndRemovedDevices": {
+      "desc": "Vérifie qu'un périphérique ajouté et un retiré donnent deux événements, connexion d'abord.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testReplacedDeviceSlotReportsBothTransitions": {
+      "desc": "Vérifie qu'un volant remplacé dans le même emplacement signale la connexion du nouveau et la déconnexion de l'ancien.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testOnlyDirectWindowFullscreenTransitionsAreTracked": {
+      "desc": "Vérifie que seules les transitions Window/Fullscreen directes sont suivies.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

@@ -1,0 +1,329 @@
+{
+  "path": "lua/ge/server/commands.lua",
+  "module": "Commandes de caméra et de placement du joueur, appelées en grande partie par le côté C++ et les actions d'entrée : basculer entre caméra de jeu et caméra libre, vitesse de la caméra libre, déposer la caméra sur le véhicule ou le véhicule à la position de la caméra, lire/écrire la transformée de la caméra libre en JSON. Contient aussi d'anciennes fonctions globales (getCameraPosition, setCameraFov…) conservées pour compatibilité, qui redirigent vers core_camera en journalisant un avertissement de dépréciation (une fois par fonction).",
+  "usage": "commands.toggleCamera(0)\nlocal json = commands.getCameraTransformJson() -- '[x, y, z, qx, qy, qz, qw]'",
+  "notes": [
+    "setFreeCamera est appelée par le C++ : ne pas la renommer ni la déplacer.",
+    "Alias de compatibilité : setCameraFree = setFreeCamera ; setCameraPlayer = setGameCamera ; getCamera retourne l'objet scenetree « gameCamera ».",
+    "Bug : M.getGame = getGame et M.onSettingsChanged = onSettingsChanged exportent des variables jamais définies dans ce fichier ; ces champs valent donc nil sauf si une globale du même nom existe.",
+    "Dans les globales dépréciées, setCameraFovDeg/Rad/setCameraFov n'agissent que si la caméra libre est active.",
+    "Dans les fonctions dropPlayerAtCamera, la rotation du véhicule est multipliée par quat(0,0,1,0) car l'avant d'un véhicule est inversé.",
+    "Hooks émis : onCameraHandlerSet (initCamera), onCameraToggled ({cameraType = 'GameCam'|'FreeCam'}), onNodegrab (true/false)."
+  ],
+  "fields": {
+    "getGame": {
+      "type": "any",
+      "desc": "Rétrocompatibilité ; vaut nil si la globale getGame n'existe pas."
+    },
+    "onSettingsChanged": {
+      "type": "any",
+      "desc": "Exporté depuis une variable non définie dans ce fichier : vaut nil (voir notes)."
+    }
+  },
+  "functions": {
+    "initCamera": {
+      "desc": "Initialise la caméra principale : vide les entrées de core_camera, retrouve l'objet « gameCamera », l'attache à la vue 'main', émet le hook onCameraHandlerSet et remet la configuration de caméra par défaut.",
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "objet de la scène gameCamera, ou nil s'il est introuvable"
+        }
+      ],
+      "internal": true
+    },
+    "isFreeCamera": {
+      "desc": "Indique si la caméra active du joueur est « free ».",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "indice du joueur"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "vrai si la caméra libre est active"
+        }
+      ]
+    },
+    "getCamera": {
+      "desc": "Retourne l'objet de scène « gameCamera » (rétrocompatibilité).",
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "objet gameCamera"
+        }
+      ]
+    },
+    "setGameCamera": {
+      "desc": "Repasse en caméra de jeu pour la vue du joueur ; émet onCameraToggled (GameCam) pour la vue principale. Alias : setCameraPlayer.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "indice du joueur"
+        }
+      }
+    },
+    "setCameraPlayer": {
+      "desc": "Alias de compatibilité de setGameCamera.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "indice du joueur"
+        }
+      }
+    },
+    "setFreeCamera": {
+      "desc": "Active la caméra libre (initialisée à la transformée actuelle de la vue), la réinitialise et émet onCameraToggled (FreeCam) pour la vue principale. Appelée par le C++.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "indice du joueur"
+        }
+      }
+    },
+    "setCameraFree": {
+      "desc": "Alias de compatibilité de setFreeCamera. Appelée par le C++.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "indice du joueur"
+        }
+      }
+    },
+    "toggleFastSpeed": {
+      "desc": "Active ou coupe le modificateur de vitesse rapide de la caméra libre (typiquement la touche Maj).",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "vrai pour accélérer"
+        }
+      }
+    },
+    "changeCameraSpeed": {
+      "desc": "Modifie la vitesse normale de la caméra (typiquement Alt + molette).",
+      "params": {
+        "val": {
+          "type": "number",
+          "desc": "variation de vitesse (transmise à core_camera.changeSpeed)"
+        }
+      }
+    },
+    "onNodegrabStart": {
+      "desc": "Hook appelé au début d'une saisie de nœud (node grab) : émet onNodegrab(true), mémorise si la caméra était libre et, si la saisie ne passe pas par le véhicule joueur, bascule en caméra libre.",
+      "params": {
+        "usingPlayerVehicle": {
+          "type": "boolean",
+          "desc": "vrai si la saisie utilise le véhicule du joueur"
+        }
+      },
+      "internal": true
+    },
+    "onNodegrabStop": {
+      "desc": "Hook appelé à la fin de la saisie de nœud : émet onNodegrab(false) et revient en caméra de jeu si la caméra libre avait été activée par la saisie.",
+      "params": {
+        "usingPlayerVehicle": {
+          "type": "boolean",
+          "desc": "vrai si la saisie utilisait le véhicule du joueur (non utilisé)"
+        }
+      },
+      "internal": true
+    },
+    "dropCameraAtPlayer": {
+      "desc": "Passe en caméra libre et la place à la position et orientation du véhicule du joueur.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "indice du joueur"
+        }
+      }
+    },
+    "dropPlayerAtCamera": {
+      "desc": "Téléporte le véhicule du joueur à la position de la caméra, orienté selon la direction horizontale de la caméra, puis repasse en caméra de jeu (la caméra bigMap devient orbit) et la réinitialise.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "indice du joueur"
+        }
+      }
+    },
+    "resetDropPlayerAtCameraNoResetCamera": {
+      "desc": "Repasse en caméra de jeu (bigMap devient orbit) et réinitialise la caméra du joueur ; étape finale du dépôt sans reset.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "indice du joueur"
+        }
+      }
+    },
+    "planDropPlayerAtCameraNoReset": {
+      "desc": "Calcule un plan de dépôt du véhicule à la position de la caméra sans le réinitialiser (la déformation est conservée).",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "indice du joueur"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "plan {vid, nodeId, clusterId, x, y, z, rx, ry, rz, rw, origin*}, ou nil si pas de véhicule"
+        }
+      ]
+    },
+    "applyDropPlayerAtCameraNoResetPlan": {
+      "desc": "Applique un plan : déplace le cluster de nœuds du véhicule (setClusterPosRelRot), annule sa vitesse et met à jour la transformée d'origine.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "indice du joueur (non utilisé)"
+        },
+        "plan": {
+          "type": "table",
+          "desc": "plan retourné par planDropPlayerAtCameraNoReset"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "faux si le véhicule du plan n'existe plus"
+        }
+      ]
+    },
+    "dropPlayerAtCameraNoResetImpl": {
+      "desc": "Planifie puis applique le dépôt sans reset, puis remet la caméra en mode jeu.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "indice du joueur"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "le plan appliqué, ou nil en cas d'échec"
+        }
+      ]
+    },
+    "dropPlayerAtCameraNoReset": {
+      "desc": "Dépose le véhicule à la caméra sans reset. Si multiplayer_vehicleSync existe, délègue la demande à celui-ci ; sinon appelle dropPlayerAtCameraNoResetImpl.",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "indice du joueur"
+        }
+      }
+    },
+    "toggleCamera": {
+      "desc": "Bascule la caméra : en écran partagé, bascule la caméra libre de la vue du joueur ; sinon passe au groupe de caméras suivant (core_camera.cycleCameraGroup, Maj+C).",
+      "params": {
+        "player": {
+          "type": "integer|nil",
+          "desc": "indice du joueur (0 par défaut)"
+        }
+      }
+    },
+    "getCameraTransformJson": {
+      "desc": "Retourne la position et la rotation de la caméra sous forme de chaîne JSON.",
+      "returns": [
+        {
+          "type": "string",
+          "desc": "'[x, y, z, qx, qy, qz, qw]' (position à 2 décimales)"
+        }
+      ]
+    },
+    "setFreeCameraTransformJson": {
+      "desc": "Active la caméra libre puis lui applique la transformée décrite par une chaîne JSON de 7 nombres (x, y, z, qx, qy, qz, qw). Ignore silencieusement un JSON invalide ou incomplet.",
+      "params": {
+        "json": {
+          "type": "string",
+          "desc": "chaîne produite par getCameraTransformJson"
+        }
+      }
+    },
+    "setCameraPosRot": {
+      "desc": "(Fonction globale, pas dans M.) Déprécié : utiliser core_camera.setPosRot. Applique position et quaternion à la caméra du joueur 0.",
+      "params": {
+        "px": {
+          "type": "number",
+          "desc": "x"
+        },
+        "py": {
+          "type": "number",
+          "desc": "y"
+        },
+        "pz": {
+          "type": "number",
+          "desc": "z"
+        },
+        "rx": {
+          "type": "number",
+          "desc": "quat x"
+        },
+        "ry": {
+          "type": "number",
+          "desc": "quat y"
+        },
+        "rz": {
+          "type": "number",
+          "desc": "quat z"
+        },
+        "rw": {
+          "type": "number",
+          "desc": "quat w"
+        }
+      }
+    },
+    "setCameraFovDeg": {
+      "desc": "(Fonction globale, pas dans M.) Déprécié : utiliser core_camera.setFOV. Règle le champ de vision (degrés) si la caméra libre est active.",
+      "params": {
+        "fovDeg": {
+          "type": "number",
+          "desc": "FOV en degrés"
+        }
+      }
+    },
+    "setCameraFovRad": {
+      "desc": "(Fonction globale, pas dans M.) Déprécié : utiliser core_camera.setFOV. Règle le FOV (radians, converti en degrés) si la caméra libre est active.",
+      "params": {
+        "fovRad": {
+          "type": "number",
+          "desc": "FOV en radians"
+        }
+      }
+    },
+    "setCameraFov": {
+      "desc": "(Fonction globale, pas dans M.) Déprécié : utiliser core_camera.setFOV. Règle le FOV en degrés si la caméra libre est active.",
+      "params": {
+        "fovDeg": {
+          "type": "number",
+          "desc": "FOV en degrés"
+        }
+      }
+    },
+    "getCameraPosition": {
+      "desc": "(Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getPosition."
+    },
+    "getCameraUp": {
+      "desc": "(Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getUp."
+    },
+    "getCameraRight": {
+      "desc": "(Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getRight."
+    },
+    "getCameraForward": {
+      "desc": "(Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getForward."
+    },
+    "getCameraQuat": {
+      "desc": "(Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getQuat."
+    },
+    "getCameraFovDeg": {
+      "desc": "(Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getFovDeg."
+    },
+    "getCameraFovRad": {
+      "desc": "(Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getFovRad."
+    },
+    "getCameraFov": {
+      "desc": "(Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getFovDeg (retourne des degrés)."
+    }
+  }
+}

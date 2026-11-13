@@ -1,0 +1,52 @@
+{
+  "path": "lua/ge/extensions/ui/arrowGPS.test.lua",
+  "module": "Tests unitaires de l'extension ui_arrowGPS (flèche GPS flottante à l'écran). Le fichier charge arrowGPS.lua dans un environnement simulé (faux createObject TSStatic, faux core_camera, GFXDevice, scenetree) via loadfile + setfenv, puis vérifie la création paresseuse de la flèche, sa réutilisation, sa couleur, sa rotation vers la cible de plus haute priorité et sa recréation après suppression de l'objet. Utile à un moddeur pour comprendre le contrat de ui_arrowGPS (setTarget, removeTarget, setScale, setDepth, setAppScreenPos, onPreRender).",
+  "usage": "require('testFramework/TestManager'):runTestFiles('ui/arrowGPS')",
+  "notes": [
+    "Ce n'est pas une extension de jeu : le module est exécuté par testFramework/TestManager, pas par extensions.load.",
+    "Chaque test reçoit un contexte ctx (assert, assertEqual, assertNear) fourni par le TestManager.",
+    "Contrat déduit des tests : la flèche n'est créée qu'au premier onPreRender avec une cible ET un véhicule joueur ; la plus petite valeur de priorité l'emporte (priorité 1 devant 10) ; le shape utilisé est art/shapes/interface/s_mm_arrow_floating.dae et la couleur par défaut est '1 0.4 0.2 1'."
+  ],
+  "functions": {
+    "testIdleExtensionDoesNotCreateArrow": {
+      "desc": "Vérifie qu'aucun objet n'est créé tant qu'aucune cible valide (avec pos) n'est posée : onPreRender, setTarget sans pos, removeTarget et onExtensionUnloaded ne créent rien.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test du TestManager."}},
+      "internal": true
+    },
+    "testTargetWaitsForPlayerAndRender": {
+      "desc": "Vérifie que la flèche attend un véhicule joueur et un onPreRender : sans joueur rien n'est créé, dès que le joueur existe la flèche est créée et visible.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test du TestManager."}},
+      "internal": true
+    },
+    "testRenderedArrowIsReusedAndHidesWithoutPlayer": {
+      "desc": "Vérifie la couleur et le shape par défaut, que la flèche est masquée quand le joueur disparaît puis réaffichée, sans recréation (un seul objet créé).",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test du TestManager."}},
+      "internal": true
+    },
+    "testPriorityColorAndTargetRemoval": {
+      "desc": "Vérifie que la cible de priorité la plus basse (1) dicte la couleur et la direction de la flèche, que removeTarget bascule sur la cible suivante, et que la flèche est masquée quand il n'y a plus de cible.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test du TestManager."}},
+      "internal": true
+    },
+    "testSceneDeletionRecreatesArrowWithoutTargetUpdate": {
+      "desc": "Vérifie que si l'objet de scène est supprimé, onPreRender recrée la flèche en conservant couleur et échelle (setScale), sans nouvel appel à setTarget.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test du TestManager."}},
+      "internal": true
+    },
+    "testTargetUpdateAfterSceneDeletionDoesNotUseOldObject": {
+      "desc": "Vérifie qu'un setTarget/setScale après suppression de l'objet n'accède pas à l'ancien objet (le faux objet lève une erreur sinon) et que la recréation a lieu au onPreRender suivant.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test du TestManager."}},
+      "internal": true
+    },
+    "testSettingsBeforeCreationAffectFirstRender": {
+      "desc": "Vérifie que setScale, setDepth et setAppScreenPos appelés avant la création de la flèche sont pris en compte dès le premier rendu (échelle 0.08, profondeur 0.3, position écran 0.75/0.25).",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test du TestManager."}},
+      "internal": true
+    },
+    "testUnloadClearsObjectAndTargetState": {
+      "desc": "Vérifie que onExtensionUnloaded supprime l'objet et vide l'état des cibles, et que l'extension reste utilisable ensuite avec de nouvelles cibles.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test du TestManager."}},
+      "internal": true
+    }
+  }
+}

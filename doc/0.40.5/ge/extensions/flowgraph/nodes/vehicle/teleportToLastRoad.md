@@ -4,12 +4,16 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/vehicle/teleportToLastRoad")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud « Teleport To Last Road » (catégorie `repeat_instant`). Téléporte le véhicule sur la dernière route valide (`spawn.teleportToLastRoad`) et déclenche le hook `onVehicleTeleportedToLastRoad(vehId)`. Pins d'entrée : `vehId`, `resetVehicle` (bool), `destinationPos` (vec3, optionnel : position vers laquelle regarder, sinon 15 m devant le véhicule).
+
 ## Classe `C`
+
+Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:init()` |  | 21 |
-| `C:work()` |  | 25 |
+| `C:init()` | Constructeur vide. | 21 |
+| `C:work()` | Calcule la position visée puis appelle `spawn.teleportToLastRoad` et le hook. | 25 |
 
 ## Hooks émis
 

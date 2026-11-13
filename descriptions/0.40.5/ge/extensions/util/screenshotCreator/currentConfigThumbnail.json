@@ -1,0 +1,37 @@
+{
+  "path": "lua/ge/extensions/util/screenshotCreator/currentConfigThumbnail.lua",
+  "module": "Sous-module de screenshotCreator qui génère la vignette de la configuration courante d'un véhicule. start() prépare une capture asynchrone : à chaque frame (onPreRender), une coroutine résout le cadrage selon le mode sélectionné (framingManager), capture la vignette hors écran (délai de 5 s maximum) puis appelle le callback avec le résultat. Une seule capture peut être active à la fois.",
+  "notes": [
+    "Si le cadrage ne peut pas être résolu, le callback est appelé avec success = false et le message d'erreur en quatrième argument.",
+    "Le nom du modèle est lu dans vehicle.jbeam ou vehicle.JBeam."
+  ],
+  "functions": {
+    "start": {
+      "desc": "Démarre la capture de la vignette d'un véhicule. Refuse (false, \"busy\") si une capture est déjà en cours.",
+      "params": {
+        "vehicle": {"type": "userdata", "desc": "Véhicule à photographier"},
+        "configName": {"type": "string", "desc": "Nom de la configuration"},
+        "outputPath": {"type": "string", "desc": "Chemin du fichier image à produire"},
+        "callback": {"type": "function", "desc": "callback(success, outputPath, token, errorMessage?) appelé à la fin"},
+        "token": {"type": "any", "desc": "Valeur renvoyée telle quelle au callback"}
+      },
+      "returns": [
+        {"type": "boolean", "desc": "true si la capture est lancée, false si occupé"},
+        {"type": "string|nil", "desc": "\"busy\" en cas de refus"}
+      ],
+      "internal": false
+    },
+    "onPreRender": {
+      "desc": "Hook appelé chaque frame avant le rendu : fait avancer la coroutine de capture. En cas d'erreur Lua, logue l'erreur, libère la capture et appelle le callback avec success = false.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook appelé au déchargement : abandonne la capture en cours sans appeler son callback.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

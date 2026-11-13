@@ -1,0 +1,48 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.lua",
+  "module": "Fenêtre 'Flexbody Debug' du Vehicle Editor live, pour diagnostiquer les flexbodies (meshes déformables) du véhicule. Onglet 'Single Flexmesh' : choisir un flexbody (combo trié, favoris), régler la visibilité du mesh, afficher le flexbody choisi, picker un nœud ou un sommet (vertex) à la souris dans un rayon 'Max Dist from Cursor' (0 à 10 m) et visualiser leurs relations. Onglet 'All Flexmeshes' : trouver les sommets sans nœud proche et (mode expert) les sommets aux coordonnées hors limites. Dépend de editor_veMain.",
+  "notes": [
+    "Les réglages par véhicule (favoris) sont sauvegardés dans /settings/editor/flexbodyDebug_settings.json, indexés par nom de fichier JBeam.",
+    "L'état est conservé par ID de véhicule (copie profonde de vehData) ; onVehicleSpawned supprime l'état du véhicule réapparu pour qu'il soit reconstruit.",
+    "Modes internes : défaut, picking nœud, nœud pickés, picking vertex, vertex pickés, affichage des sommets sans nœuds proches.",
+    "La recherche des sommets sans nœuds proches active vehicle:setFlexmeshDebugMode(true) et parcourt tous les flexbodies : peut être lente sur un gros véhicule.",
+    "Le dessin utilise debugDrawer (drawLine, drawSphere, drawTextAdvanced) dans le hook onVehicleEditorRenderJBeams."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "{'editor_veMain'}."},
+    "menuEntry": {"type": "string", "desc": "'Flexbody Debug'."}
+  },
+  "functions": {
+    "onVehicleEditorRenderJBeams": {
+      "desc": "Hook de rendu émis par editor_veMain : dessine le flexbody sélectionné et exécute le picking de nœud/sommet selon le mode courant.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+      },
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Appelé chaque frame : initialise l'état du véhicule, dessine la fenêtre à onglets et les fenêtres annexes (sommets hors limites, sommets sans nœuds).",
+      "params": {"dt": {"type": "number", "desc": "Delta temps."}},
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Au changement de véhicule, bascule vers l'état (ou crée l'état) du nouveau véhicule.",
+      "params": {
+        "oldVehicle": {"type": "integer", "desc": "ID de l'ancien véhicule."},
+        "newVehicle": {"type": "integer", "desc": "ID du nouveau véhicule."},
+        "player": {"type": "integer", "desc": "Index du joueur."}
+      },
+      "internal": true
+    },
+    "onVehicleSpawned": {
+      "desc": "Quand un véhicule apparaît, oublie ses données mémorisées.",
+      "params": {"id": {"type": "integer", "desc": "ID du véhicule."}},
+      "internal": true
+    },
+    "open": {"desc": "Ouvre la fenêtre.", "internal": false},
+    "onSerialize": {"desc": "Renvoie {windowOpen}.", "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}], "internal": true},
+    "onDeserialized": {"desc": "Restaure l'état d'ouverture.", "params": {"data": {"type": "table", "desc": "Table de onSerialize."}}, "internal": true}
+  }
+}

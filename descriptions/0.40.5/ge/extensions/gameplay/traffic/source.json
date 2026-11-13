@@ -1,0 +1,76 @@
+{
+  "path": "lua/ge/extensions/gameplay/traffic/source.lua",
+  "module": "Gère les « sources » (foyers) du gestionnaire de trafic, utile quand plusieurs joueurs (écran partagé) doivent chacun avoir du trafic autour d'eux. Une source est un véhicule ou une position fixe ; le module fait tourner le foyer du trafic (gameplay_traffic.setFocus) de source en source à intervalle régulier. Chargé à la demande.",
+  "usage": "gameplay_traffic_source.autoAddPlayers('default') -- une source par joueur, rotation toutes les 5 s",
+  "notes": [
+    "Le mode de mise à jour vaut 'off' ou 'default' (seul 'default' fait tourner les sources).",
+    "autoAddPlayers ne fait rien s'il y a moins de 2 joueurs (core_multiseat.getJoinedPlayers()[2] nil) ; il pose trafficClearRadius = 160 sur chaque véhicule joueur et désactive enableDynamicValues du trafic.",
+    "En mode 'default', après chaque changement de source le timer est gelé à -1 jusqu'à ce qu'un véhicule IA de trafic soit réinitialisé (onVehicleResetted).",
+    "addSource renvoie l'entrée créée ou false ; une source 'custom' exige data.pos et data.dir."
+  ],
+  "functions": {
+    "resetSources": {
+      "desc": "Supprime toutes les sources (remet trafficClearRadius à 0 sur les véhicules concernés), rétablit le foyer par défaut du trafic et réactive enableDynamicValues.",
+      "params": {},
+      "returns": []
+    },
+    "addSource": {
+      "desc": "Ajoute une source au trafic. Mode 'vehicle' : data est un id de véhicule ou une table {vehId}. Mode 'custom' : data = {pos, dir, speed?}. Autre mode (ex. 'camera') : entrée sans donnée.",
+      "params": {
+        "mode": {"type": "string", "desc": "'camera', 'vehicle' ou 'custom'."},
+        "data": {"type": "integer|table|nil", "desc": "Id de véhicule, ou table {vehId=…} ou {pos=vec3, dir=vec3, speed=number}."}
+      },
+      "returns": [{"type": "table|boolean", "desc": "L'entrée de source ajoutée, ou false si les données sont invalides (véhicule inexistant, pos/dir manquants)."}]
+    },
+    "removeSource": {
+      "desc": "Retire la source à l'indice donné ; si c'était l'indice courant de rotation, la rotation repart à 1.",
+      "params": {"index": {"type": "integer", "desc": "Indice (à partir de 1) dans la liste des sources."}},
+      "returns": []
+    },
+    "getSources": {
+      "desc": "Renvoie la table des sources courantes (référence directe, pas une copie).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Liste d'entrées {mode, auto, vehId?, pos?, dirVec?, speed?}."}]
+    },
+    "setSourceMode": {
+      "desc": "Définit le mode de mise à jour des sources et réinitialise l'état de rotation. En mode 'default', crée un timer et un intervalle (minimum 1 s, 5 s par défaut).",
+      "params": {
+        "mode": {"type": "string", "desc": "'off' ou 'default'."},
+        "options": {"type": "table|nil", "desc": "Options ; options.interval = intervalle de rotation en secondes."}
+      },
+      "returns": []
+    },
+    "updateSource": {
+      "desc": "Passe à la source suivante (en privilégiant une source dont le véhicule roule à plus de 1 m/s) ou à l'indice donné, puis appelle gameplay_traffic.setFocus(mode, source). Appelée automatiquement par onUpdate ou manuellement.",
+      "params": {"index": {"type": "integer|nil", "desc": "Indice forcé ; si nil, avance à la prochaine source."}},
+      "returns": []
+    },
+    "autoAddPlayers": {
+      "desc": "Réinitialise les sources puis ajoute comme source le véhicule de chaque joueur (multiseat), si au moins 2 joueurs ont rejoint. Active ensuite le mode de mise à jour.",
+      "params": {"defaultMode": {"type": "string|nil", "desc": "Mode de mise à jour, 'default' si nil."}},
+      "returns": []
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook appelé quand un joueur change de véhicule. En écran partagé, autoAddPlayers est souvent appelé avant que chacun soit assis : si le nouveau véhicule n'est pas déjà source et qu'il y a au moins 2 joueurs, relance autoAddPlayers.",
+      "params": {
+        "oldId": {"type": "integer", "desc": "Ancien id de véhicule."},
+        "newId": {"type": "integer", "desc": "Nouvel id de véhicule."},
+        "player": {"type": "integer", "desc": "Joueur concerné (non utilisé)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleResetted": {
+      "desc": "Hook appelé quand un véhicule est réinitialisé. Si le timer de rotation est gelé (-1) et que le véhicule est une IA de trafic, relance le timer à 0.",
+      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule réinitialisé."}},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque frame. Fait avancer le timer ; à l'intervalle, appelle updateSource puis gèle le timer (-1).",
+      "params": {"dt": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps de simulation (s), utilisé par le timer."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

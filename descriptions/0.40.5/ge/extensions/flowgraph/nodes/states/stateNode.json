@@ -1,0 +1,113 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/states/stateNode.lua",
+  "module": "Noeud d'état « State Node » du stategraph (créé par _flowgraph_createStateNode). Représente un graphe cible (targetGraph) dans le graphe d'états ; pins : flow (entrée), success et fail (sorties de type state), plus des sorties personnalisées (transitions). Peut exporter son état en fichier .state.flow.json. Double-clic : ouvre le graphe cible.",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "representsGraph": {
+          "desc": "Renvoie le graphe cible représenté par ce noeud.",
+          "internal": true
+        },
+        "init": {
+          "desc": "allowCustomOutPins = true, savePins = true.",
+          "params": {
+            "mgr": {
+              "type": "any",
+              "desc": "gestionnaire flowgraph"
+            }
+          },
+          "internal": true
+        },
+        "setTargetGraph": {
+          "desc": "Associe un graphe cible, reprend son nom et prend la couleur « groupstate » s'il s'agit d'un graphe d'états ; sinon nom « No Target! ».",
+          "params": {
+            "graph": {
+              "type": "any",
+              "desc": "graphe cible ou nil"
+            }
+          },
+          "internal": true
+        },
+        "setAutoStart": {
+          "desc": "Vide (non utilisé).",
+          "params": {
+            "val": {
+              "type": "any",
+              "desc": "ignoré"
+            }
+          },
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Liste déroulante « Target Graph » (graphes racine hors graphe d'états) et bouton « Export State » (sauvegarde JSON via editor_fileDialog).",
+          "internal": true
+        },
+        "getTransitionNames": {
+          "desc": "Renvoie la liste triée des noms de pins de sortie (transitions possibles).",
+          "internal": true
+        },
+        "doubleClicked": {
+          "desc": "Sélectionne le graphe cible dans l'éditeur.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        },
+        "EndPin": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde l'id du graphe cible (res.targetGraphId).",
+          "params": {
+            "res": {
+              "type": "any",
+              "desc": "table de sauvegarde"
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Mémorise targetGraphId pour _postDeserialize.",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "données sauvegardées"
+            }
+          },
+          "internal": true
+        },
+        "_postDeserialize": {
+          "desc": "Après chargement de tous les graphes, retrouve le graphe cible (id + décalage getGraphNodeOffset) et l'associe.",
+          "internal": true
+        },
+        "onCustomNameChanged": {
+          "desc": "Renomme le graphe cible et renvoie un message d'historique.",
+          "params": {
+            "name": {
+              "type": "any",
+              "desc": "nouveau nom"
+            }
+          },
+          "internal": true
+        },
+        "_onSerializeState": {
+          "desc": "Sérialise noeud + graphe cible pour l'export d'état (res.type = 'state').",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/flashMessage.lua",
+  "module": "Nœud flowgraph « Flash Message » (catégorie repeat_instant, durée) : affiche un message au centre de l'écran via scenario/scenariohelper.flashUiMessage. Entrées : flow, « message » (any), « duration » (3 s), « instant » (caché, efface les précédents), « biggerText » (caché, vrai). Sortie : flow. Nécessite un layout UI qui contient l'app des messages.",
+  "notes": [
+    "Les tables sont transmises telles quelles, le reste est converti avec tostring.",
+    "work() renvoie le message à chaque frame où le flux est actif."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "init": {
+          "desc": "Charge scenario/scenariohelper.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Si 'instant', envoie 'ScenarioFlashMessageClear', puis affiche le message et recopie le flux d'entrée en sortie.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/career/modules/rentals.lua",
+  "module": "Ébauche non terminée d'un système de location de véhicules en carrière : la plupart des fonctions ne contiennent que des commentaires, et les hooks (onExtensionLoaded, onSaveCurrentProfile, onUpdate) sont commentés. Seule isRenting est exportée.",
+  "notes": [
+    "Code inactif : currRentalVeh n'est jamais assigné (beginRenting déclare une variable locale du même nom et utilise shopId non défini), donc isRenting renvoie toujours false.",
+    "playAbandonTimer et trackAbandonVeh utilisent currAbandonTime alors que la variable déclarée s'appelle currAbandonTimer : bug si le code était activé."
+  ],
+  "functions": {
+    "isRenting": {
+      "desc": "API UI : indique si un véhicule de location est en cours (currRentalVeh non nil).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "Toujours false en l'état."}],
+      "internal": false
+    }
+  }
+}

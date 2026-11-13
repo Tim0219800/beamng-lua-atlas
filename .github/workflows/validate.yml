@@ -8,11 +8,14 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+
+      - name: Tools compile
+        run: python -m py_compile outils/*.py
 
       - name: Descriptions are valid JSON with a path
         run: |
@@ -33,9 +36,9 @@ jobs:
           sys.exit(1 if bad else 0)
           EOF
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Stubs parse as Lua
         run: |

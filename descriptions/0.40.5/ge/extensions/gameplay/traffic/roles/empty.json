@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/gameplay/traffic/roles/empty.lua",
+  "module": "Rôle de trafic minimal (« empty »). Il hérite de baseRole mais vide la table d'actions : aucune action supplémentaire ni IA spécifique n'est appliquée au véhicule. Utile pour un véhicule de trafic qu'on veut laisser totalement passif.",
+  "notes": ["Le module renvoie un constructeur : require('/lua/ge/extensions/gameplay/traffic/baseRole')(C, ...) enveloppe la classe C.", "init copie les baseActions de baseRole dans self.actions puis met self.baseActions à nil."],
+  "classes": {
+    "C": {
+      "desc": "Classe du rôle, complétée par baseRole.",
+      "functions": {
+        "init": {
+          "desc": "Appelé à la création du rôle. Copie les actions de base (self.baseActions) dans self.actions, puis supprime self.baseActions ; aucune action propre au rôle n'est ajoutée.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        }
+      }
+    }
+  }
+}

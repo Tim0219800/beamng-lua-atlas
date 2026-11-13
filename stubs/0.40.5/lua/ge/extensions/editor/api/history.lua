@@ -2,75 +2,68 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/api/history.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe locale `C` de lua/ge/extensions/editor/api/history.lua (instanciée par la fonction renvoyée par le module)
+--- Objet d'historique. Champs : maxUndoLevels, undoStack, redoStack, currentTransaction.
 ---@class editor_api_history
 local editor_api_history = {}
 
---- This will start a history transaction of adding multiple actions as a group.
----  @param name the name of the undo transaction (as a group of actions)
+--- Démarre un groupe d'actions annulables d'un seul coup. Les redo ne sont exécutés qu'à endTransaction.
 ---Source : lua/ge/extensions/editor/api/history.lua:76
----@param name any
+---@param name string|nil nom de la transaction (optionnel)
+---@return table|boolean  la transaction créée, ou false si une transaction est déjà en cours
 function editor_api_history:beginTransaction(name) end
 
---- Cancels a started transaction. Used when adding actions in a transaction, and some add action failed or data is not valid.
+--- Abandonne la transaction en cours sans rien exécuter ni empiler (utile si une action a échoué).
 ---Source : lua/ge/extensions/editor/api/history.lua:88
 function editor_api_history:cancelTransaction() end
 
---- Clear the history undo and redo stacks, used on new document.
+--- Vide les piles d'undo et de redo (nouveau document).
 ---Source : lua/ge/extensions/editor/api/history.lua:173
 function editor_api_history:clear() end
 
---- This adds the action on the undo stack **AND EXECUTES THE REDO** function with the given data table as argument.
----  When this function is called inside a beginTransaction/endTransaction, it will not execute the redo function until endTransaction, when all the redo functions of all the added actions inside that transaction are called at once.
----  @param name the name of the action, in the example format "MyCreateWhatever" do not add Action at the end of the string
----  @param data the data used by both undo and redo functions, where you keep new and old information about the action done
----  @param undoFunc the undo function, which has the format: local function myCreateWhateverUndo(actionData)
----  @param redoFunc the redo function, which has the format: local function myCreateWhateverRedo(actionData)
----  @param dontCallRedoNow wont call the redo function as part of the normal operation, you will need to do the operation separated from the redo code
----  @return the action table that was pushed to the stack
+--- Enregistre une action undo/redo et exécute son redo. Dans une transaction, l'action est seulement ajoutée au groupe.
 ---Source : lua/ge/extensions/editor/api/history.lua:122
----@param name any
----@param data any
----@param undoFunc any
----@param redoFunc any
----@param dontCallRedoNow any
+---@param name string nom de l'action, sans suffixe "Action" (ex. "MyCreateWhatever")
+---@param data table données partagées par undoFunc et redoFunc
+---@param undoFunc function function(actionData) qui annule l'action
+---@param redoFunc function function(actionData) qui fait/refait l'action
+---@param dontCallRedoNow boolean|nil true = ne pas appeler redoFunc maintenant
+---@return any  voir notes : résultat de redoFunc, action, nil (doublon) ou false
 function editor_api_history:commitAction(name, data, undoFunc, redoFunc, dontCallRedoNow) end
 
---- Deserialize the history stacks
+--- Restaure les piles depuis `data.history` s'il existe et annule la transaction en cours.
 ---Source : lua/ge/extensions/editor/api/history.lua:212
----@param data any
+---@param data table table contenant history
 function editor_api_history:deserialize(data) end
 
---- Ends a transaction successfuly and **EXECUTES ALL REDO** functions from all the added actions in this transaction.
+--- Termine la transaction : l'empile et exécute les redo de toutes ses actions (sauf dontCallRedoNow), puis vide la pile de redo.
 ---Source : lua/ge/extensions/editor/api/history.lua:94
----@param dontCallRedoNow any
+---@param dontCallRedoNow boolean|nil true = ne pas exécuter les redo maintenant
+---@return boolean  toujours true
 function editor_api_history:endTransaction(dontCallRedoNow) end
 
+--- Initialise les piles vides, maxUndoLevels = 1000, aucune transaction en cours. Appelé par le constructeur.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/editor/api/history.lua:31
 function editor_api_history:init() end
 
---- Redo a number of steps from the history stack.
----  @param steps how many steps to redo, default is 1 if not specified
+--- Rétablit `steps` transactions : appelle redo de chaque action dans l'ordre, puis les remet sur la pile d'undo.
 ---Source : lua/ge/extensions/editor/api/history.lua:58
----@param steps any
+---@param steps integer|nil nombre de transactions à rétablir, 1 par défaut
 function editor_api_history:redo(steps) end
 
---- Serialize the history stacks
+--- Écrit `data.history = { undoStack, redoStack }` (références, pas de copie).
 ---Source : lua/ge/extensions/editor/api/history.lua:205
----@param data any
+---@param data table table à remplir
 function editor_api_history:serialize(data) end
 
---- Undo a number of steps from the history stack.
----  @param steps how many steps to undo, default is 1 if not specified
+--- Annule `steps` transactions : appelle undo de chaque action en ordre inverse, puis déplace la transaction sur la pile de redo. S'arrête si la pile est vide.
 ---Source : lua/ge/extensions/editor/api/history.lua:40
----@param steps any
+---@param steps integer|nil nombre de transactions à annuler, 1 par défaut
 function editor_api_history:undo(steps) end
 
---- Update an object id with a new one, that can be found in the redo actions.
----  @param oldObjectId the old id
----  @param newObjectId the new id
+--- Dans les actions de la pile de redo, remplace `data.objectId` et les éléments de `data.objectIds` égaux à oldObjectId par newObjectId (utile quand un objet est recréé avec un autre id).
 ---Source : lua/ge/extensions/editor/api/history.lua:181
----@param oldObjectId any
----@param newObjectId any
+---@param oldObjectId integer ancien id
+---@param newObjectId integer nouvel id
 function editor_api_history:updateRedoStackObjectId(oldObjectId, newObjectId) end
 

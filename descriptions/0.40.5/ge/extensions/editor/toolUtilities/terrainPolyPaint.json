@@ -1,0 +1,50 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/terrainPolyPaint.lua",
+  "module": "Peinture de matériau de terrain sur un anneau polygonal (remplissage par lignes de balayage) ou sur une liste de cellules, avec un enregistrement d'annulation. Un enregistrement est { xs, ys, prev, cnt } : coordonnées monde de chaque cellule peinte et son indice de matériau d'ORIGINE, pour restaurer exactement l'état d'avant. Chaque enregistrement est une surcouche vivante jusqu'à revert ou release ; les enregistrements s'empilent dans l'ordre de peinture, et liftAll/layAll les retirent et les remettent tous (sauvegarde du terrain, repeinture du réseau dessous). Une seule mise à jour de grille est faite sur la zone touchée.",
+  "notes": [
+    "Les trous du terrain (indice 255) ne sont jamais repeints ni restaurés par-dessus.",
+    "liftAll/layAll s'emboîtent par compteur : seul l'appel le plus externe travaille. Toujours les appeler en paire dans la même frame.",
+    "liftAll oublie les enregistrements peints sur un bloc de terrain qui n'existe plus.",
+    "Toutes les fonctions utilisent extensions.editor_terrainEditor ; sans bloc de terrain ou sans terrain editor, paintRing et paintCells renvoient nil."
+  ],
+  "functions": {
+    "paintRing": {
+      "desc": "Peint les cellules du terrain à l'intérieur de `ring` (remplissage par balayage), puis rafraîchit la grille sur la boîte touchée. Renvoie l'enregistrement d'annulation, nil si rien n'a été peint.",
+      "params": {
+        "ring": {"type": "table", "desc": "Anneau de points en XY monde (3 au moins)."},
+        "mat": {"type": "integer|function", "desc": "Indice de couche pour tout l'anneau, ou fonction mat(gx, gy, wx, wy) interrogée par cellule qui renvoie un indice, ou nil pour laisser la cellule."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Enregistrement { xs, ys, prev, cnt, ... }."}]
+    },
+    "paintCells": {
+      "desc": "Peint une liste explicite de cellules (xs/ys monde) toutes avec `matIdx`.",
+      "params": {
+        "xs": {"type": "number[]", "desc": "X monde des cellules."},
+        "ys": {"type": "number[]", "desc": "Y monde des cellules."},
+        "matIdx": {"type": "integer", "desc": "Indice de matériau."},
+        "prev": {"type": "integer[]|nil", "desc": "Matériaux d'origine déjà connus ; s'ils sont absents ou vides, ils sont lus sur le terrain."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Enregistrement d'annulation, nil si la liste est vide ou sans terrain."}]
+    },
+    "revert": {
+      "desc": "Remet les cellules d'un enregistrement dans leurs matériaux d'origine puis fait une mise à jour de grille unique. Les enregistrements peints par-dessus depuis sont retirés d'abord puis remis, pour que chaque cellule retrouve ce qui était vraiment dessous.",
+      "params": {"rec": {"type": "table|nil", "desc": "Enregistrement renvoyé par paintRing ou paintCells."}},
+      "returns": []
+    },
+    "release": {
+      "desc": "Cède la peinture d'un enregistrement au terrain (gravure, cuisson) : elle reste peinte et n'est plus retirée avec le reste.",
+      "params": {"rec": {"type": "table|nil", "desc": "Enregistrement."}},
+      "returns": []
+    },
+    "liftAll": {
+      "desc": "Retire la peinture de tous les enregistrements vivants, du plus récent au plus ancien. S'emboîte : seul l'appel le plus externe agit. Pas de rafraîchissement de grille, layAll suit toujours dans la même frame.",
+      "params": {},
+      "returns": []
+    },
+    "layAll": {
+      "desc": "Remet la peinture, du plus ancien au plus récent, par-dessus ce qui se trouve maintenant dessous, puis rafraîchit la grille sur la zone touchée.",
+      "params": {},
+      "returns": []
+    }
+  }
+}

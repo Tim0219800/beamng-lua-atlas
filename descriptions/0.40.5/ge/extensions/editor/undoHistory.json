@@ -1,0 +1,10 @@
+{
+  "path": "lua/ge/extensions/editor/undoHistory.lua",
+  "module": "Fenêtre d'éditeur « Undo History » : affiche côte à côte la pile d'annulation (editor.history.undoStack) et la pile de rétablissement (redoStack). Chaque action est listée avec son nom ; une infobulle montre un dump tronqué de l'action (20 lignes de 100 caractères max). Boutons « Undo Selected », « Redo Selected » (appellent editor.undo / editor.redo avec le nombre d'étapes) et « Delete All History » (editor.clearUndoHistory, sans défaire les modifications).",
+  "notes": ["La fenêtre s'appelle « undoHistory » et est ouverte via le menu Window > Undo History.", "Les index sélectionnés (selectedIndex, selectedIndex2) sont des variables locales du module, non exportées."],
+  "functions": {
+    "onEditorGui": {"desc": "Hook appelé à chaque frame de l'éditeur : dessine la fenêtre Undo History avec les deux piles.", "internal": true},
+    "onEditorInitialized": {"desc": "Hook appelé à l'initialisation de l'éditeur : ajoute l'entrée de menu « Undo History » et enregistre la fenêtre (taille initiale 300x500).", "internal": true},
+    "onExtensionLoaded": {"desc": "Hook appelé au chargement de l'extension ; ne fait rien.", "internal": true}
+  }
+}

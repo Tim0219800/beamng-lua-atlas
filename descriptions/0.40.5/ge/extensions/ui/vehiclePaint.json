@@ -1,0 +1,32 @@
+{
+  "path": "lua/ge/extensions/ui/vehiclePaint.lua",
+  "module": "Petite fenêtre imgui de débogage « Metallic paint » pour régler en direct les paramètres de peinture métallique du véhicule du joueur (3 peintures : métallique, rugosité, vernis, rugosité du vernis). Elle lit et écrit le champ objet `metallicPaintData` du véhicule sous forme de chaîne de 4 nombres.",
+  "usage": "extensions.load('ui_vehiclePaint'); ui_vehiclePaint.show()",
+  "notes": [
+    "Les 4 valeurs de metallicPaintData sont, dans l'ordre : [1] Roughness, [2] Metallic, [3] Coat, [4] Coat roughness (d'après les indices passés à sliderUI). Chaque curseur va de 0 à 1.",
+    "changeData n'écrit toujours que dans la peinture 0 : son paramètre index désigne la composante du tableau, pas la peinture."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "ui_imgui."}
+  },
+  "functions": {
+    "show": {
+      "desc": "Ouvre la fenêtre 'Metallic paint' (la fenêtre est dessinée dans onUpdate)."
+    },
+    "changeData": {
+      "desc": "Modifie une composante de metallicPaintData de la peinture 0 du véhicule du joueur 0 et réécrit le champ.",
+      "params": {
+        "change": {"type": "number", "desc": "Nouvelle valeur."},
+        "index": {"type": "integer", "desc": "Indice (1 à 4) dans le tableau de 4 valeurs."}
+      }
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque frame : si la fenêtre est ouverte et qu'un véhicule joueur existe, dessine les curseurs des peintures 0, 1 et 2 et applique les changements via setField.",
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement : crée le pointeur booléen de visibilité (faux) et le pointeur flottant des curseurs.",
+      "internal": true
+    }
+  }
+}

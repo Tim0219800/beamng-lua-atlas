@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/ui/gridSelectorUtils/translateHelper.lua",
+  "module": "Aide de traduction côté Lua pour les sélecteurs en grille. Traduit une clé avec `_tr`, résout les expressions imbriquées de style Angular (`{{ 'clé' | translate }}`, `{{ clé | translate }}`, `{{clé}}`) jusqu'à 10 passes, et met le résultat en cache par clé.",
+  "notes": [
+    "Le cache (translateCache) n'est jamais vidé : un changement de langue en cours de session n'est pas pris en compte pour les clés déjà traduites.",
+    "Le cache ne tient compte que de la clé, pas du `fallback` : le premier fallback utilisé reste.",
+    "Le drapeau interne debugTranslations (false par défaut) randomiserait la première lettre de chaque mot ; il n'est pas modifiable depuis l'extérieur."
+  ],
+  "functions": {
+    "translate": {
+      "desc": "Renvoie la traduction de la clé (via _tr, avec la clé comme repli par défaut), après résolution des traductions imbriquées. Si la clé n'est pas une chaîne, la renvoie telle quelle ou \"Missing Translation Key!\" si nil.",
+      "params": {"key": {"type": "string", "desc": "Clé de traduction."}, "fallback": {"type": "string|nil", "desc": "Texte de repli passé à _tr (défaut : la clé)."}},
+      "returns": [{"type": "string", "desc": "Texte traduit."}]
+    }
+  }
+}

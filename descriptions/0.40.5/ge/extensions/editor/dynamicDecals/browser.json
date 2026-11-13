@@ -1,0 +1,26 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/browser.lua",
+  "module": "Fenêtre « Dynamic Decals Tool - Browser » de l'outil de livrées dynamiques de l'éditeur : un point central à onglets (Textures, Brushes, Fonts…) où d'autres modules enregistrent leur contenu avec registerBrowserTab. Les assets se glissent-déposent vers les widgets du système de decals. Le module est initialisé par l'outil principal via setup(tool).",
+  "usage": "extensions.editor_dynamicDecals_browser.registerBrowserTab(\"Textures\", function() im.Text(\"…\") end, 10)",
+  "notes": ["Les onglets sont triés par order croissant (1000 par défaut).", "registerEditorPreferences et editorPreferenceValueChanged sont des fonctions vides (corps commenté).", "Dans onGui, la variable textureBrowserCurrentTab est écrasée à chaque itération et n'a pas d'effet visible."],
+  "functions": {
+    "onGui": {"desc": "Dessine la fenêtre et sa barre d'onglets en appelant le guiFn de chaque onglet. Enregistrée par setup() comme callback d'éditeur « browser ».", "params": {}, "internal": true},
+    "registerEditorPreferences": {"desc": "Hook de préférences de l'éditeur : ne fait rien actuellement.", "params": {"prefsRegistry": {"type": "table", "desc": "registre de préférences"}}, "internal": true},
+    "editorPreferenceValueChanged": {"desc": "Hook appelé quand une préférence change : ne fait rien actuellement.", "params": {"path": {"type": "string", "desc": "chemin de la préférence"}, "value": {"type": "any", "desc": "nouvelle valeur"}}, "internal": true},
+    "setup": {
+      "desc": "Initialise le module : récupère les extensions editor_api_dynamicDecals, editor_dynamicDecals_textures et editor_dynamicDecals_docs, enregistre la fenêtre (800x400), le callback d'interface « browser » et la page de documentation « Browser ».",
+      "params": {"tool_in": {"type": "table", "desc": "outil de decals dynamiques (fournit registerOnEditorGuiFn)"}}
+    },
+    "registerBrowserTab": {
+      "desc": "Ajoute un onglet au navigateur et retrie la liste par ordre.",
+      "params": {
+        "name": {"type": "string", "desc": "titre de l'onglet"},
+        "guiFn": {"type": "function", "desc": "fonction ImGui dessinant le contenu de l'onglet"},
+        "order": {"type": "number|nil", "desc": "rang de tri, 1000 par défaut"}
+      }
+    },
+    "showWindow": {"desc": "Affiche la fenêtre du navigateur.", "params": {}},
+    "hideWindow": {"desc": "Masque la fenêtre du navigateur.", "params": {}},
+    "isWindowVisible": {"desc": "Indique si la fenêtre est visible.", "params": {}, "returns": [{"type": "boolean", "desc": "visibilité"}]}
+  }
+}

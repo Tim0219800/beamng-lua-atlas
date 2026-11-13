@@ -1,0 +1,40 @@
+{
+  "path": "lua/ge/extensions/util/screenshotCreator/thumbnailPaths.lua",
+  "module": "Calcul des chemins de sortie des vignettes de véhicules pour le compositeur de vignettes. Tous les fichiers vont dans vehicles/<modelKey>/ au format .jpg ; la vignette d'une config s'appelle <config>.jpg, et default.jpg pour la config par défaut en mode « defaults ». Les noms sont assainis (caractères autres que lettres, chiffres, _, . et - remplacés par _).",
+  "notes": [
+    "captureMode vaut « defaults » (seule la config par défaut est écrite, sous le nom default.jpg) ou « all » (une vignette par config ; la config par défaut est aussi copiée en default.jpg via paths.defaultFinal).",
+    "makeOutputPaths crée le dossier de sortie (FS:directoryCreate) : il a un effet de bord sur le disque.",
+    "hasThumbnail teste <config>.jpg puis <config>.png dans vehicles/<modelKey>/ (chemin relatif, c'est-à-dire dossier utilisateur et dossier du jeu via le système de fichiers virtuel)."
+  ],
+  "functions": {
+    "safePathPart": {
+      "desc": "Assainit un morceau de nom de fichier : remplace tout caractère hors [A-Za-z0-9_.-] par _ ; renvoie « unknown » si le résultat est vide.",
+      "params": {"value": {"type": "any", "desc": "Valeur convertie en chaîne."}},
+      "returns": [{"type": "string", "desc": "Nom sûr."}]
+    },
+    "getFinalOutputPath": {
+      "desc": "Calcule le chemin final d'une vignette et son dossier.",
+      "params": {
+        "item": {"type": "table", "desc": "Élément {modelKey, configName, isDefaultConfig}."},
+        "captureMode": {"type": "string", "desc": "« defaults » ou « all »."}
+      },
+      "returns": [
+        {"type": "string", "desc": "Chemin du fichier, ex. vehicles/pickup/d15_4wd.jpg."},
+        {"type": "string", "desc": "Dossier de sortie, ex. vehicles/pickup/."}
+      ]
+    },
+    "hasThumbnail": {
+      "desc": "Indique si une vignette (.jpg ou .png) existe déjà pour l'élément.",
+      "params": {"item": {"type": "table", "desc": "Élément {modelKey, configName}."}},
+      "returns": [{"type": "boolean", "desc": "true si le fichier existe."}]
+    },
+    "makeOutputPaths": {
+      "desc": "Crée le dossier de sortie et renvoie les chemins à utiliser pour la capture.",
+      "params": {
+        "item": {"type": "table", "desc": "Élément {modelKey, configName, isDefaultConfig}."},
+        "captureMode": {"type": "string", "desc": "« defaults » ou « all »."}
+      },
+      "returns": [{"type": "table", "desc": "{outputFolder, final, defaultFinal = chemin default.jpg à copier (mode « all », config par défaut)}."}]
+    }
+  }
+}

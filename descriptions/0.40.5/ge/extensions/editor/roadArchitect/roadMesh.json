@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/editor/roadArchitect/roadMesh.lua",
+  "module": "Crée les maillages procéduraux (objets de scène ProceduralMesh) du Road Architect : trottoirs avec bordures (kerbs) à gauche ou à droite de la route, et ponts. Il garde en interne les tables des maillages par nom de route et par nom de pont, pour pouvoir les supprimer plus tard. Il est appelé par le module roads lors de finalise/unfinalise et de updateRoads.",
+  "notes": [
+    "createRoad lit r.renderData et r.laneKeys : la route doit avoir été calculée (geometry.computeRoadRenderData) avant.",
+    "createRoad ne génère des maillages que pour les sections latérales de type 'sidewalk' (une voie par section) ; les autres types de voies sont rendus par les décalcomanies, pas par ce module.",
+    "Les maillages sont ajoutés au dossier de scène fourni, avec canSave = true.",
+    "Les ponts sont nommés 'Bridge_<nom de route>' ; un pont existant est supprimé puis recréé à chaque updateBridge."
+  ],
+  "functions": {
+    "createRoad": {"desc": "Découpe la route en sections latérales et crée un maillage de trottoir + bordure pour chaque voie 'sidewalk' (côté gauche ou droit selon isLeftSide). Mémorise les maillages sous le nom de la route.", "params": {"r": {"type": "table", "desc": "Route avec renderData."}, "roadMeshIdx": {"type": "integer", "desc": "Indice de la route, utilisé pour nommer les objets créés."}, "folder": {"type": "userdata", "desc": "SimGroup de scène qui reçoit les maillages."}}, "returns": []},
+    "tryRemove": {"desc": "Supprime de la scène les maillages créés pour la route (s'il y en a) et oublie l'entrée.", "params": {"roadName": {"type": "string", "desc": "Nom de la route."}}, "returns": []},
+    "updateBridge": {"desc": "(Re)crée le maillage procédural d'un pont : supprime l'ancien, calcule les anneaux de sommets à partir du renderData (voies -1 à 1), génère surface et capuchons, et l'ajoute au dossier.", "params": {"r": {"type": "table", "desc": "Route de type pont, avec renderData."}, "folder": {"type": "userdata", "desc": "SimGroup « Road Architect - Bridge <nom> »."}}, "returns": []},
+    "tryRemoveBridge": {"desc": "Supprime l'objet maillage du pont et l'oublie.", "params": {"name": {"type": "string", "desc": "Nom (identifiant) de la route de type pont."}}, "returns": []},
+    "clearBridges": {"desc": "Remplace la table des ponts par une table vide sans supprimer les objets de scène.", "params": {}, "returns": []}
+  }
+}

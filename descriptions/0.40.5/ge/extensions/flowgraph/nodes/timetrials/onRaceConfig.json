@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/timetrials/onRaceConfig.lua",
+  "module": "Noeud « Race Config » (provider, tag input). Donne la configuration choisie par le joueur pour la course, lue une seule fois dans scenario_scenarios.getScenario() : laps (scenario.lapCount), reverse (scenario.isReverse), rollingStart (scenario.rollingStart).",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "done = false, clearOutPinsOnStart = false.",
+          "params": {
+            "mgr": {
+              "type": "any",
+              "desc": "gestionnaire flowgraph"
+            }
+          },
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "done = false.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Tant que non fait et qu'un scénario existe, copie ses réglages sur les pins.",
+          "internal": false
+        },
+        "onScenarioRestarted": {
+          "desc": "Hook de redémarrage : relit la configuration.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/trackPrefab.lua",
+  "module": "Noeud flowgraph « Track Prefab » (once_instant). Permet au flowgraph de suivre un prefab créé hors flowgraph, via modules.prefab:addPrefab(id, options). Entrées : flow, id (0 = prefab du joueur d'après la description), dontDelete, skipNavgraphReload, skipCollisionReload (tous true par défaut, cachés).",
+  "notes": [
+    "L'icône référence nodeIcons.svene (faute de frappe) : icône nil."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "workOnce": {
+          "desc": "Appelle addPrefab(id, {dontDelete, skipNavgraphReload, skipCollisionReload}).",
+          "internal": false
+        },
+        "_executionStopped": {
+          "desc": "Ne fait rien.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

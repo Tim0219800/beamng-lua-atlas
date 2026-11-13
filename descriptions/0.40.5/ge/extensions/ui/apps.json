@@ -1,0 +1,37 @@
+{
+  "path": "lua/ge/extensions/ui/apps.lua",
+  "module": "Catalogue des apps d'interface (Vue/JS) installées. getUIAppsData parcourt /ui/modules/apps/ à la recherche de app.json, de app.vue et des variantes app.<directive>.vue, et construit une table indexée par nom d'app (types traduits, aperçus, fichiers vue/js, indicateurs interactive/essential/photomode…). Le module surveille aussi /settings/ui_apps/ et prévient l'interface quand un layout change.",
+  "notes": [
+    "Un app.json sans domElement ou sans directive est ignoré avec une erreur dans le log.",
+    "Les apps sans app.json mais avec un app.vue (ou app.<variante>.vue) sont ajoutées comme apps « sourceOnly » (catégorie Embedded, auxiliaires, cachées du navigateur d'apps).",
+    "Les clés de position css autorisées dans app.json sont left, right, top, bottom, width, height et margin ; les autres sont supprimées.",
+    "Une app dont le champ simplemenu ne correspond pas à Engine.UI.isSimpleMenu() est exclue.",
+    "Un avertissement est journalisé si getUIAppsData dépasse 100 ms."
+  ],
+  "functions": {
+    "getUIAppsData": {
+      "desc": "Construit et renvoie le catalogue des apps disponibles, indexé par appName.",
+      "params": {},
+      "returns": [{"type": "table<string, table>", "desc": "Données de chaque app (appName, directive, types, typesTranslated, folder, vueFile, hasAppVue, hasAppJs, interactive, essential, isAuxiliary, photomode, official, previews…)."}],
+      "internal": false
+    },
+    "notifyLayoutsChanged": {
+      "desc": "Envoie l'événement UI 'UiAppLayoutsChanged' pour que l'interface relise les layouts.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onFilesChanged": {
+      "desc": "Hook appelé quand des fichiers changent : si un fichier est sous /settings/ui_apps/, programme un rafraîchissement des layouts 0,2 s plus tard.",
+      "params": {"files": {"type": "table<integer, table>", "desc": "Liste d'entrées avec un champ filename."}},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook de frame : déclenche notifyLayoutsChanged quand le délai programmé par onFilesChanged est écoulé.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

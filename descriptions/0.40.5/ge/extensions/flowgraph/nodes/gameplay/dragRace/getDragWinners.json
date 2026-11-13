@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getDragWinners.lua",
+  "module": "Nœud flowgraph « Get Drag Race Winner Data » (catégorie repeat_instant). Donne le résultat du joueur à la fin d'une course de dragster. Sorties : playerWin, playerPos (position), dialDiff (ET + RT du joueur moins son dial), threshold (meilleur adversaire moins joueur en ET + RT ; positif si le joueur franchit la ligne en premier). Source : dragBridge.getPlayerRaceResult ou getWinnersData.",
+  "notes": ["Si les gagnants sont indisponibles ou vides, une erreur de nœud est posée et les sorties ne sont pas modifiées.", "dialDiff et threshold ne sont renseignés que si getPlayerRaceResult existe."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "_executionStarted": {"desc": "Vide data et result.", "internal": true},
+        "work": {"desc": "Lit le résultat du bridge et alimente les sorties utilisées."}
+      }
+    }
+  }
+}

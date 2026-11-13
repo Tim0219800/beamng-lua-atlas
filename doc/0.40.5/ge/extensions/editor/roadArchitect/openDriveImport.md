@@ -4,12 +4,46 @@
 
 **Accès :** extension `editor_roadArchitect_openDriveImport` : `extensions.load("editor_roadArchitect_openDriveImport")`, puis la globale `editor_roadArchitect_openDriveImport`
 
+Import OpenDRIVE (.xodr) dans Road Architect. Le fichier XML est analysé (routes : planView avec line/arc/spiral/poly3/paramPoly3, elevationProfile, superelevation, laneOffset, laneSections avec largeurs et hauteurs de voies ; junctions), la ligne de référence est discrétisée en polyligne 3D, puis chaque route OpenDRIVE devient une route Road Architect indépendante. Les jonctions OpenDRIVE sont lues mais non converties. Peut être utilisé sans interface (importFromFile, y compris avec le contenu du fichier fourni par le pont tech/BeamNGpy). Enregistre l'import dans l'historique de l'éditeur (undo/redo).
+
+## Exemple
+
+```lua
+local res = editor_roadArchitect_openDriveImport.importFromFile('/levels/mon_niveau/route.xodr', {placeMode = 2, terraform = true})
+print(res.importedRoadCount, res.skippedRoadCount)
+```
+
+## Remarques
+
+- Options reconnues : placeMode (0 = position du fichier, 1 = placeX/placeY, 2 = XY de la caméra, 3 = XY du véhicule joueur), placeX, placeY, placeZ (hauteur du premier nœud de la première route importée), offsetToTerrain (true : conformer au terrain), verticalOffset (décalage Z, ignoré si offsetToTerrain), terraform (true : terraformMultiRoads avec domainOfInfluence, défaut 30, et margin, défaut 1.0), plus les options lues par importFile.maybeFinalise.
+- Résultat : table { success, importedRoadCount, skippedRoadCount, warningCount, warnings, junctionCount, unsupported = {junctions}, finalized }. En cas d'erreur pendant la conversion, les routes déjà créées sont supprimées et l'erreur est relancée.
+- Si fileContent est une chaîne non vide, elle est utilisée à la place de la lecture du fichier (la lecture sandboxée ne voit pas les chemins hôte ; le chemin doit sinon être sous les montages VFS du jeu ou de l'utilisateur).
+- Incohérence probable : les attributs name et rule de <road> sont lus avec tonumber(), ce qui donne nil pour les valeurs textuelles habituelles (name="Route 1", rule="RHT").
+- Les routes dont la conversion ne crée rien sont comptées dans skippedRoadCount. Les jonctions OpenDRIVE produisent un avertissement ('junction record(s) were parsed but not converted').
+
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `editor_roadArchitect_openDriveImport.import(options)` | Opens the existing file picker and forwards the selected path to the headless importer. | 919 |
-| `editor_roadArchitect_openDriveImport.importFromFile(filePath, options, fileContent)` | Imports an .xodr file from disk (or inline fileContent from the tech bridge). | 652 |
+| `editor_roadArchitect_openDriveImport.import(options)` | Version interactive : ouvre le sélecteur de fichier de l'éditeur (filtre .xodr) puis appelle importFromFile avec le chemin choisi. Les erreurs sont écrites dans le journal (niveau E) au lieu d'être relancées. | 919 |
+| `editor_roadArchitect_openDriveImport.importFromFile(filePath, options, fileContent)` | Importe un fichier .xodr (ou son contenu fourni en fileContent), crée les routes Road Architect correspondantes, applique placement, décalage vertical, conformation au terrain et terraformage selon options, finalise et enregistre l'action dans l'historique. Lance une erreur si le contenu est illisible. | 652 |
+
+### Détail des paramètres
+
+#### `editor_roadArchitect_openDriveImport.import(options)`
+
+Version interactive : ouvre le sélecteur de fichier de l'éditeur (filtre .xodr) puis appelle importFromFile avec le chemin choisi. Les erreurs sont écrites dans le journal (niveau E) au lieu d'être relancées.
+
+- `options` (*table|nil*) : Options transmises à importFromFile.
+
+#### `editor_roadArchitect_openDriveImport.importFromFile(filePath, options, fileContent)`
+
+Importe un fichier .xodr (ou son contenu fourni en fileContent), crée les routes Road Architect correspondantes, applique placement, décalage vertical, conformation au terrain et terraformage selon options, finalise et enregistre l'action dans l'historique. Lance une erreur si le contenu est illisible.
+
+- `filePath` (*string*) : Chemin du fichier .xodr (peut être ignoré si fileContent est fourni).
+- `options` (*table|nil*) : Options d'import (placeMode, placeX, placeY, placeZ, offsetToTerrain, verticalOffset, terraform, domainOfInfluence, margin, finalize…).
+- `fileContent` (*string|nil*) : Contenu XML du fichier, déjà lu (par exemple envoyé par BeamNGpy).
+- **renvoie** : table Résumé { success, importedRoadCount, skippedRoadCount, warningCount, warnings, junctionCount, unsupported, finalized }.
 
 ## Appels vers le moteur (C++)
 

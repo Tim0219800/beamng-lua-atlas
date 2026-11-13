@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/routePointToPoint.lua",
+  "module": "Nœud « Get Navgraph Route » (once_instant). Calcule un itinéraire sur le navgraph entre une position de départ et une d'arrivée. Entrées : posA, posB (vec3), legalRoute (caché, true : respecte les sens de circulation). Sortie : navgraphRoute (liste de waypoints, type navgraphPath).",
+  "notes": [
+    "Le 4e argument de map.getPath vaut 1000 si legalRoute (pénalité pour les sens interdits) et 1 sinon (déduit du code)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "workOnce": {
+          "desc": "Pour chaque position, trouve la route la plus proche (map.findClosestRoad) et retient le nœud le plus proche ; si l'une échoue, ne fait rien. Puis calcule map.getPath(depart, arrivee, nil, 1000 ou 1) et l'écrit sur la sortie.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

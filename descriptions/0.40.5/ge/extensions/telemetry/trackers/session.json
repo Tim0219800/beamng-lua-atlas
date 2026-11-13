@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/telemetry/trackers/session.lua",
+  "module": "Suiveur de télémétrie de session : marque le début et la fin de la session. Il se charge en premier et se décharge en dernier, donc encadre tous les autres évènements. Un rechargement Lua du moteur de jeu poursuit la session en cours. Au début : évènement « session » (type start) avec faits sur le client, langues, version de télémétrie, licence tech, fuseau horaire, identifiant anonyme, mode Big Picture, alimentation et VR. À la fin : « session » (type end) avec la durée.",
+  "notes": [
+    "Toutes les heures locales peuvent être fausses de plusieurs heures. L'évènement « login » (émis dès que l'authentification est disponible) donne le décalage avec l'horloge serveur (clockOffset), l'heure UTC locale, l'heure ajustée et l'horodatage serveur tel que reçu, pour ancrer les autres évènements.",
+    "Lors d'une session poursuivie après rechargement Lua, aucun nouvel évènement start n'est émis ; loginLogged est repris de l'état précédent.",
+    "La fin de session n'est émise qu'une fois et pas pendant un rechargement Lua (onSerialize avec reason == « reload »)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "telemetry_core."}
+  },
+  "functions": {
+    "onExtensionLoaded": {"desc": "Hook appelé au chargement : émet l'évènement de début de session (sauf session poursuivie), tente d'émettre le login et passe en déchargement manuel.", "params": {"previousState": {"type": "table|nil", "desc": "État renvoyé par onSerialize ({loginLogged}) lors d'un rechargement."}}, "returns": [], "internal": true},
+    "onExtensionUnloaded": {"desc": "Hook appelé au déchargement : émet l'évènement de fin de session avec la durée (hors rechargement Lua).", "params": {}, "returns": [], "internal": true},
+    "onSerialize": {"desc": "Hook appelé avant déchargement : retient si c'est un rechargement Lua et renvoie {loginLogged}.", "params": {"reason": {"type": "string", "desc": "Raison (« reload » pour un rechargement)."}}, "returns": [{"type": "table", "desc": "{loginLogged}"}], "internal": true},
+    "onOnlineStateChanged": {"desc": "Hook appelé quand l'état de connexion en ligne change : une fois la connexion revenue (premier moment où l'horloge serveur est connue), émet l'évènement login.", "params": {"connected": {"type": "boolean", "desc": "true si connecté."}}, "returns": [], "internal": true}
+  }
+}

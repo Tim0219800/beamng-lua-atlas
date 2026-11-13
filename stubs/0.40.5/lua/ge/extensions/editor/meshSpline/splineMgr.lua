@@ -2,213 +2,229 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/meshSpline/splineMgr.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
+--- Gestionnaire d'état de l'outil Mesh Spline : détient la liste des mesh splines (meshSplines) et la table id vers indice (splineMap). Il crée, copie, découpe, joint, supprime, sérialise et reconstruit les splines, applique les presets, gère les liens avec le Master Spline et fournit les callbacks undo/redo de l'éditeur. Chaque spline possède un dossier SimGroup dans MissionGroup (non sauvegardé tant qu'elle n'est pas « bakée ») et reçoit un UUID via Engine.generateUUID().
 --- Accès : extension `editor_meshSpline_splineMgr` : `extensions.load("editor_meshSpline_splineMgr")`, puis la globale `editor_meshSpline_splineMgr`
 ---@class editor_meshSpline_splineMgr
 editor_meshSpline_splineMgr = {}
 
---- Adds a new mesh spline.
+--- Ajoute une nouvelle mesh spline vide : nom unique, UUID, dossier de scène, flags par défaut (isEnabled, normalMode = 2, isAliasRoundRobin...), puis applique le preset 'concrete_barrier' et met à jour la table id vers indice.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:610
 function editor_meshSpline_splineMgr.addNewMeshSpline() end
 
---- One-shot: drops the spline's control nodes onto the surface below (raycast). The build stays free in 3D, so this simply moves
----  the nodes down to the terrain/objects; run it again after terraforming to re-snap.
+--- Action ponctuelle : pose les nœuds de contrôle sur la surface en dessous (raycast vertical) puis marque la spline dirty. La construction reste libre en 3D ; à relancer après un terraformage pour re-coller.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1246
----@param spline any
+---@param spline table Spline à modifier.
 function editor_meshSpline_splineMgr.conformNodesToTerrain(spline) end
 
---- Converts the given paths (traced from a bitmap) to mesh splines.
+--- Convertit des chemins tracés depuis une bitmap en mesh splines : une spline par chemin, points convertis en coordonnées monde via le terrain editor, normales prises sur le terrain. Un chemin trop petit n'est pas importé (la spline vide créée reste dans la liste).
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1256
----@param paths any
+---@param paths table[] Chemins avec points ({x,y} en grille) et widths.
 function editor_meshSpline_splineMgr.convertPathsToMeshSplines(paths) end
 
---- Copies the profile of the given mesh spline.
+--- Copie le profil d'une spline (tous ses paramètres sans les nœuds, largeurs, normales ni géométrie dérivée) pour le coller sur une autre.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1083
----@param spline any
+---@param spline table Spline source.
+---@return table  Profil copié.
 function editor_meshSpline_splineMgr.copyMeshSplineProfile(spline) end
 
---- Deep copies the given mesh spline.
+--- Copie profonde d'une spline (buffer.encode/decode), avec les tables de géométrie dérivée vidées.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:707
----@param spline any
+---@param spline table Spline à copier.
+---@return table  Copie indépendante.
 function editor_meshSpline_splineMgr.deepCopyMeshSpline(spline) end
 
---- Deep copies the full mesh spline state.
+--- Copie profonde de la liste complète des splines (pour l'historique undo/redo).
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:719
+---@return table  Liste de copies.
 function editor_meshSpline_splineMgr.deepCopyMeshSplineState() end
 
---- Deserializes a mesh spline. `data` is either the editor's buffer-encoded blob (string) or a plain table straight from a JSON
----  session file. On the JSON path the derived scratch tables are empty and node positions arrive as plain {x,y,z}, so guarantee
----  the tables exist and rehydrate them to vec3 before the first build.
+--- Désérialise une spline. data est soit le blob encodé de l'éditeur (string), soit une table issue d'un fichier de session JSON ; dans ce dernier cas les tables dérivées sont créées vides et les positions {x,y,z} redeviennent des vec3 avant la première reconstruction.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1180
----@param data any
----@param isCreateObject any
+---@param data string|table Blob ou table de session.
+---@param isCreateObject boolean true pour créer le dossier SimGroup de scène de la spline (sauf si une spline verrouillée en garde déjà un après rechargement Lua).
+---@return table  La spline désérialisée.
 function editor_meshSpline_splineMgr.deserializeMeshSpline(data, isCreateObject) end
 
---- Finds a live mesh spline by id (nil if not present).
+--- Trouve une spline vivante par son id.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:672
----@param id any
+---@param id string UUID de la spline.
+---@return table|nil  La spline, ou nil si absente.
 function editor_meshSpline_splineMgr.findMeshSpline(id) end
 
---- Returns the current list of mesh splines.
+--- Renvoie la liste simplifiée des splines actives (isEnabled) pour l'interface : nom, id et type.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1289
+---@return table[]  Éléments {name, id, type}.
 function editor_meshSpline_splineMgr.getCurrentMeshSplineList() end
 
---- Returns the default slider parameters.
+--- Renvoie les paramètres par défaut des curseurs de l'interface (bornes, valeurs).
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:607
+---@return table  Paramètres de curseurs.
 function editor_meshSpline_splineMgr.getDefaultSliderParams() end
 
---- Fetches the edit mode key.
+--- Renvoie la clé du mode d'édition de l'outil.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:476
+---@return string  Clé du mode d'édition.
 function editor_meshSpline_splineMgr.getEditModeKey() end
 
---- Fetches the mesh splines.
+--- Renvoie la table vivante des mesh splines (non copiée).
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:479
+---@return table  Liste des splines, base 1.
 function editor_meshSpline_splineMgr.getMeshSplines() end
 
---- Fetches the mesh spline map.
+--- Renvoie la table vivante id vers indice des splines.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:482
+---@return table<string, integer>  Indice par id.
 function editor_meshSpline_splineMgr.getSplineMap() end
 
---- Fetches the tool prefix string.
+--- Renvoie le préfixe de nom de l'outil (« Mesh Spline »).
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:473
+---@return string  Préfixe de l'outil.
 function editor_meshSpline_splineMgr.getToolPrefixStr() end
 
---- Returns true if the given mesh spline is linked, false otherwise.
+--- Dit si la spline d'id donné est liée à un Master Spline.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1303
----@param id any
+---@param id string UUID de la spline.
+---@return boolean  true si liée, false sinon (ou si absente).
 function editor_meshSpline_splineMgr.isLinked(id) end
 
---- Joins two unlooped Mesh Splines into one, modifying spline1 and deleting spline2.
+--- Joint deux mesh splines ouvertes en une seule : la géométrie concaténée (geom.joinSplineGeometry) est écrite dans la première, la seconde est supprimée. Ne fait rien si un indice est invalide ou si les nœuds ne permettent pas la jonction.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:885
----@param splineIdx1 any
----@param nodeIdx1 any
----@param splineIdx2 any
----@param nodeIdx2 any
+---@param splineIdx1 integer Indice de la première spline.
+---@param nodeIdx1 integer Nœud d'extrémité de la première.
+---@param splineIdx2 integer Indice de la seconde spline.
+---@param nodeIdx2 integer Nœud d'extrémité de la seconde.
 function editor_meshSpline_splineMgr.joinMeshSplines(splineIdx1, nodeIdx1, splineIdx2, nodeIdx2) end
 
---- Redo callback for object select operations.
+--- Callback de rétablissement pour une opération de sélection d'objet : remet data.new à la place de la spline de même id.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1080
----@param data any
+---@param data table Données d'action avec old et new.
 function editor_meshSpline_splineMgr.objectSelectRedo(data) end
 
---- Undo callback for object select operations.
+--- Callback d'annulation pour une opération de sélection d'objet : remet data.old à la place de la spline de même id, retire ses meshes et la marque dirty.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1077
----@param data any
+---@param data table Données d'action avec old et new.
 function editor_meshSpline_splineMgr.objectSelectUndo(data) end
 
---- Pastes the profile to the given mesh spline.
+--- Colle un profil sur la spline : retire d'abord ses meshes, reprend les paramètres du profil (normalMode, espacement, jitter, décalage vertical, etc.) et marque la spline dirty.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1098
----@param spline any
----@param profile any
+---@param spline table Spline cible.
+---@param profile table Profil renvoyé par copyMeshSplineProfile.
 function editor_meshSpline_splineMgr.pasteMeshSplineProfile(spline, profile) end
 
---- Handles the redo for preset selection (removes meshes before applying).
+--- Rétablit le choix d'un preset (retire les meshes avant d'appliquer le nouvel état).
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1029
----@param meshSplineData any
+---@param meshSplineData table Données d'action.
 function editor_meshSpline_splineMgr.presetSelectionRedo(meshSplineData) end
 
---- Handles the undo for preset selection (removes meshes before applying).
+--- Annule le choix d'un preset (retire les meshes avant d'appliquer l'ancien état).
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1015
----@param meshSplineData any
+---@param meshSplineData table Données d'action.
 function editor_meshSpline_splineMgr.presetSelectionUndo(meshSplineData) end
 
---- Recompute the spline id -> index map (called by the shared session helper after a load appends the loaded splines).
+--- Recalcule la table id vers indice (appelée par l'utilitaire de session après un chargement qui ajoute des splines).
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1063
 function editor_meshSpline_splineMgr.recomputeIdMap() end
 
---- Removes all mesh splines.
----  [If isIncludeDisabled is true, then all mesh splines will be removed, including disabled ones.]
----  [If isIncludeDisabled is false, then only enabled mesh splines will be removed.]
+--- Supprime toutes les splines. Avec isIncludeDisabled à true, y compris les verrouillées et liées ; sinon seulement les actives non liées.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:688
----@param isIncludeDisabled any
+---@param isIncludeDisabled boolean true pour tout supprimer.
 function editor_meshSpline_splineMgr.removeAllMeshSplines(isIncludeDisabled) end
 
---- Removes a linked mesh spline by ID (called from master spline layer removal).
+--- Supprime une spline liée par son id (appelée quand une couche du Master Spline est retirée). Ne fait rien si l'id est inconnu.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:678
----@param splineId any
+---@param splineId string UUID de la spline.
 function editor_meshSpline_splineMgr.removeLinkedMeshSpline(splineId) end
 
---- Removes the mesh spline with the given index.
+--- Supprime la spline d'indice donné : ses meshes, son dossier de scène, puis l'entrée de la liste ; met à jour la table id vers indice. Plante si l'indice n'existe pas (la spline est lue sans test avant tryRemove).
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:656
----@param idx any
+---@param idx integer Indice de la spline (base 1).
 function editor_meshSpline_splineMgr.removeMeshSpline(idx) end
 
---- Serializes a mesh spline to a table.
+--- Sérialise une spline pour le tampon d'éditeur : vide d'abord les tables dérivées de la spline vivante (elle est donc modifiée), puis renvoie buffer.encode(spline).
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1158
----@param spline any
+---@param spline table Spline à sérialiser.
+---@return string  Données encodées (déduit du code).
 function editor_meshSpline_splineMgr.serializeMeshSpline(spline) end
 
---- Serialises a mesh spline to a portable plain table for a session file (see toolUtilities/session). Deep-copied through the
----  codec so the live spline is never mutated; derived geometry is emptied (rebuilt by the dirty pass) and the runtime scene
----  handle dropped.
+--- Sérialise une spline en table simple et portable pour un fichier de session (toolUtilities/session). Copie profonde via le codec pour ne jamais modifier la spline vivante ; la géométrie dérivée est vidée (reconstruite ensuite) et le handle de scène retiré.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1171
----@param spline any
+---@param spline table Spline à sérialiser.
+---@return table  Table JSON-compatible.
 function editor_meshSpline_splineMgr.serializeMeshSplineToTable(spline) end
 
---- Sets the given linked mesh spline to be linked or not.
+--- Active ou désactive le lien d'une spline (isLink, linkId), retire ses meshes et la marque dirty. Ne fait rien si l'id est inconnu.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1309
----@param id any
----@param groupId any
----@param isLink any
+---@param id string UUID de la spline.
+---@param groupId string Identifiant du groupe de lien, utilisé comme linkId si isLink est vrai.
+---@param isLink boolean true pour lier, false pour délier.
 function editor_meshSpline_splineMgr.setLink(id, groupId, isLink) end
 
---- Sets the mesh spline with the given index.
+--- Place la spline à l'indice donné, crée son dossier de scène (SimGroup dans MissionGroup, cansave = false) s'il n'existe pas et la marque dirty.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:485
----@param spline any
----@param idx any
+---@param spline table Spline à enregistrer.
+---@param idx integer Indice de destination (base 1).
 function editor_meshSpline_splineMgr.setMeshSpline(spline, idx) end
 
---- Sets the mesh splines (full table).
+--- Enregistre toutes les splines de la table à leurs indices (appelle setMeshSpline pour chacune).
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:505
----@param splines any
+---@param splines table Liste de splines.
 function editor_meshSpline_splineMgr.setMeshSplines(splines) end
 
---- Sets the given spline to the given preset.
+--- Applique un preset (mesh central, capuchons, espacement, décalages, etc., issus de la table des presets) à la spline : supprime d'abord ses meshes de la scène, copie les paramètres du preset, mesure le mesh et marque la spline dirty. Ne fait rien si la spline ou le nom est nil ; un nom inconnu se contente de la vider et de la marquer dirty.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:512
----@param spline any
----@param presetStr any
+---@param spline table Spline cible.
+---@param presetStr string Nom du preset, par exemple 'concrete_barrier'.
 function editor_meshSpline_splineMgr.setPreset(spline, presetStr) end
 
---- Handles the redo for a single mesh spline.
+--- Callback de rétablissement pour l'édition d'une seule spline.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1007
----@param meshSplineData any
+---@param meshSplineData table Données d'action contenant le nouvel état.
 function editor_meshSpline_splineMgr.singleSplineEditRedo(meshSplineData) end
 
---- Handles the undo for a single mesh spline.
+--- Callback d'annulation pour l'édition d'une seule spline (historique de l'éditeur).
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:999
----@param meshSplineData any
+---@param meshSplineData table Données d'action contenant l'ancien état.
 function editor_meshSpline_splineMgr.singleSplineEditUndo(meshSplineData) end
 
---- Splits the selected mesh spline into two, at the selected node.
+--- Coupe la spline sélectionnée en deux au nœud sélectionné. Une spline en boucle est simplement ouverte au point de coupe. Sinon la spline d'origine est supprimée et remplacée par deux nouvelles splines nommées <nom>_split_A et <nom>_split_B qui reprennent ses paramètres.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:728
----@param selectedSplineIdx any
----@param selectedNodeIdx any
+---@param selectedSplineIdx integer Indice de la spline (base 1).
+---@param selectedNodeIdx integer Indice du nœud de coupe (base 1).
 function editor_meshSpline_splineMgr.splitMeshSpline(selectedSplineIdx, selectedNodeIdx) end
 
---- Handles the redo for trans-meshspline edits.
+--- Rétablit une édition transverse à plusieurs mesh splines.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1053
----@param data any
+---@param data table Données d'action.
 function editor_meshSpline_splineMgr.transSplineEditRedo(data) end
 
---- Handles the undo for trans-meshspline edits.
+--- Annule une édition transverse à plusieurs mesh splines.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1043
----@param data any
+---@param data table Données d'action.
 function editor_meshSpline_splineMgr.transSplineEditUndo(data) end
 
---- Unlinks all mesh splines.
+--- Délie toutes les mesh splines (isLink = false, linkId = nil) et les marque dirty.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1347
 function editor_meshSpline_splineMgr.unlinkAll() end
 
---- Updates the geometry and meshes of any dirty mesh splines.
+--- Reconstruit les splines marquées dirty : moins de 2 nœuds, retire meshes et géométrie ; sinon recalcule la géométrie (populationEngine.updateGeometry), repeuple les meshes (populate.populateMeshSpline) et met à jour roadLength. Signale ensuite une édition à la session « meshSpline ».
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1218
 function editor_meshSpline_splineMgr.updateDirtyMeshSplines() end
 
---- Updates the given linked mesh spline with the given geometry.
+--- Met à jour une spline liée avec la géométrie du Master Spline (nodes, widths, nmls, isLoop, isConformToTerrain). S'il y a moins de 2 points, vide la géométrie dérivée et retire les meshes. Marque la spline dirty.
 ---Source : lua/ge/extensions/editor/meshSpline/splineMgr.lua:1324
----@param id any
----@param points any
----@param widths any
----@param nmls any
----@param isLoop any
----@param isConformToTerrain any
+---@param id string UUID de la spline liée.
+---@param points table Nœuds.
+---@param widths table Largeurs par nœud.
+---@param nmls table Normales par nœud.
+---@param isLoop boolean Spline en boucle.
+---@param isConformToTerrain boolean Épouse la surface en dessous.
 function editor_meshSpline_splineMgr.updateLinkedMeshSpline(id, points, widths, nmls, isLoop, isConformToTerrain) end
 

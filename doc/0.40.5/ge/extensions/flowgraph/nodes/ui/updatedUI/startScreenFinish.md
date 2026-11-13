@@ -4,11 +4,19 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/ui/updatedUI/startScreenFinish")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud « Screen Finish » (repeat_instant, couleur ui). Termine la construction d'un écran (début ou fin) et l'envoie à l'UI. Entrée flow (chainFlow), sortie flow. À placer en bout de chaîne après StartScreen Begin / EndScreen Begin et les nœuds de panneaux.
+
+## Remarques
+
+- Le pin de sortie flow n'est jamais écrit par work.
+
 ## Classe `C`
+
+Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:work()` |  | 21 |
+| `C:work()` | Émet le hook onStartScreenFinishedBuilding puis appelle modules.ui:finishUIBuilding(). | 21 |
 
 ## Hooks émis
 

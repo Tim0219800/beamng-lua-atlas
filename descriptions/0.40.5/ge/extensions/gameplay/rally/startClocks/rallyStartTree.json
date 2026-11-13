@@ -1,0 +1,38 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/startClocks/rallyStartTree.lua",
+  "module": "Affichage LED du panneau d'horloge de départ (« rally start tree ») de BeamNG. Il retrouve dans la scène les TSStatic utilisant la forme s_rally_start_tree.dae, puis dessine dans deux textures (couleur et opacité, 900x540) une grille de LED : feux tricolores (R/A/G), horloge à 6 chiffres en vert, libellé d'étape en ambre et compte à rebours en rouge. Aide aussi à choisir l'orientation de l'affichage vers un point cible. Module simple (table C), sans constructeur.",
+  "notes": [
+    "Les textures sont déclarées dans C.textures (tags @rallyStartClockDisplay et @rallyStartClockOpacity) ; draw doit recevoir une table avec les champs color et opacity correspondants.",
+    "Chiffres disponibles : 0 à 9, S et tiret ; un caractère sans motif est ignoré.",
+    "Les LED éteintes sont dessinées en noir (showInactiveLeds = true)."
+  ],
+  "fields": {
+    "textures": {"type": "table", "desc": "Définition des deux textures dynamiques : color (clearColor transparent) et opacity (clearColor noir), chacune avec tag, width et height."}
+  },
+  "functions": {
+    "findClocks": {
+      "desc": "Parcourt les TSStatic de la scène et renvoie ceux dont shapeName est la forme du start tree.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Liste de {anchor, shapeName (forme d'affichage), transform, scale}"}],
+      "internal": false
+    },
+    "draw": {
+      "desc": "Dessine l'état complet de l'afficheur dans les textures : feux, horloge, libellé d'étape et compte à rebours (format « -N », « M:SS » ou un ou deux chiffres).",
+      "params": {
+        "textures": {"type": "table", "desc": "{color, opacity} : objets texture ciblés"},
+        "display": {"type": "table", "desc": "{clock=string \"HH:MM:SS\" style, label=string, countdown=string, semaphore=\"R\"|\"A\"|\"G\"}"}
+      },
+      "internal": false
+    },
+    "getView": {
+      "desc": "Calcule un vecteur de visée pour l'affichage d'une horloge : combine la tangente et la normale de la surface de la horloge, orientées dans le sens de la route et vers l'intérieur, selon que l'horloge est à droite ou à gauche de la ligne de départ.",
+      "params": {
+        "clock": {"type": "table", "desc": "Élément renvoyé par findClocks (utilise clock.anchor)"},
+        "startLine": {"type": "table", "desc": "{pos, rot} de la ligne de départ ; rot nécessaire"},
+        "targetPos": {"type": "vec3", "desc": "Position de la cible (côté où se trouve la horloge par rapport à la route)"}
+      },
+      "returns": [{"type": "vec3|nil", "desc": "Direction composée ; nil si la rotation est absente ou dégénérée"}],
+      "internal": false
+    }
+  }
+}

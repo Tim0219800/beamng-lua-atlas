@@ -2,272 +2,260 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/api/core.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
+--- Noyau de l'objet editor du World Editor : initialize(editor) y installe les constantes (FloatMin/Max, IntMin/Max, AuxControl_*), l'état (history, levelPath, dirty, editModes, selection) et les fonctions de base : création/ouverture/sauvegarde de niveaux, état « modifié » (dirty) du niveau et des outils, annuler/refaire, types de visualisation, visibilité/sélectionnabilité des classes d'objets, modes d'édition et actions copier/coller/supprimer routées vers le mode courant. Un moddeur d'outil d'éditeur s'en sert via editor.xxx.
 --- Accès : extension `editor_api_core` : `extensions.load("editor_api_core")`, puis la globale `editor_api_core`
 ---@class editor_api_core
 editor_api_core = {}
 
+--- Installe constantes, variables d'état et fonctions sur l'objet editor.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/editor/api/core.lua:715
----@param editorInstance any
+---@param editorInstance table Objet editor
 function editor_api_core.initialize(editorInstance) end
 
---- Classe locale `editor` de lua/ge/extensions/editor/api/core.lua
+--- Fonctions ajoutées à l'objet editor par initialize.
 ---@class editor_api_core_editor
 local editor_api_core_editor = {}
 
+--- Si des outils sont modifiés, ouvre la fenêtre modale saveDirtyTools et renvoie true.
 ---Source : lua/ge/extensions/editor/api/core.lua:544
+---@return boolean  true si au moins un outil est modifié
 function editor_api_core_editor.anyToolDirty() end
 
---- Save a copy of the level's scene tree to an autosave folder
+--- Sauvegarde une copie du niveau dans /temp/level_autosaves/<niveau>/<compteur>/ en tournant sur files.autoSave.maxAutoSaveCountPerSession, puis restaure levelPath et l'état dirty.
 ---Source : lua/ge/extensions/editor/api/core.lua:150
 function editor_api_core_editor.autoSaveLevel() end
 
+--- Si le niveau/les outils sont modifiés, affiche une boîte de dialogue : Oui sauvegarde, Annuler appelle Engine.cancelShutdown(), Non remet tout à propre.
 ---Source : lua/ge/extensions/editor/api/core.lua:553
----@param noCancelButton any
+---@param noCancelButton boolean|nil Si vrai, pas de bouton Annuler
 function editor_api_core_editor.checkDirtyAndSave(noCancelButton) end
 
---- Clears the current undo history (along with redo information), basically acting like a collapse of operations. From this moment all the past operations are irreversible.
+--- Vide l'historique d'annulation et de refaire ; les actions passées deviennent irréversibles.
 ---Source : lua/ge/extensions/editor/api/core.lua:309
 function editor_api_core_editor.clearUndoHistory() end
 
+--- Supprime tous les types de visualisation enregistrés.
 ---Source : lua/ge/extensions/editor/api/core.lua:371
 function editor_api_core_editor.clearVisualizationTypes() end
 
---- Copy the current selection. The copy action is routed to the current edit mode, calling its ``onCopy()`` callback, see `Edit Modes`.
----  The global extension hook ``onEditorCopy`` will also be invoked, which can be used by other tools if they're in focus and don't have edit modes registered.
+--- Copier : appelle onCopy du mode courant puis le hook onEditorCopy.
 ---Source : lua/ge/extensions/editor/api/core.lua:474
 function editor_api_core_editor.copy() end
 
+--- Copie récursivement les fichiers de srcPath vers dstPath (FS:findFiles + FS:copyFile) et le logue.
 ---Source : lua/ge/extensions/editor/api/core.lua:20
----@param srcPath any
----@param dstPath any
+---@param srcPath string Dossier source
+---@param dstPath string Dossier destination
 function editor_api_core_editor.copyDirectory(srcPath, dstPath) end
 
+--- Copie un dossier de niveau (défaut levels/template/) vers un nouveau, remplace le nom de l'ancien niveau par le nouveau dans les .json/.cs et renomme les fichiers contenant l'ancien nom. Peut être long.
 ---Source : lua/ge/extensions/editor/api/core.lua:32
----@param srcPath any
----@param dstPath any
+---@param srcPath string|nil Niveau source, levels/template/ si vide
+---@param dstPath string Niveau destination
 function editor_api_core_editor.copyLevelFolder(srcPath, dstPath) end
 
---- Cut the current selection. The cut action is routed to the current edit mode, calling its ``onCut()`` callback, see `Edit Modes`.
----  The global extension hook ``onEditorCut`` will also be invoked, which can be used by other tools if they're in focus and don't have edit modes registered.
+--- Couper : appelle onCut du mode d'édition courant puis le hook onEditorCut.
 ---Source : lua/ge/extensions/editor/api/core.lua:465
 function editor_api_core_editor.cut() end
 
---- Delete an object by its id.
+--- Supprime un objet par id s'il existe et n'est pas verrouillé, puis marque l'éditeur modifié.
 ---Source : lua/ge/extensions/editor/api/core.lua:275
----@param objectId any
+---@param objectId integer ID de l'objet
+---@return boolean  true si supprimé
 function editor_api_core_editor.deleteObject(objectId) end
 
---- Delete the items in the current selection. The delete selection action is routed to the current edit mode, calling its ``onDeleteSelection()`` callback, see `Edit Modes`.
----  The global extension hook ``onEditorDeleteSelection`` will also be invoked, which can be used by other tools if they're in focus and don't have edit modes registered.
+--- Supprimer la sélection : appelle onDeleteSelection du mode courant, émet onEditorDeleteSelection et vide editor.selection.
 ---Source : lua/ge/extensions/editor/api/core.lua:521
 function editor_api_core_editor.deleteSelection() end
 
---- Deselect the current selection. The deselect action is routed to the current edit mode, calling its ``onDeselect()`` callback, see `Edit Modes`.
----  The global extension hook ``onEditorDeselect`` will also be invoked, which can be used by other tools if they're in focus and don't have edit modes registered.
+--- Désélectionner : appelle onDeselect du mode courant puis le hook onEditorDeselect.
 ---Source : lua/ge/extensions/editor/api/core.lua:512
 function editor_api_core_editor.deselect() end
 
---- Used by editor UI to do new level, complete with all the open dialog
+--- Pour l'UI : propose de sauver, ouvre un sélecteur de dossier sous /levels, copie le niveau template vers le nouveau dossier, puis newLevel() et openLevel().
 ---Source : lua/ge/extensions/editor/api/core.lua:569
 function editor_api_core_editor.doNewLevel() end
 
---- Used by editor UI to open a level, complete with open file dialog
+--- Pour l'UI : propose de sauver, ouvre un sélecteur de dossier sous /levels et ouvre le niveau choisi.
 ---Source : lua/ge/extensions/editor/api/core.lua:584
 function editor_api_core_editor.doOpenLevel() end
 
---- Used by editor UI to save level, will ask for folder is no level path was set
+--- Pour l'UI : sauvegarde le niveau, ou appelle doSaveLevelAs si levelPath est vide.
 ---Source : lua/ge/extensions/editor/api/core.lua:596
 function editor_api_core_editor.doSaveLevel() end
 
---- Used by editor UI to save a level into another folder, as a new level, complete with open folder dialog
+--- Pour l'UI : sélecteur de dossier, copie le dossier du niveau vers le nouveau puis saveLevelAs. Refuse /levels directement (il faut un sous-dossier).
 ---Source : lua/ge/extensions/editor/api/core.lua:606
 function editor_api_core_editor.doSaveLevelAs() end
 
---- Duplicate the current selection. The duplicate action is routed to the current edit mode, calling its ``onDuplicate()`` callback, see `Edit Modes`.
----  The global extension hook ``onEditorDuplicate`` will also be invoked, which can be used by other tools if they're in focus and don't have edit modes registered.
+--- Dupliquer : appelle onDuplicate du mode courant puis le hook onEditorDuplicate.
 ---Source : lua/ge/extensions/editor/api/core.lua:494
 function editor_api_core_editor.duplicate() end
 
+--- Active/désactive le mode headless d'un outil : sauvegarde et charge les dispositions de fenêtres, renseigne editor.headless/headlessToolName et émet onEditorHeadlessChange(enabled, toolName).
 ---Source : lua/ge/extensions/editor/api/core.lua:625
----@param enabled any
----@param toolName any
+---@param enabled boolean Activer ou non
+---@param toolName string Nom de l'outil
 function editor_api_core_editor.enableHeadless(enabled, toolName) end
 
---- Returns the current edit mode name, from the key name of the editMode table
+--- Clé du mode courant dans editor.editModes, "" si aucun.
 ---Source : lua/ge/extensions/editor/api/core.lua:456
+---@return string  Nom
 function editor_api_core_editor.getCurrentEditModeName() end
 
---- Return the current level name.
+--- Nom du niveau courant (dernier dossier du chemin de mission).
 ---Source : lua/ge/extensions/editor/api/core.lua:530
+---@return string|nil  Nom du niveau
 function editor_api_core_editor.getLevelName() end
 
---- Return the current level path.
+--- Chemin du dossier du niveau courant, "" si inconnu.
 ---Source : lua/ge/extensions/editor/api/core.lua:539
+---@return string  Chemin
 function editor_api_core_editor.getLevelPath() end
 
---- Return true if object type is editable/selectable.
----  @param typeName the name of the C++ object class/type
+--- Indique si une classe d'objets est sélectionnable.
 ---Source : lua/ge/extensions/editor/api/core.lua:398
----@param typeName any
+---@param typeName string Nom de la classe
+---@return boolean  true si sélectionnable
 function editor_api_core_editor.getObjectTypeSelectable(typeName) end
 
---- Returns true/false for class visibility
----  Get the object type visibility.
----  @param typeName the name of the C++ object class/type
+--- Indique si une classe d'objets est rendue.
 ---Source : lua/ge/extensions/editor/api/core.lua:385
----@param typeName any
+---@param typeName string Nom de la classe
+---@return boolean  true si visible
 function editor_api_core_editor.getObjectTypeVisible(typeName) end
 
---- Return a visualization type current value.
----  @param name the vizualization's name
----  @return true if the vizualization is active
+--- Valeur courante d'un type de visualisation ; nil si le nom est inconnu.
 ---Source : lua/ge/extensions/editor/api/core.lua:338
----@param name any
+---@param name string Nom du type
+---@return boolean|nil  true si actif
 function editor_api_core_editor.getVisualizationType(name) end
 
---- Returns the available visualization types. You can add custom ones adding an item to ``editor.registerVisualizationType(...)``
+--- Liste des types de visualisation, triée par displayName si besoin.
 ---Source : lua/ge/extensions/editor/api/core.lua:356
+---@return table[]  Types enregistrés
 function editor_api_core_editor.getVisualizationTypes() end
 
+--- Indique si cet outil est actuellement en mode headless.
 ---Source : lua/ge/extensions/editor/api/core.lua:647
----@param toolName any
+---@param toolName string Nom de l'outil
+---@return boolean  true si actif
 function editor_api_core_editor.isHeadlessToolActive(toolName) end
 
+--- Crée dans le dossier du niveau un fichier .link (JSON {path = targetPath}) qui pointe vers targetPath, et renvoie le chemin du lien (sans .link). Renvoie targetPath tel quel si aucun niveau n'est ouvert, "" si targetPath est vide.
 ---Source : lua/ge/extensions/editor/api/core.lua:665
----@param targetPath any
+---@param targetPath string Chemin de la ressource cible
+---@return string  Chemin dans le niveau
 function editor_api_core_editor.linkifyPath(targetPath) end
 
+--- Coupe le canal audio maître (mémorise le volume) ou le rétablit.
 ---Source : lua/ge/extensions/editor/api/core.lua:651
----@param muteIt any
+---@param muteIt boolean|nil true ou nil pour couper, false pour rétablir
 function editor_api_core_editor.muteAudio(muteIt) end
 
---- Reset everything and create a new level from a default template
+--- Remet l'éditeur à zéro pour un nouveau niveau : hooks onEditorExitLevel puis onEditorBeforeNewLevel, vide l'historique, levelPath = "", compteur d'autosave à 1, puis onEditorAfterNewLevel et resetDirty. Ne détruit pas le scenetree.
 ---Source : lua/ge/extensions/editor/api/core.lua:74
 function editor_api_core_editor.newLevel() end
 
---- Open an existing level from disk. Will remove any unsaved changes made to the current level.
----  @param path the level folder, relative to game root
+--- Ouvre un niveau existant : désactive les signaux Sim, hook onEditorBeforeOpenLevel, newLevel(), shutdown de l'éditeur puis core_levels.startLevel(path), puis hook onEditorAfterOpenLevel. Les modifications non sauvées sont perdues.
 ---Source : lua/ge/extensions/editor/api/core.lua:88
----@param path any
+---@param path string Dossier du niveau, relatif à la racine du jeu
 function editor_api_core_editor.openLevel(path) end
 
---- Paste the current selection. The paste action is routed to the current edit mode, calling its ``onPaste()`` callback, see `Edit Modes`.
----  The global extension hook ``onEditorPaste`` will also be invoked, which can be used by other tools if they're in focus and don't have edit modes registered.
+--- Coller : appelle onPaste du mode courant puis le hook onEditorPaste.
 ---Source : lua/ge/extensions/editor/api/core.lua:484
 function editor_api_core_editor.paste() end
 
---- Hides and deactivates the editor.
+--- Cache et désactive l'éditeur.
 ---Source : lua/ge/extensions/editor/api/core.lua:265
 function editor_api_core_editor.quitEditor() end
 
---- Quit the actual game.
+--- Quitte le jeu (quit()).
 ---Source : lua/ge/extensions/editor/api/core.lua:270
 function editor_api_core_editor.quitGame() end
 
---- Redo (revert the last undo steps) the last operation(s).
----  @param steps the number of redo steps to be performed, if omitted, then this is 1
+--- Refait la ou les dernières opérations annulées.
 ---Source : lua/ge/extensions/editor/api/core.lua:293
----@param steps any
+---@param steps integer|nil Nombre d'étapes, 1 par défaut
 function editor_api_core_editor.redo(steps) end
 
---- Add a new user visualization type.
----  @param typeData the visualization type info
+--- Enregistre un type de visualisation personnalisé.
 ---Source : lua/ge/extensions/editor/api/core.lua:366
----@param typeData any
+---@param typeData table name, displayName, type (editor.varTypes), getter/setter si Custom, callback optionnel
 function editor_api_core_editor.registerVisualizationType(typeData) end
 
+--- Vide la liste des outils modifiés et remet cleanExit à true.
 ---Source : lua/ge/extensions/editor/api/core.lua:252
 function editor_api_core_editor.resetAllDirtyTools() end
 
---- Set the editor state to clean, no need to save it.
+--- Marque le niveau comme propre, efface le flag de scène du moteur et remet cleanExit à true.
 ---Source : lua/ge/extensions/editor/api/core.lua:258
 function editor_api_core_editor.resetDirty() end
 
+--- Retire un outil de la liste des outils modifiés.
 ---Source : lua/ge/extensions/editor/api/core.lua:248
----@param name any
+---@param name string Nom de l'outil
 function editor_api_core_editor.resetDirtyTool(name) end
 
+--- Dessine la fenêtre modale « Save Tool Windows Data » listant les outils modifiés (Save All, Save Selected, Don't Save Any, Cancel).
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/editor/api/core.lua:177
 function editor_api_core_editor.saveDirtyToolsUi() end
 
---- Save the current level data. There must be a level opened. This function will call the Save As if the level is unnamed.
+--- Sauvegarde le MissionGroup dans <levelPath>main (via __main), avec hooks onEditorBeforeSaveLevel/onEditorAfterSaveLevel, resetDirty, notification, et copie de sauvegarde si la préférence files.autoSave.saveBackupCopy est active (hooks onEditorBefore/AfterSaveLevelBackup).
 ---Source : lua/ge/extensions/editor/api/core.lua:115
 function editor_api_core_editor.saveLevel() end
 
---- Save the level's scene tree to the specified path.
+--- Change editor.levelPath et le nom de mission (info.json) puis sauvegarde le niveau à cet emplacement.
 ---Source : lua/ge/extensions/editor/api/core.lua:143
----@param levelPath any
+---@param levelPath string Dossier cible
 function editor_api_core_editor.saveLevelAs(levelPath) end
 
---- Select all items. The select all action is routed to the current edit mode, calling its ``onSelectAll()`` callback, see `Edit Modes`.
----  The global extension hook ``onEditorSelectAll`` will also be invoked, which can be used by other tools if they're in focus and don't have edit modes registered.
+--- Tout sélectionner : appelle onSelectAll du mode courant puis le hook onEditorSelectAll.
 ---Source : lua/ge/extensions/editor/api/core.lua:503
 function editor_api_core_editor.selectAll() end
 
---- Select the current edit mode
----  @param mode the edit mode table, with the fields:
----   **displayName** - the display name shown in the title bar for the current edit mode, example: "Edit Terrain"
----   **onActivate** - a function called when the edit mode gets selected, optional
----   **onDeactivate** - a function called when the edit mode gets deselected, optional
----   **onUpdate** - a function called when the edit mode needs to update/check internal state
----   **onCut** - a function called when the edit mode is required to cut the selection, optional
----   **onCopy** - a function called when the edit mode is required to copy the selection, optional
----   **onPaste** - a function called when the edit mode is required to paste the selection, optional
----   **onDuplicate** - a function called when the edit mode is required to duplicate(clone) the selection, optional
----   **onSelectAll** - a function called when the edit mode is required to select all items, optional
----   **onDeselect** - a function called when the edit mode is required to deselect the selection, optional
----   **onDeleteSelection** - a function called when the edit mode is required to delete the selected items, optional
----   **onToolbar** - a function called when the edit mode is selected and it needs to render icon buttons in the vertical edit mode toolbar, optional
----   **actionMap** - an action map for the input, which will be pushed to the action map stack when the edit mode is selected, optional
----   **icon** - an icon for the edit mode, you can find the icons in the editor.icons table, if nil, no toolbar button will be shown in the edit modes toolbar
----   **iconTooltip** - a tooltip for the button in the edit modes toolbar, optional
+--- Active un mode d'édition : désactive l'ancien (onDeactivate, hook onEditorEditModeDeactivated, pop de son actionMap), active le nouveau (onActivate, hook onEditorEditModeActivated, push de son actionMap en priorité maximale) puis émet onEditorEditModeChanged(old, new). Champs du mode : displayName, onActivate, onDeactivate, onUpdate, onCut, onCopy, onPaste, onDuplicate, onSelectAll, onDeselect, onDeleteSelection, onToolbar, actionMap, icon, iconTooltip, hideObjectIcons.
 ---Source : lua/ge/extensions/editor/api/core.lua:419
----@param newEditMode any
+---@param newEditMode table|nil Table du mode d'édition (nil pour aucun)
 function editor_api_core_editor.selectEditMode(newEditMode) end
 
---- Set the editor state to dirty, level needs to be saved.
+--- Marque le niveau comme modifié et enregistre l'info d'arrêt non propre (préférences general.internal.cleanExit/lastLevel).
 ---Source : lua/ge/extensions/editor/api/core.lua:238
 function editor_api_core_editor.setDirty() end
 
+--- Déclare un outil comme ayant des données non sauvées, avec sa fonction de sauvegarde.
 ---Source : lua/ge/extensions/editor/api/core.lua:243
----@param name any
----@param saveFn any
+---@param name string Nom de l'outil
+---@param saveFn function Fonction appelée pour sauver les données
 function editor_api_core_editor.setDirtyTool(name, saveFn) end
 
---- Set a certain object type from being editable/selectable.
----  @param typeName the name of the C++ object class/type
----  @param selectable true/false for class selectability
+--- Autorise ou interdit la sélection d'une classe d'objets.
 ---Source : lua/ge/extensions/editor/api/core.lua:392
----@param typeName any
----@param selectable any
+---@param typeName string Nom de la classe
+---@param selectable boolean Sélectionnable
 function editor_api_core_editor.setObjectTypeSelectable(typeName, selectable) end
 
---- Set the object type visibility.
----  @param typeName the name of the C++ object class/type to be visible
----  @param visible true/false for class visibility
+--- Rend visible/invisible une classe d'objets C++ dans l'éditeur.
 ---Source : lua/ge/extensions/editor/api/core.lua:378
----@param typeName any
----@param visible any
+---@param typeName string Nom de la classe
+---@param visible boolean Visibilité
 function editor_api_core_editor.setObjectTypeVisible(typeName, visible) end
 
---- Allows the user to change the current history table instance.
----  This is useful for context aware undo, for example if the editor uses multiple windows/panes and when switching editing actions back and forth, each window/pane should keep its own undo context to allow proper undo/redo operation.
----  @param history the history table instance to be used from now on. If this is nil then the default history will be used.
+--- Change l'instance d'historique utilisée (utile pour un undo par fenêtre/panneau). nil rétablit l'historique par défaut.
 ---Source : lua/ge/extensions/editor/api/core.lua:300
----@param history any
+---@param history table|nil Instance d'historique
 function editor_api_core_editor.setUndoHistory(history) end
 
---- Set a visualization type's status on or off.
----  @param name the name of the type, allowed values can be found using [editor.getVisualizationTypes()][{{editor.getVisualizationTypes()}}]
----  @param on true to activate the vizualization
+--- Active/désactive un type de visualisation enregistré (selon son type ConVar/LuaVar/Custom/Setting) puis appelle son callback éventuel. Ignore un nom inconnu.
 ---Source : lua/ge/extensions/editor/api/core.lua:316
----@param name any
----@param on any
+---@param name string Nom du type
+---@param on boolean true pour activer
 function editor_api_core_editor.setVisualizationType(name, on) end
 
---- Undo the last operation(s).
----  @param steps the number of undo steps to be performed, if omitted, then this is 1
+--- Annule la ou les dernières opérations de l'historique courant.
 ---Source : lua/ge/extensions/editor/api/core.lua:287
----@param steps any
+---@param steps integer|nil Nombre d'étapes, 1 par défaut
 function editor_api_core_editor.undo(steps) end
 

@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/editor/waterObjectHelper.lua",
+  "module": "Petite extension de l'éditeur de monde : quand on modifie dans l'inspecteur un champ de texture d'un objet d'eau, elle recharge les textures de l'objet. Elle ne réagit qu'aux champs rippleTex, foamTex, depthGradientTex et cubemap, et uniquement pour les objets de classe WaterObject.",
+  "functions": {
+    "onEditorInspectorFieldChanged": {
+      "desc": "Hook de l'éditeur appelé quand un champ de l'inspecteur change. Pour chaque id sélectionné, si le champ est rippleTex, foamTex, depthGradientTex ou cubemap et que l'objet est un WaterObject, appelle object:reloadTextures().",
+      "params": {
+        "selectedIds": {"type": "table<integer, integer>", "desc": "ids des objets sélectionnés"},
+        "fieldName": {"type": "string", "desc": "nom du champ modifié"},
+        "fieldValue": {"type": "any", "desc": "nouvelle valeur (non utilisée)"},
+        "arrayIndex": {"type": "integer|nil", "desc": "indice dans le tableau pour un champ tableau (non utilisé)"}
+      },
+      "internal": true
+    }
+  },
+  "notes": [
+    "Le code ne vérifie pas que scenetree.findObjectById renvoie un objet non nil avant d'appeler object:isSubClassOf : un id invalide provoquerait une erreur."
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "path": "lua/ge/extensions/telemetry/clientFacts.lua",
+  "module": "Module (chargé par require, pas une extension) qui rassemble les « faits client » de la télémétrie : version du jeu, plateforme, type de build, OS, CPU, GPU préféré, mémoire, batterie, VR, mode headless, fournisseur d'intégration continue, licence tech, etc. configManager l'envoie au serveur lors de la récupération de la configuration de télémétrie. Les valeurs inconnues ou invalides sont omises (nil).",
+  "notes": [
+    "Les valeurs textuelles 'unknown' ou vides, les nombres <= 0 (ou < 0 selon le champ) et les booléens non booléens sont remplacés par nil.",
+    "deviceType vaut 'steamdeck', 'laptop' ou 'desktop' (selon la présence d'une batterie, sur PC), sinon 'unknown'.",
+    "osVersion est de la forme 'majeur.mineur.build' et n'est renseigné que si les trois nombres sont valides."
+  ],
+  "functions": {
+    "detectCiProvider": {
+      "desc": "Détecte un exécuteur d'intégration continue via les variables d'environnement. Ordre de priorité : jenkins (JENKINS_URL, JENKINS_HOME), gitlab (GITLAB_CI), github-actions, azure-pipelines (TF_BUILD), teamcity, buildkite, circleci, travis, appveyor, puis 'generic' si CI est défini. Une valeur '', '0' ou 'false' (insensible à la casse) compte comme non définie.",
+      "params": {"getEnvironment": {"type": "function|nil", "desc": "Fonction nom -> valeur ; os.getenv par défaut (injectable pour les tests)."}},
+      "returns": [
+        {"type": "boolean", "desc": "true si un exécuteur CI est détecté."},
+        {"type": "string|nil", "desc": "Nom du fournisseur."}
+      ],
+      "internal": false
+    },
+    "normalizePlatform": {
+      "desc": "Normalise le nom de plateforme : la chaîne vide (PC) devient 'pc', 'unknown' ou une valeur non textuelle devient nil, le reste est conservé.",
+      "params": {"platform": {"type": "string|nil", "desc": "Valeur brute de Engine.Platform.getPlatform()."}},
+      "returns": [{"type": "string|nil", "desc": "Plateforme normalisée."}],
+      "internal": false
+    },
+    "selectPreferredGPU": {
+      "desc": "Choisit l'adaptateur graphique : le premier de type 'dedicated', sinon le premier de la liste ; nil si la liste est absente ou vide.",
+      "params": {"adapters": {"type": "table[]|nil", "desc": "Liste issue de Engine.Platform.getGPUAdaptersInfo()."}},
+      "returns": [{"type": "table|nil", "desc": "Adaptateur choisi."}],
+      "internal": false
+    },
+    "collect": {
+      "desc": "Construit la table de faits client en interrogeant Engine.Platform (OS, CPU, mémoire, alimentation, GPU), Engine.Render (type d'adaptateur), les globales beamng_* , headless_mode, OnlineServiceProvider.branch, ResearchVerifier.isTechLicenseVerified() et render_openxr.state. Tolère l'absence de ces API.",
+      "params": {"version": {"type": "string", "desc": "Version du schéma de télémétrie (telemetryVersion de configManager)."}},
+      "returns": [{"type": "table", "desc": "Champs : version, product, productVersion, platform, buildType, buildNumber, arch, isCiRunner, ciProvider, osType, osBits, osVersion*, deviceType, systemMemoryBytes, cpu*, gpu*, gfxAdapterType, headless, distributionBranch, techLicense, batteryPresent, vrAvailable."}],
+      "internal": false
+    }
+  }
+}

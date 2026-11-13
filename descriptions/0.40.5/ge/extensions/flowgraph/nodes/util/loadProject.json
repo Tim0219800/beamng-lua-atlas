@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/loadProject.lua",
+  "module": "Nœud « Load Project » (once_p_duration). Charge un projet flowgraph par nom (chemin relatif à flowgraphEditor/, extension .flow.json facultative) et l'exécute. Entrées : filepath, startNextFrame (démarre à la frame suivante au lieu d'immédiatement). Quand le projet parent s'arrête, le projet cible est arrêté et supprimé (data.destroyTargetOnStop, true par défaut).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Active destroyTargetOnStop et vide la cible.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Limite le sélecteur de fichier du pin filepath aux fichiers .flow.json.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Arrête la cible (setRunning(false)) et la retire à la frame suivante via core_flowgraphManager.removeNextFrame si destroyTargetOnStop.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Résout le chemin (essaie le nom brut, +.flow.json, flowgraphEditor/<nom>.flow.json), charge le gestionnaire (core_flowgraphManager.loadManager) puis le démarre tout de suite ou à la frame suivante.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

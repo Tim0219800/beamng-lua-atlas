@@ -1,0 +1,441 @@
+{
+  "path": "lua/ge/extensions/career/modules/inventory.lua",
+  "module": "Inventaire de véhicules de la carrière : la table vehicles (inventoryId -> infos : model, config, niceName, owned, partConditions, timeToAccess, loanType, owningOrganization...), la correspondance inventoryId <-> id d'objet véhicule dans le monde, le véhicule courant, le dernier et le favori. Il gère l'ajout et la suppression de véhicules, leur apparition/entrée (spawnVehicle, enterVehicle), la sauvegarde (un fichier JSON et une miniature par véhicule dans career/vehicles/ plus career/inventory.json), le menu « Mes véhicules » de l'ordinateur, la vente, les plaques, les permissions et les POI de la grande carte.",
+  "usage": "local invId = career_modules_inventory.getCurrentVehicle()\nlocal info = career_modules_inventory.getVehicle(invId)\nprint(info.niceName, info.owned)",
+  "notes": [
+    "L'inventaire compte 20 emplacements (slotAmount) ; seuls les véhicules owned sans takesNoInventorySpace occupent un emplacement.",
+    "inventoryId = plus petit entier libre à partir de 1. Un véhicule ajouté reçoit les champs configBaseValue, finalBuyingPrice, defaultThumbnail et plaque (config.licenseName).",
+    "Le premier véhicule ajouté devient le favori. Posséder 3 véhicules débloque le succès GARAGE_STARTER.",
+    "À l'ajout, les conditions de pièces sont initialisées côté véhicule puis lues ; le hook onVehicleAdded(inventoryId) est émis quand elles sont à jour (attention : onVehicleAdded n'est donc pas immédiat).",
+    "Hooks émis : onInventoryPreRemoveVehicleObject(inventoryId, vehId), onVehicleRemoved(inventoryId), onEnterVehicleFinished(inventoryId), onBeforeVehicleSell({inventoryId, price}), onVehicleSaveFinished(savePath).",
+    "Le chargement (onExtensionLoaded) ignore les sauvegardes de version < 42 ; si la version est < 64, tous les véhicules sont vendus (ou loaners rendus, ou supprimés) à l'activation de la carrière.",
+    "timeToAccess (s) retarde l'accès à un véhicule (achat, réparation) ; il décroît en temps réel dans onUpdate, y compris pendant que le jeu est fermé (réduit de la durée écoulée depuis la sauvegarde).",
+    "Un véhicule non possédé (owned = false) est interdit à la vente, réparation, peinture, tuning, achat de pièces, plaque, stockage, favori, remorquage au garage ; returnLoanedVehicle est autorisé seulement pour ces véhicules (caché pour les possédés).",
+    "getInventoryIdsInClosestGarage(true) renvoie next(...) de l'ensemble des véhicules du garage, donc un véhicule quelconque et non nécessairement le plus proche (le tri par distance n'est appliqué qu'à la liste complète).",
+    "setLicensePlateText teste `if inventoryId` au lieu de `if vehId` : si le véhicule n'est pas dans le monde (vehId nil), core_vehicles.setPlateText est appelé avec nil.",
+    "saveAnyVehiclePosDEBUG vaut true : les positions de tous les véhicules sont toujours restaurées telles que sauvegardées."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : career_career, career_modules_log, gameplay_tutorial_setup."}
+  },
+  "functions": {
+    "getVehicles": {
+      "desc": "Renvoie la table complète des véhicules de l'inventaire (par référence).",
+      "params": {},
+      "returns": [{"type": "table<integer, table>", "desc": "inventoryId -> infos du véhicule."}],
+      "internal": false
+    },
+    "getVehicle": {
+      "desc": "Renvoie les infos d'un véhicule de l'inventaire.",
+      "params": {"inventoryId": {"type": "integer", "desc": "Id d'inventaire."}},
+      "returns": [{"type": "table|nil", "desc": "Infos du véhicule."}],
+      "internal": false
+    },
+    "isEmpty": {
+      "desc": "Indique si l'inventaire ne contient aucun véhicule.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si vide."}],
+      "internal": false
+    },
+    "getCurrentVehicle": {
+      "desc": "Id d'inventaire du véhicule que le joueur conduit (nil à pied). Listé dans les fonctions « Debug » du fichier.",
+      "params": {},
+      "returns": [{"type": "integer|nil", "desc": "inventoryId courant."}],
+      "internal": false
+    },
+    "getCurrentVehicleId": {
+      "desc": "Id d'objet (monde) du véhicule courant de l'inventaire.",
+      "params": {},
+      "returns": [{"type": "integer|nil", "desc": "Id d'objet véhicule."}],
+      "internal": false
+    },
+    "getLastVehicle": {
+      "desc": "Id d'inventaire du dernier véhicule dans lequel le joueur est entré.",
+      "params": {},
+      "returns": [{"type": "integer|nil", "desc": "inventoryId."}],
+      "internal": false
+    },
+    "getVehicleIdFromInventoryId": {
+      "desc": "Convertit un id d'inventaire en id d'objet du monde (nil si non apparu).",
+      "params": {"inventoryId": {"type": "integer|nil", "desc": "Id d'inventaire."}},
+      "returns": [{"type": "integer|nil", "desc": "Id d'objet."}],
+      "internal": false
+    },
+    "getInventoryIdFromVehicleId": {
+      "desc": "Convertit un id d'objet du monde en id d'inventaire (nil si le véhicule n'est pas dans l'inventaire).",
+      "params": {"vehId": {"type": "integer|nil", "desc": "Id d'objet véhicule."}},
+      "returns": [{"type": "integer|nil", "desc": "Id d'inventaire."}],
+      "internal": false
+    },
+    "getMapInventoryIdToVehId": {
+      "desc": "Renvoie la table inventoryId -> id d'objet pour les véhicules présents dans le monde (par référence).",
+      "params": {},
+      "returns": [{"type": "table<integer, integer>", "desc": "Correspondance."}],
+      "internal": false
+    },
+    "isSeatedInsideOwnedVehicle": {
+      "desc": "Indique si le joueur est dans un véhicule de l'inventaire (currentVehicle défini), possédé ou non.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si assis dans un véhicule de l'inventaire."}],
+      "internal": false
+    },
+    "getNumberOfFreeSlots": {
+      "desc": "Nombre d'emplacements libres (20 moins les véhicules owned qui occupent de la place).",
+      "params": {},
+      "returns": [{"type": "integer", "desc": "Emplacements libres."}],
+      "internal": false
+    },
+    "hasFreeSlot": {
+      "desc": "Indique s'il reste au moins un emplacement libre.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si oui."}],
+      "internal": false
+    },
+    "getClosestGarage": {
+      "desc": "Renvoie le garage dont la première zone est la plus proche de pos (position du joueur par défaut) dans le niveau courant.",
+      "params": {"pos": {"type": "vec3|nil", "desc": "Position de référence."}},
+      "returns": [{"type": "table|nil", "desc": "Installation garage."}],
+      "internal": false
+    },
+    "getInventoryIdsInClosestGarage": {
+      "desc": "Liste les véhicules de l'inventaire présents dans le garage le plus proche (zone intersectée), triés par distance au joueur. Avec onlyFirst, renvoie un seul id (le premier trouvé par next, voir notes).",
+      "params": {"onlyFirst": {"type": "boolean|nil", "desc": "Ne renvoyer qu'un id."}},
+      "returns": [{"type": "integer[]|integer|nil", "desc": "Liste d'ids, ou un id si onlyFirst."}],
+      "internal": false
+    },
+    "addVehicle": {
+      "desc": "Ajoute un véhicule du monde à l'inventaire : enregistre modèle, config, nom, plaque, valeur de base (configBaseValue), initialise les conditions de pièces, attribue un inventoryId libre si absent, définit le favori s'il est le premier et débloque GARAGE_STARTER à 3 véhicules possédés.",
+      "params": {
+        "vehId": {"type": "integer", "desc": "Id d'objet du véhicule."},
+        "inventoryId": {"type": "integer|nil", "desc": "Id d'inventaire imposé, sinon le premier libre."},
+        "options": {"type": "{owned: boolean|nil, finalPrice: number|nil}|nil", "desc": "owned vaut true par défaut ; finalPrice sert au succès FLIP_PROFIT."}
+      },
+      "returns": [{"type": "integer|nil", "desc": "inventoryId, nil si l'objet ou ses données sont introuvables."}],
+      "internal": false
+    },
+    "removeVehicle": {
+      "desc": "Supprime le véhicule de l'inventaire et du monde, émet onVehicleRemoved et réassigne le favori si besoin.",
+      "params": {"inventoryId": {"type": "integer", "desc": "Id d'inventaire."}},
+      "internal": false
+    },
+    "removeVehicleObject": {
+      "desc": "Supprime seulement l'objet véhicule du monde (le véhicule reste dans l'inventaire, en stockage) ; passe le joueur en mode marche s'il le conduisait. Émet onInventoryPreRemoveVehicleObject.",
+      "params": {
+        "inventoryId": {"type": "integer", "desc": "Id d'inventaire."},
+        "skipPartConditions": {"type": "boolean|nil", "desc": "Non utilisé dans le corps (reste un TODO)."}
+      },
+      "internal": false
+    },
+    "spawnVehicle": {
+      "desc": "Fait apparaître un véhicule de l'inventaire depuis sa config (liste de pièces aplatie), restaure ses conditions de pièces et réconcilie l'inventaire de pièces. Retourne nil si le modèle ou le fichier de config n'existe plus.",
+      "params": {
+        "inventoryId": {"type": "integer", "desc": "Id d'inventaire."},
+        "replaceOption": {"type": "integer|nil", "desc": "1 : remplace le véhicule courant du joueur ; 2 : remplace l'objet ayant le même inventoryId ; autre : nouveau véhicule sans y entrer."},
+        "callback": {"type": "function|nil", "desc": "Appelée quand les conditions de pièces sont synchronisées."}
+      },
+      "returns": [{"type": "userdata|nil", "desc": "Objet véhicule créé."}],
+      "internal": false
+    },
+    "enterVehicle": {
+      "desc": "Fait entrer le joueur dans un véhicule de l'inventaire (nil = passer à pied). Sans effet si le véhicule est inaccessible (timeToAccess). Met d'abord à jour les conditions de pièces des véhicules apparus, sauf loadOption 1.",
+      "params": {
+        "newInventoryId": {"type": "integer|nil", "desc": "Id d'inventaire."},
+        "loadOption": {"type": "integer|nil", "desc": "1 : ne pas recharger le véhicule ; 2 : forcer le rechargement ; nil : entrer dans l'objet existant ou le faire apparaître."},
+        "callback": {"type": "function|nil", "desc": "Appelée après l'entrée."}
+      },
+      "internal": false
+    },
+    "updatePartConditions": {
+      "desc": "Demande au véhicule ses conditions de pièces (getPartConditions) et les stocke dans l'inventaire puis dans l'inventaire de pièces.",
+      "params": {
+        "vehId": {"type": "integer|nil", "desc": "Id d'objet ; sinon déduit de inventoryId."},
+        "inventoryId": {"type": "integer", "desc": "Id d'inventaire."},
+        "callback": {"type": "function|nil", "desc": "Appelée une fois la valeur reçue."}
+      },
+      "internal": false
+    },
+    "updatePartConditionsOfSpawnedVehicles": {
+      "desc": "Marque tous les véhicules apparus comme modifiés et met à jour leurs conditions de pièces ; callback est appelé quand tous sont traités (ou tout de suite s'il n'y en a aucun).",
+      "params": {"callback": {"type": "function|nil", "desc": "Appelée à la fin."}},
+      "internal": false
+    },
+    "getPartConditionsCallback": {
+      "desc": "Enregistre les conditions de pièces reçues du véhicule (ignorées avec un avertissement si ce n'est pas une table), finalise un ajout en attente (hook onVehicleAdded) et synchronise l'inventaire de pièces.",
+      "params": {
+        "partConditions": {"type": "table|boolean", "desc": "Conditions, ou false si non initialisées."},
+        "inventoryId": {"type": "integer", "desc": "Id d'inventaire."}
+      },
+      "internal": true
+    },
+    "applyPartConditions": {
+      "desc": "Réapplique au véhicule en jeu les conditions de pièces sauvegardées (initPartConditions).",
+      "params": {
+        "inventoryId": {"type": "integer", "desc": "Id d'inventaire."},
+        "vehId": {"type": "integer|nil", "desc": "Id d'objet ; sinon déduit de l'inventaire."}
+      },
+      "internal": false
+    },
+    "setVehicleDirty": {
+      "desc": "Marque un véhicule comme modifié : il sera réécrit (avec nouvelle dirtyDate) à la prochaine sauvegarde.",
+      "params": {"inventoryId": {"type": "integer", "desc": "Id d'inventaire."}},
+      "internal": false
+    },
+    "getDirtiedVehicles": {
+      "desc": "Renvoie l'ensemble des inventoryId modifiés depuis la dernière sauvegarde.",
+      "params": {},
+      "returns": [{"type": "table<integer, boolean>", "desc": "Ensemble des ids."}],
+      "internal": false
+    },
+    "sellVehicle": {
+      "desc": "Vend un véhicule : émet onBeforeVehicleSell, crédite le prix (ou la valeur calculée par valueCalculator), supprime le véhicule, joue le son d'achat, débloque FLIP_PROFIT si revendu au-dessus du prix d'achat final, et journalise.",
+      "params": {
+        "inventoryId": {"type": "integer", "desc": "Id d'inventaire."},
+        "price": {"type": "number|nil", "desc": "Prix imposé (sinon valeur calculée)."}
+      },
+      "returns": [{"type": "boolean|nil", "desc": "true si vendu, nil si le véhicule n'existe pas."}],
+      "internal": false
+    },
+    "sellVehicleFromInventory": {
+      "desc": "Vend depuis l'écran d'inventaire : vend, sauvegarde la carrière et renvoie les données à l'UI.",
+      "params": {"inventoryId": {"type": "integer", "desc": "Id d'inventaire."}},
+      "internal": false
+    },
+    "returnLoanedVehicleFromInventory": {
+      "desc": "Rend un véhicule prêté (career_modules_loanerVehicles.returnVehicle) puis sauvegarde et rafraîchit l'UI.",
+      "params": {"inventoryId": {"type": "integer", "desc": "Id d'inventaire."}},
+      "internal": false
+    },
+    "expediteRepairFromInventory": {
+      "desc": "Accélère une réparation d'assurance payante (insurance.expediteRepair), sauvegarde et rafraîchit l'UI.",
+      "params": {
+        "inventoryId": {"type": "integer", "desc": "Id d'inventaire."},
+        "price": {"type": "number", "desc": "Prix de l'accélération."}
+      },
+      "internal": false
+    },
+    "delayVehicleAccess": {
+      "desc": "Rend un véhicule inaccessible pendant `delay` secondes (timeToAccess) avec une raison (bought, repair). Ignoré si delay <= 0.",
+      "params": {
+        "inventoryId": {"type": "integer", "desc": "Id d'inventaire."},
+        "delay": {"type": "number", "desc": "Durée en secondes."},
+        "reason": {"type": "string", "desc": "Raison (\"bought\" ou \"repair\" produisent un message à la fin)."}
+      },
+      "internal": false
+    },
+    "setFavoriteVehicle": {
+      "desc": "Définit le véhicule favori (ignoré si l'id est inconnu).",
+      "params": {"inventoryId": {"type": "integer", "desc": "Id d'inventaire."}},
+      "internal": false
+    },
+    "getFavoriteVehicle": {
+      "desc": "Renvoie l'id d'inventaire du véhicule favori.",
+      "params": {},
+      "returns": [{"type": "integer|nil", "desc": "inventoryId favori."}],
+      "internal": false
+    },
+    "getVehicleThumbnail": {
+      "desc": "Chemin de la miniature du véhicule : fichier de la sauvegarde si une capture existe, sinon aperçu par défaut de sa configuration.",
+      "params": {"inventoryId": {"type": "integer|nil", "desc": "Id d'inventaire."}},
+      "returns": [{"type": "string|nil", "desc": "Chemin d'image."}],
+      "internal": false
+    },
+    "getVehicleNiceNameTranslated": {
+      "desc": "Nom d'affichage traduit du véhicule.",
+      "params": {"inventoryId": {"type": "integer", "desc": "Id d'inventaire."}},
+      "returns": [{"type": "string|nil", "desc": "Nom."}],
+      "internal": false
+    },
+    "getVehicleUiData": {
+      "desc": "Prépare les données d'un véhicule pour l'UI : valeur (et valeur réparée), prix de réparation express, distance, présence au garage/stockage, besoin de réparation, favori, assurance, permissions (réparation, vente, favori, stockage, plaque, retour de prêt), mise en vente et données de performance.",
+      "params": {
+        "inventoryId": {"type": "integer", "desc": "Id d'inventaire."},
+        "inventoryIdsInGarage": {"type": "table<integer, boolean>|nil", "desc": "Véhicules du garage le plus proche (calculé si nil)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Données pour l'UI."}],
+      "internal": false
+    },
+    "sendDataToUi": {
+      "desc": "Envoie à l'UI (guihooks vehicleInventoryData) tous les véhicules, les boutons de choix, l'en-tête, le nombre d'emplacements libres et l'argent du joueur.",
+      "params": {},
+      "internal": false
+    },
+    "openMenu": {
+      "desc": "Ouvre l'écran d'inventaire (career.computer.vehicleInventory) avec des boutons de choix configurables et met à jour les conditions de pièces des véhicules apparus.",
+      "params": {
+        "_chooseButtonsData": {"type": "table[]|nil", "desc": "Boutons {callback, buttonText, repairRequired, insuranceRequired, ownedRequired...}."},
+        "header": {"type": "string|nil", "desc": "Titre du menu."},
+        "_buttonsActive": {"type": "table|nil", "desc": "repairEnabled, sellEnabled, favoriteEnabled, storingEnabled, returnLoanerEnabled (true par défaut)."},
+        "_backTarget": {"type": "string|nil", "desc": "Route de retour."}
+      },
+      "internal": false
+    },
+    "openMenuFromComputer": {
+      "desc": "Ouvre l'inventaire depuis l'ordinateur du garage avec trois boutons : récupérer au garage, remplacer le véhicule actuel, ouvrir l'indice de performance.",
+      "params": {"_originComputerId": {"type": "string", "desc": "Id de l'ordinateur d'origine."}},
+      "internal": false
+    },
+    "openInventoryMenuForChoosingListing": {
+      "desc": "Ouvre l'inventaire pour choisir un véhicule à mettre en vente (action addListing côté UI), toutes les autres actions désactivées.",
+      "params": {},
+      "internal": false
+    },
+    "chooseVehicleFromMenu": {
+      "desc": "Exécute le callback du bouton de choix d'indice buttonIndex pour le véhicule donné.",
+      "params": {
+        "inventoryId": {"type": "integer", "desc": "Id d'inventaire choisi."},
+        "buttonIndex": {"type": "integer", "desc": "Indice du bouton (à partir de 1)."},
+        "repairPrevVeh": {"type": "any", "desc": "Transmis au callback."}
+      },
+      "internal": false
+    },
+    "closeMenu": {
+      "desc": "Ferme tous les menus de la carrière.",
+      "params": {},
+      "internal": false
+    },
+    "requestPickerExit": {
+      "desc": "Quitte le sélecteur : navigue vers la route de retour (career.computer par défaut).",
+      "params": {},
+      "returns": [{"type": "any", "desc": "Résultat de ui_router.navigate."}],
+      "internal": false
+    },
+    "setLicensePlateText": {
+      "desc": "Change le texte de plaque du véhicule dans le monde et dans sa config.",
+      "params": {
+        "inventoryId": {"type": "integer", "desc": "Id d'inventaire."},
+        "text": {"type": "string", "desc": "Texte de plaque."}
+      },
+      "internal": false
+    },
+    "purchaseLicensePlateText": {
+      "desc": "Achète un changement de plaque : paie, applique le texte, débloque NOW_ITS_MINE, joue le son et marque le véhicule modifié. Ne fait rien si le joueur ne peut pas payer.",
+      "params": {
+        "inventoryId": {"type": "integer", "desc": "Id d'inventaire."},
+        "text": {"type": "string", "desc": "Texte de plaque."},
+        "money": {"type": "number", "desc": "Prix."}
+      },
+      "internal": false
+    },
+    "isLicensePlateValid": {
+      "desc": "Valide un texte de plaque via core_vehicles.isLicensePlateValid.",
+      "params": {"text": {"type": "string", "desc": "Texte."}},
+      "returns": [{"type": "boolean", "desc": "Validité."}],
+      "internal": false
+    },
+    "isVehicleNameValid": {
+      "desc": "Valide un nom de véhicule : non vide et sans guillemet, antislash ni caractère de contrôle (\\b \\f \\n \\r \\t).",
+      "params": {"text": {"type": "string|nil", "desc": "Nom."}},
+      "returns": [{"type": "boolean", "desc": "Validité."}],
+      "internal": false
+    },
+    "renameVehicle": {
+      "desc": "Renomme le véhicule (niceName) s'il est valide et le marque modifié.",
+      "params": {
+        "inventoryId": {"type": "integer", "desc": "Id d'inventaire."},
+        "name": {"type": "string", "desc": "Nouveau nom."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si le nom est invalide."}],
+      "internal": false
+    },
+    "teleportedFromBigmap": {
+      "desc": "Appelé après une téléportation depuis la grande carte : sauvegarde la carrière si le joueur est dans un véhicule de l'inventaire et si l'autosauvegarde est active.",
+      "params": {},
+      "internal": false
+    },
+    "debugRespawnCurrentVehicle": {
+      "desc": "Debug : met à jour les conditions de pièces du véhicule courant puis le refait apparaître (replaceOption 2).",
+      "params": {},
+      "internal": false
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook : si la carrière est active, charge les fichiers de career/vehicles/ et inventory.json (véhicule courant, dernier, favori, positions, position à pied) ; décrémente timeToAccess du temps écoulé depuis la sauvegarde.",
+      "params": {},
+      "internal": true
+    },
+    "onCareerActive": {
+      "desc": "Hook : vend les véhicules si la sauvegarde est trop ancienne, puis prépare l'inventaire (réapparition des véhicules, entrée dans le véhicule courant, équipement de départ pour une nouvelle carrière).",
+      "params": {"active": {"type": "boolean", "desc": "Rien si false."}},
+      "internal": true
+    },
+    "onSaveCurrentProfileAsyncStart": {
+      "desc": "Hook : enregistre l'inventaire comme extension de sauvegarde asynchrone (career_saveSystem.registerAsyncSaveExtension).",
+      "params": {},
+      "internal": true
+    },
+    "onSaveCurrentProfile": {
+      "desc": "Hook de sauvegarde : écrit inventory.json, met à jour les conditions de pièces, puis écrit chaque véhicule (JSON + miniature si demandée) et supprime les fichiers de véhicules disparus ; à la fin, émet onVehicleSaveFinished.",
+      "params": {
+        "currentSavePath": {"type": "string", "desc": "Dossier de sauvegarde."},
+        "vehiclesThumbnailUpdate": {"type": "integer[]|nil", "desc": "Ids des véhicules dont la miniature doit être refaite."}
+      },
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook de frame : sauvegarde initiale d'une nouvelle carrière (après 10 frames), toasts de véhicule mis en stockage ou prêt rendu, décompte de timeToAccess avec messages de livraison/réparation.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Temps simulé (s)."},
+        "dtRaw": {"type": "number", "desc": "Temps brut (s)."}
+      },
+      "internal": true
+    },
+    "onBeforeWalkingModeToggled": {
+      "desc": "Hook : sortir du véhicule (mode marche) fait entrer dans « aucun véhicule » ; monter dans un véhicule de l'inventaire l'enregistre comme courant.",
+      "params": {
+        "enabled": {"type": "boolean", "desc": "true si on passe en mode marche."},
+        "vehicleInFrontVehId": {"type": "integer|nil", "desc": "Id du véhicule devant le joueur."}
+      },
+      "internal": true
+    },
+    "onBigMapActivated": {
+      "desc": "Hook : à l'ouverture de la grande carte, crée un instantané de conditions de pièces « beforeReset » pour le véhicule courant.",
+      "params": {},
+      "internal": true
+    },
+    "onScreenFadeState": {
+      "desc": "Hook : quand le fondu d'écran est complet (state 1), supprime les véhicules marqués puis exécute l'action différée (apparition d'un véhicule).",
+      "params": {"state": {"type": "integer", "desc": "État du fondu."}},
+      "internal": true
+    },
+    "onExitVehicleInventory": {
+      "desc": "Hook : l'écran d'inventaire est fermé.",
+      "params": {},
+      "internal": true
+    },
+    "onEnterVehicleFinished": {
+      "desc": "Hook : mémorise le véhicule dans lequel on est entré comme dernier véhicule.",
+      "params": {"inventoryId": {"type": "integer|nil", "desc": "Id d'inventaire."}},
+      "internal": true
+    },
+    "onAvailableMissionsSentToUi": {
+      "desc": "Hook : met à jour les conditions de pièces du véhicule courant et envoie à l'UI s'il a besoin de réparation (gameContextPlayerVehicleDamageInfo).",
+      "params": {},
+      "internal": true
+    },
+    "onComputerAddFunctions": {
+      "desc": "Hook de l'ordinateur : ajoute la fonction « Mes véhicules » (ordre 1), désactivée tant que le véhicule de départ n'est pas acheté.",
+      "params": {
+        "menuData": {"type": "table", "desc": "Données du menu."},
+        "computerFunctions": {"type": "table", "desc": "Fonctions à compléter (general)."}
+      },
+      "internal": true
+    },
+    "onCheckPermission": {
+      "desc": "Hook de permissions : pour les véhicules non possédés, interdit vente, réparation, mission, peinture, achat de pièces, plaque, tuning, stockage, échange de pièces, remorquage au garage et favori ; interdit aussi réparer/vendre un véhicule inaccessible, mettre en favori le favori ou un fichier manquant, stocker un véhicule absent du monde.",
+      "params": {
+        "tags": {"type": "string[]", "desc": "Tags demandés."},
+        "permissions": {"type": "table[]", "desc": "Liste à compléter ({permission})."},
+        "additionalData": {"type": "{inventoryId: integer}|nil", "desc": "Contexte (inventoryId)."}
+      },
+      "internal": true
+    },
+    "onGetRawPoiListForLevel": {
+      "desc": "Hook de la liste de POI : ajoute un marqueur de grande carte pour chaque véhicule de l'inventaire présent dans le monde (autre que celui du joueur), avec description (distance, plaque, odomètre) et miniature.",
+      "params": {
+        "levelIdentifier": {"type": "string", "desc": "Niveau (non utilisé)."},
+        "elements": {"type": "table[]", "desc": "Liste de POI à compléter."}
+      },
+      "internal": true
+    }
+  }
+}

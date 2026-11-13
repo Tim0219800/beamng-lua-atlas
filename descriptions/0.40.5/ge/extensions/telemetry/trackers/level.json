@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/telemetry/trackers/level.lua",
+  "module": "Suiveur de télémétrie des niveaux et des scénarios : quels niveaux sont joués et combien de temps (activité « levelLoaded »), plus le cycle de vie des scénarios (activité « scenarioRunning » avec le résultat). Le temps de chargement du niveau (loadMs) est ajouté à la fin de l'activité levelLoaded, car le chargement n'est terminé que bien après son ouverture. Le suivi par image des collisions et dégâts qui existait ici a été retiré (trop d'évènements).",
+  "notes": [
+    "loadMs va de onClientPreStartMission à l'état 2 de onWorldReadyState. L'attente des matériaux dans l'état 2 abandonne après 5 s : un chargement très lent rapporte le moment de l'abandon. Un niveau sans véhicule joueur atteint l'état 2 immédiatement et semble rapide.",
+    "Entrer dans un niveau où le jeu se trouve déjà saute onClientPreStartMission : le niveau est alors rapporté sans temps de chargement plutôt qu'avec celui du précédent.",
+    "Les scénarios flowgraph n'atteignent jamais scenario_scenarios (onScenarioLoaded ne se déclenche pas pour eux) et n'ont pas de signal de fin : onFlowgraphScenarioStarted est le même callback que onScenarioLoaded et endLevel les clôt avec le résultat « aborted ».",
+    "Résultats de scénario : success, failed (pooledResults[1].failed), restarted, aborted.",
+    "À la fin d'un niveau, le suiveur demande l'écriture du rapport (telemetry_core.triggerReportWrite)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "telemetry_core."}
+  },
+  "functions": {
+    "onClientPreStartMission": {"desc": "Hook appelé tout en haut de la chaîne de chargement (avant datablocks, objets et physique), à chaque chargement y compris les redémarrages : mémorise l'heure de début de chargement.", "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}}, "returns": [], "internal": true},
+    "onClientStartMission": {"desc": "Hook appelé au démarrage du niveau (écran de chargement encore affiché) : démarre l'activité levelLoaded.", "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}}, "returns": [], "internal": true},
+    "onWorldReadyState": {"desc": "Hook appelé aux changements d'état de préparation du monde. L'état 2 est le premier moment où le joueur peut conduire (caméra avec son objet de contrôle, matériaux du véhicule prêts) : calcule loadMs.", "params": {"state": {"type": "integer", "desc": "État de préparation (seul 2 est utilisé)."}}, "returns": [], "internal": true},
+    "onClientEndMission": {"desc": "Hook appelé à la sortie du niveau : termine scénario éventuel et niveau.", "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}}, "returns": [], "internal": true},
+    "onScenarioLoaded": {"desc": "Hook appelé au chargement d'un scénario : démarre l'activité scenarioRunning (nom et fichier source).", "params": {"scenario": {"type": "table", "desc": "Scénario (name, sourceFile)."}}, "returns": [], "internal": true},
+    "onFlowgraphScenarioStarted": {"desc": "Hook appelé au démarrage d'un scénario flowgraph ; même fonction que onScenarioLoaded.", "params": {"scenario": {"type": "table", "desc": "Scénario."}}, "returns": [], "internal": true},
+    "onScenarioFinished": {"desc": "Hook appelé à la fin d'un scénario : termine l'activité avec « failed » ou « success » selon pooledResults[1].failed.", "params": {"scenario": {"type": "table", "desc": "Scénario terminé."}}, "returns": [], "internal": true},
+    "onScenarioRestarted": {"desc": "Hook appelé au redémarrage d'un scénario : termine l'activité avec « restarted » puis en démarre une nouvelle.", "params": {"scenario": {"type": "table", "desc": "Scénario."}}, "returns": [], "internal": true},
+    "onExtensionLoaded": {"desc": "Hook appelé au chargement : déchargement manuel ; si un niveau est déjà chargé, démarre l'activité immédiatement.", "params": {}, "returns": [], "internal": true},
+    "onExit": {"desc": "Hook appelé à la fermeture du jeu : ferme les activités ouvertes pour ne pas laisser de débuts sans fin dans le fichier de session.", "params": {}, "returns": [], "internal": true},
+    "onExtensionUnloaded": {"desc": "Hook appelé au déchargement : un rechargement Lua détruit les suiveurs sans onExit, donc les activités sont fermées ici aussi (même fonction que endLevel).", "params": {}, "returns": [], "internal": true}
+  }
+}

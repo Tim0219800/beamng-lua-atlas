@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficParams.lua",
+  "module": "Nœud flowgraph « Traffic Parameters » (once_instant). Règle le système de trafic via gameplay_traffic.setTrafficVars : aiMode (traffic, random, flee, chase, follow, stop ; défaut traffic), spawnRate (spawnValue, 0 à 3), directionBias (spawnDirBias, -1 à 1 ; -1 = loin du joueur), risk (baseAggression), poolActiveAmount (activeAmount ; avec data.usePoolInactiveAmount, vaut le nombre de véhicules de trafic moins la valeur), enableRandomEvents. Seuls les pins non nil sont appliqués. Ancien pin poolAmount renommé poolActiveAmount.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "init": {
+          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Définit les valeurs prédéfinies du pin aiMode.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Construit la table de variables à partir des pins non nil et appelle gameplay_traffic.setTrafficVars.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

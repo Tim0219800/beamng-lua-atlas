@@ -1,0 +1,46 @@
+{
+  "path": "lua/ge/extensions/ui/apps/pointsBar.lua",
+  "module": "Alimente l'app d'interface pointsBar (barre de points avec paliers). Il garde le nombre de points et les paliers (100, 200, 300 par défaut) et publie dans le flux 'pointsBar' le pourcentage de remplissage, le libellé, les paliers atteints et la position des paliers en pourcentage.",
+  "usage": "ui_apps_pointsBar.setThresholds({500, 1000, 2000})\nui_apps_pointsBar.setPoints(750, '750 pts')",
+  "notes": [
+    "La barre est dimensionnée sur le dernier palier + 10 % : fillPercent = points / (dernierPalier * 1.1), sous forme de fraction (0 à ~0,91), alors que thresholdPercentages est exprimé en pourcentage (0 à 100).",
+    "setPoints ne vérifie pas que les paliers existent : une liste de paliers vide provoque une erreur (index nil).",
+    "Dans clearData, setPoints(0) n'a pas de libellé : pointsLabel interne devient nil (le flux utilise alors '0').",
+    "L'extension reste chargée en permanence (déchargement manuel)."
+  ],
+  "functions": {
+    "setPoints": {
+      "desc": "Met à jour les points courants et le libellé, recalcule remplissage et paliers atteints, puis publie dans le flux 'pointsBar'.",
+      "params": {
+        "points": {"type": "number", "desc": "Points actuels."},
+        "pointsLabel": {"type": "string|nil", "desc": "Texte affiché ; par défaut tostring(points)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setThresholds": {
+      "desc": "Définit la liste des paliers (si fournie), recalcule leur position en pourcentage et publie dans le flux.",
+      "params": {"thresholds": {"type": "table<integer, number>|nil", "desc": "Paliers croissants ; le dernier fixe l'échelle."}},
+      "returns": [],
+      "internal": false
+    },
+    "clearData": {
+      "desc": "Remet les paliers par défaut {100, 200, 300} et les points à 0.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "requestAllData": {
+      "desc": "Republie paliers et points courants (utile quand l'app se monte).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onInit": {
+      "desc": "Hook d'initialisation : place l'extension en déchargement manuel.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

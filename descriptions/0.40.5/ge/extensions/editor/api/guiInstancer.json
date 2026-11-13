@@ -1,0 +1,43 @@
+{
+  "path": "lua/ge/extensions/editor/api/guiInstancer.lua",
+  "module": "Petite classe utilitaire de l'éditeur qui gère une liste d'instances d'une fenêtre GUI (par ex. plusieurs copies d'un même panneau). Chaque instance est une table `{ locked = false }` rangée dans `instances` avec un index entier. Le module renvoie un constructeur sans argument qui crée l'objet et appelle `init`.",
+  "usage": "local instancer = require(\"editor/api/guiInstancer\")()\nlocal idx = instancer:addInstance()\ninstancer:removeInstance(idx)",
+  "notes": [
+    "`nextInstanceIndex` est remis à 1 quand la table d'instances est vide au moment de `addInstance`.",
+    "`removeInstance` met seulement la case à nil : les indices ne sont pas décalés."
+  ],
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Objet renvoyé par le constructeur du module. Champs : `instances` (table index -> {locked}), `nextInstanceIndex` (integer).",
+      "functions": {
+        "init": {
+          "desc": "Initialise `instances` à vide et `nextInstanceIndex` à 1. Appelé par le constructeur.",
+          "internal": true
+        },
+        "addInstance": {
+          "desc": "Ajoute une instance `{ locked = false }` et renvoie son index. Repart de 1 si aucune instance n'existe.",
+          "returns": [{"type": "integer", "desc": "index de la nouvelle instance"}]
+        },
+        "removeInstance": {
+          "desc": "Supprime l'instance à l'index donné (met la case à nil).",
+          "params": {"instanceIndex": {"type": "integer", "desc": "index renvoyé par addInstance"}}
+        },
+        "serialize": {
+          "desc": "Écrit `{ instances, nextInstanceIndex }` dans `state[name]` pour la sauvegarde de l'état de l'éditeur.",
+          "params": {
+            "name": {"type": "string", "desc": "clé sous laquelle stocker l'état"},
+            "state": {"type": "table", "desc": "table d'état à remplir"}
+          }
+        },
+        "deserialize": {
+          "desc": "Restaure `instances` et `nextInstanceIndex` depuis `state[name]` s'il existe (défauts `{}` et 1).",
+          "params": {
+            "name": {"type": "string", "desc": "clé de l'état sauvegardé"},
+            "state": {"type": "table", "desc": "table d'état sauvegardée"}
+          }
+        }
+      }
+    }
+  }
+}

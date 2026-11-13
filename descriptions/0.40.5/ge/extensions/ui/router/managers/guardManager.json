@@ -1,0 +1,53 @@
+{
+  "path": "lua/ge/extensions/ui/router/managers/guardManager.lua",
+  "module": "Registre des gardes de navigation du routeur. reloadGuards parcourt le dossier lua/ge/extensions/ui/router/guards/, charge chaque fichier et enregistre les fonctions de sa table M.guards sous leur clé. Les routes référencent ces clés dans leurs listes de gardes (enterGuards, exitGuards) ; executeGuards les exécute dans l'ordre. Un moddeur peut ajouter ses propres gardes avec addGuard.",
+  "usage": "extensions.ui_router_managers_guardManager.addGuard(\"monGarde\", function(route, params, context)\n  return true -- false bloque la navigation\nend)",
+  "notes": [
+    "Une garde est appelée avec (route, params, context) ; seule la valeur exacte false bloque (result.failedGuard = clé de la garde) : un retour nil laisse passer. Les clés de garde inconnues sont ignorées avec un avertissement.",
+    "addGuard n'écrase pas une clé existante (avertissement) ; updateGuard exige qu'elle existe.",
+    "Les gardes sont chargées avec require(\"ge/extensions/ui/router/guards/<fichier>\") après FS:findFiles(\"/lua/ge/extensions/ui/router/guards/\", \"*.lua\") : un fichier de ce dossier sans table M.guards est chargé mais ne fournit rien (cas de guards/default.lua)."
+  ],
+  "functions": {
+    "reloadGuards": {
+      "desc": "Vide le registre puis recharge toutes les gardes des fichiers du dossier guards/. Appelée au chargement de ui_router.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "addGuard": {
+      "desc": "Ajoute une garde sous la clé donnée ; ne fait rien (avertissement) si la clé existe déjà.",
+      "params": {
+        "key": {"type": "string", "desc": "Clé de la garde."},
+        "fn": {"type": "function", "desc": "Fonction (route, params, context) -> boolean."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "updateGuard": {
+      "desc": "Remplace une garde existante ; ne fait rien (avertissement) si la clé est inconnue.",
+      "params": {
+        "key": {"type": "string", "desc": "Clé de la garde."},
+        "fn": {"type": "function", "desc": "Nouvelle fonction."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "removeGuard": {
+      "desc": "Supprime la garde de clé donnée.",
+      "params": {"key": {"type": "string", "desc": "Clé de la garde."}},
+      "returns": [],
+      "internal": false
+    },
+    "executeGuards": {
+      "desc": "Exécute dans l'ordre les gardes listées ; s'arrête à la première qui renvoie false.",
+      "params": {
+        "specifiedGuards": {"type": "string[]", "desc": "Clés de gardes à exécuter."},
+        "route": {"type": "table", "desc": "Route visée (ou de la route courante pour les gardes de sortie)."},
+        "params": {"type": "table|nil", "desc": "Paramètres de route."},
+        "context": {"type": "table|nil", "desc": "Contexte (par exemple {routeName, options} pour les gardes de sortie)."}
+      },
+      "returns": [{"type": "table", "desc": "{result = valeur de la dernière garde exécutée (true par défaut), failedGuard = clé de la garde bloquante}."}],
+      "internal": false
+    }
+  }
+}

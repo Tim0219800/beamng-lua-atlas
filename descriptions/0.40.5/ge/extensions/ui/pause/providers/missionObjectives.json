@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/ui/pause/providers/missionObjectives.lua",
+  "module": "Fournisseur de données du menu pause pour les objectifs de la mission en cours. Il se contente de renvoyer le résultat de gameplay_missions_missionScreen.getPauseMissionObjectivesData().",
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{\"gameplay_missions_missionScreen\"}"}
+  },
+  "functions": {
+    "getData": {
+      "desc": "Renvoie les données d'objectifs de mission pour le menu pause (fournies par gameplay_missions_missionScreen). Le contexte est ignoré.",
+      "params": {"context": {"type": "table", "desc": "Contexte du menu pause (non utilisé)."}},
+      "returns": [{"type": "any", "desc": "Données renvoyées par getPauseMissionObjectivesData."}],
+      "internal": false
+    }
+  }
+}

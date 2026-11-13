@@ -1,0 +1,21 @@
+{
+  "path": "lua/ge/extensions/flowgraph/modules/missionModule.lua",
+  "module": "Module flowgraph (moduleOrder -100) qui lie un projet flowgraph à la mission qui l'a lancé (self.mgr.activity). Il gère les véhicules de mission (garder ou masquer le véhicule joueur et le trafic), prépare un véhicule (phares la nuit, conducteur factice), supprime le véhicule joueur mis de côté et relaie les évènements personnalisés vers la mission. À l'arrêt, il stoppe la mission si elle est en cours et émet onMissionFinished.",
+  "notes": [
+    "Sans mgr.activity (projet lancé hors mission), la plupart des fonctions ne font rien.",
+    "processVehicles ne s'exécute qu'une fois (flag processed) et seulement si params n'est pas vide.",
+    "onClear est vide et n'est pas déclaré comme hook."
+  ],
+  "functions": {
+    "init": {"desc": "Appelé à la création du module : appelle clear().", "internal": true},
+    "clear": {"desc": "Remet processed à false.", "internal": true},
+    "processVehicles": {"desc": "Applique les options keepPlayer et keepTraffic de la mission : active ou désactive le véhicule joueur d'origine et met à jour mission.setupData.stashedVehicles, et dégèle le trafic via gameplay_traffic.unfreezeState si keepTraffic est vrai. Avertit si déjà appelé.", "params": {"params": {"type": "table", "desc": "champs keepPlayer (boolean) et keepTraffic (boolean)"}}},
+    "prepareVehicle": {"desc": "Prépare un véhicule pour la mission : si l'heure du jeu est dans la fenêtre de nuit solaire, allume les phares (electrics.setLightsState(2)) ; si addDummyDriver et le réglage enableSeatOccupants, place un occupant factice au siège conducteur.", "params": {"id": {"type": "integer|nil", "desc": "id du véhicule (défaut : véhicule joueur 0)"}, "addDummyDriver": {"type": "boolean|nil", "desc": "ajouter un conducteur factice"}}},
+    "getOriginalPlayerId": {"desc": "Renvoie l'id du véhicule joueur d'avant la mission (mission._startingInfo.vehId).", "returns": [{"type": "integer|nil", "desc": "id ou nil"}]},
+    "removeStashedPlayerVehicle": {"desc": "Supprime définitivement le véhicule joueur mis de côté (il ne sera plus réactivé à la fin du projet).", "params": {}},
+    "missionHook": {"desc": "Appelle mission:onMissionCustomEvent(name, data) si la mission le définit, et journalise l'évènement.", "params": {"name": {"type": "string", "desc": "nom de l'évènement"}, "data": {"type": "any", "desc": "données"}}},
+    "executionStopped": {"desc": "Appelé à l'arrêt du projet : arrête la mission si elle est en cours (gameplay_missions_missionManager.stop), émet extensions.hook('onMissionFinished') et déclenche l'évènement UI hotlappingReevaluateControlsEnabled.", "internal": true},
+    "onClear": {"desc": "Fonction vide.", "internal": true},
+    "executionStarted": {"desc": "Appelé au démarrage du projet : déclenche l'évènement UI hotlappingReevaluateControlsEnabled et appelle clear().", "internal": true}
+  }
+}

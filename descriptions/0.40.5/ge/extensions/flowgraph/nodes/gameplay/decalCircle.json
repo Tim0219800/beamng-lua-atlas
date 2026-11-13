@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/decalCircle.lua",
+  "module": "Nœud flowgraph « Decal Circle » (catégorie repeat_instant, util/draw). Dessine un cercle de décalques au sol, comme une barre de chargement radiale. Pins d'entrée : pos (centre), radius, decalScale ({1,1,3}), amount (32 décalques), inverted, decalPath, filling1 (0 à 100, progression), filling2 (0 à 100, recharge), couleurs filledColor, fillingColor1, fillingColor2, backgroundColor. Envoie les décalques à Engine.Render.DynamicDecalMgr.addDecals chaque frame.",
+  "notes": ["data.snapToTerrain = true est défini mais non utilisé dans ce fichier.", "Les décalques ont fadeStart 200 et fadeEnd 250."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Définit data.snapToTerrain = true.", "internal": true},
+        "_executionStarted": {"desc": "Réinitialise le pool de décalques et les caches de couleurs.", "internal": true},
+        "work": {"desc": "Met à jour les caches de couleurs, calcule position, direction, couleur et échelle de chaque décalque sur le cercle et les soumet au renderer."}
+      }
+    }
+  }
+}

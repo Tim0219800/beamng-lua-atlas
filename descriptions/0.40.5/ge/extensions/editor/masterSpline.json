@@ -1,0 +1,46 @@
+{
+  "path": "lua/ge/extensions/editor/masterSpline.lua",
+  "module": "Outil Master Spline de l'éditeur de monde (mode d'édition « masterSpline »). Une Master Spline est une courbe maîtresse (nœuds, largeurs, normales) qui pilote une pile de couches, chacune liée à une spline enfant d'un autre outil (mesh, assembly, decal, road, tree) décalée latéralement. Le fichier contient surtout l'interface imgui (fenêtre « masterSpline », poignées de virage, gizmo, terraformage, route automatique, homologation, session) ; les données sont dans masterSpline/splineMgr.lua. Elle sert aux créateurs de niveaux, pas aux véhicules.",
+  "notes": [
+    "L'API publique est réduite : deux setters de sélection et les hooks de sérialisation/éditeur ; presque tout le reste est local au fichier.",
+    "onEditorGui reconstruit les Master Splines dirty à chaque image même si l'outil n'est pas actif (il dessine alors seulement les contours via rSpline.renderShells).",
+    "onSerialize est destructif : après avoir sérialisé, il délie toutes les splines, supprime toutes les Master Splines puis appelle be:reloadCollision() (la collision est cuite dans la scène). Les données doivent donc être rechargées par onDeserialized.",
+    "Valeurs par défaut de la route automatique : baseWidth 10, slopeAvoidance 1, bankingStrength 0.35, widthBlend 0.5. Curseur de position latérale entre -5 et 5, DOI entre 0 et 500.",
+    "Le fichier s'enregistre auprès de splineInput.registerSplineTool et déclare une spec de session (Save/Load Session) groupant masters et enfants liés."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant celle-ci pour garantir l'ordre de sérialisation : editor_assemblySpline, editor_decalSpline, editor_meshSpline, editor_roadSpline, editor_treeSpline."}
+  },
+  "functions": {
+    "setSelectedSplineIdx": {
+      "desc": "Définit l'indice de la Master Spline sélectionnée (sélection croisée entre outils).",
+      "params": {"idx": {"type": "integer", "desc": "Indice dans la liste (à partir de 1)."}}
+    },
+    "setSelectedNodeIdx": {
+      "desc": "Définit l'indice du nœud sélectionné (sélection croisée entre outils).",
+      "params": {"idx": {"type": "integer", "desc": "Indice du nœud (à partir de 1)."}}
+    },
+    "onSerialize": {
+      "desc": "Hook de sérialisation de l'éditeur : sérialise toutes les Master Splines, délie leurs enfants, supprime les Master Splines et recharge la collision.",
+      "returns": [{"type": "table[]", "desc": "Tableau des Master Splines sérialisées."}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook de désérialisation : supprime les Master Splines existantes, recrée celles de data, puis recalcule la table id vers indice.",
+      "params": {"data": {"type": "table[]", "desc": "Données produites par onSerialize."}},
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Hook appelé à chaque image de l'éditeur : optimisation en direct de la spline sélectionnée, reconstruction des splines dirty, puis, si l'outil est actif, fenêtre, caméra panoramique, poignées de virage engineered, événements souris/clavier, terraformage et dessin.",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook d'initialisation de l'éditeur : enregistre le mode d'édition « Master Spline » (editor.editModes.masterSpline) et la fenêtre « masterSpline ».",
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook appelé en quittant la carte : délie et supprime toutes les Master Splines et recalcule la table id vers indice.",
+      "internal": true
+    }
+  }
+}

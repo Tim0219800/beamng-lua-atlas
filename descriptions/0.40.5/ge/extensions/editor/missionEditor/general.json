@@ -1,0 +1,40 @@
+{
+  "path": "lua/ge/extensions/editor/missionEditor/general.lua",
+  "module": "Section « General » du Mission Editor : édite le nom et la description de la mission (champs texte ImGui) et affiche une icône de traduction (verte si _tr trouve une traduction, rouge sinon, avec la traduction en infobulle). Le module renvoie un constructeur : require('/lua/ge/extensions/editor/missionEditor/general')(missionEditor). Toute modification met mission._dirty = true.",
+  "notes": [
+    "La description peut être une chaîne ou une table ; une table n'est pas modifiable (elle est affichée avec dumps).",
+    "Tampons ImGui : nom 1024 caractères, description 2048.",
+    "Bug mineur : getMissionIssues compare la traduction avec le nom sans tester le type du nom ; seul le cas de description gère explicitement une table."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Sous-fenêtre de la section General, créée par le constructeur renvoyé par le module.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur : mémorise la référence au missionEditor et prépare les champs recommandés (attributs recommandés de gameplay_missions_missions).",
+          "params": {"missionEditor": {"type": "table", "desc": "Module editor_missionEditor."}},
+          "returns": [],
+          "internal": true
+        },
+        "setMission": {
+          "desc": "Sélectionne la mission à éditer : crée les tampons du nom et de la description et efface les traductions en cache.",
+          "params": {"mission": {"type": "table", "desc": "Données de mission."}},
+          "returns": [],
+          "internal": false
+        },
+        "getMissionIssues": {
+          "desc": "Appelle setMission puis renvoie les problèmes : nom manquant (error), description manquante (error), nom sans traduction (warning), description sans traduction (warning).",
+          "params": {"m": {"type": "table", "desc": "Données de mission."}},
+          "returns": [{"type": "table[]", "desc": "Éléments {label, severity}."}],
+          "internal": false
+        },
+        "draw": {
+          "desc": "Dessine les champs Name et Description et leurs icônes de traduction ; enregistre les modifications dans la mission à la fin de l'édition.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        }
+      }
+    }
+  }
+}

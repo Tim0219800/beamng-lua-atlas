@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/mission/stageLightsDragRace.lua",
+  "module": "Noeud flowgraph 'Set Stage Lights' (categorie repeat_instant). Allume la lumiere Pre Stage ou Stage de l'arbre de Noel du drag race (objets scene Prestagelight_l/r et Stagelight_l/r) du cote 'side' ('l' ou 'r', defaut 'l'). 'light' vaut 'preStage' (defaut) ou 'stage'. L'impulsion 'reset' cache toutes ces lumieres.",
+  "notes": [
+    "La sortie flow n'est jamais ecrite, et le pin d'entree flow n'est pas teste.",
+    "Sans reset prealable, self.lights est vide et work plante a l'acces des lumieres."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "postInit": {
+          "desc": "Definit les valeurs proposees des pins side (left/right) et light (Pre Stage/Stage).",
+          "internal": true
+        },
+        "initLights": {
+          "desc": "Recherche les quatre objets lumineux dans la scene.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Vide la table lights.",
+          "internal": true
+        },
+        "init": {
+          "desc": "Vide la table lights.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Sur reset : retrouve les lumieres et les cache. Sinon rend visible la lumiere choisie.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

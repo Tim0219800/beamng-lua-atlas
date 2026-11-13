@@ -4,13 +4,21 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/vehicle/toggleVehicleControls")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud « Toggle Vehicle Controls » (catégorie `repeat_instant`). Active ou désactive l'action map `VehicleCommonActionMap` (`setEnabled(controllable)`), donc les contrôles du véhicule pour le joueur. Pin d'entrée : `controllable` (bool). À l'arrêt, les contrôles sont réactivés.
+
+## Remarques
+
+- `C.todo` : « PlayerUsable a des bugs et ne fonctionne que la première fois » (texte copié de Player Usable).
+
 ## Classe `C`
+
+Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:_executionStopped()` |  | 30 |
-| `C:init()` |  | 20 |
-| `C:work()` |  | 25 |
+| `C:_executionStopped()` | Réactive l'action map à l'arrêt du projet. | 30 |
+| `C:init()` | Constructeur vide. | 20 |
+| `C:work()` | Active/désactive l'action map `VehicleCommonActionMap`. | 25 |
 
 ## Appels vers le moteur (C++)
 

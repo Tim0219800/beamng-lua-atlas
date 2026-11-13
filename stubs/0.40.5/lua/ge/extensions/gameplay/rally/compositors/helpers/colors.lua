@@ -2,55 +2,56 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/compositors/helpers/colors.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
+--- Palette de couleurs partagée par les styles de notes de rallye visuelles. Les valeurs sont soit des références CSS (var(--bng-...)) consommées par l'application d'UI des notes visuelles, soit des codes hexadécimaux. Aucune fonction : uniquement des chaînes de couleur, regroupées par usage (général, carte de chaleur de l'intensité des virages, spectre néon à fort contraste, badges de coupe, avertissements, modificateurs).
 --- Accès : extension `gameplay_rally_compositors_helpers_colors` : `extensions.load("gameplay_rally_compositors_helpers_colors")`, puis la globale `gameplay_rally_compositors_helpers_colors`
 ---@class gameplay_rally_compositors_helpers_colors
----@field black string
----@field blue500 string
----@field blue600 string
----@field careBg any
----@field careIcon any
----@field careStroke string
----@field cautionBg any
----@field cautionIcon any
----@field cautionStroke string
----@field cutBg any
----@field cutStroke any
----@field deepBlue string
----@field deepCrimson string
----@field deepCyan string
----@field deepGold string
----@field deepGreen string
----@field deepOrange string
----@field dontCutBg any
----@field dontCutStroke any
----@field doubleCautionBg any
----@field doubleCautionIcon any
----@field doubleCautionStroke string
----@field green500 string
----@field green600 string
----@field iconAndTextDefault any
----@field indigoblue650 string
----@field indigoblue750 string
----@field mainPaletteFg any
----@field modifierBg string
----@field modifierStroke string
----@field neonBlue string
----@field neonCrimson string
----@field neonCyan string
----@field neonGold string
----@field neonGreen string
----@field neonOrange string
----@field offBlack string
----@field offWhite string
----@field orange string
----@field orange500 string
----@field peach300 string
----@field peach400 string
----@field red550 string
----@field red650 string
----@field red750 string
----@field white string
----@field yellow400 string
----@field yellow500 string
+---@field black string '#000000'.
+---@field blue500 string Bleu 500.
+---@field blue600 string Bleu 600.
+---@field careBg string Fond de la note 'care' (= offBlack).
+---@field careIcon string Icône de la note 'care' (= careStroke).
+---@field careStroke string Contour de la note 'care' ('#ffff00').
+---@field cautionBg string Fond de la note 'caution' (= offBlack).
+---@field cautionIcon string Icône 'caution' (= cautionStroke).
+---@field cautionStroke string Contour de la note 'caution' ('#ff0000').
+---@field cutBg string Fond du badge 'coupe' autorisée (= neonGreen).
+---@field cutStroke string Contour du badge 'coupe' (= deepGreen).
+---@field deepBlue string '#005ecb'.
+---@field deepCrimson string '#c4002f'.
+---@field deepCyan string '#008fb3'.
+---@field deepGold string '#c7a500'.
+---@field deepGreen string '#00a152'.
+---@field deepOrange string '#c96500'.
+---@field dontCutBg string Fond du badge 'ne pas couper' (= neonCrimson).
+---@field dontCutStroke string Contour du badge 'ne pas couper' (= deepCrimson).
+---@field doubleCautionBg string Fond de la note 'double caution' (= offBlack).
+---@field doubleCautionIcon string Icône 'double caution' (= doubleCautionStroke).
+---@field doubleCautionStroke string Contour de 'double caution' ('#ff0000').
+---@field green500 string Vert 500.
+---@field green600 string Vert 600.
+---@field iconAndTextDefault string Couleur par défaut des icônes et textes (= offWhite).
+---@field indigoblue650 string Bleu indigo 650.
+---@field indigoblue750 string Bleu indigo 750.
+---@field mainPaletteFg string Couleur de premier plan de la palette principale (= offBlack).
+---@field modifierBg string Fond des modificateurs ('#a855f7').
+---@field modifierStroke string Contour des modificateurs ('#7e22ce').
+---@field neonBlue string '#33a6ff'.
+---@field neonCrimson string '#ff1744'.
+---@field neonCyan string '#00d5ff'.
+---@field neonGold string '#ffd600'.
+---@field neonGreen string '#00e676'.
+---@field neonOrange string '#ff8a00'.
+---@field offBlack string var(--bng-off-black), noir adouci.
+---@field offWhite string var(--bng-off-white), blanc adouci.
+---@field orange string Orange de la charte BeamNG.
+---@field orange500 string Orange 500.
+---@field peach300 string Pêche 300.
+---@field peach400 string Pêche 400.
+---@field red550 string Rouge 550 (carte de chaleur des virages).
+---@field red650 string Rouge 650.
+---@field red750 string Rouge 750.
+---@field white string '#ffffff'.
+---@field yellow400 string Jaune 400 (tertiaire).
+---@field yellow500 string Jaune 500.
 gameplay_rally_compositors_helpers_colors = {}
 

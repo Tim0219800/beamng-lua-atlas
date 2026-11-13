@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/environment/setCloud.lua",
+  "module": "Nœud flowgraph « Set Clouds » (catégorie dynamic_instant). Règle les paramètres des nuages. Pins d'entrée : objectId (id optionnel d'un objet nuage), coverage (0 à 1), exposure, windSpeed, height. Exécuté une fois (workOnce) ou à chaque frame en mode repeat.",
+  "notes": ["Sans objectId, seuls coverage (setCloudCover) et windSpeed (setWindSpeed) sont appliqués aux nuages par défaut ; exposure et height sont ignorés.", "data.restoreCloud = true est défini mais _executionStarted/_executionStopped sont vides : rien n'est restauré (valeur inutilisée)."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Définit data.restoreCloud = true.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
+        "postInit": {"desc": "Configure le pin coverage comme curseur 0 à 1.", "internal": true},
+        "_executionStarted": {"desc": "Vide.", "internal": true},
+        "_executionStopped": {"desc": "Vide.", "internal": true},
+        "workOnce": {"desc": "Applique les paramètres une seule fois."},
+        "work": {"desc": "En mode repeat, applique les paramètres à chaque frame."},
+        "setCloudParameters": {"desc": "Appelle core_environment.setCloudCoverByID/ExposureByID/WindByID/HeightByID si objectId est fourni, sinon setCloudCover et setWindSpeed."}
+      }
+    }
+  }
+}

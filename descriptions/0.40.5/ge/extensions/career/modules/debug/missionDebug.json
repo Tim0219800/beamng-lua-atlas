@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/career/modules/debug/missionDebug.lua",
+  "module": "Onglet de debug carrière « Missions ». Deux entrées : '> Reload Missions' (gameplay_missions_missions.reloadCompleteMissionSystem) et '> Make All Missions Startable' (force startable et visible sur toutes les missions via gameplay_missions_unlocks.overrideStartable/overrideVisible puis vide gameplay_rawPois).",
+  "notes": ["Outil de développement ; debugOrder = 3 (même valeur que organizationsDebug)."],
+  "fields": {
+    "debugOrder": {"type": "number", "desc": "Ordre de tri (3)."},
+    "debugName": {"type": "string", "desc": "'Missions'."}
+  },
+  "functions": {
+    "drawDebugFunctions": {
+      "desc": "Dessine les deux entrées de menu de debug des missions (rechargement, déblocage de toutes les missions).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

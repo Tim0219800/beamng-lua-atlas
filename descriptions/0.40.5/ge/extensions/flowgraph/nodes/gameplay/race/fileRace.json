@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/fileRace.lua",
+  "module": "Nœud flowgraph « File Race » (tag scenario, pas de catégorie définie). Gère une course complète à partir d'un pathData (nœud File Path) : crée un objet gameplay/race/race au premier flux, lui donne le chemin, le départ lancé (rolling), le nombre de tours (seulement si le chemin est fermé, sinon 1), le mode IA automatique, l'app hotlapping, le debug draw et le son des waypoints, puis appelle race:onUpdate(dtSim) à chaque frame (sauf si la pin idle a du flux). Le nombre de véhicules est réglable dans l'éditeur (pins vehId_1…vehId_N). Sorties : flow, active, complete, vehicleChanged, raceData, aiPath (navgraphPath pour Follow Waypoints) et time (durée totale à la fin, pour vehId_1).",
+  "notes": ["Options data : useHotlappingApp (true), useDebugDraw (false), useWaypointAudio (true).", "Seuls les véhicules existants (getObjectByID) sont passés à race:setVehicleIds.", "Les pins complete, active et time ne reflètent que l'état du véhicule vehId_1.", "Pins hasSecVeh/changeVeh/primVehId/secVehId : permettent de basculer une seule fois sur un véhicule secondaire via race:changeRaceVehicle.", "Les anciennes pins vehID, vehId et vehID_1 sont redirigées vers vehId_1 (legacyPins)."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise l'état (started, race, count = 1) et les options data.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
+        "postInit": {"desc": "Crée les pins vehId_i selon self.count.", "internal": true},
+        "drawCustomProperties": {"desc": "Champ éditeur « Vehicle Count » qui ajoute ou retire des pins vehId_i.", "returns": [{"type": "string|nil", "desc": "Raison de la modification pour l'historique d'annulation."}], "internal": true},
+        "updatePins": {"desc": "Passe le nombre de pins vehId_i de old à new : supprime les pins en trop (et leurs liens) ou en crée de nouvelles.", "params": {"old": {"type": "integer", "desc": "Nombre actuel de véhicules."}, "new": {"type": "integer", "desc": "Nouveau nombre de véhicules."}}},
+        "_onSerialize": {"desc": "Sauvegarde count dans la table de sérialisation.", "params": {"res": {"type": "table", "desc": "Table de résultat à compléter."}}, "internal": true},
+        "_onDeserialized": {"desc": "Relit count (défaut 1) et recrée les pins.", "params": {"res": {"type": "table", "desc": "Données sérialisées."}}, "internal": true},
+        "_executionStarted": {"desc": "Remet à zéro race, started et vehicleChanged.", "internal": true},
+        "_executionStopped": {"desc": "Appelle race:stopRace() si une course existe, puis l'oublie.", "internal": true},
+        "drawMiddle": {"desc": "Affiche « Started » ou « Stopped » dans le nœud.", "params": {"builder": {"type": "table", "desc": "Constructeur de nœud imgui."}, "style": {"type": "table", "desc": "Style du nœud."}}, "internal": true},
+        "work": {"desc": "Gère reset, démarre la course au premier flux, la met à jour chaque frame et renseigne les pins de sortie.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+      }
+    }
+  }
+}

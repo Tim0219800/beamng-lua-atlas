@@ -1,0 +1,235 @@
+{
+  "path": "lua/ge/extensions/ui/router.lua",
+  "module": "Routeur de navigation de l'interface côté Lua (ui_router). Il orchestre un « handshake » avec les frameworks UI (Vue, Angular/legacy) : résolution de la route, gardes de sortie/entrée, hooks de cycle de vie (onLeave, onEnter, onMount), envoi du changement de route au framework, puis réception des accusés (reçu, navigation démarrée, route validée, montée). Il délègue l'état aux modules ui/router/* (navigationState, transitionManager, frameworkManager, guardManager, scopeManager, breadcrumbManager…). Un moddeur s'en sert surtout pour appeler navigate/back/reload et pour écouter les hooks onUiChangedState et onUiActiveScopeChanged.",
+  "usage": "-- naviguer vers une route avec des paramètres\nlocal res = ui_router.navigate(\"mainmenu\", {})\nif not res.success then log(\"W\", \"mod\", \"échec : \" .. tostring(res.reason)) end\n-- navigation non annulable (verrou de protection)\nui_router.navigate(\"photomode\", nil, {cancellable = false})",
+  "notes": [
+    "Séquence d'une navigation : 1) navigate émet le changement de route (FrameworkManager.sendRouteChange) ; 2) routeChangeReceived ; 3) routeNavigationStarted ; 4) routeChangeComplete promeut l'entrée en attente et termine la transition, sauf pour les routes Vue qui attendent un accusé de montage ; 5) routeMounted exécute onMount et termine la transition.",
+    "Pour les routes Vue, les accusés doivent renvoyer un identifiant de transition non vide (sinon reason=\"missing_transition_id\"). Angular/legacy peuvent s'en passer et sont validés par nom de route.",
+    "Un navigate avec options.cancellable == false acquiert un verrou identifié par un jeton unique (\"navProtect_N\") qui bloque tout navigate/back/reload suivant (reason=\"active_navigation_not_cancellable\") jusqu'à l'état terminal de cette navigation (fin, annulation, échec, timeout, reset, désérialisation). Sinon la dernière navigation l'emporte et annule la transition en cours (annulation « navigation_replaced »).",
+    "Les échecs de navigate renvoient {result=false, success=false, reason=...} : active_navigation_not_cancellable, route_not_found, guard_blocked_exit, guard_blocked_enter, lifecycle_hook_error, navigation_preempted, ou l'erreur de résolution de la référence de route.",
+    "Le nom de route accepte une référence enrichie : route relative résolue contre la route courante, requête inline (?a=1) et portée (:scope). Les paramètres explicites l'emportent sur ceux de la requête.",
+    "Hooks émis : extensions.hook(BEFORE_ROUTE_CHANGE, entry), AFTER_ROUTE_CHANGE, ROUTE_CHANGE_CANCELLED (toRoute, fromRoute, reason, transitionId, plus timeoutClassification/phase/... pour un timeout), ROUTE_TIMING (routeName, {total, enter, ready, mountAcked} en ms), onUiChangedState(nomRoute, routeOrigine) et onUiActiveScopeChanged(payload). Évènement UI : guihooks ui_router_routeData (namespace, route, fromRoute, scopeTree, scopeParentMap, targetScope, breadcrumbs, data, status, error) avec status = enter-ready, mounted-ready ou error.",
+    "NavigationObserver (diagnostic) n'est chargé que si shipping_build ~= true.",
+    "back() ne renvoie rien (nil) si la route courante n'a ni backTarget ni gestionnaire de retour valide.",
+    "L'extension se met en déchargement manuel à son chargement (setExtensionUnloadMode manual) et recharge les gardes (GuardManager.reloadGuards).",
+    "Fonctions dépréciées : push, replace (journalisent un avertissement puis appellent navigate) et forward (renvoie {result=false, reason=\"deprecated_method\"}). Les fonctions __test_* sont des points d'accès réservés aux tests."
+  ],
+  "functions": {
+    "navigate": {
+      "desc": "Navigue vers une route : résout la cible, exécute les gardes de sortie de la route courante, annule toute transition en cours, exécute onLeave, les gardes d'entrée, onEnter, émet les données de route (status enter-ready) puis lance la transition vers le framework UI.",
+      "params": {
+        "routename": {"type": "string", "desc": "Nom de la route, éventuellement relatif, avec requête inline (?a=1) et portée (:scope)."},
+        "params": {"type": "table|nil", "desc": "Paramètres de route (prioritaires sur les paramètres de la requête inline)."},
+        "options": {"type": "table|nil", "desc": "Options : cancellable (false = navigation protégée), decorator, showDecorator, restoreLastScope, routeScopeId (ajouté automatiquement)… transmises à la requête de route."}
+      },
+      "returns": [
+        {"type": "table", "desc": "{result=true, success=true, data=entry} ou {result=false, success=false, reason=string, failedGuard?}."}
+      ],
+      "internal": false
+    },
+    "back": {
+      "desc": "Retour : navigue vers le backTarget de la route courante (avec les paramètres de l'entrée précédente si elle correspond, sinon ceux de la route courante, et restoreLastScope = true) ; sinon exécute le gestionnaire de retour déclaré (RouteHandlers) si le mode est « handler ».",
+      "params": {
+        "options": {"type": "table|nil", "desc": "Options de navigation copiées dans la navigation de retour."}
+      },
+      "returns": [
+        {"type": "table|any", "desc": "Résultat de navigate ou du gestionnaire ; {result=false, reason=\"no_current_route\"} sans route courante ; nil si rien à faire."}
+      ],
+      "internal": false
+    },
+    "cancel": {
+      "desc": "Annule la transition en cours (raison « cancelled ») : notifie le framework et émet le hook ROUTE_CHANGE_CANCELLED.",
+      "params": {
+        "options": {"type": "table|nil", "desc": "Inutilisé."}
+      },
+      "returns": [
+        {"type": "table", "desc": "{success=true}, ou {success=false, message} s'il n'y a aucune transition."}
+      ],
+      "internal": false
+    },
+    "getCurrent": {
+      "desc": "Renvoie l'entrée de navigation courante (validée) de NavigationState.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Entrée courante {request, resolved, routeNode, …} ou nil."}],
+      "internal": false
+    },
+    "reload": {
+      "desc": "Rejoue la navigation : réutilise le nom, les paramètres et les options de l'entrée courante pour les arguments absents, puis appelle navigate.",
+      "params": {
+        "routeName": {"type": "string|nil", "desc": "Route cible (défaut : route courante)."},
+        "params": {"type": "table|nil", "desc": "Paramètres (défaut : ceux de la requête courante)."},
+        "options": {"type": "table|nil", "desc": "Options (défaut : celles de la requête courante)."}
+      },
+      "returns": [
+        {"type": "table", "desc": "Résultat de navigate, ou {success=false, message} s'il n'y a aucune route à recharger."}
+      ],
+      "internal": false
+    },
+    "getBreadcrumbs": {
+      "desc": "Renvoie le fil d'Ariane de la route courante (NavigationState.getBreadcrumbs).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Liste des miettes de pain."}],
+      "internal": false
+    },
+    "getState": {
+      "desc": "Renvoie l'état du routeur : la route courante et l'état de portée active.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{currentRoute=entry|nil, activeScope={activeScopeId, previousActiveScopeId, routeName}}."}],
+      "internal": false
+    },
+    "isNavigationProtected": {
+      "desc": "Indique si une navigation protégée (cancellable = false) est active.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si le verrou de protection est détenu."}],
+      "internal": false
+    },
+    "resetStates": {
+      "desc": "Réinitialise tout l'état du routeur : navigation, transition, observateur (non shipping), verrou de protection, données de route et portée active.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "reportActiveScope": {
+      "desc": "Appelé par l'interface pour signaler la portée (scope) active. Ignore les rapports d'une route périmée, mémorise la dernière portée active de la route (hors popup, et si la portée est déclarée dans l'arbre) puis émet le hook onUiActiveScopeChanged.",
+      "params": {
+        "payload": {"type": "table", "desc": "{routeName?, activeScopeId?, isPopup?}."}
+      },
+      "returns": [
+        {"type": "table", "desc": "{success=true}, ou {success=false, reason=\"invalid_payload\"|\"stale_route\", stale?}."}
+      ],
+      "internal": false
+    },
+    "routeChangeReceived": {
+      "desc": "Accusé du framework : le changement de route a été reçu. Marque la progression routeChangeReceived de la transition.",
+      "params": {
+        "frameworkId": {"type": "string", "desc": "Framework (« vue », …) ; inutilisé ici."},
+        "routeName": {"type": "string", "desc": "Route accusée."},
+        "transitionId": {"type": "string|nil", "desc": "Identifiant de transition renvoyé par l'UI."}
+      },
+      "returns": [{"type": "table", "desc": "Résultat de TransitionManager.markProgress."}],
+      "internal": false
+    },
+    "routeNavigationStarted": {
+      "desc": "Accusé du framework : la navigation côté UI a démarré. Exige un identifiant de transition pour Vue pendant une transition.",
+      "params": {
+        "frameworkId": {"type": "string", "desc": "Framework émetteur."},
+        "routeName": {"type": "string", "desc": "Route accusée."},
+        "transitionId": {"type": "string|nil", "desc": "Identifiant de transition."}
+      },
+      "returns": [{"type": "table", "desc": "{success=false, reason=\"missing_transition_id\"} ou résultat de markProgress."}],
+      "internal": false
+    },
+    "routeChangeRejected": {
+      "desc": "Rejet définitif par l'UI d'un changement de route impossible ou mal formé (les routes simplement absentes ne sont pas rejetées car elles peuvent s'enregistrer plus tard). Annule la transition active si l'identifiant correspond.",
+      "params": {
+        "frameworkId": {"type": "string", "desc": "Framework émetteur."},
+        "routeName": {"type": "string", "desc": "Route rejetée."},
+        "transitionId": {"type": "string|nil", "desc": "Identifiant de transition (validé s'il est fourni)."},
+        "reason": {"type": "string|nil", "desc": "Raison du rejet (diagnostic, transmise au hook)."}
+      },
+      "returns": [{"type": "table", "desc": "{success=true} ou {success=false, reason=\"no_active_transition\"|\"transition_id_mismatch\"}."}],
+      "internal": false
+    },
+    "routeChangeComplete": {
+      "desc": "Accusé du framework : la route est validée côté UI. Promeut l'entrée en attente en entrée courante, notifie le framework, émet les hooks AFTER_ROUTE_CHANGE et onUiChangedState, et termine la transition sauf si un accusé de montage Vue est attendu (et onEnter n'a pas échoué).",
+      "params": {
+        "frameworkId": {"type": "string", "desc": "Framework émetteur."},
+        "routeName": {"type": "string", "desc": "Route validée (doit correspondre à l'entrée en attente)."},
+        "transitionId": {"type": "string|nil", "desc": "Identifiant de transition (obligatoire pour Vue)."}
+      },
+      "returns": [{"type": "table", "desc": "{success=true, alreadyCommitted?} ou {success=false, reason=no_active_transition|missing_transition_id|missing_transition_meta|missing_pending_entry|route_mismatch|transition_id_mismatch|missing_current_entry}."}],
+      "internal": false
+    },
+    "routeChangeFailed": {
+      "desc": "Échec de navigation signalé par le framework (par exemple chargement d'un composant Vue impossible). Annule la navigation en cours sans toucher à la route validée : valide route et identifiant, refuse si la route est déjà validée, exécute le onLeave de la destination en attente pour annuler les effets de son onEnter, puis annule la transition.",
+      "params": {
+        "frameworkId": {"type": "string", "desc": "Framework émetteur (exigé avec identifiant pour Vue)."},
+        "routeName": {"type": "string", "desc": "Route en échec."},
+        "transitionId": {"type": "string|nil", "desc": "Identifiant de transition."}
+      },
+      "returns": [{"type": "table", "desc": "{success=true} ou {success=false, reason=no_active_transition|missing_transition_id|already_committed|<raison de validation>}."}],
+      "internal": false
+    },
+    "routeMounted": {
+      "desc": "Accusé Vue : le composant de la route est monté. Exige un identifiant de transition, une route validée (sinon reason=\"not_committed\"), exécute onMount, émet les données de route (status mounted-ready ou error) et termine la transition. Un accusé tardif/dupliqué pour la route déjà validée renvoie {success=true, stale=true}.",
+      "params": {
+        "routeName": {"type": "string", "desc": "Route montée."},
+        "transitionId": {"type": "string", "desc": "Identifiant de transition de l'UI (obligatoire)."}
+      },
+      "returns": [{"type": "table", "desc": "{success=true, stale?|skipped?|alreadyMounted?} ou {success=false, reason=no_active_transition|missing_transition_id|missing_transition_context|route_mismatch|transition_id_mismatch|missing_transition_meta|not_committed|lifecycle_hook_error}."}],
+      "internal": false
+    },
+    "onGuiUpdate": {
+      "desc": "Hook appelé à chaque mise à jour GUI (arguments de temps de la boucle principale) : fait avancer le TransitionManager, renvoie le message de changement de route au framework si besoin (resends de démarrage) ou traite un timeout de transition (émet les données de route en erreur puis annule).",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta de temps réel (secondes)."},
+        "dtSim": {"type": "number", "desc": "Delta de temps simulé (inutilisé)."},
+        "dtRaw": {"type": "number", "desc": "Delta de temps brut (inutilisé)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook appelé avant un rechargement des extensions Lua : renvoie {navigation = NavigationState.serialize()}.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Données à restaurer par onDeserialize."}],
+      "internal": true
+    },
+    "onDeserialize": {
+      "desc": "Hook appelé après un rechargement : efface le verrou de protection (périmé) et restaure NavigationState à partir de data.navigation.",
+      "params": {
+        "data": {"type": "table|nil", "desc": "Données produites par onSerialize."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement de l'extension : passe en déchargement manuel et recharge les gardes de route.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "push": {
+      "desc": "Déprécié : journalise un avertissement et appelle navigate.",
+      "params": {
+        "routename": {"type": "string", "desc": "Route cible."},
+        "params": {"type": "table|nil", "desc": "Paramètres."},
+        "options": {"type": "table|nil", "desc": "Options."}
+      },
+      "returns": [{"type": "table", "desc": "Résultat de navigate."}],
+      "internal": false
+    },
+    "replace": {
+      "desc": "Déprécié : journalise un avertissement et appelle navigate.",
+      "params": {
+        "routename": {"type": "string", "desc": "Route cible."},
+        "params": {"type": "table|nil", "desc": "Paramètres."},
+        "options": {"type": "table|nil", "desc": "Options."}
+      },
+      "returns": [{"type": "table", "desc": "Résultat de navigate."}],
+      "internal": false
+    },
+    "forward": {
+      "desc": "Déprécié et non implémenté : renvoie toujours un échec.",
+      "params": {
+        "options": {"type": "table|nil", "desc": "Inutilisé."}
+      },
+      "returns": [{"type": "table", "desc": "{result=false, reason=\"deprecated_method\"}."}],
+      "internal": false
+    },
+    "__test_getProtectionToken": {
+      "desc": "Point d'accès réservé aux tests : renvoie le jeton du verrou de navigation protégée.",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "Jeton actif ou nil."}],
+      "internal": true
+    },
+    "__test_setProtectionToken": {
+      "desc": "Point d'accès réservé aux tests : impose le jeton du verrou de navigation protégée.",
+      "params": {
+        "token": {"type": "string|nil", "desc": "Jeton à imposer."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

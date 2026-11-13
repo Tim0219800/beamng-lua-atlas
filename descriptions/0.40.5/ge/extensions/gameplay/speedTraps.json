@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/gameplay/speedTraps.lua",
+  "module": "Extension qui gère les radars de vitesse et de feu rouge posés dans les niveaux sous forme de triggers BeamNGTrigger portant un champ speedTrapType (« speed » ou « redLight »). Quand un véhicule entre dans le trigger, dans le bon sens et trop vite, elle émet les hooks onSpeedTrapTriggered ou onRedLightCamTriggered et fait flasher la lumière associée. Inactive pendant une mission au premier plan.",
+  "usage": "function M.onSpeedTrapTriggered(data, speed, overSpeed)\n  print(data.triggerName, speed, overSpeed)\nend",
+  "notes": [
+    "Données attendues dans data : event ('enter'), speedTrapType, speedLimit (m/s), speedLimitTolerance (défaut 10 % de la limite), speedTrapLightName, subjectID, triggerID, triggerName ; pour un feu rouge : triggerSpeed (défaut 5 m/s) et trafficSignalId.",
+    "Radar de vitesse : déclenché si la vitesse dépasse limite + tolérance. Feu rouge : déclenché si la vitesse dépasse triggerSpeed ET que le signal est « redTrafficLight ».",
+    "Ignoré si le véhicule est à plus de 100 m de la caméra ou si le véhicule roule dans le sens opposé à l'axe Y du trigger.",
+    "Le flash dure 0,1 s (radar) ; pour un feu rouge : flash 0,1 s, pause de 10 / vitesse s, second flash 0,1 s.",
+    "Pour un radar de feu rouge, trafficSignal est utilisé sans vérification de nil : si trafficSignalId est invalide, erreur Lua."
+  ],
+  "functions": {
+    "onBeamNGTrigger": {
+      "desc": "Hook appelé par le moteur à chaque événement d'un BeamNGTrigger. Ne traite que les triggers avec speedTrapType et l'événement 'enter'. Calcule la vitesse du véhicule, vérifie le sens de passage et émet onSpeedTrapTriggered(data, vehSpeed, overSpeed) ou onRedLightCamTriggered(data, vehSpeed), puis allume la lumière nommée.",
+      "params": {"data": {"type": "table", "desc": "Données du trigger (voir notes)."}},
+      "internal": true
+    },
+    "getSpeedTrapsInCurrentLevel": {
+      "desc": "Liste les triggers BeamNGTrigger du niveau courant dont le speedTrapType correspond.",
+      "params": {"speedTrapType": {"type": "string", "desc": "'speed' ou 'redLight'."}},
+      "returns": [{"type": "table[]", "desc": "Objets trigger (table vide si aucun)."}]
+    }
+  }
+}

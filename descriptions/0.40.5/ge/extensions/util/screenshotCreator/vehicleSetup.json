@@ -1,0 +1,70 @@
+{
+  "path": "lua/ge/extensions/util/screenshotCreator/vehicleSetup.lua",
+  "module": "Mise en place physique du véhicule avant une vignette : le replace à l'endroit de départ (premier SpawnSphere du niveau, sinon une position de repli), applique la rotation de vignette configurée (thumbnailConfig.getRotation), l'aligne au sol et attend qu'il se stabilise. Fournit aussi des mesures du sol sous une boîte englobante (utilisées par le cadrage procédural) et l'allumage des feux de croisement.",
+  "notes": [
+    "placeVehicleForThumbnail et waitForVehicleToSettle utilisent coroutine.yield : à appeler depuis une coroutine (celle de job.lua).",
+    "Le véhicule est aligné par le coin arrière-droit de sa boîte sur le SpawnSphere ; pour les modèles inflated_mat et large_bridge la boîte est centrée sur le point d'apparition.",
+    "La boîte du véhicule dans le monde (getSpawnWorldOOBB) ne suit une téléportation qu'après des pas de physique ; l'alignement utilise donc la boîte locale initialNodePosBB et la pose qui vient d'être fixée.",
+    "Si une rotation de vignette est appliquée, la position et l'orientation d'origine sont mémorisées par véhicule pour getResetTransform ; elles sont oubliées quand le véhicule est réapparu (onVehicleSpawned).",
+    "Délai de stabilisation : pauseDelay de la config s'il est > 0, sinon options.settleDelay, sinon 2 s."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extension chargée avant : util_screenshotCreator_thumbnailConfig."}
+  },
+  "functions": {
+    "getGroundHeight": {
+      "desc": "Lance un rayon statique vers le bas (0,5 m au-dessus, 2 m en dessous) depuis la position donnée et renvoie la hauteur du sol, ou la hauteur de la position si le sol n'est pas trouvé ou est incohérent.",
+      "params": {"position": {"type": "vec3", "desc": "Position monde."}},
+      "returns": [{"type": "number", "desc": "Hauteur Z du sol en mètres."}]
+    },
+    "getFloorHeight": {
+      "desc": "Trouve la hauteur du sol sous une boîte englobante en lançant le rayon depuis le dessus de la boîte (utile pour les accessoires dont des nœuds sont enterrés, comme des bornes). Se replie sur le bas de la boîte si aucun sol n'est touché.",
+      "params": {"bb": {"type": "table", "desc": "OOBB avec getPoint(i) et getCenter()."}},
+      "returns": [{"type": "number", "desc": "Hauteur Z du sol en mètres."}]
+    },
+    "getThumbnailSpawnTransform": {
+      "desc": "Renvoie la position et la rotation du premier objet SpawnSphere de la scène, point de départ des vignettes.",
+      "returns": [
+        {"type": "vec3|nil", "desc": "Position, nil s'il n'y a pas de SpawnSphere."},
+        {"type": "quat|nil", "desc": "Rotation."}
+      ]
+    },
+    "getResetTransform": {
+      "desc": "Renvoie la position et la rotation à utiliser pour replacer le véhicule : celles d'origine mémorisées si une rotation de vignette avait été appliquée, sinon sa pose actuelle.",
+      "params": {"vehicle": {"type": "table", "desc": "Objet véhicule."}},
+      "returns": [
+        {"type": "vec3", "desc": "Position."},
+        {"type": "quat", "desc": "Rotation."}
+      ]
+    },
+    "placeVehicleForThumbnail": {
+      "desc": "Réinitialise le véhicule (vehicle:reset), le téléporte sur le point de départ avec la rotation de vignette de la config, puis l'aligne au sol (deux coroutine.yield).",
+      "params": {
+        "vehicle": {"type": "table", "desc": "Objet véhicule."},
+        "configName": {"type": "string", "desc": "Nom de la configuration (pour la rotation de vignette)."},
+        "fallbackPosition": {"type": "vec3|nil", "desc": "Position utilisée s'il n'y a pas de SpawnSphere."},
+        "fallbackRotation": {"type": "quat|nil", "desc": "Rotation utilisée s'il n'y a pas de SpawnSphere."}
+      }
+    },
+    "waitForVehicleToSettle": {
+      "desc": "Attend (en cédant la main à chaque frame) le temps de stabilisation du véhicule.",
+      "params": {
+        "modelName": {"type": "string", "desc": "Nom du modèle."},
+        "configName": {"type": "string", "desc": "Nom de la configuration."},
+        "options": {"type": "table|nil", "desc": "{settleDelay = secondes} (défaut 2)."}
+      }
+    },
+    "setLowBeams": {
+      "desc": "Si enabled est vrai, envoie au véhicule electrics.setLightsState(1) (feux de croisement). Ne fait rien sinon.",
+      "params": {
+        "vehicle": {"type": "table", "desc": "Objet véhicule."},
+        "enabled": {"type": "boolean", "desc": "Allumer les feux."}
+      }
+    },
+    "onVehicleSpawned": {
+      "desc": "Hook appelé quand un véhicule apparaît : oublie la rotation de vignette mémorisée pour ce véhicule.",
+      "params": {"vehicleId": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "internal": true
+    }
+  }
+}

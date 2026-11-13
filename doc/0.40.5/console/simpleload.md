@@ -4,6 +4,8 @@
 
 **Accès :** `require("simpleload")`
 
+Script de test de la console : il supprime tous les objets (BeamEngine:deleteAllObjects) puis fait apparaître le véhicule vehicles/pickup à l'origine (BeamEngine:spawnObject(1, ..., nil, vec3(0,0,0))). Rien n'est exporté.
+
 ## Appels vers le moteur (C++)
 
 - `BeamEngine:` `deleteAllObjects`, `spawnObject`

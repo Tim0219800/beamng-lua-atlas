@@ -1,0 +1,29 @@
+{
+  "path": "lua/common/json.test.lua",
+  "module": "Tests unitaires du module json de BeamNG (require('json')). Chaque fonction testXxx(ctx) reçoit un contexte de test avec assertEqual(a, b, message) et assertNear(a, b, tolérance, message) ; elles vérifient le décodage JSON/SJSON (commentaires, virgules facultatives, nombres, Infinity, échappements, affectations de niveau supérieur sans accolades, entrée depuis string.buffer), les erreurs sur entrées invalides, et l'aller-retour encode/decode (dont vec3 et quat). Utile à un moddeur pour savoir ce que le parseur accepte.",
+  "notes": [
+    "Ce sont des tests : ils ne servent pas en jeu normal ; le lanceur de tests (non lu ici) appelle chaque fonction avec ctx.",
+    "Le parseur accepte les virgules manquantes, les commentaires // et /* */ mais pas les commentaires imbriqués ni un '/' isolé.",
+    "json.decode(nil) renvoie nil ; json.decode(123) (non-chaîne) et un JSON invalide lèvent une erreur (vérifiée par pcall).",
+    "Les vec3 et quat encodés en JSON sont décodés comme tables avec champs x, y, z (et w pour quat)."
+  ],
+  "functions": {
+    "testJsonDecodeNil": {"desc": "Vérifie que json.decode(nil) renvoie nil.", "params": {"ctx": {"type": "table", "desc": "Contexte de test (assertEqual, assertNear)."}}, "returns": [], "internal": true},
+    "testJsonDecodeObjectString": {"desc": "Décode un objet JSON simple et vérifie les champs.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
+    "testJsonDecodeArrayString": {"desc": "Décode un tableau JSON simple.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
+    "testJsonDecodeFromBuffer": {"desc": "Teste le décodage depuis une instance string.buffer.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
+    "testJsonDecodeSjsonFeatures": {"desc": "Teste les fonctionnalités de type SJSON attendues par le parseur BeamNG.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
+    "testJsonDecodeMissingCommasAccepted": {"desc": "Vérifie que le parseur tolère les virgules omises.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
+    "testJsonDecodeTopLevelAssignments": {"desc": "Vérifie le format clé/valeur de niveau supérieur sans accolades.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
+    "testJsonDecodeComments": {"desc": "Teste la gestion des commentaires dans les objets et les tableaux.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
+    "testJsonDecodeEscapes": {"desc": "Teste le décodage des séquences d'échappement des chaînes.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
+    "testJsonDecodeNumbers": {"desc": "Teste les variantes de nombres acceptées.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
+    "testJsonDecodeInfinityTokens": {"desc": "Teste les graphies d'Infinity acceptées par le parseur SJSON.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
+    "testJsonDecodeInvalidNumberTokens": {"desc": "Vérifie le rejet de nombres/Infinity mal formés.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
+    "testJsonEncodeDecodeVec3Quat": {"desc": "Vérifie que vec3 et quat survivent à encode puis decode (tables x,y,z[,w], tolérance 1e-6).", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
+    "testJsonEncodeDecodeRoundtrip": {"desc": "Aller-retour encode/decode d'une structure imbriquée (nombre, chaîne, booléen, tableau, objet).", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
+    "testJsonDecodeInvalidString": {"desc": "Vérifie qu'un texte invalide (« {bad ») lève une erreur.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
+    "testJsonDecodeInvalidInputType": {"desc": "Vérifie que json.decode(123) lève une erreur.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true},
+    "testJsonDecodeMalformedCases": {"desc": "Liste de cas mal formés (« : » manquant, fermeture manquante, chaîne non terminée, tokens true/false/null invalides, exposant invalide, commentaires imbriqués) qui doivent tous échouer.", "params": {"ctx": {"type": "table", "desc": "Contexte de test."}}, "returns": [], "internal": true}
+  }
+}

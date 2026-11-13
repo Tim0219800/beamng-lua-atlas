@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/staticEditor/veJBeamTableVis.lua",
+  "module": "Application « JBeam Table Visualizer » du Static Editor de l'éditeur de véhicule. Elle charge un fichier .jbeam choisi via un sélecteur de fichier, cherche récursivement les tables de nombres qui peuvent être tracées en courbe (par exemple les courbes de couple ou de torque d'un moteur), et les affiche avec plotHelperUtil (courbe de Catmull-Rom, mise à l'échelle auto). Un bouton Refresh relit le fichier sur le disque.",
+  "usage": "extensions.load('editor_vehicleEditor_staticEditor_veJBeamTableVis')\neditor_vehicleEditor_staticEditor_veJBeamTableVis.open()",
+  "notes": [
+    "Est listée dans le menu Apps du Static Editor grâce à M.menuEntry = 'JBeam Table Visualizer' (appelle open()).",
+    "Une table est « traçable » quand ses sous-tables ont toutes la même taille et que le premier et le deuxième élément des lignes (sauf la première) sont des nombres. L'en-tête (première ligne dont le premier élément est un texte) est retiré de la table d'origine par removeHeader, ce qui modifie les données chargées en mémoire.",
+    "Les chemins sont affichés sous la forme « section > sous-section » dans la liste déroulante.",
+    "onUpdate ne dessine rien tant que vEditor.vehicle est nil ; le sélecteur de fichier s'ouvre dans /vehicles/ avec le filtre .jbeam.",
+    "Le parsing utilise json.decode (copié de common/jbeam/io.lua), donc le fichier doit être du JSON valide (pas le JBeam étendu avec commentaires)."
+  ],
+  "fields": {
+    "menuEntry": {"type": "string", "desc": "Texte de l'entrée du menu Apps : « JBeam Table Visualizer »."}
+  },
+  "functions": {
+    "open": {"desc": "Ouvre la fenêtre de l'application (windowOpen[0] = true). Appelée par le menu Apps du Static Editor."},
+    "onUpdate": {
+      "desc": "Hook d'extension appelé à chaque frame : si la fenêtre est ouverte et qu'un véhicule est chargé dans l'éditeur, dessine le bouton d'ouverture de fichier, la liste des données traçables, le bouton Refresh et le graphe.",
+      "params": {"dt": {"type": "number", "desc": "delta de temps (s), transmis au tracé"}},
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook appelé avant un rechargement Lua : sauvegarde l'état ouvert/fermé de la fenêtre.",
+      "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook appelé après un rechargement Lua : restaure l'état de la fenêtre.",
+      "params": {"data": {"type": "table", "desc": "table produite par onSerialize"}},
+      "internal": true
+    }
+  }
+}

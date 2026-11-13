@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/drift/driftScore.lua",
+  "module": "Nœud flowgraph « Drift Score » (catégorie repeat_instant, drift). Donne les scores de drift de gameplay_drift_scoring.getScore() : score (total), cachedScore (temporaire) et combo (courant).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Copie score, cachedScore et combo vers les pins de sortie."}
+      }
+    }
+  }
+}

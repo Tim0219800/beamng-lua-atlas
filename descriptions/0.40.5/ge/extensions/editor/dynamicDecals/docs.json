@@ -1,0 +1,87 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/docs.lua",
+  "module": "Fenêtre de documentation intégrée à l'outil Dynamic Decals (table des matières + contenu). Chaque module de l'outil y enregistre une page avec register({section = {...}, guiFn = fn}) ; ce module fournit aussi les pages Introduction, Getting Started et Controls (les contrôles sont lus dans les actions d'entrée de l'action map « dynamicDecals », clavier et souris). selectSection ouvre la fenêtre sur une page donnée.",
+  "usage": "local docs = extensions.editor_dynamicDecals_docs\ndocs.register({section = {\"Ma section\"}, guiFn = function(sec) ui_imgui.TextUnformatted(\"Texte\") end, order = 50})\ndocs.selectSection(\"Ma section\")",
+  "notes": [
+    "register : `data.section` doit être une table (liste de noms du parent au enfant), sinon un avertissement est loggé et rien n'est enregistré. Les sections intermédiaires manquantes sont créées avec data.order.",
+    "selectSection accepte soit un nom (recherche dans tout l'arbre, efface le filtre de recherche et repart de l'arbre de base), soit une table de noms (chemin complet).",
+    "Bug : introductionGui affiche la version avec tool.version[2] deux fois (minor, minor) au lieu de (major, minor, patch).",
+    "showWindow trie les enfants de chaque section (sortFn) avant d'ouvrir et sauvegarde une copie de l'arbre."
+  ],
+  "functions": {
+    "register": {
+      "desc": "Enregistre (ou met à jour) une page de documentation dans l'arbre des sections.",
+      "params": {"data": {"type": "table", "desc": "{section = string[], guiFn = function(docsSection), order = number|nil}."}},
+      "returns": [],
+      "internal": false
+    },
+    "selectSection": {
+      "desc": "Sélectionne une page de la documentation et, sauf si doNotOpenWindow, ouvre la fenêtre.",
+      "params": {
+        "section": {"type": "string|string[]", "desc": "Nom de la page, ou chemin sous forme de liste de noms."},
+        "doNotOpenWindow": {"type": "boolean|nil", "desc": "Si vrai, ne montre pas la fenêtre."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "showWindow": {
+      "desc": "Trie les sections puis affiche la fenêtre de documentation.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "hideWindow": {
+      "desc": "Masque la fenêtre de documentation.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "isWindowVisible": {
+      "desc": "Indique si la fenêtre de documentation est visible.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si visible."}],
+      "internal": false
+    },
+    "image": {
+      "desc": "Affiche une image dans la page de doc (à la largeur donnée en conservant le ratio), avec info-bulle optionnelle et légende grise.",
+      "params": {
+        "path": {"type": "string", "desc": "Chemin de la texture."},
+        "overrideWidth": {"type": "number|nil", "desc": "Largeur en pixels ; défaut toute la largeur disponible."},
+        "title": {"type": "string|nil", "desc": "Texte d'info-bulle."},
+        "subtitle": {"type": "string|nil", "desc": "Légende sous l'image."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "verticalSpacing": {
+      "desc": "Insère un espace vertical de hauteur `dynamicDecalsTool.docs.verticalSpacing` (défaut 16).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "introductionGui": {
+      "desc": "Dessine la page « Introduction » (message de bienvenue et version de l'outil).",
+      "params": {"docsSection": {"type": "table", "desc": "Section de documentation courante."}},
+      "returns": [],
+      "internal": true
+    },
+    "registerEditorPreferences": {
+      "desc": "Enregistre `dynamicDecalsTool.docs` : indentSpacing (int, défaut 8, de 0 à 64) pour la table des matières et verticalSpacing (int, défaut 16, de 0 à 64).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : déclare la fenêtre (640x640), enregistre les callbacks d'interface et d'update, les pages Introduction (ordre 0), Getting Started (10) et Controls (20), et construit la liste des contrôles clavier/souris de l'action map dynamicDecals.",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

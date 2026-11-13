@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/pathDefaultStartTransform.lua",
+  "module": "Nœud flowgraph « Race Start Transform » (catégorie repeat_instant, tags scenario et race). Donne la transformation d'une position de départ d'un pathData, utile pour créer des triggers personnalisés. Entrées : pathData et name (string ou number : nom ou id de la position ; défaut = defaultStartPosition). Sorties : existing, pos (position décalée vers l'arrière de la moitié de startBoxLength et relevée de la moitié de startBoxHeight, donc centre de la boîte de départ), origPos (position d'origine), rot (quat), scl ({largeur, longueur, hauteur}). Calculé une seule fois (tant que self.path est nil).",
+  "notes": ["Options data : startBoxWidth = 2, startBoxLength = 5, startBoxHeight = 1.5, useStringMatch = false (si vrai, la première position dont le nom contient la chaîne donnée est utilisée).", "Si la position est absente ou 'missing', existing vaut false et les autres sorties ne sont pas mises à jour."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise self.path, désactive clearOutPinsOnStart et définit les options de boîte de départ.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
+        "_executionStopped": {"desc": "Oublie le chemin mémorisé.", "internal": true},
+        "work": {"desc": "Cherche la position de départ et calcule pos, origPos, rot, scl et existing.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+      }
+    }
+  }
+}

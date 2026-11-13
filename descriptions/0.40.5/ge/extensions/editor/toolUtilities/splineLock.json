@@ -1,0 +1,64 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/splineLock.lua",
+  "module": "État de verrouillage partagé par les outils de splines personnalisés de l'éditeur. Une spline verrouillée (isEnabled == false) reste dans son outil, mais les objets générés appartiennent au niveau : ils sont sauvegardés (canSave = true) et collisionnent. Une spline déverrouillée produit des objets d'aperçu transitoires (canSave = false, sans collision). Chaque outil appelle sync() depuis sa reconstruction, et fournit un itérateur `each(fn)` qui appelle fn(obj, collides, isParked) pour chaque objet qu'il possède. Tant que c'est verrouillé, l'outil ne déplace ni ne refait les objets existants : les retouches manuelles restent.",
+  "usage": "local lock = require('editor/toolUtilities/splineLock')\nlocal applied = {}\nlocal function each(fn) for _, o in ipairs(myObjs) do fn(o, true, false) end end\nlock.sync(applied, spline, 'myTool', each)",
+  "notes": [
+    "`each` reçoit fn(obj, collides, isParked) ; isParked = objet possédé mais hors résultat (caché pour réutilisation), laissé tel quel.",
+    "capture/restore ignorent les DecalRoad, MeshRoad et River (posés par leurs nœuds, pas par une transformation).",
+    "Tous les objets taggués avec les champs dynamiques sourceTool, sourceSplineId et sourceSplineName.",
+    "sync ne fait rien si l'état de verrouillage n'a pas changé depuis le dernier appliqué ; une spline neuve non verrouillée est considérée déjà en état « live »."
+  ],
+  "functions": {
+    "dropDeleted": {
+      "desc": "Retire d'une liste les références à des objets qui n'existent plus (par ex. supprimés à la main dans l'arbre de scène). Compacte la liste en place.",
+      "params": {"list": {"type": "table", "desc": "Tableau d'objets de scène, modifié en place."}},
+      "returns": []
+    },
+    "tag": {
+      "desc": "Marque un objet généré avec la spline d'origine (champs dynamiques sourceTool, sourceSplineId, sourceSplineName) pour le retrouver dans l'arbre de scène ou l'inspecteur.",
+      "params": {
+        "obj": {"type": "userdata", "desc": "Objet de scène."},
+        "toolName": {"type": "string", "desc": "Nom de l'outil."},
+        "spline": {"type": "table", "desc": "Spline avec .id et .name."}
+      },
+      "returns": []
+    },
+    "applyObject": {
+      "desc": "Met un objet généré dans l'état de verrouillage : canSave = isLocked, et collisionType = 'Collision Mesh' si verrouillé et `collides`, sinon 'None'.",
+      "params": {
+        "obj": {"type": "userdata", "desc": "Objet de scène."},
+        "isLocked": {"type": "boolean", "desc": "Spline verrouillée."},
+        "collides": {"type": "boolean|nil", "desc": "Collision une fois verrouillé ; nil laisse la collision inchangée."}
+      },
+      "returns": []
+    },
+    "hasAny": {
+      "desc": "Vrai si l'outil possède encore au moins un objet vivant (non parqué) pour la spline.",
+      "params": {"each": {"type": "function", "desc": "Itérateur de l'outil."}},
+      "returns": [{"type": "boolean", "desc": "Un objet vivant existe."}]
+    },
+    "sync": {
+      "desc": "Aligne les objets générés d'une spline sur son état de verrouillage. N'agit que si l'état diffère du dernier appliqué (table `applied` id -> isLocked). Met à jour le dossier de scène (canSave, tag), les objets (applyObject, tag, remise dans le dossier si déplacé à la main). Au déverrouillage, supprime les objets du dossier portant le tag de la spline mais non possédés par l'outil. Appelle be:reloadCollision().",
+      "params": {
+        "applied": {"type": "table<any, boolean>", "desc": "Table id de spline -> dernier état appliqué ; modifiée."},
+        "spline": {"type": "table", "desc": "Spline (id, name, isEnabled, sceneTreeFolderId)."},
+        "toolName": {"type": "string", "desc": "Nom de l'outil, utilisé pour le tag."},
+        "each": {"type": "function", "desc": "Itérateur de l'outil."}
+      },
+      "returns": [{"type": "boolean", "desc": "Vrai si une action a été menée."}]
+    },
+    "capture": {
+      "desc": "Enregistre l'état éditable à la main des objets d'une spline (transformation, échelle, forme pour les TSStatic, dossier), indexé par id d'objet. À prendre avant un déverrouillage qui les réinitialise, pour pouvoir annuler.",
+      "params": {"each": {"type": "function", "desc": "Itérateur de l'outil."}},
+      "returns": [{"type": "table", "desc": "id -> { xf, scale, shape, groupId }."}]
+    },
+    "restore": {
+      "desc": "Remet une capture en place après le re-verrouillage qui annule un déverrouillage : forme (shapeName + postApply), transformation, échelle, dossier. Les objets créés entre-temps et absents de la capture sont supprimés. Appelle be:reloadCollision().",
+      "params": {
+        "rec": {"type": "table", "desc": "Résultat de capture."},
+        "each": {"type": "function", "desc": "Itérateur de l'outil."}
+      },
+      "returns": []
+    }
+  }
+}

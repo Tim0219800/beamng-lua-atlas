@@ -1,0 +1,59 @@
+{
+  "path": "lua/ge/extensions/gameplay/drift/sounds.lua",
+  "module": "Gère les sons d'interface du drift (événements FMOD UI>Career>Drift_*) : un son continu pendant un drift dont la hauteur suit le facteur de performance, un son à chaque nouveau palier, à chaque changement de combo, à l'annulation du drift (crash/spinout) et à la validation des points. Contient aussi une fenêtre imgui « Drift audio » pour simuler un drift en debug. Chargé par gameplay_drift_general tant que l'extension d'affichage drift est chargée.",
+  "notes": [
+    "Sons : continuousDrift = event:>UI>Career>Drift_Counting, newTier = Drift_Tier, newCombo1 = Drift_Combo_1x, newCombo5 = Drift_Combo_5x, driftCanceled = Drift_Canceled, pointsConfirmed = Drift_PointsReceived.",
+    "Le son continu est coupé quand le drift est en pause ou gelé (gameplay_drift_general.getPaused/getFrozen) ; sinon il joue tant que gameplay_drift_drift.getIsDrifting() est vrai.",
+    "Le volume du son de palier est tierData.order - 1 (donc 0 pour le palier d'ordre 1).",
+    "Le son de combo utilise comboChange <= 0.2 pour choisir Combo_1x, sinon Combo_5x.",
+    "La fonction locale reset() n'est pas exportée : general.reset ne peut donc pas l'appeler."
+  ],
+  "functions": {
+    "getDriftDebugInfo": {
+      "desc": "Renvoie {default=false, canBeChanged=true} pour la fenêtre de debug drift.",
+      "returns": [{"type": "table", "desc": "{default = false, canBeChanged = true}"}]
+    },
+    "onUpdate": {
+      "desc": "Appelé à chaque frame : au premier appel crée la source audio du son continu, affiche la fenêtre de debug, puis joue/arrête le son continu et met à jour son paramètre pitch et sa position (caméra).",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (inutilisé)."},
+        "_dtSim": {"type": "number", "desc": "Delta temps simulé, mémorisé pour les transitions de debug."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (inutilisé)."}
+      },
+      "internal": true
+    },
+    "onNewDriftTierReached": {
+      "desc": "Hook : joue le son de nouveau palier.",
+      "params": {"tierData": {"type": "table", "desc": "Données du palier ; order sert au volume."}},
+      "internal": true
+    },
+    "onDriftNewCombo": {
+      "desc": "Hook : joue le son de combo 1x ou 5x selon l'ampleur du changement.",
+      "params": {"data": {"type": "table", "desc": "{comboChange = number}."}},
+      "internal": true
+    },
+    "onDriftCrash": {
+      "desc": "Hook : joue le son d'annulation du drift.",
+      "internal": true
+    },
+    "onDriftSpinout": {
+      "desc": "Hook : joue le son d'annulation du drift.",
+      "internal": true
+    },
+    "onDriftDebugChanged": {
+      "desc": "Hook : à la désactivation du debug, arrête la simulation de drift (gameplay_drift_drift.simulateADrift()).",
+      "params": {"value": {"type": "boolean", "desc": "Nouvel état du debug."}},
+      "internal": true
+    },
+    "onDriftCompletedScored": {
+      "desc": "Hook : joue le son de points reçus.",
+      "params": {"data": {"type": "table", "desc": "Données du drift scoré (inutilisées)."}},
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook : supprime la source audio du son continu au déchargement.",
+      "internal": true
+    }
+  },
+  "fields": {}
+}

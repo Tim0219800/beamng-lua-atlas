@@ -1,0 +1,56 @@
+{
+  "path": "lua/ge/extensions/career/modules/computer.lua",
+  "module": "Menu « ordinateur » du garage en mode carrière. openMenu construit la liste des véhicules du garage le plus proche, laisse les autres modules ajouter leurs boutons via le hook onComputerAddFunctions, démarre un tether (le menu se ferme si le joueur s'éloigne) puis navigue vers l'écran UI 'career.computer'. Un moddeur ajoute un bouton en implémentant onComputerAddFunctions(menuData, computerFunctions) dans son extension.",
+  "usage": "-- ajouter un bouton général dans le menu de l'ordinateur\nM.onComputerAddFunctions = function(menuData, computerFunctions)\n  computerFunctions.general.monBouton = {\n    id = 'monBouton', label = 'Mon bouton', callback = function(computerId) print(computerId) end,\n    disabled = false\n  }\nend",
+  "notes": [
+    "Dépend de career_career (M.dependencies).",
+    "computerFunctions a deux sous-tables : general[buttonId] et vehicleSpecific[inventoryId][buttonId] ; chaque entrée a un callback(computerId).",
+    "M.reasons contient des raisons prêtes à l'emploi (tutorialActive, hasBoughtStarterVehicle, needsRepair) ; getComputerUIData traduit leur label via core_locales.",
+    "Bug probable : dans openMenu, le repli startSphereTether(computerPos, ...) utilise la variable computerPos qui n'est pas définie (la ligne qui la calcule est commentée) ; elle vaut nil si la facilité n'a aucune porte.",
+    "Distances de tether : 1 m (boîte, porte) et 4 m (sphère)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{\"career_career\"} : extensions chargées avant ce module."},
+    "reasons": {"type": "table<string, table>", "desc": "Raisons standard de désactivation d'un bouton : tutorialActive, hasBoughtStarterVehicle (type 'text') et needsRepair (type 'needsRepair'), chacune avec un label de traduction."}
+  },
+  "functions": {
+    "openMenu": {
+      "desc": "Ouvre le menu ordinateur pour une facilité : liste les véhicules du garage le plus proche (nom, besoin de réparation, date de saleté), déclenche onComputerAddFunctions, démarre le tether, navigue vers 'career.computer' puis déclenche onComputerMenuOpened.",
+      "params": {
+        "computerFacility": {"type": "table", "desc": "Facilité 'computer' (champs id, name, doors)."},
+        "resetActiveVehicleIndex": {"type": "boolean|nil", "desc": "Transmis à l'UI dans menuData.resetActiveVehicleIndex."},
+        "activityElement": {"type": "any", "desc": "Non utilisé dans la fonction."}
+      },
+      "returns": []
+    },
+    "openComputerMenuById": {
+      "desc": "Récupère la facilité 'computer' par son id via freeroam_facilities.getFacility puis appelle openMenu.",
+      "params": {"computerId": {"type": "string", "desc": "Identifiant de la facilité ordinateur."}},
+      "returns": []
+    },
+    "computerButtonCallback": {
+      "desc": "Appelée par l'UI lors d'un clic : retrouve le bouton (vehicleSpecific[inventoryId] si inventoryId est donné, sinon general) et exécute son callback(computerId).",
+      "params": {
+        "buttonId": {"type": "string", "desc": "Clé du bouton dans computerFunctions."},
+        "inventoryId": {"type": "integer|nil", "desc": "Id d'inventaire du véhicule pour un bouton spécifique à un véhicule."}
+      },
+      "returns": []
+    },
+    "getComputerUIData": {
+      "desc": "Renvoie à l'UI une copie des données du menu : computerFunctions (labels de raisons traduits, clés inventoryId converties en chaînes), vehicles (avec thumbnail et inventoryId en chaîne), facilityName, resetActiveVehicleIndex, computerId. Table vide si le menu n'a pas été ouvert.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Données pour l'écran career.computer."}]
+    },
+    "onMenuClosed": {
+      "desc": "Hook appelé à la fermeture du menu ; supprime le tether (tether.remove = true).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "closeMenu": {
+      "desc": "Ferme tous les menus carrière (career_career.closeAllMenus). Sert aussi de callback de tether quand le joueur s'éloigne.",
+      "params": {},
+      "returns": []
+    }
+  }
+}

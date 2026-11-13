@@ -1,0 +1,117 @@
+{
+  "path": "lua/ge/extensions/career/modules/branches/leagues.lua",
+  "module": "Gère les « ligues » de la carrière : groupes de missions (et de spots de drift) rattachés à une compétence, chargés depuis les fichiers /gameplay/**/*.leagues.json à l'activation de la carrière. Calcule si une ligue est débloquée (conditions leagueStars, branchLevel, skillStars, branchStars, inDevelopment), les étoiles obtenues/disponibles, l'ordre d'affichage, et vérifie la cohérence des missions (une seule ligue, skill, showInCareer).",
+  "notes": [
+    "Les ligues sont chargées par loadLeagues dans onCareerActive(true) ; getLeagueById/getLeagueOfMission échouent si appelées avant (leaguesById est nil).",
+    "Le statut de déblocage est mis en cache (league._unlocked) ; clearLeagueUnlockCache le réinitialise ainsi que le cache d'étoiles par compétence.",
+    "isLeagueUnlocked écrit aussi condition.met/progress/label sur les conditions de la ligue et league.unlockLabels.",
+    "getLeaguesForUnlockChange débloque le succès NEW_TERRITORY si au moins une ligue passe de verrouillée à débloquée.",
+    "Une ligue 'inDevelopment' reçoit unlock = {{type='inDevelopment'}} et une liste de missions vide.",
+    "Incohérence probable : checkStartConditionLeague teste table.getn(lMap) > 1 sur une table à clés (toujours 0), donc l'erreur 'plusieurs ligues dans startCondition' ne se déclenche jamais."
+  ],
+  "functions": {
+    "getLeagueById": {
+      "desc": "Renvoie la ligue d'id donné (table brute, non formatée).",
+      "params": {"id": {"type": "string", "desc": "Id de la ligue."}},
+      "returns": [{"type": "table|nil", "desc": "Ligue ou nil."}]
+    },
+    "getLeagueOfMission": {
+      "desc": "Renvoie la ligue qui contient la mission donnée.",
+      "params": {"mId": {"type": "string", "desc": "Id de la mission."}},
+      "returns": [{"type": "table|nil", "desc": "Ligue ou nil."}]
+    },
+    "clearLeagueUnlockCache": {
+      "desc": "Efface le cache de déblocage de chaque ligue et le cache d'étoiles par compétence.",
+      "params": {},
+      "returns": []
+    },
+    "getSimpleUnlockedStatus": {
+      "desc": "Vide le cache puis renvoie une table id de ligue -> débloquée (booléen) pour toutes les ligues.",
+      "params": {},
+      "returns": [{"type": "table<string, boolean>", "desc": "Statut de déblocage par ligue."}]
+    },
+    "isLeagueUnlocked": {
+      "desc": "Évalue (avec cache) les conditions de déblocage d'une ligue ; sans condition elle est débloquée.",
+      "params": {"id": {"type": "string", "desc": "Id de la ligue."}},
+      "returns": [
+        {"type": "boolean", "desc": "true si toutes les conditions sont remplies (false si la ligue n'existe pas)."},
+        {"type": "table[]|nil", "desc": "Libellés des conditions (unlockLabels)."}
+      ]
+    },
+    "formatLeague": {
+      "desc": "Copie profonde d'une ligue enrichie pour l'UI : totalStarsAvailable, totalStarsObtained (missions et objectifs de drift), icon et accentColor de la compétence ('badgeRoundStar' si certification).",
+      "params": {"l": {"type": "table", "desc": "Ligue brute."}},
+      "returns": [{"type": "table", "desc": "Ligue formatée."}]
+    },
+    "getLeaguesForProgressBranchPage": {
+      "desc": "Liste les ligues formatées d'une branche (et de ses sous-compétences sauf si ignoreSubSkills), triées par _order. Sans branchId, toutes les ligues.",
+      "params": {
+        "branchId": {"type": "string|nil", "desc": "Id de la branche ou compétence."},
+        "ignoreSubSkills": {"type": "boolean|nil", "desc": "Si vrai, ne retient que les ligues de la compétence elle-même."}
+      },
+      "returns": [{"type": "table[]", "desc": "Ligues formatées triées."}]
+    },
+    "getLeaguesForUnlockChange": {
+      "desc": "Compare deux statuts de déblocage et renvoie les ligues nouvellement débloquées (formatées, triées) ; débloque le succès NEW_TERRITORY s'il y en a.",
+      "params": {
+        "before": {"type": "table<string, boolean>", "desc": "Statut avant."},
+        "after": {"type": "table<string, boolean>", "desc": "Statut après."}
+      },
+      "returns": [{"type": "table[]", "desc": "Ligues nouvellement débloquées."}]
+    },
+    "getNoLeague": {
+      "desc": "Obsolète : logue l'erreur 'Deprecated' et ne fait rien.",
+      "params": {
+        "skill": {"type": "any", "desc": "Non utilisé."},
+        "missions": {"type": "any", "desc": "Non utilisé."},
+        "driftSpots": {"type": "any", "desc": "Non utilisé."}
+      },
+      "returns": []
+    },
+    "getLeaguesForMission": {
+      "desc": "Liste les ligues formatées (triées) qui contiennent la mission donnée.",
+      "params": {"missionId": {"type": "string", "desc": "Id de la mission."}},
+      "returns": [{"type": "table[]", "desc": "Ligues formatées."}]
+    },
+    "addLeagueSortOrder": {
+      "desc": "Calcule league._order : groupe par compétence, tri par étoiles requises puis ordre de fichier, ligues 'highlightIfUnlocked' débloquées en tête, puis ordre des compétences (career_branches.getOrder).",
+      "params": {},
+      "returns": []
+    },
+    "onCareerActive": {
+      "desc": "Hook : quand la carrière devient active, charge les ligues depuis les fichiers *.leagues.json de /gameplay/.",
+      "params": {"active": {"type": "boolean", "desc": "true à l'activation."}},
+      "returns": [],
+      "internal": true
+    },
+    "getStarsForSkills": {
+      "desc": "Somme des étoiles par défaut disponibles et débloquées pour toutes les missions dont careerSetup.skill est dans la table donnée.",
+      "params": {"skillIds": {"type": "table<string, boolean>", "desc": "Ensemble d'ids de compétences."}},
+      "returns": [
+        {"type": "integer", "desc": "Total d'étoiles par défaut."},
+        {"type": "integer", "desc": "Étoiles par défaut débloquées."}
+      ]
+    },
+    "getStarsForSkill": {
+      "desc": "Raccourci de getStarsForSkills pour une seule compétence.",
+      "params": {"skillId": {"type": "string", "desc": "Id de la compétence."}},
+      "returns": [
+        {"type": "integer", "desc": "Total d'étoiles par défaut."},
+        {"type": "integer", "desc": "Étoiles débloquées."}
+      ]
+    },
+    "getStartConditionLeagueId": {
+      "desc": "Remplit map[leagueId] = true pour chaque condition de type 'league' trouvée dans une startCondition (récursif sur cond.nested).",
+      "params": {
+        "cond": {"type": "table", "desc": "Condition de démarrage d'une mission."},
+        "map": {"type": "table<string, boolean>", "desc": "Table de sortie."}
+      },
+      "returns": []
+    },
+    "checkMission": {
+      "desc": "Vérifie la configuration d'une mission par rapport aux ligues (startCondition cohérente avec la ligue, careerSetup.skill égal à la compétence de la ligue, showInCareer vrai) et logue des erreurs 'E'.",
+      "params": {"mission": {"type": "table", "desc": "Mission à vérifier."}},
+      "returns": []
+    }
+  }
+}

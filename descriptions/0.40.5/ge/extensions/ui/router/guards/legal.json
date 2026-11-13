@@ -1,0 +1,10 @@
+{
+  "path": "lua/ge/extensions/ui/router/guards/legal.lua",
+  "module": "Garde d'entrée « onlineConsentSet » : n'autorise la navigation vers une route que si le consentement en ligne a été donné, c'est-à-dire si les réglages onlineFeatures et telemetry ne valent plus \"ask\". Les routes du module « legal » (premier segment du nom de route) sont toujours autorisées pour que l'assistant de consentement puisse se terminer. Les gardes sont enregistrées par GuardManager à partir de M.guards.",
+  "notes": [
+    "Les réglages sont lus avec core_settings_settings.getValue(\"onlineFeatures\") et (\"telemetry\")."
+  ],
+  "fields": {
+    "guards": {"type": "table<string, function>", "desc": "Table des gardes exposées : {onlineConsentSet = function(route) -> boolean}."}
+  }
+}

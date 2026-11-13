@@ -1,0 +1,99 @@
+{
+  "path": "lua/common/libs/LuaIRC/init.lua",
+  "module": "Point d'entrée de la bibliothèque tierce LuaIRC (client IRC en Lua, adapté pour BeamNG). Définit le module global `irc` (écriture `module \"irc\"`, Lua 5.1) : irc.new(data) crée un client, connect() ouvre la socket TCP (SSL possible via libs/luasec/ssl), envoie CAP/NICK/USER et boucle jusqu'à l'authentification. Charge irc.util, irc.asyncoperations et irc.handlers. Les événements se branchent avec hook(name, id, f) ; think() doit être appelé régulièrement pour lire les messages entrants.",
+  "usage": "local irc = require(\"libs/LuaIRC/init\")\nlocal c = irc.new({nick = \"MonBot\"})\nc:hook(\"OnChat\", function(user, channel, msg) print(user.nick, msg) end)\nc:connect(\"irc.example.org\", 6667)\nc:join(\"#test\")\n-- puis appeler c:think() à chaque frame",
+  "notes": [
+    "Avant connect(), l'objet a la métatable meta_preconnect : seules hook, unhook et connect sont utilisables, tout autre accès aux méthodes de meta lève une erreur.",
+    "connect() bloque (timeout 30 s par défaut, puis boucle d'attente avec pause de 0.1 s) tant que le serveur n'a pas répondu 001 ; il ne renvoie rien. Sur échec de connexion TCP, il logge une erreur et retourne sans lever d'erreur.",
+    "Dans connect(), `success` est affecté sans `local` (variable globale). En cas de LuaSec absent, le log passe un 4e argument inutile (2).",
+    "meta:handle affiche par print les commandes IRC inconnues et leurs paramètres.",
+    "Un hook qui renvoie une valeur vraie interrompt la chaîne des hooks suivants pour cet événement (invoke retourne true)."
+  ],
+  "classes": {
+    "meta": {
+      "desc": "Métatable d'une connexion IRC établie (après connect()). Les méthodes d'envoi sont dans asyncoperations.lua.",
+      "functions": {
+        "hook": {
+          "desc": "Enregistre une fonction pour un événement (ex. OnChat, OnJoin, OnRaw, OnSend, PreRegister, OnConnect, OnDisconnect). Si f est omis, id est utilisé comme fonction. Renvoie id (ou f).",
+          "params": {
+            "name": {"type": "string", "desc": "Nom de l'événement"},
+            "id": {"type": "any", "desc": "Identifiant du hook (sert à unhook) ou la fonction elle-même"},
+            "f": {"type": "function|nil", "desc": "Fonction appelée avec les arguments de l'événement"}
+          },
+          "returns": [{"type": "any", "desc": "L'identifiant du hook"}]
+        },
+        "unhook": {
+          "desc": "Retire un hook ; assert si l'événement n'a pas de hook ou si l'id est inconnu.",
+          "params": {
+            "name": {"type": "string", "desc": "Nom de l'événement"},
+            "id": {"type": "any", "desc": "Identifiant renvoyé par hook"}
+          }
+        },
+        "invoke": {
+          "desc": "Appelle les hooks d'un événement ; s'arrête au premier qui renvoie une valeur vraie.",
+          "params": {
+            "name": {"type": "string", "desc": "Nom de l'événement"},
+            "...": {"type": "any", "desc": "Arguments passés aux hooks"}
+          },
+          "returns": [{"type": "boolean|nil", "desc": "true si un hook a répondu vrai"}]
+        },
+        "disconnect": {
+          "desc": "Déconnexion propre : déclenche OnDisconnect (message, false), envoie QUIT puis ferme la socket.",
+          "params": {"message": {"type": "string|nil", "desc": "Message de départ (défaut \"Bye!\")"}}
+        },
+        "shutdown": {
+          "desc": "Ferme la socket et retire la métatable de l'objet (il n'est plus utilisable).",
+          "internal": true
+        },
+        "think": {
+          "desc": "Lit toutes les lignes disponibles sur la socket (non bloquant), déclenche le hook OnRaw puis, s'il ne renvoie pas vrai, traite la ligne via handle. À appeler régulièrement. Lève une erreur si la socket est coupée."
+        },
+        "handle": {
+          "desc": "Exécute le gestionnaire irc.handlers correspondant à la commande reçue ; affiche la commande si elle est inconnue.",
+          "params": {
+            "prefix": {"type": "string|nil", "desc": "Préfixe de la ligne (nick!user@host ou serveur)"},
+            "cmd": {"type": "string", "desc": "Commande ou code numérique"},
+            "params": {"type": "table<integer, string>", "desc": "Paramètres de la ligne"}
+          },
+          "internal": true
+        },
+        "whois": {
+          "desc": "Envoie WHOIS et lit les réponses de façon bloquante jusqu'au code 318. Renvoie une table avec userinfo, node, channels, account/registered selon les réponses du serveur ; les autres lignes reçues sont traitées par handle.",
+          "params": {"nick": {"type": "string", "desc": "Pseudo à interroger"}},
+          "returns": [{"type": "table", "desc": "Champs userinfo, node, channels, registered, account"}]
+        },
+        "topic": {
+          "desc": "Demande le sujet d'un salon (commande TOPIC) ; la réponse arrive via le hook OnTopic.",
+          "params": {"channel": {"type": "string", "desc": "Nom du salon"}}
+        }
+      }
+    },
+    "meta_preconnect": {
+      "desc": "Métatable d'un client créé par irc.new mais pas encore connecté.",
+      "functions": {
+        "__index": {
+          "desc": "Renvoie hook, unhook ou connect ; lève une erreur pour tout autre champ qui existe dans meta (accessible seulement après connexion).",
+          "params": {
+            "o": {"type": "table", "desc": "Le client"},
+            "k": {"type": "string", "desc": "Clé demandée"}
+          },
+          "internal": true
+        },
+        "connect": {
+          "desc": "Ouvre la connexion TCP (SSL facultatif), envoie CAP REQ multi-prefix, déclenche PreRegister, envoie PASS/NICK/USER, puis boucle sur think() jusqu'à réception du 001 avant de déclencher OnConnect. Accepte soit (host, port), soit une table.",
+          "params": {
+            "_host": {"type": "string|table", "desc": "Nom d'hôte, ou table {host, port, timeout, password, secure}"},
+            "_port": {"type": "integer|nil", "desc": "Port (défaut 6667)"}
+          }
+        }
+      }
+    }
+  },
+  "functions": {
+    "new": {
+      "desc": "Crée un client IRC non connecté. data.nick est obligatoire (assert) et validé par checkNick ; username vaut \"lua\" et realname \"Lua owns\" par défaut ; nickGenerator vaut defaultNickGenerator ; track_users est vrai par défaut.",
+      "params": {"data": {"type": "table", "desc": "{nick, username?, realname?, nickGenerator?}"}},
+      "returns": [{"type": "table", "desc": "Client avec la métatable meta_preconnect"}]
+    }
+  }
+}

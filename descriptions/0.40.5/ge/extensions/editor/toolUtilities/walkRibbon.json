@@ -1,0 +1,59 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/walkRibbon.lua",
+  "module": "Génère un trottoir bordé (bordure et dalles) balayé le long de deux rails, sous forme d'un seul mesh unique, pour les outils de routes de l'éditeur. Les parties de mesh sont regroupées par matériau (deux trottoirs de même pierre partagent un même mesh, donc un seul draw). Gère aussi les bordures abaissées au droit des passages piétons : le trottoir s'affleure sur la zone du passage et remonte en rampe de chaque côté. Utilise meshPart (face4, face4n) et kerbSpec (matériaux et cotes de bordure).",
+  "usage": "local wr = require('editor/toolUtilities/walkRibbon')\nlocal inner2, outer2, scale = wr.crossingDips(road.crossings, road.divPoints, inner, outer)\nlocal tris = wr.build(inner2, outer2, { parts = parts, scale = scale, paving = 'slab_mat', uvs = 1.0 })",
+  "notes": [
+    "Constantes : rampe de 1.5 m (crossingRampM), partie à plat de 3.5 m (crossingDepthM) quand le passage n'indique rien, rééchantillonnage tous les 0.4 m dans la zone d'un passage.",
+    "Sans densification, un rail grossier peut n'avoir aucune station dans la bande du passage et le trottoir resterait plein hauteur : c'est pourquoi crossingDips redécoupe les segments.",
+    "build renvoie 0 s'il y a moins de 2 stations communes ou si opts.parts est absent.",
+    "Les rails sont des listes de points { x, y, z } de même longueur : la ligne de bordure côté route (inner) et le fond du pavage (outer)."
+  ],
+  "fields": {
+    "crossingRampM": {"type": "number", "desc": "Longueur de la rampe de chaque côté d'un passage abaissé (1.5 m)."},
+    "crossingDepthM": {"type": "number", "desc": "Longueur par défaut de la partie à plat quand le passage n'indique rien (3.5 m)."}
+  },
+  "functions": {
+    "build": {
+      "desc": "Balaie le trottoir entre deux rails correspondants : la ligne de bordure sur la route et le fond du pavage. Ajoute des faces dans opts.parts (un mesh par matériau). Les options : parts (obligatoire, liste de parties), paving (matériau des dalles, défaut celui de kerbSpec), variant (variante de bordure), caps (fermer les extrémités, vrai par défaut), scale (hauteur de bordure par station, 0 = bordure supprimée), uvs (nombre de dalles au mètre), worldUv (poser le pavage depuis x,y monde), uRail (rail sur lequel mesurer les UV en long), bury (profondeur enterrée), back (faux pour ne pas fermer le fond).",
+      "params": {
+        "inner": {"type": "table", "desc": "Rail intérieur, liste de { x, y, z } (ligne de bordure)."},
+        "outer": {"type": "table", "desc": "Rail extérieur, liste de { x, y, z } (fond du pavage)."},
+        "opts": {"type": "table", "desc": "Options décrites ci-dessus ; opts.parts requis."}
+      },
+      "returns": [{"type": "integer", "desc": "Nombre de triangles écrits (0 si rien)."}]
+    },
+    "dropScale": {
+      "desc": "Multiplicateur de hauteur de bordure par station pour un trottoir traversé par des passages piétons : 0 (à ras) sur chaque passage, rampe de part et d'autre, 1 ailleurs. `cum`, `centres` et `depths` sont des abscisses curvilignes sur le rail. nil si aucun passage n'atteint le trottoir.",
+      "params": {
+        "cum": {"type": "number[]", "desc": "Abscisse curviligne cumulée de chaque station."},
+        "centres": {"type": "number[]", "desc": "Abscisse du centre de chaque passage."},
+        "depths": {"type": "number[]|nil", "desc": "Profondeur (m) de chaque passage ; 3.5 par défaut."}
+      },
+      "returns": [{"type": "number[]|nil", "desc": "Un multiplicateur par station entre 0 et 1."}]
+    },
+    "crossingDips": {
+      "desc": "Densifie inner/outer dans la bande de chaque passage (environ tous les 0.4 m) et renvoie les rails densifiés avec le multiplicateur d'abaissement par station. Les centres des passages sont projetés sur le rail à partir de la position t le long de la ligne centrale. Renvoie les rails d'ORIGINE et nil si la route n'a pas de passage ou de ligne centrale.",
+      "params": {
+        "crossings": {"type": "table|nil", "desc": "Passages de la route, liste de { t (0..1, 0.5 par défaut), depthM }."},
+        "div": {"type": "table", "desc": "Ligne centrale de la route (liste de points)."},
+        "inner": {"type": "table", "desc": "Rail intérieur."},
+        "outer": {"type": "table", "desc": "Rail extérieur."}
+      },
+      "returns": [
+        {"type": "table", "desc": "Rail intérieur (densifié ou d'origine)."},
+        {"type": "table", "desc": "Rail extérieur."},
+        {"type": "number[]|nil", "desc": "Multiplicateur par station, nil s'il n'y a pas de passage."}
+      ]
+    },
+    "width": {
+      "desc": "Distance dont le rail extérieur doit s'écarter de l'intérieur : la bordure plus une dalle (kerbW + slabW de kerbSpec).",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Largeur en mètres."}]
+    },
+    "rise": {
+      "desc": "Hauteur de la surface de marche au-dessus de la route sur laquelle repose le rail intérieur (kerbH de kerbSpec).",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Hauteur en mètres."}]
+    }
+  }
+}

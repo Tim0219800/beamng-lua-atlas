@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/career/onIntroPopupCareerClosed.lua",
+  "module": "Nœud flowgraph « On introPopupCareerClosed » (catégorie repeat_instant, couleur/icône ui). Détecte la fermeture de la fenêtre d'intro de la carrière. Sorties : closed (impulsion d'une frame) et id (any, id de la fenêtre fermée, nil sinon).",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Crée la table de drapeaux.", "internal": true},
+        "work": {"desc": "Chaque frame : closed à faux et id à nil, puis applique et efface les drapeaux.", "params": {"args": {"type": "any", "desc": "non utilisé"}}},
+        "onIntroPopupCareerClosed": {"desc": "Hook : lève closed et mémorise l'id de la fenêtre si fourni.", "params": {"id": {"type": "any", "desc": "id de la fenêtre fermée"}}, "internal": true},
+        "_afterTrigger": {"desc": "Efface les drapeaux après le déclenchement.", "internal": true}
+      }
+    }
+  }
+}

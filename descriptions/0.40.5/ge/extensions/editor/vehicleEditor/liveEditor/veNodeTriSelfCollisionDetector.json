@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/veNodeTriSelfCollisionDetector.lua",
+  "module": "Fenêtre 'Node Triangle Self Collision Detector' du Vehicle Editor live. Le bouton 'Start Analysis' teste, pour chaque triangle collidable, quels nœuds du véhicule passent à moins d'un rayon donné (0.025 à 0.1 m, 0.025 m étant le vrai rayon de collision) du triangle. Sont ignorés : triangles NONCOLLIDABLE, nœuds du triangle, nœuds sans collision ou sans selfCollision, nœuds de coupleurs ou avec couplerTag/tag, et nœuds de même premier groupe qu'un sommet du triangle. Les paires trouvées sont imprimées dans la console et dessinées (sphère orange, triangle vert, textes).",
+  "notes": [
+    "Complexité O(triangles x nœuds) exécutée en un seul frame : peut figer l'éditeur sur un gros véhicule.",
+    "Les résultats sont stockés par ID de véhicule dans vehsResultData et inclus dans onSerialize.",
+    "Distances en mètres."
+  ],
+  "fields": {
+    "menuEntry": {"type": "string", "desc": "'Node Triangle Self Collision Detector'."}
+  },
+  "functions": {
+    "onVehicleEditorRenderJBeams": {
+      "desc": "Hook de rendu émis par editor_veMain : dessine les résultats de l'analyse du véhicule courant (sphère du nœud, triangle, étiquettes).",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+      },
+      "internal": true
+    },
+    "onUpdate": {"desc": "Appelé chaque frame : dessine la fenêtre (curseur de rayon, boutons Start Analysis / Clear Results).", "internal": true},
+    "open": {"desc": "Ouvre la fenêtre.", "internal": false},
+    "onSerialize": {"desc": "Renvoie {windowOpen, nodeCollisionRadius, vehsResultData}.", "returns": [{"type": "table", "desc": "État à restaurer."}], "internal": true},
+    "onDeserialized": {"desc": "Restaure l'état d'ouverture et le rayon (data.nodeCollisionRadius).", "params": {"data": {"type": "table", "desc": "Table de onSerialize."}}, "internal": true}
+  }
+}

@@ -1,0 +1,385 @@
+{
+  "path": "lua/ge/extensions/gameplay/drag/core.lua",
+  "module": "Noyau du système de drag race (solo et multijoueur). Il possède la table dragData (piste, couloirs, pilotes, timers, phases), crée les « racers » (setupRacer), gère reset/clear de la course, les hooks réseau MP (onDragRace*), les récompenses carrière, le chargement paresseux des extensions drag (phaseHandlers, dragTypes_*, times, display) et la détection de sortie de zone. Un moddeur l'utilise pour charger une piste (loadDragDataForMission), armer une course (startDragRaceActivity) ou lire l'état (getData, getRacerData, getTimers).",
+  "usage": "local data = gameplay_drag_core.loadDragDataForMission('/levels/west_coast_usa/dragstrips/strip.dragSettings.json')\nif data then gameplay_drag_core.startDragRaceActivity(1, be:getPlayerVehicleID(0)) end",
+  "notes": [
+    "Les extensions gameplay_drag_phaseHandlers, gameplay_drag_dragTypes_headsUpRace / bracketRace, gameplay_drag_times et gameplay_drag_display sont chargées à la demande par ensureAllExtensionsLoaded (appelée par setDragRaceData et startDragRaceActivity) et déchargées par clear({extensions=true}).",
+    "dragType doit valoir 'headsUpRace' ou 'bracketRace', sinon setDragRaceData/startDragRaceActivity échouent (log E).",
+    "Les champs de disqualification existent en double : isDisqualified/disqualifiedReason et les anciens alias (orthographe fautive) isDesqualified/desqualifiedReason, gardés pour compatibilité.",
+    "Deux états de reset : 'idle', 'resetting', 'ready' (getResetState).",
+    "Les raisons de DQ sont des clés de traduction (missions.dragRace.gameplay.disqualified.vehicleReset, vehicleSwitched, vehicleRemoved, playerLeft).",
+    "onDragRaceCancelled et onExtensionLoaded sont des fonctions vides (le reset/clear est fait par dragBridge ou les hooks véhicule).",
+    "Les hooks onVehicleResetted/onVehicleSwitched/onVehicleDestroyed ne disqualifient qu'en contexte 'freeroam', course démarrée et hors multijoueur.",
+    "onUpdate : hors MP en freeroam, appelle onPlayerLeftDragArea si aucun pilote n'est dans la stripZone, ou si tous les pilotes en phase 'stage' sont à plus de 25 m (STAGE_RUNAWAY_CLEAR_DISTANCE) de l'origine.",
+    "getResetState/validateResetState : la validation de reset n'émet qu'un warning dans le log (pas d'erreur bloquante).",
+    "Récompense carrière : 5 (careerRewards) en monnaie 'bmra', une seule fois par course, pas en contexte 'activity'."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : saveSystem, dragBridge, rulesMenu, timeslip, poi."}
+  },
+  "functions": {
+    "allRacersFinished": {
+      "desc": "Vrai si data contient au moins un racer et que tous ont isFinished.",
+      "params": {"data": {"type": "table|nil", "desc": "Données de piste (dragData ou poiData)."}},
+      "returns": [{"type": "boolean", "desc": "true si tous les pilotes ont fini."}]
+    },
+    "calculateStateChecksum": {
+      "desc": "Somme de contrôle simple de l'état de course (isStarted, isCompleted, phases, DQ, fini des racers), utilisée pour logguer l'effet d'un reset.",
+      "params": {"data": {"type": "table|nil", "desc": "Données de piste."}},
+      "returns": [{"type": "integer", "desc": "Checksum, 0 si data est nil."}]
+    },
+    "clear": {
+      "desc": "Nettoie l'état drag selon les options (toutes à false par défaut) : hooks (onDragClear puis onDragClearComplete), transitionLock, localRace (MP), extensions (décharge les extensions paresseuses), data (décharge les prefabs et met dragData à nil), context (retour à 'freeroam'), ui (cache l'app 'drag'), treeLightStaging (éteint le voyant de staging).",
+      "params": {"opts": {"type": "table|nil", "desc": "Table d'options booléennes nommées hooks, transitionLock, localRace, extensions, data, context, ui, treeLightStaging."}},
+      "returns": []
+    },
+    "clearPoiJoinRequest": {
+      "desc": "Oublie la demande de participation envoyée pour un POI (MP).",
+      "params": {"poiKey": {"type": "string|nil", "desc": "Clé renvoyée par getPoiKey."}},
+      "returns": []
+    },
+    "clearRaceState": {
+      "desc": "Supprime l'état stocké pour une course MP (raceStateStore).",
+      "params": {"raceId": {"type": "any", "desc": "Identifiant de course."}},
+      "returns": []
+    },
+    "createTimeslipData": {
+      "desc": "Délègue à gameplay_drag_timeslip.createTimeslipData.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Données du ticket de chronométrage."}]
+    },
+    "createTimeslipPanelData": {
+      "desc": "Délègue à gameplay_drag_timeslip.createTimeslipPanelData.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Données du panneau de ticket."}]
+    },
+    "finalizeMPPostRace": {
+      "desc": "Fin de course MP : appelle display.dragRaceEndLineReached pour chaque racer, génère les données de victoire (phaseHandlers.generateWinData) puis envoie le ticket à l'UI (et sauvegarde les temps de dial).",
+      "params": {},
+      "returns": []
+    },
+    "getCurrentSavePath": {
+      "desc": "Chemin de sauvegarde courant du système de sauvegarde drag.",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "Chemin (déduit de saveSystem.getCurrentSavePath)."}]
+    },
+    "getData": {
+      "desc": "Source unique des données drag (piste, racers, timers). Solo et MP : core en est propriétaire.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "dragData, nil si rien de chargé."}]
+    },
+    "getDragDataForLevel": {
+      "desc": "Charge (puis met en cache) toutes les pistes *.dragSettings.json du dossier dragstrips d'un niveau. Ajoute _originFile, _fnWithoutExt et _index à chaque entrée.",
+      "params": {"levelIdentifier": {"type": "string", "desc": "Nom du niveau (core_levels.getLevelByName)."}},
+      "returns": [{"type": "table[]", "desc": "Liste des données de pistes."}]
+    },
+    "getDragGamemode": {
+      "desc": "Renvoie l'extension du gamemode drag multijoueur (multiplayer/gamemodes/drag/drag) si elle est chargée.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "L'extension ou nil."}]
+    },
+    "getDragIsStarted": {
+      "desc": "Indique si la course est démarrée (dragData.isStarted).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "false si aucune donnée."}]
+    },
+    "getExpectedStagingRacerCount": {
+      "desc": "Nombre de pilotes attendus en staging avant de lancer le compte à rebours (1 par défaut).",
+      "params": {},
+      "returns": [{"type": "integer", "desc": "Nombre attendu."}]
+    },
+    "getExtension": {
+      "desc": "Extension de type de course active (headsUpRace ou bracketRace).",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "L'extension dragType."}]
+    },
+    "getGameplayContext": {
+      "desc": "Contexte de jeu courant : 'freeroam' par défaut, ou data.context de la piste (par ex. 'activity').",
+      "params": {},
+      "returns": [{"type": "string", "desc": "Contexte."}]
+    },
+    "getMaxLanes": {
+      "desc": "Nombre de couloirs de la piste (au moins 1 ; 2 par défaut si la piste n'a pas de lanes).",
+      "params": {"data": {"type": "table|nil", "desc": "poiData ou dragData."}},
+      "returns": [{"type": "integer", "desc": "Nombre de couloirs."}]
+    },
+    "getPoiKey": {
+      "desc": "Clé stable « niveau:nom » d'une piste (nom = _fnWithoutExt ou name), utilisée pour un lobby par piste en MP.",
+      "params": {"poiData": {"type": "table|nil", "desc": "Données du POI."}},
+      "returns": [{"type": "string|nil", "desc": "Clé, nil si poiData est nil."}]
+    },
+    "getRaceState": {
+      "desc": "Renvoie un instantané de l'état de course. En MP : issu du raceStateStore (id, players, queue, currentPairIndex, treeType, finishTimes, timerValues, lobbyId, poiData…), ou nil si introuvable. En solo : data, isStarted, isCompleted, treeType.",
+      "params": {"raceId": {"type": "any", "desc": "Identifiant de course MP ; nil = course locale active ou première stockée."}},
+      "returns": [{"type": "table|nil", "desc": "État de course."}]
+    },
+    "getRacerData": {
+      "desc": "Renvoie la table du racer d'un véhicule.",
+      "params": {"vehicleId": {"type": "integer", "desc": "ID du véhicule."}},
+      "returns": [{"type": "table|nil", "desc": "Racer, nil si inconnu."}]
+    },
+    "getResetState": {
+      "desc": "État du reset : 'idle', 'resetting' ou 'ready'.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "État."}]
+    },
+    "getStagingCheckData": {
+      "desc": "Appelée par l'hôte MP : vérifie si tous les pilotes sont en staging (lecture seule).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "allStaged ; false si pas hôte, course non démarrée ou pas de données."}, {"type": "table|nil", "desc": "dragData courant, nil si la vérification n'a pas eu lieu."}]
+    },
+    "getTimers": {
+      "desc": "Timers d'un racer (dial, timer, distanceTimer, velocity…).",
+      "params": {"vehicleId": {"type": "integer", "desc": "ID du véhicule."}},
+      "returns": [{"type": "table|nil", "desc": "Table des timers ({} si racer inconnu, nil si pas de données)."}]
+    },
+    "isDragEnabled": {
+      "desc": "Drag autorisé si la carrière est active ou si le réglage enableDragRaceInFreeroam est vrai.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "Activé ou non."}]
+    },
+    "isJoinWindowOpen": {
+      "desc": "Fenêtre de participation ouverte : course non terminée et aucun racer au-delà de la phase 1.",
+      "params": {"data": {"type": "table|nil", "desc": "Données de piste."}},
+      "returns": [{"type": "boolean", "desc": "Ouverte ou non."}]
+    },
+    "isPoiJoinRequestSent": {
+      "desc": "Indique si une demande de participation a déjà été envoyée pour ce POI.",
+      "params": {"poiKey": {"type": "string", "desc": "Clé de POI."}},
+      "returns": [{"type": "boolean|nil", "desc": "true si envoyée."}]
+    },
+    "loadDragDataForMission": {
+      "desc": "Aide pour les missions : charge la piste depuis un fichier, charge les prefabs, fixe le contexte et arme les données (setDragRaceData).",
+      "params": {"filepath": {"type": "string", "desc": "Chemin du fichier de piste (.dragSettings.json)."}},
+      "returns": [{"type": "table|nil", "desc": "Données chargées, nil en cas d'échec."}]
+    },
+    "loadDragStripData": {
+      "desc": "Charge les données de piste via saveSystem.loadDragStripData et les stocke dans dragData.",
+      "params": {"filepath": {"type": "string", "desc": "Chemin du fichier."}},
+      "returns": [{"type": "table|nil", "desc": "Données ou nil (log E)."}]
+    },
+    "onAnyMissionChanged": {
+      "desc": "Hook : à chaque démarrage ou arrêt de mission, fait un clear complet (tous les drapeaux à true).",
+      "params": {"status": {"type": "string", "desc": "'started' ou 'stopped' déclenchent le nettoyage."}, "mission": {"type": "table", "desc": "Mission concernée."}},
+      "returns": [],
+      "internal": true
+    },
+    "onCareerActive": {
+      "desc": "Hook : carrière activée, délègue à saveSystem.onCareerActive.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onDragRaceCancelled": {
+      "desc": "Hook MP : course annulée. Ne fait rien (le reset/clear vient du dragBridge ou des hooks véhicule).",
+      "params": {"raceId": {"type": "any", "desc": "Identifiant de course."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDragRaceClientDisconnected": {
+      "desc": "Hook MP : un client se déconnecte. Retrouve le joueur MP correspondant et appelle onDragRacePlayerLeft.",
+      "params": {"client": {"type": "table", "desc": "Client avec champ id."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDragRaceCountdownStart": {
+      "desc": "Hook : début du compte à rebours. En MP côté client, termine la phase 1 de tous les racers et passe à la phase suivante ; en solo, passe à la phase suivante si tous les pilotes attendus sont en staging. Puis démarre la phase 2 de chaque racer (hook startDragCountdown).",
+      "params": {"mappedTime": {"type": "number", "desc": "Temps du compte à rebours (non utilisé directement)."}, "randValue": {"type": "number", "desc": "Valeur aléatoire (non utilisée directement)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDragRaceJoinAccepted": {
+      "desc": "Hook MP : participation acceptée. Arme les données de la piste (avec treeType), crée le racer du véhicule local, démarre l'activité et ouvre le menu de lobby si fermé.",
+      "params": {"raceId": {"type": "any", "desc": "Identifiant de course."}, "lane": {"type": "integer", "desc": "Couloir attribué."}, "poiData": {"type": "table", "desc": "Données de la piste."}, "treeType": {"type": "string", "desc": "Type d'arbre de départ (par ex. '.500')."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDragRaceListChanged": {
+      "desc": "Hook MP : la liste des courses a changé ; relayée au gamemode drag.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onDragRacePlayerLeft": {
+      "desc": "Hook MP : marque le racer d'un joueur parti comme disqualifié et fini (raison playerLeft). Recherche par vehicleId, sinon par couloir.",
+      "params": {"player": {"type": "table", "desc": "Table avec mpPlayerId."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDragRaceReset": {
+      "desc": "Hook MP : remet isStarted/isCompleted à false et autorise un nouveau onDragRaceStarted pour la même course (manche suivante).",
+      "params": {"raceId": {"type": "any", "desc": "Identifiant de course."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDragRaceStart": {
+      "desc": "Hook MP : l'hôte diffuse le départ ; les clients (non hôtes) terminent la phase 2 et passent tous les racers en phase de course (phase 3).",
+      "params": {"raceStartTime": {"type": "number", "desc": "Heure de départ (non utilisée directement)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDragRaceStarted": {
+      "desc": "Hook MP : la manche démarre. Reconstruit dragData depuis raceState.poiData (copie profonde), crée les racers de la manche, marque le racer local (isLocalRacer), applique les dials, émet onDragReset, lance startDragRaceActivity et ouvre le contrôle de dial en bracketRace si le dial local est vide. Ignore les appels doublons pour le même raceId.",
+      "params": {"raceId": {"type": "any", "desc": "Identifiant de course."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDragRaceTimerUpdated": {
+      "desc": "Hook MP : un timer réseau arrive. Applique le dial d'un joueur distant et ré-associe le racer au vrai vehicleId si la clé a changé (même couloir).",
+      "params": {"raceId": {"type": "any", "desc": "Identifiant de course."}, "mpPlayerId": {"type": "any", "desc": "Joueur MP."}, "timerName": {"type": "string", "desc": "Nom du timer (par ex. 'dial')."}, "timerValue": {"type": "number", "desc": "Valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDragRaceTreeLights": {
+      "desc": "Hook MP : état des feux de l'arbre reçu pour un couloir. Met à jour le staging des racers du couloir (si stageLight défini) puis l'affichage.",
+      "params": {"lane": {"type": "integer", "desc": "Couloir."}, "lightState": {"type": "table", "desc": "État des feux (stageLights.stageLight, etc.)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDragRaceWinningLights": {
+      "desc": "Hook MP : allume le feu du gagnant du couloir (display.onWinnerLightOn).",
+      "params": {"lane": {"type": "integer", "desc": "Couloir gagnant."}},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook de chargement ; ne fait rien.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook de déchargement : clear complet de l'état drag.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onGetRawPoiListForLevel": {
+      "desc": "Hook : ajoute les POI de pistes de drag d'un niveau (délègue à gameplay_drag_poi).",
+      "params": {"levelIdentifier": {"type": "string", "desc": "Nom du niveau."}, "elements": {"type": "table", "desc": "Liste de POI à compléter."}},
+      "returns": [],
+      "internal": true
+    },
+    "onGetRawPoiListForTutorial": {
+      "desc": "Hook : liste de POI pour le tutoriel, toujours celle du niveau west_coast_usa.",
+      "params": {"elements": {"type": "table", "desc": "Liste de POI à compléter."}},
+      "returns": [],
+      "internal": true
+    },
+    "onPlayerLeftDragArea": {
+      "desc": "Appelée quand le joueur quitte la zone de la piste (hors ligne) : clear complet avec déchargement des extensions. Aussi appelée depuis onUpdate.",
+      "params": {},
+      "returns": []
+    },
+    "onSaveCurrentProfile": {
+      "desc": "Hook : sauvegarde du profil carrière ; écrit le fichier des temps de dial.",
+      "params": {"currentSavePath": {"type": "string|nil", "desc": "Chemin de sauvegarde."}},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook par frame : détecte la sortie de zone (stripZone) et la fuite de staging (> 25 m), puis gère la re-staging après DQ en freeroam et les minuteries de staging distant.",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."}, "dtRaw": {"type": "number", "desc": "Delta brut (s)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook : véhicule détruit. En freeroam solo avec course démarrée, marque le racer comme retiré et disqualifié.",
+      "params": {"vehicleId": {"type": "integer", "desc": "ID du véhicule."}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleResetted": {
+      "desc": "Hook : véhicule réinitialisé. En freeroam solo avec course démarrée, disqualifie le racer (vehicleReset).",
+      "params": {"vehicleId": {"type": "integer", "desc": "ID du véhicule."}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook : changement de véhicule joué. En freeroam solo avec course démarrée, disqualifie l'ancien et le nouveau racer (vehicleSwitched).",
+      "params": {"oldId": {"type": "integer", "desc": "Ancien véhicule."}, "newId": {"type": "integer", "desc": "Nouveau véhicule."}},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet l'état de course à zéro selon les options (false/nil par défaut) : raceState (isStarted/isCompleted), racers (phase, DQ, fini, timers de chaque racer), clearRacers (vide la liste), timeslip (efface le ticket UI), transitionLock, treeLightStaging (voyant de staging allumé), hooks (émet onDragReset), raceId (passé au hook). Valide ensuite l'état et logue un warning si incohérent.",
+      "params": {"opts": {"type": "table|nil", "desc": "Options nommées."}},
+      "returns": []
+    },
+    "saveDialTimes": {
+      "desc": "Enregistre les temps du ticket dans le carnet de dial via saveSystem.saveDialTimes (si des données sont chargées).",
+      "params": {"timeslip": {"type": "table", "desc": "Données du ticket."}},
+      "returns": []
+    },
+    "sendTimeslipDataToUi": {
+      "desc": "Envoie le ticket à l'UI (guihook onDragRaceTimeslipData). En MP, émet plutôt le hook onDragMPTimeslipRequested et laisse le gamemode finaliser. Sauvegarde aussi les temps de dial ; en gamemode multiseat drag, n'envoie pas le ticket au HUD.",
+      "params": {},
+      "returns": []
+    },
+    "setCareerRewards": {
+      "desc": "Accorde la récompense carrière (monnaie bmra, valeur 5) une fois par course, sauf contexte 'activity' ou carrière inactive.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "{bmra = n} si accordée, nil sinon."}]
+    },
+    "setDragRaceData": {
+      "desc": "Arme les données de piste : normalise les champs de DQ, calcule raceEndTimerId (timer de plus grande distance), restaure les métatables de zones, synchronise les waypoints avec la scène, charge les extensions requises, lit le carnet de dial puis émet onDragDataSet.",
+      "params": {"data": {"type": "table", "desc": "Données de piste (dragSettings)."}},
+      "returns": []
+    },
+    "setExpectedStagingRacerCount": {
+      "desc": "Fixe le nombre de pilotes qui doivent être en staging avant le départ (minimum 1).",
+      "params": {"count": {"type": "integer", "desc": "Nombre de pilotes."}},
+      "returns": []
+    },
+    "setExtension": {
+      "desc": "Remplace l'extension de type de course active.",
+      "params": {"ext": {"type": "table|nil", "desc": "Extension dragType."}},
+      "returns": []
+    },
+    "setPlayableVehicle": {
+      "desc": "Marque le racer du véhicule comme jouable (isPlayable = true).",
+      "params": {"vehicleId": {"type": "integer", "desc": "ID du véhicule."}},
+      "returns": []
+    },
+    "setPoiJoinRequestSent": {
+      "desc": "Mémorise (val vrai) ou oublie une demande de participation pour un POI.",
+      "params": {"poiKey": {"type": "string", "desc": "Clé de POI."}, "val": {"type": "boolean", "desc": "true pour mémoriser, sinon efface."}},
+      "returns": []
+    },
+    "setRaceState": {
+      "desc": "Fusionne des champs dans l'état stocké d'une course MP.",
+      "params": {"raceId": {"type": "any", "desc": "Identifiant de course."}, "updates": {"type": "table", "desc": "Champs à écrire."}},
+      "returns": []
+    },
+    "setRacerDial": {
+      "desc": "Fixe le dial (temps annoncé, en secondes) d'un racer et le marque isSet. Crée le timer dial s'il manque.",
+      "params": {"vehicleId": {"type": "integer", "desc": "ID du véhicule."}, "dialValue": {"type": "number", "desc": "Valeur >= 0."}},
+      "returns": [{"type": "boolean", "desc": "true si appliqué."}]
+    },
+    "setRacerWheelGeometry": {
+      "desc": "Calcule la géométrie des roues du véhicule (groupes par « frontness », décalages par rapport au centre) et initialise racer.allWheelsOffsets, wheelsCenter, beamState et frontWheelId. Si aucune roue n'est trouvée, utilise l'OOBB.",
+      "params": {"racer": {"type": "table", "desc": "Racer à compléter."}, "vehicle": {"type": "userdata", "desc": "Objet BeamNGVehicle."}},
+      "returns": []
+    },
+    "setRacersDial": {
+      "desc": "Applique plusieurs dials d'un coup.",
+      "params": {"dials": {"type": "table[]", "desc": "Liste d'entrées {racerId = vehId, value = dial}."}},
+      "returns": [{"type": "boolean", "desc": "true si au moins un dial a été appliqué."}]
+    },
+    "setupRacer": {
+      "desc": "Crée le racer d'un véhicule dans un couloir (phases, timers depuis la config de piste, dial initial, géométrie des roues, nom, plaque, état stock). Refuse un couloir déjà occupé. En MP, crée un stub si le véhicule n'existe pas localement.",
+      "params": {"vehicleId": {"type": "integer", "desc": "ID du véhicule."}, "lane": {"type": "integer|nil", "desc": "Couloir."}},
+      "returns": []
+    },
+    "startDragRaceActivity": {
+      "desc": "Démarre l'activité de drag : charge les extensions, crée le racer du joueur en freeroam solo, affiche l'app UI 'drag', allume le staging, coupe/met le contact sur 3 pour les racers jouables hors freeroam, émet onDragRacersSetup puis appelle startActivity du type de course.",
+      "params": {"lane": {"type": "integer|nil", "desc": "Couloir du joueur."}, "vehicleId": {"type": "integer|nil", "desc": "Véhicule (défaut : véhicule joueur 0)."}},
+      "returns": [{"type": "boolean", "desc": "true si démarré."}]
+    },
+    "validateResetState": {
+      "desc": "Vérifie qu'un reset est complet (course non démarrée, racers en phase 1, ni DQ ni finis, timers arrêtés, phases remises à zéro).",
+      "params": {"data": {"type": "table|nil", "desc": "Données de piste."}},
+      "returns": [{"type": "boolean", "desc": "Valide ou non."}, {"type": "string", "desc": "Message explicatif."}]
+    }
+  }
+}

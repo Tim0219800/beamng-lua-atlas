@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/environment/setScatterSky.lua",
+  "module": "Nœud flowgraph « Set ScatterSky » (catégorie dynamic_instant). Règle la luminosité du ciel (skyBrightness) et les textures de gradient du ScatterSky (colorize, sunScale, ambientScale, fogScale, night, nightFog ; pins string cachés). Les valeurs d'origine sont mémorisées au démarrage et restaurées à l'arrêt (data.restoreScatterSky).",
+  "notes": ["Après application, le nœud relit puis réécrit l'heure (getTimeOfDay/setTimeOfDay) pour forcer la mise à jour du ciel.", "Les pins gradient sont tous appliqués même s'ils sont vides (valeur nil)."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Définit data.restoreScatterSky = true.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
+        "_executionStarted": {"desc": "Mémorise la luminosité et les six fichiers de gradient actuels.", "internal": true},
+        "_executionStopped": {"desc": "Restaure les valeurs mémorisées si data.restoreScatterSky est vrai.", "internal": true},
+        "workOnce": {"desc": "Applique les paramètres une fois."},
+        "work": {"desc": "En mode repeat, applique les paramètres à chaque frame."},
+        "setScatterSkyParameters": {"desc": "Appelle les setters core_environment (setSkyBrightness, set*GradientFile) puis réapplique l'heure courante."}
+      }
+    }
+  }
+}

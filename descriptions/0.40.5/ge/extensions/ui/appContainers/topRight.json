@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/ui/appContainers/topRight.lua",
+  "module": "Déclare le conteneur d'apps « topRight » (coin haut-droit de l'interface) auprès de ui_appContainers, avec le trigger UI setTopRightAppVisibility. La liste d'apps est vide dans 0.40.5 : le conteneur existe mais ne gère aucune app.",
+  "notes": ["Remplace l'ancien identifiant secondaryApps (voir ui_appContainers.resolveContainerId)."],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "{ \"ui_appContainers\" } : chargé avant ce module."}
+  },
+  "functions": {
+    "onExtensionLoaded": {
+      "desc": "Appelé au chargement de l'extension : enregistre le conteneur topRight (sans app) via ui_appContainers.registerContainer.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

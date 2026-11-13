@@ -1,0 +1,29 @@
+{
+  "path": "lua/ge/extensions/editor/roadArchitect/geometry.lua",
+  "module": "Module de géométrie de l'éditeur Road Architect (GE). Il transforme les nœuds de référence d'une route en points discrétisés le long d'une spline, puis calcule pour chaque point et chaque voie les quatre coins de la section transversale, les vecteurs normal et latéral, le dévers, etc. Le résultat est stocké dans road.renderData et sert à l'affichage et à la création des DecalRoads/meshes. Un moddeur ne l'utilise que pour recalculer ou lire ces données depuis un outil d'édition.",
+  "notes": [
+    "Une seule fonction est exportée ; les fonctions d'ajustement (fitSplineStandardRoad, fitArc, fitCivEngAndFrame, identifyTunnelSections) sont locales.",
+    "La route (road) est modifiée en place : road.renderData est remplacé, road.tunnels est vidé puis recréé si road.isAllowTunnels[0] est vrai, et les nœuds peuvent changer (p.z projeté sur le terrain, rot recalculé par auto-banking).",
+    "Les valeurs de road.* telles que isConformRoadToTerrain, isCivilEngRoads, isAllowTunnels, extraS, extraE sont des pointeurs imgui (accès par [0]).",
+    "Le dévers (indice 12) est converti en radians (rad() du degré stocké sur le nœud). Les largeurs et hauteurs sont en mètres.",
+    "Le calcul des tunnels n'est fait que si extensions.editor_terrainEditor.getTerrainBlock() renvoie un bloc de terrain.",
+    "L'élargissement aux épingles (profile.isExtraWidth) ajoute 3 m répartis sur les voies de largeur > 2 m, puis restaure les largeurs d'origine après l'ajustement (il n'y a pas de garde si numLanes vaut 0 : division par zéro possible, déduit du code)."
+  ],
+  "functions": {
+    "computeRoadRenderData": {
+      "desc": "Calcule les données de rendu de la route donnée et les stocke dans road.renderData. Choisit l'ajustement selon la route : style génie civil (road.isCivilEngRoads[0]), arc de cercle (road.isArc, trois nœuds) ou spline Catmull-Rom centripète par défaut. Applique avant cela la projection sur le terrain, l'auto-banking et l'élargissement aux épingles si ces options sont actives.",
+      "params": {
+        "road": {"type": "table", "desc": "Route de Road Architect (nodes, profile, laneKeys, leftKeys, rightKeys, renderData, tunnels, options imgui…). Modifiée en place."}
+      },
+      "returns": [],
+      "internal": false,
+      "notes": [
+        "Structure de road.renderData : renderData[point][laneKey] = tableau à 13 entrées. [1:4] coins de la section, dans le sens horaire depuis le haut-gauche ; [5] normale unitaire ; [6] vecteur latéral unitaire (commun à toutes les voies) ; [7] milieu de la voie sur la face supérieure ; [8] type de voie (string : 'road_lane', 'sidewalk', 'island'…) ; [9:11] largeur de voie, hauteurs relatives gauche et droite ; [12] angle de rotation latérale signé (dévers, radians) ; [13] décalage latéral (commun à toutes les voies pour ce point).",
+        "Les voies de gauche sont traitées de l'intérieur vers l'extérieur, puis celles de droite ; les coins des voies de droite sont permutés pour garder l'ordre horaire depuis le haut-gauche des deux côtés.",
+        "Auto-banking : si profile.isAutoBanking[0] est actif, la rotation des premier et dernier nœuds est mise à 0 et celle des nœuds intermédiaires marqués isAutoBanked suit le rayon du cercle passant par les trois nœuds : angle = clamp(-0.015 * rayon + 8.5, 0, 8) degrés, multiplié par autoBankingFactor.",
+        "Les points discrétisés dont la distance au précédent est inférieure à 0,1 m (distance² <= 0.01) sont supprimés lors de l'ajustement.",
+        "Le commentaire d'origine annonce [1:12] mais le code remplit 13 entrées."
+      ]
+    }
+  }
+}

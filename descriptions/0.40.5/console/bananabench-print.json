@@ -1,0 +1,7 @@
+{
+  "path": "lua/console/bananabench-print.lua",
+  "module": "Script de la VM console le plus simple : lance bench.physics() de bananabench et ne garde que l'affichage texte (tableau MBeams/s et % temps réel imprimé pendant le test). Ne produit aucun fichier.",
+  "notes": [
+    "S'exécute au chargement (pas de fonction exportée)."
+  ]
+}

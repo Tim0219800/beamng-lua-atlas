@@ -1,0 +1,537 @@
+{
+  "path": "lua/ge/extensions/gameplay/missions/missions.lua",
+  "module": "Registre central des missions de BeamNG. Il découvre les missions fichier (dossiers /gameplay/missions/<niveau>/<type>/.../info.json) et procédurales (générateurs du dossier proceduralMissionGenerators), les charge, les assainit, construit l'objet mission avec le constructeur de son type (/gameplay/missionTypes/<type>/constructor.lua), charge la sauvegarde de progression, et fournit les POI des missions pour la carte. Un moddeur l'utilise pour lister, retrouver, créer ou sauvegarder des missions.",
+  "usage": "local m = gameplay_missions_missions.getMissionById('west_coast_usa/timeTrial/xyz')\nfor _, mi in ipairs(gameplay_missions_missions.getMissionsOfLevel('gridmap_v2')) do print(mi.id, mi.missionType) end",
+  "notes": [
+    "L'id d'une mission est le chemin du dossier moins le préfixe /gameplay/missions/. La partie avant le premier « / » doit être un niveau connu (comparaison insensible à la casse), sinon la mission est ignorée avec un avertissement. Le chemin ne doit pas contenir d'espace.",
+    "getAllMissions charge toutes les missions de tous les niveaux au premier appel (coûteux) ; getMissionsOfLevel / getMissionById ne chargent que ce qui est demandé. getAllMissions remplit aussi le cache par niveau.",
+    "Un type de mission est un dossier /gameplay/missionTypes/<type>/ contenant constructor.lua (obligatoire), et facultativement editor.lua, progressSetup.json, staticData.json, preview.jpg.",
+    "Un constructor.lua propre à une mission (<dossier de la mission>/constructor.lua) peut fusionner ses clés (sauf init) dans l'objet mission.",
+    "sanitizeMissionAfterCreation remplace par nop les méthodes manquantes (onStart, onUpdate, onStop, stateChanged, getCommonSettingsData, etc.), calcule le cache d'étoiles (careerSetup._activeStarCache) et ajoute les infos de mod (modID, modName, modTitle).",
+    "Les tables renvoyées par getMissionById / getAllMissions sont mises en cache et partagées : ne pas les modifier sans clearCache.",
+    "Bug probable dans createMission : `table.insert(loaded, data)` ajoute la table data comme élément positionnel de la mission chargée (probablement l'intention était de la fusionner).",
+    "Dans constructMissionFromFileData, `infoPath` est calculé avec la variable locale missionDir du module (la chaîne « /gameplay/missions ») et non le dossier de la mission : le chemin affiché dans le message d'erreur « did not specify a valid missionType » est donc faux.",
+    "getAllIdsOfLevel existe en local mais n'est pas exporté.",
+    "M.editorHelper renvoie en réalité la classe editor/util/editorElementHelper (avec le paramètre 'mission'), et non le fichier missionTypes/editorHelper.lua."
+  ],
+  "fields": {
+    "dependencies": {
+      "type": "string[]",
+      "desc": "Extensions chargées avant : gameplay_missions_startTrigger, gameplay_missions_progress, gameplay_rawPois."
+    },
+    "onModManagerReady": {
+      "type": "function",
+      "desc": "Alias de clearCache : le registre est vidé quand le gestionnaire de mods est prêt (hook). L'analyse statique l'avait typé « any »."
+    }
+  },
+  "functions": {
+    "getRecommendedAttributesList": {
+      "desc": "Liste des attributs recommandés possibles pour une mission : durability, offroading, rock crawling, acceleration, top speed, nimble.",
+      "params": {},
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Noms des attributs."
+        }
+      ]
+    },
+    "getAdditionalAttributes": {
+      "desc": "Renvoie les attributs additionnels affichables (vehicle : own/provided/choice/multi/none ; difficulty : veryLow à veryHigh) avec icône et clés de traduction.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Table clé -> {valuesSorted, valuesByKey, icon, label, translationKey}."
+        },
+        {
+          "type": "string[]",
+          "desc": "Clés triées : {\"vehicle\",\"difficulty\"}."
+        }
+      ]
+    },
+    "getMissionTypes": {
+      "desc": "Liste les types de mission (noms des dossiers de /gameplay/missionTypes contenant constructor.lua). Résultat mis en cache.",
+      "params": {},
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Noms de types."
+        }
+      ]
+    },
+    "getMissionTypeConstructor": {
+      "desc": "Charge (require) et met en cache le constructeur d'un type de mission. Logue une erreur et renvoie nil si le fichier est introuvable.",
+      "params": {
+        "missionTypeName": {
+          "type": "string",
+          "desc": "Nom du type (dossier)."
+        }
+      },
+      "returns": [
+        {
+          "type": "function|nil",
+          "desc": "Fabrique de mission du type."
+        }
+      ]
+    },
+    "getMissionProgressSetupData": {
+      "desc": "Lit et met en cache progressSetup.json du type de mission ({} s'il n'existe pas ou est illisible).",
+      "params": {
+        "missionTypeName": {
+          "type": "string",
+          "desc": "Nom du type."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Données de configuration de la progression."
+        }
+      ]
+    },
+    "getMissionStaticData": {
+      "desc": "Lit et met en cache staticData.json du type de mission ({} par défaut).",
+      "params": {
+        "missionTypeName": {
+          "type": "string",
+          "desc": "Nom du type."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Données statiques du type."
+        }
+      ]
+    },
+    "getMissionEditorForType": {
+      "desc": "Renvoie l'éditeur de missions du type (require de <type>/editor.lua puis appel). S'il n'existe pas, crée un éditeur par défaut basé sur editorHelper. Utilisé par logMissionIssues et par l'éditeur.",
+      "params": {
+        "missionTypeName": {
+          "type": "string",
+          "desc": "Nom du type."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Objet éditeur."
+        }
+      ]
+    },
+    "getNoPreviewFilepath": {
+      "desc": "Chemin de l'image d'aperçu par défaut : /ui/images/noPreview.jpg.",
+      "params": {},
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Chemin."
+        }
+      ]
+    },
+    "getNoThumbFilepath": {
+      "desc": "Chemin de la vignette par défaut : /ui/images/noThumb.jpg.",
+      "params": {},
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Chemin."
+        }
+      ]
+    },
+    "getNoVehicleThumbFilepath": {
+      "desc": "Chemin de la vignette « véhicule du joueur » : /ui/images/playerVehicle.jpg.",
+      "params": {},
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Chemin."
+        }
+      ]
+    },
+    "getMissionPreviewFilepath": {
+      "desc": "Cherche preview.jpg/png/jpeg dans le dossier de la mission, puis dans le dossier du type de mission ; sinon renvoie l'aperçu par défaut.",
+      "params": {
+        "missionData": {
+          "type": "table",
+          "desc": "Données de mission (missionFolder, missionType)."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Chemin de l'image."
+        }
+      ]
+    },
+    "sanitizeMissionAfterCreation": {
+      "desc": "Complète la mission après construction : official, date, infos de mod, icône de carte par défaut (mission_primary_triangle), cache d'étoiles actives, récompenses (rewardAmount nil -> 0 avec erreur loguée) et méthodes par défaut (nop) ou conseils par défaut.",
+      "params": {
+        "mission": {
+          "type": "table",
+          "desc": "Objet mission construit (modifié en place)."
+        }
+      },
+      "returns": []
+    },
+    "recursiveRemoveNestedFromCondition": {
+      "desc": "Nettoie récursivement une condition : convertit un ancien branchId de condition branchLevel vers le nouveau format (career_branches.oldAttributeNamesToNewNames) et retire les « nested » des conditions qui ne sont pas multiAnd/multiOr (avertissement).",
+      "params": {
+        "mId": {
+          "type": "string",
+          "desc": "Id de la mission (pour les logs)."
+        },
+        "cond": {
+          "type": "table",
+          "desc": "Condition à nettoyer (modifiée en place)."
+        }
+      },
+      "returns": []
+    },
+    "getMissionTypeFromMissionId": {
+      "desc": "Extrait le type de mission d'un id : le second segment du chemin (après le niveau), ou une chaîne vide.",
+      "params": {
+        "missionId": {
+          "type": "string",
+          "desc": "Id de mission."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Type de mission."
+        }
+      ]
+    },
+    "loadMission": {
+      "desc": "Charge une mission depuis son dossier (info.json) sans cache : vérifie que le dossier est sous /gameplay/missions/ et sans espace, fixe id et missionFolder, assainit les données. Ce sont les données brutes, pas l'objet mission construit.",
+      "params": {
+        "missionDir": {
+          "type": "string",
+          "desc": "Dossier de la mission, commençant par /gameplay/missions/."
+        },
+        "skipThumbnail": {
+          "type": "boolean|nil",
+          "desc": "true pour ne pas résoudre la vignette."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Données de la mission, ou nil en cas d'erreur."
+        }
+      ]
+    },
+    "saveMission": {
+      "desc": "Écrit info.json (indenté) pour les données de mission : name, description, missionType, retryBehaviour, startCondition, visibleCondition, startTrigger, missionTypeData, careerSetup (sans _activeStarCache, avec les récompenses d'origine restaurées), setupModules, etc.",
+      "params": {
+        "missionData": {
+          "type": "table",
+          "desc": "Données de la mission."
+        },
+        "newFolder": {
+          "type": "string|nil",
+          "desc": "Dossier cible ; par défaut missionData.missionFolder."
+        }
+      },
+      "returns": []
+    },
+    "getFilesData": {
+      "desc": "Renvoie les données brutes (info.json assainies, ou missions procédurales) de toutes les missions, triées par id, avec cache distinct selon skipThumbnail.",
+      "params": {
+        "skipThumbnail": {
+          "type": "boolean|nil",
+          "desc": "true pour une liste plus légère sans vignettes."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Liste de données de mission."
+        }
+      ]
+    },
+    "createMission": {
+      "desc": "Crée et sauvegarde une nouvelle mission dans /gameplay/missions/<id> avec des valeurs par défaut (type flowgraph, startTrigger de type level sur gridmap, startCondition vehicleDriven), puis la recharge et l'ajoute aux caches.",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "Id de la mission (niveau/type/nom)."
+        },
+        "data": {
+          "type": "table|nil",
+          "desc": "Données initiales."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Données chargées de la mission."
+        }
+      ]
+    },
+    "getMissionById": {
+      "desc": "Renvoie l'objet mission construit pour un id (avec cache), ou nil si elle n'existe pas ou si sa construction échoue.",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "Id de mission."
+        },
+        "infoData": {
+          "type": "table|nil",
+          "desc": "Infos déjà connues {dir|data, level, procedural} pour éviter la recherche."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Mission."
+        }
+      ]
+    },
+    "getMissionsOfLevel": {
+      "desc": "Renvoie toutes les missions construites d'un niveau, triées par id (avec cache).",
+      "params": {
+        "levelIdentifier": {
+          "type": "string",
+          "desc": "Identifiant du niveau."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Missions du niveau."
+        }
+      ]
+    },
+    "getAllMissions": {
+      "desc": "Renvoie toutes les missions de tous les niveaux, triées par id. Premier appel coûteux (charge tout) ; met à jour la progression d'util_asyncBulkLoader si elle est active.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Missions."
+        }
+      ]
+    },
+    "areAllMissionsLoaded": {
+      "desc": "Indique si getAllMissions a déjà été exécuté.",
+      "params": {},
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true si la liste complète est en cache."
+        }
+      ]
+    },
+    "getAllIds": {
+      "desc": "Renvoie les ids de toutes les missions (sans les charger), triés.",
+      "params": {},
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Ids."
+        }
+      ]
+    },
+    "getMissionsByMissionType": {
+      "desc": "Filtre toutes les missions sur leur missionType.",
+      "params": {
+        "type": {
+          "type": "string",
+          "desc": "Type de mission."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Missions de ce type."
+        }
+      ]
+    },
+    "getMissionsByFilter": {
+      "desc": "Filtre toutes les missions par niveau (startTrigger.level) et/ou par missionType.",
+      "params": {
+        "filters": {
+          "type": "table|nil",
+          "desc": "{level=string, missionType=string}."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Missions correspondantes."
+        }
+      ]
+    },
+    "getLocations": {
+      "desc": "Renvoie (avec cache) les zones de démarrage d'une mission via gameplay_missions_startTrigger.parseMission, en y ajoutant mission et name.",
+      "params": {
+        "mission": {
+          "type": "table",
+          "desc": "Mission construite."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Locations {type, level, pos, rot, radius, check, displayMarker, mission, name}."
+        }
+      ]
+    },
+    "existsMission": {
+      "desc": "Teste si une mission existe sans la charger (niveau valide et id présent dans la liste d'infos du niveau).",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "Id de mission."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true si elle existe."
+        }
+      ]
+    },
+    "formatMissionToRawPoi": {
+      "desc": "Ajoute à `elements` un POI par zone de démarrage « coordinates » de la mission dans le niveau donné, si la mission est démarrable et visible (gameplay_missions_unlocks). L'id est l'id de la mission, suffixé de -<i> si plusieurs zones.",
+      "params": {
+        "m": {
+          "type": "table",
+          "desc": "Mission."
+        },
+        "elements": {
+          "type": "table",
+          "desc": "Liste de POI à compléter."
+        },
+        "levelIdentifier": {
+          "type": "string",
+          "desc": "Niveau concerné."
+        }
+      },
+      "returns": []
+    },
+    "onGetRawPoiListForLevel": {
+      "desc": "Hook du système de POI : ajoute les POI de toutes les missions du niveau (niveau courant si nil).",
+      "params": {
+        "levelIdentifier": {
+          "type": "string|nil",
+          "desc": "Niveau ; nil = niveau courant."
+        },
+        "elements": {
+          "type": "table",
+          "desc": "Liste de POI à compléter."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onActivityAcceptGatherData": {
+      "desc": "Hook appelé quand le joueur ouvre la fenêtre d'acceptation d'une activité : pour chaque POI de type « mission », ajoute une fiche (titre, étoiles, attributs additionnels, bouton « voir les détails » qui ouvre mission.details).",
+      "params": {
+        "elemData": {
+          "type": "table",
+          "desc": "Données des POI concernés."
+        },
+        "activityData": {
+          "type": "table",
+          "desc": "Liste de fiches à compléter."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "logMissionIssues": {
+      "desc": "Calcule (une seule fois) puis journalise la liste des problèmes de configuration d'une mission, via l'éditeur de son type (checkContainer et calculateMissionIssues). Gravités : unknown, minor, warning, error, critical.",
+      "params": {
+        "mission": {
+          "type": "table",
+          "desc": "Mission (reçoit le champ _issueList)."
+        }
+      },
+      "returns": []
+    },
+    "onExtensionLoaded": {
+      "desc": "Charge (require) tous les générateurs du dossier proceduralMissionGenerators ; ceux sans generate reçoivent nop.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "reloadCompleteMissionSystem": {
+      "desc": "Arrête immédiatement la mission en cours, vide les caches de gameplay_markerInteraction, des déblocages et des missions (outil de développement).",
+      "params": {},
+      "returns": []
+    },
+    "clearCache": {
+      "desc": "Vide tous les caches du registre (missions, données de fichiers, locations, niveaux disponibles) : les missions seront relues au prochain accès.",
+      "params": {},
+      "returns": []
+    },
+    "baseMission": {
+      "desc": "Raccourci vers la fabrique de missionTypes/baseMission : à utiliser dans le constructor.lua d'un type de mission simple.",
+      "params": {
+        "C": {
+          "type": "table",
+          "desc": "Classe dérivée du type."
+        },
+        "...": {
+          "type": "any",
+          "desc": "Options (données de la mission)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Mission."
+        },
+        {
+          "type": "any",
+          "desc": "Valeur retournée par init."
+        }
+      ]
+    },
+    "flowMission": {
+      "desc": "Raccourci vers la fabrique de missionTypes/flowMission : à utiliser dans le constructor.lua d'un type de mission flowgraph.",
+      "params": {
+        "C": {
+          "type": "table",
+          "desc": "Classe dérivée du type."
+        },
+        "...": {
+          "type": "any",
+          "desc": "Options (données de la mission)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Mission."
+        },
+        {
+          "type": "any",
+          "desc": "Valeur retournée par init."
+        }
+      ]
+    },
+    "editorHelper": {
+      "desc": "Raccourci vers la fabrique editor/util/editorElementHelper pré-configurée avec le contexte 'mission' ; sert à écrire l'éditeur d'un type de mission.",
+      "params": {
+        "C": {
+          "type": "table",
+          "desc": "Classe d'éditeur dérivée."
+        },
+        "...": {
+          "type": "any",
+          "desc": "Options."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Éditeur."
+        }
+      ]
+    }
+  }
+}

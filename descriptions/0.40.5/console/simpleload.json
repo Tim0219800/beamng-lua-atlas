@@ -1,0 +1,4 @@
+{
+  "path": "lua/console/simpleload.lua",
+  "module": "Script de test de la console : il supprime tous les objets (BeamEngine:deleteAllObjects) puis fait apparaître le véhicule vehicles/pickup à l'origine (BeamEngine:spawnObject(1, ..., nil, vec3(0,0,0))). Rien n'est exporté."
+}

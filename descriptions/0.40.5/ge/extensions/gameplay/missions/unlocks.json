@@ -1,0 +1,156 @@
+{
+  "path": "lua/ge/extensions/gameplay/missions/unlocks.lua",
+  "module": "Extension GE qui évalue les conditions de déblocage et de visibilité des missions (champs startCondition et visibleCondition). Au chargement, elle charge tous les types de condition du dossier gameplay/missions/unlocks/conditions/. Elle construit aussi des caches : mission précédentes (backward), missions suivantes (forward), profondeur dans l'arbre et niveau de branche de carrière requis. Un moddeur s'en sert pour savoir si une mission est démarrable/visible ou pour forcer ces états.",
+  "usage": "local m = gameplay_missions_missions.getMissionById('west_coast_usa/timeTrials/xyz')\nif gameplay_missions_unlocks.isMissionStartable(m) then ... end\ngameplay_missions_unlocks.overrideStartable(m, true)",
+  "notes": [
+    "M.startConditionMet est exportée mais référence une variable locale inexistante : elle vaut toujours nil (bug du jeu).",
+    "Hors carrière, une mission affichée à la fois en carrière et en freeroam est toujours démarrable et visible (computeStartableDetails renvoie nil).",
+    "Les résultats sont mis en cache par id de mission : appeler clearUnlockStatusCache() après un changement de progression.",
+    "Un visibleCondition de type 'automatic' rend la mission visible si au moins une mission précédente est démarrable (ou s'il n'y en a aucune).",
+    "getBranchLevelForCondition appelle M.getBranchLevelForCondition pour la récursion (pas la locale) : pas de conséquence tant que M n'est pas remplacé.",
+    "Les overrides (overrideStartable / overrideVisible) priment sur le calcul et ne sont jamais effacés par clearCache."
+  ],
+  "fields": {
+    "startConditionMet": {"type": "nil", "desc": "Exporté depuis une variable non définie : vaut toujours nil."}
+  },
+  "functions": {
+    "conditionMet": {
+      "desc": "Évalue récursivement une condition. Cherche le type dans les types chargés (retombe sur 'missing' si inconnu), appelle sa conditionMet et son getLabel.",
+      "params": {"condition": {"type": "table", "desc": "Condition avec un champ type (ex. missionPassed, branchLevel, multiAnd) et ses paramètres."}},
+      "returns": [{"type": "table", "desc": "{met = boolean, condition = table, nested = table|nil (résultats des sous-conditions), label = string|table, hidden = boolean|nil}"}],
+      "internal": false
+    },
+    "getSimpleUnlockedStatus": {
+      "desc": "Construit une table plate (id de mission -> copie profonde de constructUnlocksField) pour comparer l'état de déblocage avant/après une action.",
+      "params": {},
+      "returns": [{"type": "table<string, table>", "desc": "Données de déblocage par id de mission."}],
+      "internal": false
+    },
+    "getUnlockDiff": {
+      "desc": "Compare deux résultats de getSimpleUnlockedStatus sur les clés startable et visible.",
+      "params": {
+        "before": {"type": "table", "desc": "État avant."},
+        "after": {"type": "table", "desc": "État après."}
+      },
+      "returns": [{"type": "table", "desc": "{list = {{missionId, change = {{key, old, new}}}}, byId = table, missionsList = {{name, id}} (missions devenues démarrables)}"}],
+      "internal": false
+    },
+    "getMissionBasedUnlockDiff": {
+      "desc": "Pour une mission, liste les missions directement débloquées par elle (forwardIds), avec leur état démarrable et si elles ont changé dans diff.",
+      "params": {
+        "mission": {"type": "table", "desc": "Mission source."},
+        "diff": {"type": "table", "desc": "Résultat de getUnlockDiff (utilise diff.byId)."}
+      },
+      "returns": [{"type": "table", "desc": "{list = {{missionId, changed, startable}}}"}],
+      "internal": false
+    },
+    "getMissionsForCondition": {
+      "desc": "Collecte récursivement les ids de missions référencés par les conditions missionPassed et missionCompleted.",
+      "params": {
+        "cond": {"type": "table", "desc": "Condition (parcourt cond.nested)."},
+        "list": {"type": "string[]", "desc": "Liste remplie en place."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getBranchLevelForCondition": {
+      "desc": "Collecte récursivement les niveaux de branche de carrière exigés (conditions branchLevel, et league via la branche de la ligue, niveau 1).",
+      "params": {
+        "cond": {"type": "table", "desc": "Condition à parcourir."},
+        "list": {"type": "table<string, integer>", "desc": "Table branchId -> niveau, remplie en place."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "isMissionStartable": {
+      "desc": "Indique si la mission est démarrable. Un override posé par overrideStartable prime, sinon le résultat de startCondition est utilisé.",
+      "params": {"mission": {"type": "table", "desc": "Mission."}},
+      "returns": [{"type": "boolean", "desc": "true si démarrable."}],
+      "internal": false
+    },
+    "getStartableDetails": {
+      "desc": "Détails (mis en cache) de l'évaluation de startCondition. Renvoie nil pour une mission présente en carrière et en freeroam quand la carrière n'est pas active.",
+      "params": {"mission": {"type": "table", "desc": "Mission."}},
+      "returns": [{"type": "table|nil", "desc": "Résultat de conditionMet (met, label, nested…)."}],
+      "internal": false
+    },
+    "isMissionVisible": {
+      "desc": "Indique si la mission est visible (selon le mode carrière/freeroam et visibleCondition). Un override posé par overrideVisible prime. Résultat mis en cache.",
+      "params": {"mission": {"type": "table", "desc": "Mission."}},
+      "returns": [{"type": "boolean", "desc": "true si visible."}],
+      "internal": false
+    },
+    "getBackwardMissionIds": {
+      "desc": "Ids des missions requises par la startCondition de cette mission (mis en cache).",
+      "params": {"mission": {"type": "table", "desc": "Mission."}},
+      "returns": [{"type": "string[]", "desc": "Liste d'ids."}],
+      "internal": false
+    },
+    "getForwardMissionInfo": {
+      "desc": "Informations vers l'avant : missions débloquées, niveau de branche max, étiquettes de branche et profondeur. Reconstruit le cache complet si besoin (charge toutes les missions).",
+      "params": {"mission": {"type": "table", "desc": "Mission."}},
+      "returns": [{"type": "table", "desc": "{forwardIds = string[], maxBranchLevel = integer, branchTags = table<string, boolean>, depth = integer}"}],
+      "internal": false
+    },
+    "overrideStartable": {
+      "desc": "Force l'état démarrable d'une mission (nil pour retirer l'override).",
+      "params": {
+        "mission": {"type": "table", "desc": "Mission."},
+        "value": {"type": "boolean|nil", "desc": "Valeur forcée."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "overrideVisible": {
+      "desc": "Force la visibilité d'une mission (nil pour retirer l'override).",
+      "params": {
+        "mission": {"type": "table", "desc": "Mission."},
+        "value": {"type": "boolean|nil", "desc": "Valeur forcée."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "constructUnlocksField": {
+      "desc": "Assemble le champ unlocks d'une mission.",
+      "params": {"mission": {"type": "table", "desc": "Mission."}},
+      "returns": [{"type": "table", "desc": "{startable, visible, startableDetails, backward, forward, maxBranchLevel, branchTags, depth}"}],
+      "internal": false
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement de l'extension : charge tous les fichiers de /lua/ge/extensions/gameplay/missions/unlocks/conditions et enregistre chaque type de condition.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "depthIdSort": {
+      "desc": "Comparateur pour table.sort sur des missions : par profondeur croissante puis par id.",
+      "params": {
+        "a": {"type": "table", "desc": "Mission."},
+        "b": {"type": "table", "desc": "Mission."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si a doit précéder b."}],
+      "internal": false
+    },
+    "depthIdSortUsingIds": {
+      "desc": "Comme depthIdSort mais à partir d'ids de missions. Renvoie false si l'une des missions n'existe pas.",
+      "params": {
+        "aId": {"type": "string", "desc": "Id de mission."},
+        "bId": {"type": "string", "desc": "Id de mission."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si a doit précéder b."}],
+      "internal": false
+    },
+    "clearUnlockStatusCache": {
+      "desc": "Vide le cache d'état démarrable/visible (et celui des ligues de carrière si présent).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "clearCache": {
+      "desc": "Vide le cache d'état ainsi que les caches backward et forward.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

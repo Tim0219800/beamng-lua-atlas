@@ -2,74 +2,77 @@
 -- tim19Atlas stub generated from lua/ge/extensions/telemetry/trackers/gameplay/missions.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
+--- Suiveur de télémétrie des missions : suit l'entonnoir (quelles missions démarrent, comment elles sont configurées, comment elles finissent). L'activité « missionRunning » porte la durée ; des évènements ponctuels signalent le clic sur Démarrer, l'ouverture des écrans de début/fin, chaque tentative terminée, les redémarrages, reconfigurations et abandons.
 --- Accès : extension `telemetry_trackers_gameplay_missions` : `extensions.load("telemetry_trackers_gameplay_missions")`, puis la globale `telemetry_trackers_gameplay_missions`
 ---@class telemetry_trackers_gameplay_missions
----@field dependencies table
+---@field dependencies string[] telemetry_core.
 telemetry_trackers_gameplay_missions = {}
 
---- Fires once the mission is actually running, for every start path including the ones that
----  load a level first. startedFrom is missionScreen (in level), gameplaySelector, discover or
----  withinMission (retry, next mission or reconfigure from the end screen). Starts from career
----  tutorials, activity flows, multiplayer or scenarios report other.
+--- Hook appelé quand la mission tourne réellement, pour tous les chemins de démarrage (y compris ceux qui chargent d'abord un niveau). Démarre l'activité missionRunning. startedFrom : missionScreen (en niveau), gameplaySelector, discover, withinMission (nouvel essai, mission suivante ou reconfiguration depuis l'écran de fin) ; les départs depuis tutoriels de carrière, flux d'activité, multijoueur ou scénarios donnent « other ».
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/telemetry/trackers/gameplay/missions.lua:24
----@param state any
----@param mission any
----@param userSettings any
----@param startedFrom any
+---@param state string État ; seul « started » est pris en compte.
+---@param mission table Mission (doit avoir _isOngoing).
+---@param userSettings table Réglages du joueur pour la mission.
+---@param startedFrom string|nil Origine du démarrage.
 function telemetry_trackers_gameplay_missions.onAnyMissionChanged(state, mission, userSettings, startedFrom) end
 
---- Every stop passes through here, including the instant one on a level change, a return to
----  the main menu or a career start, which skips onMissionStopped
+--- Hook appelé avant tout arrêt de mission, y compris l'arrêt instantané lors d'un changement de niveau, d'un retour au menu ou d'un démarrage de carrière (qui saute onMissionStopped). Termine l'activité avec l'issue « stopped ».
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/telemetry/trackers/gameplay/missions.lua:163
----@param state any
----@param mission any
+---@param state string Seul « stopped » est pris en compte.
+---@param mission table Mission concernée.
 function telemetry_trackers_gameplay_missions.onAnyMissionWillChange(state, mission) end
 
---- Counterpart of missionStartScreenOpened. Carries no result: the screen is told what to
----  show from elsewhere, and a mission built on the endScreenWhole node never fires this at
----  all. The results come from onMissionAttemptAggregated below.
+--- Hook appelé à l'ouverture de l'écran de fin : émet missionEndScreenOpened (sans résultat).
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/telemetry/trackers/gameplay/missions.lua:67
 function telemetry_trackers_gameplay_missions.onEndScreenUIOpened() end
 
+--- Hook appelé au chargement : déchargement manuel.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/telemetry/trackers/gameplay/missions.lua:169
 function telemetry_trackers_gameplay_missions.onExtensionLoaded() end
 
---- game exit, a lua reload and disabling the tracker all unload it, the core unloads the
----  trackers before their onExit would run
+--- Hook appelé au déchargement (fermeture du jeu, rechargement Lua, suiveur désactivé) : termine l'activité avec l'issue trackerUnloaded.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/telemetry/trackers/gameplay/missions.lua:176
 function telemetry_trackers_gameplay_missions.onExtensionUnloaded() end
 
---- Fires when the mission is closed early, before it would stop on its own. attemptsCompleted
----  is 0 when the player left without finishing a single attempt. byPlayer is false when the
----  game closed the mission itself, for example after a failed vehicle spawn.
----  Missions that handle the abandon themselves still stop afterwards, the activity is already
----  closed by then.
+--- Hook appelé quand la mission est fermée prématurément : émet missionAbandoned (byPlayer, attemptsCompleted, qui vaut 0 si aucun essai n'a été terminé) et termine l'activité avec l'issue « abandoned ». byPlayer est false quand le jeu ferme lui-même la mission, par exemple après un échec d'apparition de véhicule.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/telemetry/trackers/gameplay/missions.lua:149
----@param mission any
----@param byPlayer any
+---@param mission table Mission.
+---@param byPlayer boolean true si le joueur a abandonné.
 function telemetry_trackers_gameplay_missions.onMissionAbandoned(mission, byPlayer) end
 
---- Fires as the attempt is saved, the one point where the whole result exists as a single
----  table. Which of the data fields are filled depends on the mission type.
+--- Hook appelé quand une tentative est enregistrée (seul moment où le résultat complet existe en une table) : émet missionAttemptCompleted (issue, numéro, étoiles, temps, pénalité, points, modèle et config du véhicule). Les champs remplis dépendent du type de mission.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/telemetry/trackers/gameplay/missions.lua:87
----@param attempt any
----@param mission any
----@param progressKey any
+---@param attempt table Tentative (type, attemptNumber, unlockedStars, data).
+---@param mission table Mission.
+---@param progressKey string Clé de progression.
 function telemetry_trackers_gameplay_missions.onMissionAttemptAggregated(attempt, mission, progressKey) end
 
+--- Hook appelé quand les réglages d'une mission changent : émet missionReconfigured avec les seuls réglages modifiés.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/telemetry/trackers/gameplay/missions.lua:130
----@param data any
+---@param data table {mission, oldUserSettings, newUserSettings}
 function telemetry_trackers_gameplay_missions.onMissionReconfigured(data) end
 
+--- Hook appelé au clic d'un bouton du message de récupération : si id vaut restartMission, émet missionRestarted.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/telemetry/trackers/gameplay/missions.lua:121
----@param id any
+---@param id string Identifiant du bouton.
 function telemetry_trackers_gameplay_missions.onRecoveryPromptButtonPressed(id) end
 
+--- Hook appelé quand l'écran de départ est construit : émet missionStartScreenOpened une seule fois par mission.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/telemetry/trackers/gameplay/missions.lua:110
 function telemetry_trackers_gameplay_missions.onStartScreenFinishedBuilding() end
 
---- The start and end screen nodes are also used outside missions, split screen gamemodes
----  for example, so both events are only counted while a mission runs
+--- Hook appelé au clic sur le bouton Démarrer : émet missionStartButtonClicked (seulement pendant une mission).
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/telemetry/trackers/gameplay/missions.lua:56
 function telemetry_trackers_gameplay_missions.onUIStartButtonClicked() end
 

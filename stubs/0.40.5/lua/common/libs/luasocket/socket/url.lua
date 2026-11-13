@@ -2,93 +2,55 @@
 -- tim19Atlas stub generated from lua/common/libs/luasocket/socket/url.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- URI parsing, composition and relative URL resolution
----  LuaSocket toolkit.
----  Author: Diego Nehab
----  Declare module
+--- Bibliothèque tierce LuaSocket (Diego Nehab), version « URL 1.0.3 » : analyse, composition et résolution d'URL relatives selon la RFC 2396. Utile pour découper une URL en scheme/authority/userinfo/host/port/path/params/query/fragment, la reconstruire, encoder/décoder les caractères réservés (%XX) et manipuler les segments de chemin.
 --- Accès : `require("libs/luasocket/socket/url")`
 ---@class libs_luasocket_socket_url
----@field _VERSION string
+---@field _VERSION string Version du module : "URL 1.0.3".
 local libs_luasocket_socket_url = {}
 
---- Builds a absolute URL from a base and a relative URL according to RFC 2396
----  Input
----    base_url
----    relative_url
----  Returns
----    corresponding absolute url
+--- Construit une URL absolue à partir d'une URL de base et d'une URL relative (RFC 2396).
 ---Source : lua/common/libs/luasocket/socket/url.lua:221
----@param base_url any
----@param relative_url any
+---@param base_url string|table URL de base (chaîne ou table issue de parse).
+---@param relative_url string|table URL relative (chaîne ou table issue de parse).
+---@return string  URL absolue correspondante.
 function libs_luasocket_socket_url.absolute(base_url, relative_url) end
 
---- Rebuilds a parsed URL from its components.
----  Components are protected if any reserved or unallowed characters are found
----  Input
----    parsed: parsed URL, as returned by parse
----  Returns
----    a stringing with the corresponding URL
+--- Reconstruit une URL à partir d'une table du type renvoyé par parse ; les composants contenant des caractères réservés sont protégés.
 ---Source : lua/common/libs/luasocket/socket/url.lua:185
----@param parsed any
+---@param parsed table Parties de l'URL.
+---@return string  URL composée.
 function libs_luasocket_socket_url.build(parsed) end
 
---- Builds a path component from its segments, escaping protected characters.
----  Input
----    parsed: path segments
----    unsafe: if true, segments are not protected before path is built
----  Returns
----    path: corresponding path stringing
+--- Recompose un chemin à partir de ses segments en échappant les caractères protégés.
 ---Source : lua/common/libs/luasocket/socket/url.lua:281
----@param parsed any
----@param unsafe any
+---@param parsed table Segments du chemin (comme renvoyé par parse_path).
+---@param unsafe boolean|nil Si true, les segments ne sont pas protégés avant composition.
+---@return string  Chemin composé.
 function libs_luasocket_socket_url.build_path(parsed, unsafe) end
 
---- Encodes a string into its escaped hexadecimal representation
----  Input
----    s: binary string to be encoded
----  Returns
----    escaped representation of string binary
+--- Encode une chaîne binaire en remplaçant chaque octet non alphanumérique par sa représentation %XX.
 ---Source : lua/common/libs/luasocket/socket/url.lua:30
----@param s any
+---@param s string Chaîne à encoder.
+---@return string  Chaîne échappée.
 function libs_luasocket_socket_url.escape(s) end
 
---- Parses a url and returns a table with all its parts according to RFC 2396
----  The following grammar describes the names given to the URL parts
----  <url> ::= <scheme>://<authority>/<path>;<params>?<query>#<fragment>
----  <authority> ::= <userinfo>@<host>:<port>
----  <userinfo> ::= <user>[:<password>]
----  <path> :: = {<segment>/}<segment>
----  Input
----    url: uniform resource locator of request
----    default: table with default values for each field
----  Returns
----    table with the following fields, where RFC naming conventions have
----    been preserved:
----      scheme, authority, userinfo, user, password, host, port,
----      path, params, query, fragment
----  Obs:
----    the leading '/' in {/<path>} is considered part of <path>
+--- Découpe une URL en table avec les champs scheme, authority, userinfo, user, password, host, port, path, params, query, fragment (seuls ceux présents sont remplis). Le '/' initial du chemin fait partie de path.
 ---Source : lua/common/libs/luasocket/socket/url.lua:126
----@param url any
----@param default any
+---@param url string URL à analyser.
+---@param default table|nil Valeurs par défaut copiées dans le résultat avant l'analyse.
+---@return table|nil  Parties de l'URL, ou nil et "invalid url".
 function libs_luasocket_socket_url.parse(url, default) end
 
---- Breaks a path into its segments, unescaping the segments
----  Input
----    path
----  Returns
----    segment: a table with one entry per segment
+--- Découpe un chemin en segments (désencodés) ; un chemin commençant par '/' donne un champ is_absolute.
 ---Source : lua/common/libs/luasocket/socket/url.lua:260
----@param path any
+---@param path string Chemin de l'URL.
+---@return table  Liste des segments (un par entrée).
 function libs_luasocket_socket_url.parse_path(path) end
 
---- Encodes a string into its escaped hexadecimal representation
----  Input
----    s: binary string to be encoded
----  Returns
----    escaped representation of string binary
+--- Décode les séquences %XX d'une chaîne en octets.
 ---Source : lua/common/libs/luasocket/socket/url.lua:73
----@param s any
+---@param s string Chaîne échappée.
+---@return string  Chaîne décodée.
 function libs_luasocket_socket_url.unescape(s) end
 
 return libs_luasocket_socket_url

@@ -1,0 +1,63 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/listDescription.lua",
+  "module": "Nœud flowgraph « List Description » (catégorie repeat_instant) : construit un texte de liste à partir de clés de traduction ou d'objets de traduction contextuels. Entrées « item_i » (string ou table) pour chaque élément ; sortie « value » (string). Les éléments vides sont ignorés ; la mise en forme est faite par self.mgr.modules.ui:buildListText.",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_onDeserialized": {
+          "desc": "Restaure count.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde du nœud à remplir."
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde count.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde du nœud à remplir."
+            }
+          },
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Champ « List Item Count ».",
+          "internal": true
+        },
+        "init": {
+          "desc": "count = 1.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Crée les pins initiaux.",
+          "internal": true
+        },
+        "updatePins": {
+          "desc": "Ajuste le nombre de pins item_i.",
+          "params": {
+            "old": {
+              "type": "integer",
+              "desc": "Ancien nombre d'éléments."
+            },
+            "new": {
+              "type": "integer",
+              "desc": "Nouveau nombre d'éléments."
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Traduit chaque élément (core_locales.translateWithOrWithoutContext), construit la liste et l'écrit sur « value ».",
+          "internal": true
+        }
+      }
+    }
+  }
+}

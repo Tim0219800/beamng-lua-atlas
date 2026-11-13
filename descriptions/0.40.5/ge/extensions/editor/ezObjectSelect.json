@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/editor/ezObjectSelect.lua",
+  "module": "Point d'entrée de l'outil « Easy Select » de l'éditeur. Enregistre un mode d'édition (editor.editModes.ezObjectSelect, nom « Easy Select », action map « EZObjectSelect ») et une fenêtre d'outil, puis délègue le travail à editor/ezObjectSelect/controller. Les actions couper/copier/coller/dupliquer/tout sélectionner/désélectionner/supprimer sont relayées vers le mode standard editor.editModes.objectSelect. Les raccourcis molette sont documentés : Ctrl+molette cycle les objets superposés, Shift+molette tourne la sélection autour de Z monde (Ctrl+Shift : par pas de 1 degré).",
+  "notes": [
+    "Si l'activation du contrôleur échoue, le mode revient à editModes.objectSelect à la frame suivante.",
+    "Plusieurs hooks (ajout d'objet, prefab explosé, champs de l'inspecteur modifiés) invalident le cache de sélection si le contrôleur est actif.",
+    "Les fonctions request* ne font rien si le mode Easy Select n'est pas le mode actif."
+  ],
+  "functions": {
+    "onEditorInitialized": {"desc": "Charge les préférences, réinitialise les filtres d'entrée, enregistre la fenêtre (390x460 x uiscale) et le mode d'édition.", "params": {}, "internal": true},
+    "onEditorGui": {"desc": "Si le mode est actif, dessine le debug écran et la fenêtre de l'espace de travail (controller.drawWorkspace).", "params": {}, "internal": true},
+    "onExtensionLoaded": {"desc": "Charge les préférences et réinitialise les filtres d'entrée.", "params": {}, "internal": true},
+    "onExtensionUnloaded": {"desc": "Quitte le mode (retour à objectSelect) ou désactive le contrôleur, puis désenregistre la fenêtre et le mode.", "params": {}, "internal": true},
+    "requestTransformShortcut": {"desc": "Demande l'opération de transformation (déplacement) par raccourci clavier.", "params": {}},
+    "requestRotateShortcut": {"desc": "Demande l'opération de rotation par raccourci.", "params": {}},
+    "requestScaleShortcut": {"desc": "Demande l'opération d'échelle par raccourci.", "params": {}},
+    "requestFocusShortcut": {"desc": "Demande de centrer la caméra sur la sélection (focus).", "params": {}},
+    "requestNumpadPreset": {
+      "desc": "Transmet une touche du pavé numérique au contrôleur (préréglage de vue).",
+      "params": {"preset": {"type": "any", "desc": "Préréglage (déduit du code : valeur transmise telle quelle)"}}
+    },
+    "onEditorObjectAdded": {"desc": "Hook : invalide le cache de sélection (raison objectAdded).", "params": {}, "internal": true},
+    "onEditorPrefabExploded": {"desc": "Hook : invalide le cache (prefabExploded).", "params": {}, "internal": true},
+    "onEditorInspectorFieldChanged": {"desc": "Hook : invalide le cache (inspectorFieldChanged).", "params": {}, "internal": true},
+    "onEditorInspectorDynFieldChanged": {"desc": "Hook : invalide le cache (inspectorDynFieldChanged).", "params": {}, "internal": true},
+    "onEditorPreferenceValueChanged": {
+      "desc": "Hook : pour gizmos.general.highlightSelectedMeshes rafraîchit la teinte de sélection si le mode est actif ; sinon relaie au contrôleur.",
+      "params": {"path": {"type": "string", "desc": "Chemin de préférence"}, "value": {"type": "any", "desc": "Nouvelle valeur"}},
+      "internal": true
+    },
+    "onEditorAxisGizmoModeChanged": {"desc": "Hook : relaie le changement de mode du gizmo d'axes au contrôleur si le mode est actif.", "params": {"mode": {"type": "any", "desc": "Nouveau mode du gizmo"}}, "internal": true},
+    "onEditorAxisGizmoAligmentChanged": {"desc": "Hook (orthographe du jeu « Aligment ») : relaie le changement d'alignement du gizmo.", "params": {}, "internal": true},
+    "onEditorRegisterPreferences": {"desc": "Hook : laisse le contrôleur enregistrer ses préférences.", "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences"}}, "internal": true}
+  }
+}

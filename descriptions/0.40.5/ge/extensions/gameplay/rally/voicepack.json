@@ -1,0 +1,367 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/voicepack.lua",
+  "module": "Module sans état qui gère les « voicepacks » du copilote de rallye : paquets de voix (audio .ogg + metadata.json + voicepack.json) situés soit en global (`/lua/ge/extensions/gameplay/rally/compositors/voicepacks/<dirname>/`), soit dans une mission (`<missionDir>/rally/voicepacks/<dirname>/`). Il fournit les chemins de fichiers, la lecture et le cache de l'inventaire (scan), le choix d'un voicepack à partir d'un « pick » ou des préférences (liste MRU des derniers utilisés stockée dans le réglage `rallyCodriverVoicepackMRU`), la résolution du notebook d'une mission, les candidats audio (variantes) d'une note, et la construction des réglages utilisateur de type liste déroulante (clé `rallyVoicepackPick`) pour étapes et boucles.",
+  "usage": "local vp = require('/lua/ge/extensions/gameplay/rally/voicepack')\nlocal dirname, entry, result = vp.resolveEffectiveEntry(missionDir, {type = 'preferences'}, {missionId = missionId})\nif entry then print(entry.label, vp.getEntryAudioFile(entry, 'pacenote_123.ogg')) end",
+  "notes": [
+    "Identifiants : 'global:<dirname>' ou 'mission:<missionId>:<dirname>' (makeId/parseId). Valeur par défaut : 'global:ak_2026-04-16'. La MRU est une liste CSV d'ids, limitée à 10.",
+    "Un pick est une table {type = 'preferences'|'auto'|'voicepack'|'loopVoicepack', id, scope, missionId, dirname, familyKey}. Valeur de réglage : '' pour preferences, l'id pour un voicepack, 'loop:<familyKey>' pour une boucle.",
+    "Le fichier d'infos s'appelle voicepack.json (et non info.json, car le système de missions traite tout info.json comme une mission). Il doit contenir persona, language, styleLabel et notebooks (liste non vide) sinon le voicepack est ignoré. Champs optionnels : dialect, compositorStyle, styleDetailLevel, enableAnimalCodrivers, enableSpeedScaling (défaut true en global), codriverTimingOffsetSeconds (défaut 0 en global, 0,2 en mission), reuseAudioFrom (liste de dirnames globaux dont réutiliser audio et metadata), cornerGapMs, phraseGapMs, linkWordGapMs, pacenoteGapMs.",
+    "Les dossiers commençant par `_` sont masqués du scan. Les voicepacks avec enableAnimalCodrivers == false sont exclus de l'inventaire.",
+    "Le scan global est mis en cache pour toute la durée du module (invalidateCache est réservé au dev/test) ; le scan de mission est mis en cache par couple missionDir|missionId.",
+    "listInventory exclut par défaut les voicepacks dont aucun notebook candidat n'existe dans la mission (requireMissionNotebook ~= false).",
+    "Ordre de résolution par préférences : MRU (correspondance exacte d'id, sinon scope + dirname, pour chaque entrée MRU dans l'ordre), puis repli sur le plus petit styleDetailLevel et l'ordre alphabétique du label.",
+    "resolveDir parcourt la table avec pairs() : l'ordre n'est pas défini si plusieurs voicepacks correspondent.",
+    "resolveLoopMissionSettingEntry renvoie nil pour un pick 'preferences'."
+  ],
+  "fields": {
+    "infoBasename": {"type": "string", "desc": "'voicepack.json'."},
+    "audioSubdir": {"type": "string", "desc": "'audio' : sous-dossier des fichiers .ogg."},
+    "globalDir": {"type": "string", "desc": "'/lua/ge/extensions/gameplay/rally/compositors/voicepacks/' : dossier des voicepacks globaux (avec `/` final)."},
+    "missionSubdir": {"type": "string", "desc": "'rally/voicepacks' : sous-dossier des voicepacks d'une mission."},
+    "defaultVoicepackId": {"type": "string", "desc": "'global:ak_2026-04-16' : premier élément de la MRU si elle est vide."},
+    "mruLimit": {"type": "integer", "desc": "10 : taille maximale de la MRU."}
+  },
+  "functions": {
+    "getFile": {
+      "desc": "Chemin d'un fichier d'un voicepack global.",
+      "params": {
+        "voicepack": {"type": "string", "desc": "Nom de dossier du voicepack."},
+        "basename": {"type": "string", "desc": "Nom de fichier."}
+      },
+      "returns": [{"type": "string", "desc": "Chemin complet."}]
+    },
+    "getAudioFile": {
+      "desc": "Chemin d'un fichier audio d'un voicepack global (sous audio/).",
+      "params": {
+        "voicepack": {"type": "string", "desc": "Nom de dossier du voicepack."},
+        "basename": {"type": "string", "desc": "Nom du fichier audio."}
+      },
+      "returns": [{"type": "string", "desc": "Chemin."}]
+    },
+    "getEntryAudioFile": {
+      "desc": "Chemin d'un fichier audio d'une entrée : d'abord son propre dossier, puis ceux des voicepacks de reuseAudioFrom. Si le fichier n'existe nulle part, renvoie le chemin local (si le dossier audio existe) ou le premier chemin source.",
+      "params": {
+        "entry": {"type": "table", "desc": "Entrée de voicepack (issue de scan/scanMission)."},
+        "basename": {"type": "string", "desc": "Nom du fichier audio."}
+      },
+      "returns": [{"type": "string|nil", "desc": "Chemin, nil si entry ou basename manque."}]
+    },
+    "getAudioCandidates": {
+      "desc": "Liste les variantes audio d'une note d'après metadata. Sans allowedVariants, prend toutes les variantes indexées (`<stem>.ogg` = variante 1 et `<stem>_<n>.ogg`). Avec allowedVariants, ne prend que celles-ci. Résultat trié par variante puis par nom.",
+      "params": {
+        "metadata": {"type": "table", "desc": "Table basename -> métadonnées (contenu de metadata.json), avec audioLen."},
+        "basename": {"type": "string", "desc": "Nom de base de la note (avec ou sans .ogg)."},
+        "pathForBasename": {"type": "function|nil", "desc": "Fonction basename -> chemin ; sinon fname = basename."},
+        "allowedVariants": {"type": "integer[]|nil", "desc": "Numéros de variantes autorisés."}
+      },
+      "returns": [{"type": "table[]", "desc": "Liste de {basename, fname, audioLen, metadata, variantIndex}."}]
+    },
+    "getAudioCandidatesForEntry": {
+      "desc": "getAudioCandidates avec les chemins résolus par getEntryAudioFile.",
+      "params": {
+        "entry": {"type": "table", "desc": "Entrée de voicepack."},
+        "metadata": {"type": "table", "desc": "Métadonnées audio."},
+        "basename": {"type": "string", "desc": "Nom de base."},
+        "allowedVariants": {"type": "integer[]|nil", "desc": "Variantes autorisées."}
+      },
+      "returns": [{"type": "table[]", "desc": "Candidats."}]
+    },
+    "getAudioCandidatesForVoicepack": {
+      "desc": "getAudioCandidates avec les chemins d'un voicepack global (getAudioFile).",
+      "params": {
+        "voicepack": {"type": "string", "desc": "Dossier du voicepack."},
+        "metadata": {"type": "table", "desc": "Métadonnées audio."},
+        "basename": {"type": "string", "desc": "Nom de base."},
+        "allowedVariants": {"type": "integer[]|nil", "desc": "Variantes autorisées."}
+      },
+      "returns": [{"type": "table[]", "desc": "Candidats."}]
+    },
+    "chooseAudioCandidate": {
+      "desc": "Choisit un candidat au hasard (math.random).",
+      "params": {"candidates": {"type": "table[]", "desc": "Liste de candidats."}},
+      "returns": [{"type": "table|nil", "desc": "Candidat, nil si la liste est vide."}]
+    },
+    "getPacenoteFile": {
+      "desc": "Chemin audio d'une note par son hash dans un voicepack global.",
+      "params": {
+        "voicepack": {"type": "string", "desc": "Dossier du voicepack."},
+        "pacenoteHash": {"type": "string", "desc": "Hash de la note."}
+      },
+      "returns": [{"type": "string", "desc": "Chemin."}]
+    },
+    "getSystemPacenoteFile": {
+      "desc": "Chemin audio d'une note système dans un voicepack global.",
+      "params": {
+        "voicepack": {"type": "string", "desc": "Dossier du voicepack."},
+        "systemKey": {"type": "string", "desc": "Clé de la note système."},
+        "variantIndex": {"type": "integer|nil", "desc": "Variante ; défaut 1."}
+      },
+      "returns": [{"type": "string", "desc": "Chemin."}]
+    },
+    "getEntrySystemPacenoteFile": {
+      "desc": "Chemin audio d'une note système pour une entrée (avec repli reuseAudioFrom).",
+      "params": {
+        "entry": {"type": "table", "desc": "Entrée de voicepack."},
+        "systemKey": {"type": "string", "desc": "Clé de la note système."},
+        "variantIndex": {"type": "integer|nil", "desc": "Variante."}
+      },
+      "returns": [{"type": "string|nil", "desc": "Chemin."}]
+    },
+    "getMetadataFile": {
+      "desc": "Chemin de metadata.json d'un voicepack global.",
+      "params": {"voicepack": {"type": "string", "desc": "Dossier du voicepack."}},
+      "returns": [{"type": "string", "desc": "Chemin."}]
+    },
+    "getInfo": {
+      "desc": "Lit le voicepack.json d'un voicepack global (brut, sans validation).",
+      "params": {"voicepack": {"type": "string", "desc": "Dossier du voicepack."}},
+      "returns": [{"type": "table|nil", "desc": "Contenu JSON, nil si absent."}]
+    },
+    "getLanguage": {
+      "desc": "Langue déclarée d'un voicepack global.",
+      "params": {"voicepack": {"type": "string", "desc": "Dossier du voicepack."}},
+      "returns": [{"type": "string|nil", "desc": "Langue."}]
+    },
+    "getStyles": {
+      "desc": "Champ `styles` du voicepack.json d'un voicepack global.",
+      "params": {"voicepack": {"type": "string", "desc": "Dossier du voicepack."}},
+      "returns": [{"type": "table", "desc": "Styles, table vide si absent."}]
+    },
+    "invalidateCache": {
+      "desc": "Hook dev/test : oublie l'inventaire global pour forcer un nouveau scan. Les changements de préférences ne doivent pas l'appeler."
+    },
+    "invalidateMissionCache": {
+      "desc": "Oublie le cache d'inventaire d'une mission (ou de toutes si missionDir est nil).",
+      "params": {"missionDir": {"type": "string|nil", "desc": "Dossier de la mission."}}
+    },
+    "makeId": {
+      "desc": "Construit l'id d'un voicepack : 'global:<dirname>', 'mission:<missionId>:<dirname>' ou 'mission:<dirname>'.",
+      "params": {
+        "scope": {"type": "string", "desc": "'global' ou 'mission'."},
+        "dirname": {"type": "string", "desc": "Nom de dossier."},
+        "missionId": {"type": "string|nil", "desc": "Id de mission (scope mission)."}
+      },
+      "returns": [{"type": "string", "desc": "Id."}]
+    },
+    "parseId": {
+      "desc": "Décompose un id en {scope, dirname, missionId}.",
+      "params": {"id": {"type": "string", "desc": "Id."}},
+      "returns": [{"type": "table|nil", "desc": "Parties, nil si le format est invalide."}]
+    },
+    "getVoicepackMRU": {
+      "desc": "Lit la liste MRU (réglage rallyCodriverVoicepackMRU, CSV ou ancien JSON).",
+      "returns": [{"type": "string[]", "desc": "Ids, du plus récent au plus ancien."}]
+    },
+    "getEntryAudioSourceEntries": {
+      "desc": "Entrées globales dont l'audio est réutilisé (reuseAudioFrom), lues une fois puis mises en cache dans entry.audioSourceEntries. Ignore les doublons, soi-même et les dirnames invalides (avec avertissement).",
+      "params": {"entry": {"type": "table|nil", "desc": "Entrée."}},
+      "returns": [{"type": "table[]", "desc": "Entrées sources."}]
+    },
+    "getEntryAssetDirs": {
+      "desc": "Dossier de l'entrée suivi de ceux de ses sources audio.",
+      "params": {"entry": {"type": "table|nil", "desc": "Entrée."}},
+      "returns": [{"type": "string[]", "desc": "Dossiers."}]
+    },
+    "getEntryMetadataFile": {
+      "desc": "Chemin du metadata.json de l'entrée, ou de la première source qui en a un.",
+      "params": {"entry": {"type": "table|nil", "desc": "Entrée."}},
+      "returns": [{"type": "string|nil", "desc": "Chemin."}]
+    },
+    "getEntryMetadata": {
+      "desc": "Fusionne les metadata.json de l'entrée puis de ses sources (la première valeur d'un basename l'emporte), avec cache dans entry._mergedAudioMetadata.",
+      "params": {"entry": {"type": "table|nil", "desc": "Entrée."}},
+      "returns": [{"type": "table", "desc": "Table basename -> métadonnées."}]
+    },
+    "scan": {
+      "desc": "Scanne les voicepacks globaux (hors dossiers `_`) et renvoie l'index dirname -> entrée, mis en cache.",
+      "returns": [{"type": "table<string, table>", "desc": "Index des entrées globales."}]
+    },
+    "missionFullDir": {
+      "desc": "Dossier des voicepacks d'une mission : <missionDir>/rally/voicepacks.",
+      "params": {"missionDir": {"type": "string|nil", "desc": "Dossier de la mission."}},
+      "returns": [{"type": "string|nil", "desc": "Chemin."}]
+    },
+    "scanMission": {
+      "desc": "Scanne les voicepacks d'une mission (avec cache).",
+      "params": {
+        "missionDir": {"type": "string", "desc": "Dossier de la mission."},
+        "missionId": {"type": "string|nil", "desc": "Id de la mission (entre dans la clé de cache et l'id des entrées)."}
+      },
+      "returns": [{"type": "table<string, table>", "desc": "Index dirname -> entrée."}]
+    },
+    "resolveEntry": {
+      "desc": "Retrouve l'entrée d'un pick (ou d'un id) : l'index de mission pour scope 'mission', l'index global sinon.",
+      "params": {
+        "missionDir": {"type": "string|nil", "desc": "Dossier de la mission."},
+        "pick": {"type": "table|string", "desc": "Pick ou id."},
+        "missionId": {"type": "string|nil", "desc": "Id de la mission."}
+      },
+      "returns": [
+        {"type": "table|nil", "desc": "Entrée."},
+        {"type": "string|nil", "desc": "dirname."}
+      ]
+    },
+    "resolveDir": {
+      "desc": "Premier voicepack global correspondant à une langue, un persona et un styleLabel (chaque critère facultatif). L'ordre est indéfini (pairs).",
+      "params": {
+        "language": {"type": "string|nil", "desc": "Langue."},
+        "persona": {"type": "string|nil", "desc": "Persona."},
+        "styleLabel": {"type": "string|nil", "desc": "Style."}
+      },
+      "returns": [
+        {"type": "string|nil", "desc": "dirname."},
+        {"type": "table|nil", "desc": "Entrée."}
+      ]
+    },
+    "listInventory": {
+      "desc": "Liste triée par label des entrées disponibles : globales et, si missionDir est donné, celles de la mission. Filtrées par enableAnimalCodrivers et, par défaut, par la présence d'un notebook candidat dans la mission.",
+      "params": {
+        "missionDir": {"type": "string|nil", "desc": "Dossier de la mission."},
+        "opts": {"type": "table|nil", "desc": "{missionId, globalOnly, requireMissionNotebook}."}
+      },
+      "returns": [{"type": "table[]", "desc": "Entrées."}]
+    },
+    "resolveMissionNotebook": {
+      "desc": "Chemin du premier notebook déclaré par le voicepack (vpInfo.notebooks) qui existe dans la mission.",
+      "params": {
+        "missionDir": {"type": "string|nil", "desc": "Dossier de la mission."},
+        "vpInfo": {"type": "table|nil", "desc": "Entrée ou info du voicepack avec `notebooks`."}
+      },
+      "returns": [{"type": "string|nil", "desc": "Chemin <missionDir>/rally/notebooks/<nom>.notebook.json."}]
+    },
+    "listMissionNotebookCandidates": {
+      "desc": "Comme resolveMissionNotebook mais renvoie tous les noms de notebooks candidats (sans suffixe) qui existent dans la mission, dans l'ordre de préférence.",
+      "params": {
+        "missionDir": {"type": "string|nil", "desc": "Dossier de la mission."},
+        "vpInfo": {"type": "table|nil", "desc": "Entrée du voicepack."}
+      },
+      "returns": [{"type": "string[]", "desc": "Noms de notebooks."}]
+    },
+    "labelForEntry": {
+      "desc": "Libellé d'affichage « persona [(dialecte)] - style [suffixe] ».",
+      "params": {
+        "entry": {"type": "table", "desc": "Entrée."},
+        "dirname": {"type": "string", "desc": "Repli pour le persona."},
+        "suffix": {"type": "string|nil", "desc": "Suffixe ajouté (ex. '(mission)')."}
+      },
+      "returns": [{"type": "string", "desc": "Libellé."}]
+    },
+    "ensureSettingsInitialized": {
+      "desc": "Si la MRU est vide, y met defaultVoicepackId. Ne fait rien avec opts.writeSettings == false.",
+      "params": {"opts": {"type": "table|nil", "desc": "{writeSettings}."}}
+    },
+    "resolve": {
+      "desc": "Résout le voicepack à utiliser. Pick de type 'voicepack' : correspondance exacte dans l'inventaire, sinon repli sur les préférences (mode 'invalidExactFallback'). Autre pick ou nil : préférences (MRU puis niveau de détail).",
+      "params": {
+        "missionDir": {"type": "string|nil", "desc": "Dossier de la mission."},
+        "pick": {"type": "table|nil", "desc": "Pick."},
+        "opts": {"type": "table|nil", "desc": "{missionId, globalOnly, requireMissionNotebook, writeSettings}."}
+      },
+      "returns": [{"type": "table", "desc": "{entry, dirname, reason, mode, detail, candidates}."}]
+    },
+    "getCascadeKeys": {
+      "desc": "Compatibilité avec l'ancien système : langue, persona et styleLabel du voicepack global résolu par les préférences.",
+      "returns": [
+        {"type": "string|nil", "desc": "Langue."},
+        {"type": "string|nil", "desc": "Persona."},
+        {"type": "string|nil", "desc": "styleLabel."}
+      ]
+    },
+    "resolveEffectiveEntry": {
+      "desc": "Résout un pick ('auto' équivaut à 'preferences'; nil = préférences).",
+      "params": {
+        "missionDir": {"type": "string|nil", "desc": "Dossier de la mission."},
+        "pick": {"type": "table|nil", "desc": "Pick."},
+        "opts": {"type": "table|nil", "desc": "Voir resolve."}
+      },
+      "returns": [
+        {"type": "string|nil", "desc": "dirname."},
+        {"type": "table|nil", "desc": "Entrée."},
+        {"type": "table", "desc": "Résultat complet de resolve."}
+      ]
+    },
+    "buildPickerEntries": {
+      "desc": "Construit les entrées d'un sélecteur de voicepack pour une mission : éventuellement « Resolve from Settings » en tête (includePreferences), puis chaque voicepack disponible avec son label et son pick.",
+      "params": {
+        "missionDir": {"type": "string|nil", "desc": "Dossier de la mission."},
+        "opts": {"type": "table|nil", "desc": "{includePreferences, includeAuto, missionId, missionSuffix, globalOnly, requireMissionNotebook}."}
+      },
+      "returns": [{"type": "table[]", "desc": "Liste de {label, entry, pick}."}]
+    },
+    "resolveLoopVoicepackPick": {
+      "desc": "Transforme une valeur de réglage de boucle en pick concret pour une mission : un pick 'voicepack' est gardé ; un pick 'loopVoicepack' est cherché par famille dans les voicepacks de la mission.",
+      "params": {
+        "missionDir": {"type": "string", "desc": "Dossier de la mission."},
+        "missionId": {"type": "string", "desc": "Id de la mission."},
+        "value": {"type": "string", "desc": "Valeur de réglage."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Pick concret, nil pour preferences ou si introuvable."}]
+    },
+    "addLoopMissionSettingToMRU": {
+      "desc": "Ajoute à la MRU le voicepack choisi pour une boucle : directement pour un pick 'voicepack', ou celui de la première étape où la famille est trouvée.",
+      "params": {
+        "missionTypeData": {"type": "table", "desc": "Données de la mission boucle (stageN_rallyStage)."},
+        "value": {"type": "string|nil", "desc": "Valeur de réglage."}
+      }
+    },
+    "resolveLoopMissionSettingEntry": {
+      "desc": "Entrée de voicepack correspondant à une valeur de réglage de boucle.",
+      "params": {
+        "missionTypeData": {"type": "table", "desc": "Données de la boucle."},
+        "value": {"type": "string|nil", "desc": "Valeur de réglage."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Entrée, nil pour preferences ou si introuvable."}]
+    },
+    "buildLoopMissionUserSetting": {
+      "desc": "Construit le réglage utilisateur (liste déroulante) du voicepack pour une boucle : voicepacks globaux, plus les familles de voicepacks de mission communes à toutes les spéciales de la boucle. Sélection : valeur courante, sinon première correspondance MRU, sinon premier élément.",
+      "params": {
+        "missionTypeData": {"type": "table", "desc": "Données de la boucle."},
+        "currentValue": {"type": "string|nil", "desc": "Valeur actuelle."}
+      },
+      "returns": [{"type": "table|nil", "desc": "{key = 'rallyVoicepackPick', label, type = 'select', values = {{l, v, shortLabel, detail}}, value, currentOption} ; nil si aucune entrée."}]
+    },
+    "notebookBasenamesForPick": {
+      "desc": "Noms de notebooks chargeables dans la mission pour un pick de type 'voicepack'.",
+      "params": {
+        "missionDir": {"type": "string", "desc": "Dossier de la mission."},
+        "pick": {"type": "table|nil", "desc": "Pick."}
+      },
+      "returns": [{"type": "string[]", "desc": "Noms sans suffixe ; vide sinon."}]
+    },
+    "picksMatch": {
+      "desc": "Compare deux picks : même type ; 'preferences' (ou 'auto') égaux entre eux ; sinon même id, ou même dirname, scope et missionId compatibles.",
+      "params": {
+        "a": {"type": "table|nil", "desc": "Premier pick."},
+        "b": {"type": "table|nil", "desc": "Second pick."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si équivalents."}]
+    },
+    "addToMRU": {
+      "desc": "Place un voicepack en tête de la MRU (sans doublon, limite 10) et enregistre le réglage. Résout l'entrée via resolveEntry si on ne donne pas une entrée complète.",
+      "params": {
+        "entryOrPick": {"type": "table", "desc": "Entrée ou pick."},
+        "missionDir": {"type": "string|nil", "desc": "Dossier de la mission."},
+        "missionId": {"type": "string|nil", "desc": "Id de la mission."}
+      }
+    },
+    "pickFromSettingValue": {
+      "desc": "Convertit une valeur de réglage en pick : '', 'preferences', 'auto' donnent {type='preferences'} ; 'loop:<clé>' donne un loopVoicepack ; un id valide donne un voicepack ; le reste redevient preferences.",
+      "params": {"value": {"type": "string|nil", "desc": "Valeur de réglage."}},
+      "returns": [{"type": "table", "desc": "Pick."}]
+    },
+    "settingValueForPick": {
+      "desc": "Opération inverse de pickFromSettingValue.",
+      "params": {"pick": {"type": "table|nil", "desc": "Pick."}},
+      "returns": [{"type": "string", "desc": "Valeur de réglage."}]
+    },
+    "buildMissionUserSetting": {
+      "desc": "Construit le réglage utilisateur (liste déroulante) du voicepack pour une spéciale : « Resolve from Settings » puis chaque voicepack disponible. Sélection : valeur courante, sinon voicepack résolu par préférences, sinon premier élément.",
+      "params": {
+        "missionDir": {"type": "string", "desc": "Dossier de la mission."},
+        "missionId": {"type": "string", "desc": "Id de la mission."},
+        "currentValue": {"type": "string|nil", "desc": "Valeur actuelle."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Même structure que buildLoopMissionUserSetting ; nil si aucune entrée."}]
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyMoveVehicleTo.lua",
+  "module": "Nœud flowgraph « Rally Move Vehicle To » (catégorie repeat_instant, tag rally). Déplace un véhicule pour que le milieu de son pare-chocs avant, au niveau du bas de sa boîte englobante de spawn (OOBB), soit à la position pos avec la rotation rot. Il calcule le décalage entre la position du véhicule et ce point avant-bas dans le repère du véhicule, le réapplique dans le repère cible, puis appelle veh:setPositionRotation. Entrées : vehId, pos (vec3), rot (quat).",
+  "notes": ["La coordonnée Z finale vaut pos.z + 0.25 (marge fixe), et non la valeur calculée par le décalage.", "Si le véhicule est introuvable, un avertissement est loggé."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Si vehId, pos et rot sont fournis, replace le véhicule selon la position avant-bas cible.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+      }
+    }
+  }
+}

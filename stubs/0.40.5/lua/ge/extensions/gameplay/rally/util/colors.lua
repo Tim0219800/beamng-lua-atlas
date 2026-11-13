@@ -2,39 +2,40 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/util/colors.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
+--- Palette de couleurs et constantes d'affichage (alphas, rayons, largeurs) partagées par les outils de rallye : snaproads, notes d'allure (pacenotes), waypoints et curseur de l'éditeur. Ne contient aucune fonction, uniquement des champs. Les couleurs sont des tables {r, g, b} entre 0 et 1, sauf clr_error et clr_no_error qui sont des ImVec4 (ui_imgui).
 --- Accès : extension `gameplay_rally_util_colors` : `extensions.load("gameplay_rally_util_colors")`, puis la globale `gameplay_rally_util_colors`
 ---@class gameplay_rally_util_colors
----@field cam_last_pos_alpha any
----@field cam_last_pos_radius any
----@field clr_aqua table
----@field clr_black table
----@field clr_blue table
----@field clr_blue_light table
----@field clr_error any
----@field clr_green table
----@field clr_green_dark table
----@field clr_green_pastel table
----@field clr_grey table
----@field clr_grey_dark table
----@field clr_grey_light table
----@field clr_grey_light_2 table
----@field clr_light_green table
----@field clr_light_red table
----@field clr_lime_green table
----@field clr_no_error any
----@field clr_orange table
----@field clr_pink table
----@field clr_purple table
----@field clr_red table
----@field clr_red_dark table
----@field clr_red_pastel table
----@field clr_teal table
----@field clr_teal_2 table
----@field clr_white table
----@field clr_yellow table
----@field new_pacenote_cursor_alpha number
----@field new_pacenote_cursor_clr_ce any
----@field new_pacenote_cursor_clr_cs any
+---@field cam_last_pos_alpha number Alpha de cette sphère (0.8).
+---@field cam_last_pos_radius number Rayon de la sphère de dernière position caméra : snaproads_radius x 2 = 1.4 m.
+---@field clr_aqua number[] {0, 0.8, 0.8}.
+---@field clr_black number[] {0, 0, 0}.
+---@field clr_blue number[] {0, 0, 1}.
+---@field clr_blue_light number[] {0.392, 0.612, 1}.
+---@field clr_error ImVec4 Rouge d'erreur pour imgui (1, 0.2, 0.2, 1).
+---@field clr_green number[] {0, 1, 0}.
+---@field clr_green_dark number[] {0, 0.5, 0}.
+---@field clr_green_pastel number[] {0.718, 1, 0.455}.
+---@field clr_grey number[] {0.5, 0.5, 0.5}.
+---@field clr_grey_dark number[] {0.2, 0.2, 0.2}.
+---@field clr_grey_light number[] {0.75, 0.75, 0.75}.
+---@field clr_grey_light_2 number[] {0.8, 0.8, 0.8}.
+---@field clr_light_green number[] {0.5, 1, 0.5}.
+---@field clr_light_red number[] {1, 0.5, 0.5}.
+---@field clr_lime_green number[] {0.66, 1, 0}.
+---@field clr_no_error ImVec4 Vert « pas d'erreur » pour imgui (0.2, 1, 0.2, 1).
+---@field clr_orange number[] {1, 0.64, 0}.
+---@field clr_pink number[] {1, 0, 1} (magenta).
+---@field clr_purple number[] {0.73, 0, 1}.
+---@field clr_red number[] {1, 0, 0}.
+---@field clr_red_dark number[] {0.5, 0, 0}.
+---@field clr_red_pastel number[] {1, 0.494, 0.635}.
+---@field clr_teal number[] {0, 0.76, 0.55}.
+---@field clr_teal_2 number[] {0, 1, 0.58}.
+---@field clr_white number[] {1, 1, 1}.
+---@field clr_yellow number[] {1, 1, 0}.
+---@field new_pacenote_cursor_alpha number Alpha du curseur de nouvelle note d'allure dans l'éditeur (0.8).
+---@field new_pacenote_cursor_clr_ce number[] Couleur du point d'arrivée (CE) du curseur : clr_light_red.
+---@field new_pacenote_cursor_clr_cs number[] Couleur du point de départ (CS) du curseur : clr_light_green.
 ---@field new_pacenote_cursor_clr_link any
 ---@field new_pacenote_cursor_linkFromWidth number
 ---@field new_pacenote_cursor_linkHeightRadiusShinkFactor number

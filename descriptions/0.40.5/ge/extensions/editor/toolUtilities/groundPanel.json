@@ -1,0 +1,31 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/groundPanel.lua",
+  "module": "Panneau imgui des réglages du terraformage partagé (groundPass), dessiné à l'identique dans l'onglet Terrain de chaque outil de l'éditeur. Il lit et écrit groundPass.params (curseurs avec bouton de remise à la valeur par défaut, cases à cocher).",
+  "notes": [
+    "Réglages exposés quand Terraform est coché : distance de fondu (5 à 100 m), marge (0 à 20 m), pente de fondu (1 à 8), pas de lissage (0 à 15), rugosité (0 à 1), échelle du bruit (0 à 1), longueur et épaulement des culées de pont (0 à 40 m, 0 à 5 m).",
+    "Les cases Roads et Rail choisissent les réseaux couverts par Build."
+  ],
+  "functions": {
+    "rowLabel": {
+      "desc": "Dessine l'étiquette d'une ligne (texte vert avec infobulle) et place le curseur imgui à 90 px pour que les cases suivent sur la même ligne.",
+      "params": {
+        "text": {"type": "string", "desc": "Texte de l'étiquette."},
+        "tip": {"type": "string", "desc": "Infobulle."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "drawNetworks": {
+      "desc": "Dessine la ligne 'Networks:' avec les cases Roads et Rail (réseaux couverts par Build).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "draw": {
+      "desc": "Dessine la case Terraform (décochée : restaure le terrain) et, si elle est cochée, les curseurs de fondu, marge, falloff, lissage, rugosité, échelle et culées de pont.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/client/postFx/fxaa.lua",
+  "module": "Anti-aliasing FXAA. Crée le state block FXAA_StateBlock, le shader FXAA_ShaderData (fxaa.cs.hlsl) et le PostEffect « FXAA_PostEffect » (désactivé au départ, PFXAfterDiffuse, lit et écrit $backBuffer). Activer FXAA désactive SMAA et SMAA T2x.",
+  "notes": [
+    "Si FXAA_PostEffect existe déjà, rien n'est recréé ; la création des trois objets est groupée dans le même bloc if."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "fxaa_PostEffectCallbacks": {
+      "desc": "Callbacks de FXAA_PostEffect (globale FXAA_PostEffectCallbacks).",
+      "functions": {
+        "onEnabled": {"desc": "Désactive SMAA_PostEffect s'il existe, appelle disableSmaaT2x() si cette globale existe, puis retourne true.", "params": {}, "returns": [{"type": "boolean", "desc": "toujours true"}], "internal": true}
+      }
+    }
+  }
+}

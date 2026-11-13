@@ -1,0 +1,123 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/session.lua",
+  "module": "Aide partagée de sauvegarde et chargement de session pour les outils personnalisés de splines et de zones de l'éditeur. Elle gère ce qui est identique pour tous les outils : l'enveloppe JSON portable (version, tool, mapName, items ou state, globals, records), la lecture/écriture de fichier, la boucle de chargement en remplacement ou en fusion, les boutons Save / Save As / Load en haut de fenêtre et la fenêtre modale Replace/Merge. Tout le spécifique à l'outil passe par une table spec. Référence de câblage : heroRoadEditor et roadSpline.",
+  "usage": "local session = extensions.editor_toolUtilities_session\nlocal spec = {toolId = 'myTool', displayName = 'My Tool', itemNoun = 'zones', getItems = getItems,\n  serializeItem = function(it) return session.itemToTable(it, nil, {'runtimeHandle'}) end,\n  deserializeItem = deserializeItem, clearAll = clearAll, deepCopyAll = deepCopyAll,\n  transUndo = undoFn, transRedo = redoFn}\n-- dans le rendu de la fenêtre :\nsession.renderButtons(spec)\n-- depuis la passe de reconstruction :\nsession.markEdited('myTool')",
+  "notes": [
+    "Champs de spec obligatoires : toolId, getItems, serializeItem + deserializeItem (ou getState + loadWhole pour un outil à état global), clearAll, deepCopyAll, transUndo, transRedo.",
+    "Champs de spec optionnels : displayName, itemNoun, refreshIdMap, onLoaded, logTag, version (défaut 1), noMerge (document unique : un Load remplace toujours), altItemsKey (ancienne clé de tableau acceptée), iconColor, iconSize (défaut 36x36), saveIcon/saveAsIcon/loadIcon, getGlobals/applyGlobals (réglages globaux de l'outil, appliqués seulement en Replace), getRecords/applyRecords (gros enregistrements, n'ouvrent jamais l'état modifié), loadJson, loadOptions, noLoadGuard.",
+    "L'état (chemin lié, drapeau modifié, garde de chargement, baseline des globals) est tenu par toolId ; les tables sont locales au module et propres à l'exécution.",
+    "Une fusion donne un nouvel identifiant (Engine.generateUUID) à un élément entrant dont l'id existe déjà.",
+    "Après un Load en Replace (hors keepUnbound), l'outil est lié au fichier : les Save suivants l'écrasent sans demander. Les modifications de terrain ne sont pas sauvegardées.",
+    "markEdited : la garde de chargement avale exactement un appel, celui de la reconstruction forcée provoquée par un Load.",
+    "Les erreurs de chargement sont journalisées avec log('E', ...) ; le fichier est écrit par jsonWriteFile et lu par jsonReadFile."
+  ],
+  "functions": {
+    "markEdited": {
+      "desc": "Marque le document d'un outil comme modifié (non enregistré). À appeler depuis la passe de reconstruction de l'outil, une fois par passe. La garde de chargement avale un appel après un Load.",
+      "params": {"toolId": {"type": "string", "desc": "Identifiant de l'outil."}},
+      "returns": [],
+      "internal": false
+    },
+    "unbind": {
+      "desc": "Détache un outil de son fichier : le prochain Save devra demander où écrire au lieu d'écraser silencieusement le dernier fichier chargé.",
+      "params": {"toolId": {"type": "string", "desc": "Identifiant de l'outil."}},
+      "returns": [],
+      "internal": false
+    },
+    "attachment": {
+      "desc": "Renvoie le fichier auquel le document est attaché et s'il a des modifications non enregistrées.",
+      "params": {"toolId": {"type": "string", "desc": "Identifiant de l'outil."}},
+      "returns": [{"type": "table", "desc": "{ path = string|nil, dirty = true|nil }"}],
+      "internal": false
+    },
+    "boundPath": {
+      "desc": "Renvoie seulement le chemin lié, pour les appels par frame qui ne doivent pas allouer de table.",
+      "params": {"toolId": {"type": "string", "desc": "Identifiant de l'outil."}},
+      "returns": [{"type": "string|nil", "desc": "Chemin du fichier lié."}],
+      "internal": false
+    },
+    "windowTitle": {
+      "desc": "Titre de fenêtre nommant le fichier lié (ou newName avant qu'il y en ait un, « New Session » par défaut). L'identifiant id suit « ### » pour qu'ImGui garde l'ancrage et la taille. Mis en cache par outil.",
+      "params": {
+        "toolId": {"type": "string", "desc": "Identifiant de l'outil."},
+        "label": {"type": "string", "desc": "Libellé affiché."},
+        "id": {"type": "string", "desc": "Identifiant ImGui stable."},
+        "newName": {"type": "string|nil", "desc": "Nom affiché tant qu'aucun fichier n'est lié."}
+      },
+      "returns": [{"type": "string", "desc": "Titre « label - [nom]###id »."}],
+      "internal": false
+    },
+    "reattach": {
+      "desc": "Rétablit la liaison fichier et l'état modifié depuis une table renvoyée par attachment (par exemple après un rechargement d'extension).",
+      "params": {
+        "toolId": {"type": "string", "desc": "Identifiant de l'outil."},
+        "at": {"type": "table", "desc": "{ path, dirty } ; ignoré si ce n'est pas une table."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "itemToTable": {
+      "desc": "Copie profonde d'un élément via le codec string.buffer (encode puis decode), avec en option des clés remplacées par {} ou supprimées. Sert à écrire serializeItem sans muter l'élément vivant.",
+      "params": {
+        "item": {"type": "table", "desc": "Élément à copier."},
+        "emptyKeys": {"type": "string[]|nil", "desc": "Clés à remplacer par une table vide."},
+        "nilKeys": {"type": "string[]|nil", "desc": "Clés à supprimer."}
+      },
+      "returns": [{"type": "table", "desc": "Copie propre."}],
+      "internal": false
+    },
+    "rehydrateVec3Array": {
+      "desc": "Reconvertit en place un tableau de positions chargées depuis le JSON ({x,y,z} simples) en vec3. Idempotent (les vec3 existants, qui ont une méthode distance, sont laissés tels quels) ; sans danger sur nil ou une non-table.",
+      "params": {"arr": {"type": "table|nil", "desc": "Tableau de positions."}},
+      "returns": [],
+      "internal": false
+    },
+    "saveToFile": {
+      "desc": "Écrit tous les éléments dans path en JSON de session portable : version, tool, mapName (niveau courant), items ou state, globals, records.",
+      "params": {
+        "path": {"type": "string", "desc": "Chemin du fichier."},
+        "spec": {"type": "table", "desc": "Spécification de l'outil."}
+      },
+      "returns": [{"type": "boolean", "desc": "ok (toujours true)."}, {"type": "integer", "desc": "Nombre d'éléments de getItems()."}],
+      "internal": false
+    },
+    "saveIfEdited": {
+      "desc": "Réécrit le document modifié sur le fichier auquel il est lié, pour un outil dont le travail ne doit jamais attendre un appui sur Save. Renvoie false s'il n'y a pas de fichier lié ou pas de modification.",
+      "params": {"spec": {"type": "table", "desc": "Spécification de l'outil."}},
+      "returns": [{"type": "boolean", "desc": "true si enregistré."}],
+      "internal": false
+    },
+    "loadJson": {
+      "desc": "Applique un JSON de session déjà décodé. replace vide d'abord les éléments courants (et applique globals/records) ; sinon les éléments chargés sont fusionnés, un id déjà utilisé recevant un nouvel UUID. Pour un outil à état global, passe state à spec.loadWhole.",
+      "params": {
+        "j": {"type": "table", "desc": "JSON décodé."},
+        "spec": {"type": "table", "desc": "Spécification de l'outil."},
+        "replace": {"type": "boolean", "desc": "true pour remplacer, false pour fusionner."}
+      },
+      "returns": [{"type": "boolean", "desc": "ok."}, {"type": "integer|string", "desc": "Nombre d'éléments chargés, ou message d'erreur (« not a valid <toolId> session file »)."}],
+      "internal": false
+    },
+    "loadFromFile": {
+      "desc": "Lit le fichier JSON puis applique spec.loadJson s'il existe, sinon loadJson du module.",
+      "params": {
+        "path": {"type": "string", "desc": "Chemin du fichier."},
+        "spec": {"type": "table", "desc": "Spécification de l'outil."},
+        "replace": {"type": "boolean", "desc": "true pour remplacer, false pour fusionner."}
+      },
+      "returns": [{"type": "boolean", "desc": "ok."}, {"type": "integer|string", "desc": "Nombre d'éléments ou erreur."}, {"type": "boolean|nil", "desc": "keepUnbound (fichier partiel) quand spec.loadJson le renvoie."}],
+      "internal": false
+    },
+    "renderButtons": {
+      "desc": "Variante en ligne : dessine Save (une fois un fichier connu), Save As (si l'outil est non vide) et Load côte à côte, puis la fenêtre modale Replace/Merge.",
+      "params": {"spec": {"type": "table", "desc": "Spécification de l'outil."}},
+      "returns": [],
+      "internal": false
+    },
+    "renderButtonsColumns": {
+      "desc": "Variante en colonnes : dessine Save, Save As et Load comme trois cellules de grille.",
+      "params": {"spec": {"type": "table", "desc": "Spécification de l'outil."}},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenWhole.lua",
+  "module": "Nœud « EndScreen Whole » (couleur ui, singleActive). Version tout-en-un de l'écran de fin d'un scénario/mission : construit les boutons (missions suivantes, Retry, Continuer au début, Continuer ici, boutons personnalisés) et, si data.autoBuild (vrai par défaut), génère aussi l'en-tête, le panneau Results, les objectifs et notes puis termine la construction UI. Entrées : flow, reset, text, failed (caché), change, progressKey, customBtnsFirst (caché) et pins par bouton ; sorties : flow, build, retry, contStart, contHere et un flow par bouton.",
+  "notes": [
+    "Le champ todo du nœud indique que deux nœuds de ce type simultanés cassent tout.",
+    "L'auto-skip teste startingOptions.autoSkipStartScreen alors que EndScreen Begin teste autoSkipEndScreen (incohérence probable).",
+    "Contrairement à EndScreen Begin, openDialogue accède à self.mgr.activity.setupModules sans vérifier que mgr.activity existe."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Initialise open, options, data.includeRetryButton=true, data.autoBuild=true et l'auto-skip.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Appelé juste après init, une fois les pins créés.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état du nœud.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine dans l'éditeur flowgraph la liste des boutons personnalisés (champ texte par bouton, boutons « add » et « rem »). Renvoie la raison de la modification (chaîne) ou nil.",
+          "internal": true
+        },
+        "updateButtons": {
+          "desc": "Recrée les pins du nœud pour chaque nom de bouton de self.options : pin d'entrée string (libellé), pin d'entrée bool « <nom>_active » (caché, true par défaut) et pin de sortie flow. Reconnecte les liens existants quand le nom n'a pas changé.",
+          "internal": false
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde la liste des boutons personnalisés (options).",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Recharge les boutons personnalisés puis recrée les pins.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Appelé à l'arrêt du projet ; ferme le dialogue.",
+          "internal": true
+        },
+        "onClientEndMission": {
+          "desc": "Hook appelé à la fin de la mission côté client ; ferme le dialogue.",
+          "internal": true
+        },
+        "_afterTrigger": {
+          "desc": "Appelé après le déclenchement du nœud ; corps vide (code commenté).",
+          "internal": true
+        },
+        "buttonPushed": {
+          "desc": "Appelé quand un bouton est cliqué : met à true le pin de sortie du même nom que l'action, puis ferme le dialogue (navigation vers « play »).",
+          "params": {
+            "action": {
+              "type": "string",
+              "desc": "Nom du pin de sortie (contStart, contHere, ou nom d'un bouton personnalisé)."
+            }
+          },
+          "internal": false
+        },
+        "getCmd": {
+          "desc": "Renvoie la commande Lua (chaîne) qui retrouve ce nœud via core_flowgraphManager.getManagerGraphNode et appelle buttonPushed(action) ; utilisable depuis l'UI.",
+          "params": {
+            "action": {
+              "type": "string",
+              "desc": "Nom du bouton/pin."
+            }
+          },
+          "internal": false
+        },
+        "onResetGameplay": {
+          "desc": "Hook de reset du gameplay ; si l'écran est ouvert et Retry inclus, ferme le dialogue et active le pin retry.",
+          "internal": true
+        },
+        "closeDialogue": {
+          "desc": "Si construit, navigue vers « play ».",
+          "internal": false
+        },
+        "openDialogue": {
+          "desc": "Construit les boutons (voir EndScreen Begin) et, si autoBuild, remplit l'écran (en-tête, textPanel Results, objectifs, notes) puis appelle finishUIBuilding.",
+          "internal": false
+        },
+        "onNodeReset": {
+          "desc": "Appelé quand le nœud est réinitialisé (pin reset ou reset du graphe).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Gère reset, construit l'écran à la première frame de flow, active build une frame, et applique l'auto-skip (startingOptions.autoSkipStartScreen, 2 s) en arrêtant la mission.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

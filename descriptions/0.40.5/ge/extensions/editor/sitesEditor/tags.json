@@ -1,0 +1,75 @@
+{
+  "path": "lua/ge/extensions/editor/sitesEditor/tags.lua",
+  "module": "Onglet 'Tags' de l'éditeur de sites (Location Tags, Zone Tags, Parking Spot Tags selon la clé). Le module renvoie un constructeur de classe C. Il liste tous les tags présents dans sites[key] et, pour le tag choisi, affiche deux colonnes (éléments qui l'ont / qui ne l'ont pas) avec des boutons pour déplacer un ou tous les éléments d'un côté à l'autre, ce qui appelle customFields:addTag / removeTag. Les éléments sont surlignés dans le monde au survol.",
+  "notes": [
+    "Le bouton '>' retire le tag de tous les éléments qui l'ont ; '<' l'ajoute à tous les autres."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet renvoyé par le constructeur. Champs : sitesEditor, key, sites, tag, tags, sortedTags, hasTag, noTag.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur (appelé par le module).",
+          "params": {
+            "sitesEditor": {
+              "type": "table",
+              "desc": "Module editor_sitesEditor."
+            },
+            "key": {
+              "type": "string",
+              "desc": "'locations', 'zones' ou 'parkingSpots'."
+            }
+          },
+          "returns": [],
+          "internal": true
+        },
+        "setSites": {
+          "desc": "Définit les sites édités.",
+          "params": {
+            "sites": {
+              "type": "table",
+              "desc": "Objet sites."
+            }
+          },
+          "returns": [],
+          "internal": false
+        },
+        "selected": {
+          "desc": "Appelé quand l'onglet devient actif : relit et trie tous les tags des éléments.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "unselect": {
+          "desc": "Appelé quand l'onglet est quitté ; ne fait rien.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "draw": {
+          "desc": "Dessine l'onglet (appelle drawGeneralInfo). Appelée avec mouseInfo par sitesEditor mais la méthode l'ignore.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "selectTag": {
+          "desc": "Choisit un tag et répartit les éléments en hasTag et noTag.",
+          "params": {
+            "tag": {
+              "type": "string",
+              "desc": "Nom du tag."
+            }
+          },
+          "returns": [],
+          "internal": false
+        },
+        "drawGeneralInfo": {
+          "desc": "Dessine la liste des tags et les deux colonnes de gestion du tag choisi.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        }
+      }
+    }
+  }
+}

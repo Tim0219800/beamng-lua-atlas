@@ -1,0 +1,74 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/replay.lua",
+  "module": "Nœud « Timeline Replay » (comportement `duration`). Lance un fichier de replay (`core_replay.loadFile`) au début de son segment de timeline et l'arrête (`core_replay.stop`) à la fin. Pins d'entrée : `flow`, `filename` (string), `vehId`. Les replays sont listés dans l'éditeur (`core_replay.getRecordings`).",
+  "notes": [
+    "`C.todo` : nœud prototype, ne fonctionne pas dans tous les cas.",
+    "`init` appelle `_setupTimeline(5, 10)` : segment de timeline de 5 à 10 (unités de la timeline).",
+    "Le pin `vehId` n'est pas utilisé dans le code."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Arrête le replay en cours.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Bouton « Load Replays » et liste déroulante pour choisir un enregistrement.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche le nom du replay et les drapeaux internes.",
+          "internal": true,
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "Constructeur de nœud de l'éditeur (builder:Middle())."
+            },
+            "style": {
+              "type": "any",
+              "desc": "Style ImGui de l'éditeur."
+            }
+          }
+        },
+        "init": {
+          "desc": "Constructeur ; configure la timeline (5 à 10) et `replayName`.",
+          "internal": true
+        },
+        "onTimelineBegin": {
+          "desc": "Appelé au début du segment de timeline ; demande le démarrage du replay.",
+          "internal": true,
+          "params": {
+            "globalTime": {
+              "type": "number",
+              "desc": "Temps global de la timeline."
+            },
+            "localTime": {
+              "type": "number",
+              "desc": "Temps local du segment."
+            }
+          }
+        },
+        "onTimelineEnd": {
+          "desc": "Appelé à la fin du segment ; demande l'arrêt du replay.",
+          "internal": true,
+          "params": {
+            "globalTime": {
+              "type": "number",
+              "desc": "Temps global de la timeline."
+            },
+            "localTime": {
+              "type": "number",
+              "desc": "Temps local du segment."
+            }
+          }
+        },
+        "work": {
+          "desc": "Charge le replay (chemin relatif du `filename`) si `startReplay`, ou l'arrête si `stopReplay`.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

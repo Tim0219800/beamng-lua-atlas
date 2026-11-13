@@ -4,13 +4,17 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/gameplay/vehiclePool/activateAll")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Activate All Vehicles » (once_instant). Active ou désactive tous les véhicules du pool (pool:setAllVehs(activate), défaut true). Nécessite le module core_vehicleActivePooling ; l'objet pool vient du nœud Create Vehicle Pool.
+
 **Dépendances (chargées avant) :** `core_vehicleActivePooling`
 
 ## Classe `C`
 
+Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:workOnce()` |  | 23 |
+| `C:workOnce()` | Appelle setAllVehs(activate) sur le pool. | 23 |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/activateAll.lua`.*

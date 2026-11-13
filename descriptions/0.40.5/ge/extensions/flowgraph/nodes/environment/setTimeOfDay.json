@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/environment/setTimeOfDay.lua",
+  "module": "Nœud flowgraph « Set Time of Day » (catégorie dynamic_instant). Règle l'heure du jour via core_environment.setTimeOfDay. Pins d'entrée : flow, time (0 à 1 ; 0 = midi, 0.25 soir, 0.5 minuit, 0.75 matin), play (bool, lecture ou pause du cycle), dayLength (caché, durée d'un cycle complet en secondes réelles).",
+  "notes": ["time est ramené par % 1.", "Positionne mgr.modules.mission.todChanged = true pour que le module mission sache que l'heure a été modifiée.", "data.restoreTod = true est défini mais _executionStarted/_executionStopped sont vides : rien n'est restauré par ce nœud."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Définit data.restoreTod = true.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
+        "postInit": {"desc": "Configure le pin time (curseur 0 à 1, modèles Midday/Evening/Midnight/Morning).", "internal": true},
+        "_executionStarted": {"desc": "Vide.", "internal": true},
+        "_executionStopped": {"desc": "Vide.", "internal": true},
+        "workOnce": {"desc": "Applique l'heure une fois."},
+        "work": {"desc": "En mode repeat, applique l'heure à chaque frame."},
+        "setTimeOfDay": {"desc": "Marque todChanged puis appelle core_environment.setTimeOfDay({time, play, dayLength})."}
+      }
+    }
+  }
+}

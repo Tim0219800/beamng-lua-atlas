@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/telemetry/vehicleInfo.lua",
+  "module": "Utilitaires partagés par les traceurs de télémétrie pour décrire un véhicule : modèle et configuration (`getData`) et mod d'origine (`getMod`). Ce n'est pas un traceur lui-même, d'où sa place hors du dossier `trackers`.",
+  "usage": "local data = telemetry_vehicleInfo.getData(be:getPlayerVehicleID(0))\nif data then print(data.model, data.config) end",
+  "notes": [
+    "Une configuration personnalisée (partConfig contenant `{` ou `[`) est rapportée comme \":custom\", pour qu'aucune configuration construite par l'utilisateur ne quitte la machine.",
+    "getMod ne sait résoudre que les mods zippés : un mod décompressé renvoie nil."
+  ],
+  "functions": {
+    "getData": {
+      "desc": "Renvoie le modèle (`vehicle.JBeam`) et la configuration d'un véhicule. La configuration est le nom du fichier sans extension, ou \":custom\" si elle est personnalisée. Renvoie nil (avec un avertissement dans le log si l'id est inconnu) si le véhicule n'existe pas ou n'est pas un BeamNGVehicle.",
+      "params": {"vid": {"type": "integer", "desc": "Id de l'objet véhicule."}},
+      "returns": [{"type": "table|nil", "desc": "`{model = string, config = string}` ou nil."}],
+      "internal": false
+    },
+    "getMod": {
+      "desc": "Renvoie le mod d'où provient un modèle de véhicule, via `core_modmanager.getModForFilename('/vehicles/<model>/info.json')`. Nil pour le contenu d'origine, si le modèle est nil ou si `core_modmanager` est absent.",
+      "params": {"model": {"type": "string|nil", "desc": "Nom du modèle de véhicule (dossier sous /vehicles)."}},
+      "returns": [{"type": "table|nil", "desc": "`{name = string, modID = any}` (modID peut être nil), ou nil."}],
+      "internal": false
+    }
+  }
+}

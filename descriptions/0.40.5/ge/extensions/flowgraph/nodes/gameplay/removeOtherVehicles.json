@@ -1,0 +1,61 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.lua",
+  "module": "Nœud flowgraph « Remove Other Vehicles » (catégorie once_instant). Supprime tous les véhicules sauf ceux dont l'id est donné sur les pins idToIgnore_1..N (le nombre N se règle dans les propriétés). Options : onlyDrivableVehs (n'utilise que getAllVehiclesByType) et onlyFlowgraphVehs (limite aux véhicules créés par le module vehicle du flowgraph). Appelle editor.onRemoveSceneTreeObjects si l'éditeur est présent, puis obj:delete().",
+  "notes": [
+    "Les trois réglages (count, onlyDrivableVehs, onlyFlowgraphVehs) sont sauvegardés avec le graphe.",
+    "Lorsque le nombre de pins diminue, les liens vers les pins retirés sont supprimés."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_onDeserialized": {
+          "desc": "Restaure les réglages propres au nœud à partir des données sauvegardées.",
+          "internal": true,
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "données sauvegardées du nœud"
+            }
+          }
+        },
+        "_onSerialize": {
+          "desc": "Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe.",
+          "internal": true,
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "table de sérialisation à remplir"
+            }
+          }
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui).",
+          "internal": true
+        },
+        "init": {
+          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "internal": true
+        },
+        "updatePins": {
+          "desc": "Ajoute ou retire des pins d'entrée idToIgnore_i pour passer de old à new ; supprime les liens des pins retirés.",
+          "internal": true,
+          "params": {
+            "old": {
+              "type": "integer",
+              "desc": "ancien nombre de pins"
+            },
+            "new": {
+              "type": "integer",
+              "desc": "nouveau nombre de pins"
+            }
+          }
+        },
+        "workOnce": {
+          "desc": "Exécuté une seule fois (catégorie once_*) lorsque le nœud est déclenché : lit les pins d'entrée et applique l'effet.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

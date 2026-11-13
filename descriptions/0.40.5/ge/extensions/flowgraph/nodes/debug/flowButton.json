@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/debug/flowButton.lua",
+  "module": "Nœud flowgraph « Flow Button » (type simple, catégorie logic, tag input). Un bouton dans le nœud : un clic (uniquement quand le graphe tourne) produit une impulsion d'une frame sur la sortie flow. Entrée : flow. Le libellé du bouton (data.btnName, « Push » par défaut) prend le nom du pin lié (ou le nom du nœud cible si le pin s'appelle flow).",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Libellé « Push » et doTrigger à faux.", "params": {"mgr": {"type": "table", "desc": "gestionnaire (non utilisé)"}}, "internal": true},
+        "drawMiddle": {"desc": "Éditeur : dessine le bouton ; un clic arme doTrigger si le graphe est en état « running ».", "params": {"builder": {"type": "table", "desc": "constructeur de nœud"}, "style": {"type": "table", "desc": "style"}}, "internal": true},
+        "work": {"desc": "Met la sortie flow à doTrigger puis le remet à faux."},
+        "onLink": {"desc": "Hook éditeur : renomme le bouton d'après le pin ou le nœud cible si le nom est encore « Push ».", "params": {"link": {"type": "table", "desc": "lien créé"}}, "internal": true},
+        "onUnlink": {"desc": "Hook éditeur : remet le libellé « Push ».", "params": {"link": {"type": "table", "desc": "lien supprimé"}}, "internal": true}
+      }
+    }
+  }
+}

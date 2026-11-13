@@ -1,0 +1,58 @@
+{
+  "path": "lua/common/libs/timerwheel/timerwheel.lua",
+  "module": "Bibliothèque tierce timerwheel (roue de minuteries, issue de l'écosystème Kong/lua-resty) : minuteries de type timeout avec insertion, annulation et exécution en O(1), au prix d'une précision limitée (taille d'un créneau). Le module ne fournit pas de boucle : l'appelant doit appeler `wheel:step()` régulièrement (au moins toutes les `precision` secondes), par exemple depuis onUpdate.",
+  "usage": "local timerwheel = require('libs/timerwheel/timerwheel')\nlocal wheel = timerwheel.new({precision = 0.05, now = function() return os.clock() end})\nlocal id = wheel:set(2, function(arg) print('fini', arg) end, 'x')\n-- chaque frame :\nwheel:step()\nwheel:cancel(id)",
+  "notes": [
+    "Appeler `timerwheel.new(opts)` avec un point (pas `timerwheel:new`), sinon une assertion échoue.",
+    "Sans option `now`, la fonction d'horloge par défaut est `ngx.now` ou `socket.gettime` si le module `socket` est chargeable ; sinon aucune horloge n'existe et `new` échoue sur « expected 'now' to be a function ». Dans le jeu, passer `now` explicitement est le plus sûr.",
+    "Les callbacks sont exécutés dans un xpcall ; en cas d'erreur le gestionnaire par défaut écrit la pile sur stderr.",
+    "Les identifiants de minuteries sont des entiers négatifs uniques.",
+    "Un `set` avec un délai déjà écoulé s'exécute au prochain `step` (la position ne peut pas être dans le passé). Un callback qui crée un nouveau timer ne le voit pas exécuté dans le même créneau.",
+    "`wheel:peek` parcourt la roue : opération O(n)."
+  ],
+  "functions": {
+    "new": {
+      "desc": "Crée une roue de minuteries et renvoie l'objet `wheel` (méthodes step, count, set, cancel, peek). Valide les options par assertions.",
+      "params": {
+        "opts": {"type": "table|nil", "desc": "Options : precision (secondes par créneau, défaut 0.050), ringsize (créneaux par anneau, entier > 0, défaut 72000 = 1 h), now (fonction renvoyant l'heure en secondes), err_handler (gestionnaire d'erreur du xpcall)."}
+      },
+      "returns": [{"type": "table", "desc": "Objet roue."}]
+    }
+  },
+  "classes": {
+    "wheel": {
+      "desc": "Objet renvoyé par new(opts). Les méthodes s'appellent avec les deux-points.",
+      "functions": {
+        "step": {
+          "desc": "Vérifie et exécute les minuteries échues. À appeler régulièrement par votre boucle (au moins toutes les `precision` secondes).",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "Toujours true."}]
+        },
+        "count": {
+          "desc": "Nombre de minuteries en attente.",
+          "params": {},
+          "returns": [{"type": "integer", "desc": "Nombre de minuteries."}]
+        },
+        "set": {
+          "desc": "Programme une minuterie qui appellera cb(arg) dans `expire_in` secondes. Lève une erreur si `cb` est nil.",
+          "params": {
+            "expire_in": {"type": "number", "desc": "Délai en secondes."},
+            "cb": {"type": "function", "desc": "Callback, exécuté dans un xpcall."},
+            "arg": {"type": "any", "desc": "Argument transmis au callback."}
+          },
+          "returns": [{"type": "integer", "desc": "Identifiant (négatif) de la minuterie, pour cancel."}]
+        },
+        "cancel": {
+          "desc": "Annule une minuterie.",
+          "params": {"id": {"type": "integer", "desc": "Identifiant renvoyé par set."}},
+          "returns": [{"type": "boolean", "desc": "true si annulée, false si introuvable."}]
+        },
+        "peek": {
+          "desc": "Cherche la prochaine minuterie à échoir (parcours O(n)).",
+          "params": {"max_ahead": {"type": "number|nil", "desc": "Horizon maximal de recherche en secondes."}},
+          "returns": [{"type": "number|nil", "desc": "Secondes avant la prochaine échéance (peut être négatif), ou nil s'il n'y en a pas."}]
+        }
+      }
+    }
+  }
+}

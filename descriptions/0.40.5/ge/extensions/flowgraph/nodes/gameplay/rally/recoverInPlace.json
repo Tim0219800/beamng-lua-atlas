@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/recoverInPlace.lua",
+  "module": "Nœud flowgraph « Rally Mode Recover In Place » (catégorie repeat_p_duration, tags rally, recover, teleport). Récupère le véhicule sur place, sans pacenotes, historique de route ni driveline : mémorise position et orientation actuelles, téléporte avec spawn.safeTeleport (avec réparation/reset si le réglage de recovery l'indique), restaure le carburant via un instantané (fuelUtils), puis lance les hooks onVehicleTeleportedToLastRoad(vehId) et onRallyRouteRecoveryComplete({vehId, repairVehicle, inPlace = true}). Entrée : vehId (sinon véhicule joueur 0), flow.",
+  "notes": ["La réparation vient de gameplay_rallyLoop manager:getRecoveryRepairVehicle(), sinon gameplay_rally.getRecoveryRepairVehicle(), sinon du réglage rallyRepairVehicleOnRecovery, sinon true."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Appelle onNodeReset.", "internal": true},
+        "_executionStarted": {"desc": "Appelle onNodeReset.", "internal": true},
+        "_executionStopped": {"desc": "Appelle onNodeReset.", "internal": true},
+        "onNodeReset": {"desc": "Efface la recovery en attente et l'instantané de carburant.", "internal": true},
+        "runRecovery": {"desc": "Exécute la recovery en attente : téléporte le véhicule, réapplique le carburant, émet les hooks.", "internal": true},
+        "startRecovery": {"desc": "Prépare la recovery (position/rotation actuelles, choix de réparation) ; demande d'abord l'instantané de carburant si réparation, puis lance runRecovery.", "internal": true},
+        "work": {"desc": "Si flow est actif, appelle startRecovery.", "internal": true}
+      }
+    }
+  }
+}

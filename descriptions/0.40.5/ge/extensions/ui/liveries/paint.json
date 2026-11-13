@@ -1,0 +1,45 @@
+{
+  "path": "lua/ge/extensions/ui/liveries/paint.lua",
+  "module": "Lit et modifie la peinture (couleur RGBA, métallisation, rugosité) d'une couche de l'éditeur de livrées, retrouvée par son uid dans editor_api_dynamicDecals. Il fournit aussi les peintures prédéfinies du modèle de véhicule actuel. Il sert à l'écran de peinture de l'interface et à l'éditeur de décalques.",
+  "notes": [
+    "Toutes les valeurs venant de l'interface sont normalisées entre 0 et 1 : une valeur hors plage est ramenée par clamp, une valeur non numérique est remplacée par celle de la couche.",
+    "setLayerPaint travaille sur une copie profonde de la couche et appelle setLayer(updatedLayer, true), pour ne pas polluer l'historique de l'API.",
+    "Une couche liée à une palette de couleurs du véhicule (colorPaletteMapId différent de nil) repasse en palette 0 dès qu'on modifie sa peinture ici.",
+    "Les couches fill n'ont ni metallicIntensity ni roughnessIntensity : ces champs restent nil dans getLayerPaint et sont ignorés par setLayerPaint."
+  ],
+  "fields": {
+    "EDITABLE_COLOR_PALETTE_MAP_ID": {"type": "integer", "desc": "Vaut 0. C'est le seul mode où une couche affiche sa propre couleur ; tout autre id prend la couleur dans un emplacement de palette du véhicule et ignore celle de la couche."},
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant celle-ci : editor_api_dynamicDecals."}
+  },
+  "functions": {
+    "getVehiclePaintPresets": {
+      "desc": "Renvoie la liste model.paints du modèle du véhicule du joueur 0 (via core_vehicles.getModel), ou une table vide s'il n'y a pas de véhicule. Partagée avec l'éditeur de décalques.",
+      "returns": [{"type": "table", "desc": "Peintures prédéfinies du modèle."}],
+      "internal": false
+    },
+    "readNormalized": {
+      "desc": "Convertit value en nombre et le borne entre 0 et 1 ; renvoie fallback si la conversion échoue.",
+      "params": {
+        "value": {"type": "any", "desc": "Valeur reçue de l'interface."},
+        "fallback": {"type": "number", "desc": "Valeur renvoyée si value n'est pas numérique."}
+      },
+      "returns": [{"type": "number", "desc": "Valeur dans [0, 1] ou fallback."}],
+      "internal": false
+    },
+    "getLayerPaint": {
+      "desc": "Renvoie la peinture de la couche d'uid donné : layerUid, color {r, g, b, a} (blanc par défaut), metallic, roughness et presets. Renvoie nil, avec un avertissement, si l'uid n'est pas une chaîne ou si la couche n'existe pas.",
+      "params": {"layerUid": {"type": "string", "desc": "Uid de la couche."}},
+      "returns": [{"type": "table|nil", "desc": "Table de peinture."}],
+      "internal": false
+    },
+    "setLayerPaint": {
+      "desc": "Applique color, metallic et roughness à la couche d'uid donné, via une copie de la couche passée à editor_api_dynamicDecals.setLayer. Renvoie false si la couche est introuvable ou si paint n'est pas une table.",
+      "params": {
+        "layerUid": {"type": "string", "desc": "Uid de la couche."},
+        "paint": {"type": "table", "desc": "Champs facultatifs color {r, g, b, a}, metallic, roughness, tous normalisés entre 0 et 1."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si la mise à jour a été faite."}],
+      "internal": false
+    }
+  }
+}

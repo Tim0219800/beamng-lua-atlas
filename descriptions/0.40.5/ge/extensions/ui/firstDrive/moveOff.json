@@ -1,0 +1,70 @@
+{
+  "path": "lua/ge/extensions/ui/firstDrive/moveOff.lua",
+  "module": "Didacticiel « démarrer et rouler » de l'expérience First Drive. Une fois activé, il suit le véhicule du joueur 0 (accélérateur, frein, embrayage, rapport, moteur, régime, vitesse des roues, lus via core_vehicleBridge) et affiche dans l'application « moveOff » du conteneur « topCenter » les touches à utiliser pour chaque étape : allumer le moteur, démarrer, s'arrêter, faire marche arrière, couper le moteur. Les instructions dépendent du mode de boîte : arcade, manuelle réaliste avec embrayage automatique, ou manuelle réaliste.",
+  "usage": "ui_firstDrive_moveOff.setEnabled(true)\n-- l'interface reçoit l'évènement FirstDriveMoveOffState à chaque changement d'instruction\nlocal state = ui_firstDrive_moveOff.getState()",
+  "notes": [
+    "Évènement UI : FirstDriveMoveOffState, avec { label, steps, sectionIndex, sectionCount, active }. Chaque step contient action, actionLabel, inputType (« press », « hold » ou « release »), status (« complete », « current » ou « upcoming ») et éventuellement separator (« or »). À la désactivation, { active = false } est envoyé.",
+    "Le nombre de sections est 5 en arcade et en embrayage automatique, 6 en manuel réaliste (étape supplémentaire pour passer au point mort avant de démarrer).",
+    "Le hook onFirstDriveMoveOffSectionCompleted est émis (une fois, avec le nom de la section : engineOn, moveOff, stopping, reverse ou engineOff) après la mise à jour de l'état qui a terminé la section.",
+    "Seuils utilisés : vitesse de roues 0,5 m/s pour « en mouvement », 1,5 m/s pour valider la marche arrière, 1500 tr/min avant de relâcher l'embrayage, frein 0,2, embrayage tenu à partir de 0,8 et relâché sous 0,15. Une pause de 2 s sépare chaque section et 0,3 s est attendue après chaque changement de véhicule pour laisser les valeurs se rafraîchir.",
+    "Le mode (arcade, realisticAutoClutch, realisticManual) est déterminé par la valeur gearboxMode du mainController du véhicule (repli : réglage defaultGearboxBehavior, « arcade »), puis par le réglage autoClutch.",
+    "L'extension se désactive seule à onExtensionUnloaded et onClientEndMission ; un changement de réglages relance le suivi du véhicule après 0,1 s.",
+    "Seul le joueur 0 est suivi : onVehicleSwitched ignore les autres joueurs."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant celle-ci : ui_appContainers."}
+  },
+  "functions": {
+    "setEnabled": {
+      "desc": "Active ou désactive le didacticiel. À l'activation, commence à suivre le véhicule du joueur 0 (abonnements aux valeurs throttle_input, brake_input, clutch_input, gearIndex, engineRunning, rpm, wheelspeed) ; à la désactivation, désabonne, cache l'application et envoie { active = false }. Sans effet si l'état ne change pas.",
+      "params": {"value": {"type": "boolean", "desc": "Seul true active ; toute autre valeur désactive."}},
+      "internal": false
+    },
+    "getEnabled": {
+      "desc": "Indique si le didacticiel est actif.",
+      "returns": [{"type": "boolean", "desc": "true si actif."}],
+      "internal": false
+    },
+    "getState": {
+      "desc": "Renvoie la dernière instruction publiée (label, steps, sectionIndex, sectionCount, active), ou nil si rien n'est affiché.",
+      "returns": [{"type": "table|nil", "desc": "Dernier état envoyé à l'interface."}],
+      "internal": false
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque image avec dtReal (secondes réelles). Reconfigure le suivi si le véhicule du joueur change, attend la fin des délais, calcule l'instruction courante, la publie à l'interface si elle a changé et émet onFirstDriveMoveOffSectionCompleted quand une section vient d'être validée.",
+      "params": {"dtReal": {"type": "number", "desc": "Durée réelle de l'image en secondes."}},
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook appelé quand le véhicule du joueur change. Relance le suivi sur le nouveau véhicule (ignoré si inactif ou si player n'est pas 0).",
+      "params": {
+        "_": {"type": "any", "desc": "Identifiant de l'ancien véhicule (non utilisé)."},
+        "newVehicleId": {"type": "integer|nil", "desc": "Identifiant du nouveau véhicule."},
+        "player": {"type": "integer|nil", "desc": "Indice du joueur concerné."}
+      },
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook appelé quand un véhicule est détruit : arrête le suivi si c'est le véhicule suivi.",
+      "params": {"vehicleId": {"type": "integer", "desc": "Identifiant du véhicule détruit."}},
+      "internal": true
+    },
+    "onVehicleReplaced": {
+      "desc": "Hook appelé quand un véhicule est remplacé ; même traitement que onVehicleDestroyed.",
+      "params": {"vehicleId": {"type": "integer", "desc": "Identifiant du véhicule remplacé."}},
+      "internal": true
+    },
+    "onSettingsChanged": {
+      "desc": "Hook appelé quand les réglages changent. Si actif, relance le suivi du véhicule après 0,1 s, ce qui relit le mode de boîte.",
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook appelé au déchargement de l'extension : désactive le didacticiel.",
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook appelé à la fin du niveau : désactive le didacticiel.",
+      "internal": true
+    }
+  }
+}

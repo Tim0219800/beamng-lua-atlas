@@ -4,12 +4,16 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/ui/getGamestate")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Get Gamestate » (catégorie repeat_instant) : lit l'état courant de l'UI (core_gamestate.state.state). Sortie « state » (string).
+
 ## Classe `C`
+
+Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:init()` |  | 21 |
-| `C:work()` |  | 24 |
+| `C:init()` | Vide. | 21 |
+| `C:work()` | Écrit core_gamestate.state.state sur « state ». | 24 |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/getGamestate.lua`.*

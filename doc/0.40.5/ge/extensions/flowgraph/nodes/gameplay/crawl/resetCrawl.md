@@ -4,14 +4,18 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/gameplay/crawl/resetCrawl")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Reset Crawl » (catégorie once_instant, crawl). Remet à zéro le crawl actif : téléporte le véhicule au départ et réinitialise données et timers. Le système reste actif mais le timer est arrêté jusqu'à Start Crawl. Sorties : success, failed, isActive.
+
 **Dépendances (chargées avant) :** `gameplay_crawl_flowgraphBridge`
 
 ## Classe `C`
 
+Classe du nœud.
+
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:init(mgr)` |  | 23 |
-| `C:work()` |  | 27 |
+| `C:init(mgr)` | Charge le bridge du crawl. | 23 |
+| `C:work()` | Appelle bridge.resetCrawl(). Succès : isActive vrai ; échec : isActive = bridge.isCrawlActive(). | 27 |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/resetCrawl.lua`.*

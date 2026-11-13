@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/delivery/resetDelivery.lua",
+  "module": "Nœud flowgraph « Reset Delivery » (catégorie once_f_duration, livraison). Réinitialise la livraison active ou terminée : véhicules remis à leur position de départ et objectifs réinitialisés (freeformDelivery.reset). Attend la fin de l'installation (gameplay_freeformDelivery_setup.isSetupComplete) avant de donner le flux. Sorties : flow, success.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise les sorties et l'état de durée à 'inactive'.", "internal": true},
+        "_executionStopped": {"desc": "Appelle reset.", "internal": true},
+        "onNodeReset": {"desc": "Appelle reset.", "internal": true},
+        "reset": {"desc": "Remet les sorties à faux et l'état à 'inactive'."},
+        "workOnce": {"desc": "Vérifie qu'une livraison existe, appelle freeformDelivery.reset() et passe en 'started' ; journalise un avertissement ou une erreur sinon."},
+        "work": {"desc": "En état 'started', attend la fin du setup puis active success et flow."}
+      }
+    }
+  }
+}

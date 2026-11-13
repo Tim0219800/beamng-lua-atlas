@@ -1,0 +1,40 @@
+{
+  "path": "lua/ge/extensions/gameplay/missions/unlocks/conditions/missionConditions.lua",
+  "module": "Types de condition de déblocage fondés sur la progression d'autres missions : missionPassed (réussie) et missionCompleted (complétée). Elles lisent mission.saveData.progress[clé].aggregate. La clé de progression peut être 'default' (ou vide), 'any' (n'importe laquelle) ou une clé précise.",
+  "notes": [
+    "Si la mission référencée n'existe pas, un log d'erreur est émis et la condition vaut false.",
+    "La fonction locale F n'est pas exportée : checkAggregateWithKey et getTargetLabel ne sont pas accessibles depuis l'extérieur.",
+    "Le bloc missionFunction est commenté dans le code (inactif)."
+  ],
+  "fields": {
+    "missionPassed": {"type": "table", "desc": "Condition {type='missionPassed', missionId, progressKey} : vraie si aggregate.passed est vrai. editorFunction 'displayMissionCondition'."},
+    "missionCompleted": {"type": "table", "desc": "Condition {type='missionCompleted', missionId, progressKey} : vraie si aggregate.completed est vrai. editorFunction 'displayMissionConditionWithProgressKey'."}
+  },
+  "classes": {
+    "F": {
+      "desc": "Table locale d'aides (non exportée) utilisée par missionPassed et missionCompleted.",
+      "functions": {
+        "checkAggregateWithKey": {
+          "desc": "Vérifie si, pour la mission donnée, au moins une des clés de progression a le champ aggregate[field] vrai.",
+          "params": {
+            "id": {"type": "string", "desc": "Id de la mission."},
+            "progressKey": {"type": "string|nil", "desc": "'default'/nil/'' = defaultProgressKey, 'any' = toutes les clés, sinon une clé précise."},
+            "field": {"type": "string", "desc": "Champ de aggregate à tester (passed, completed…)."}
+          },
+          "returns": [{"type": "boolean", "desc": "true si une clé satisfait le champ."}],
+          "internal": true
+        },
+        "getTargetLabel": {
+          "desc": "Construit le label traduisible de la condition (clés missions.missions.unlock.<verb>.default|any|custom).",
+          "params": {
+            "id": {"type": "string", "desc": "Id de la mission."},
+            "progressKey": {"type": "string|nil", "desc": "Clé de progression."},
+            "verb": {"type": "string", "desc": "'pass' ou 'complete'."}
+          },
+          "returns": [{"type": "table|string", "desc": "{txt, context} ou texte d'erreur 'Missing Mission: …'."}],
+          "internal": true
+        }
+      }
+    }
+  }
+}

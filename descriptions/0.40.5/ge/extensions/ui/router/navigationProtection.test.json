@@ -1,0 +1,175 @@
+{
+  "path": "lua/ge/extensions/ui/router/navigationProtection.test.lua",
+  "module": "Tests du verrou de navigation protégée (options.cancellable == false) de router.lua : acquisition, blocage à l'admission, conservation entre validation et montage, et libération sur tous les chemins terminaux (cancel, rejet, échec, timeout, reset, désérialisation). Fichier lancé par le framework de tests, pas une API pour moddeur.",
+  "notes": [
+    "Lancement : extensions.testFramework_TestManager:runTestFiles(\"navigationProtection\").",
+    "Les tests de chemins terminaux fabriquent une transition dont la session porte un jeton de protection et utilisent les points d'accès __test_getProtectionToken/__test_setProtectionToken de ui_router ; les tests d'acquisition utilisent une route de mod temporaire (\"navprotect\") annulée avant validation."
+  ],
+  "functions": {
+    "testDefaultNavigationsDoNotAcquireProtection": {
+      "desc": "cancellable nil ou true : pas de verrou, la dernière navigation l'emporte.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testProtectedNavigationAcquiresBlocksAndCancelReleases": {
+      "desc": "cancellable=false acquiert le verrou, bloque les navigations suivantes ; cancel le libère.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testProtectedLockBlocksBeforeResolution": {
+      "desc": "La porte d'admission rejette une requête plus récente avant résolution de route ou gardes.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testProtectedLockBlocksIdenticalAndRepeatedRequests": {
+      "desc": "Les requêtes répétées ou identiques sont toutes bloquées pendant la protection (pas de file d'attente).",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testIdleRouterDoesNotBlockNavigation": {
+      "desc": "Sans navigation protégée active, navigate n'est pas bloqué à l'admission.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testReleaseOfNonMatchingTokenPreservesLock": {
+      "desc": "Le nettoyage d'une ancienne transition ne peut pas effacer le verrou d'une navigation protégée plus récente.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testCancelReleasesProtection": {
+      "desc": "M.cancel libère le verrou.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testRejectionReleasesProtection": {
+      "desc": "routeChangeRejected libère le verrou.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testFrameworkFailureReleasesProtection": {
+      "desc": "routeChangeFailed libère le verrou.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testTimeoutReleasesProtection": {
+      "desc": "Un timeout de transition libère le verrou.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testResetStatesReleasesProtection": {
+      "desc": "resetStates efface le verrou.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testDeserializeClearsStaleProtection": {
+      "desc": "onDeserialize abandonne un verrou périmé sans toucher à l'état de navigation persistant.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testProtectionHeldAcrossCommitAndReleasedOnMount": {
+      "desc": "Le verrou est conservé entre validation et montage, puis libéré à la fin complète.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testProtectionReleasedOnNonMountCompletion": {
+      "desc": "Une route sans accusé de montage libère le verrou à routeChangeComplete.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testReloadForwardsCancellableFalse": {
+      "desc": "reload transmet cancellable=false à la transition rejouée, qui acquiert le verrou.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

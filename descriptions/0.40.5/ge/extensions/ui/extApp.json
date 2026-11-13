@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/ui/extApp.lua",
+  "module": "Serveur web/WebSocket pour afficher l'interface du jeu sur un appareil externe (téléphone). Au chargement, il démarre via utils/wsUtils un serveur sur le port 8084 (protocole 'bng-ext-app-v1', page /ui/entrypoints/main/index.html), en HTTPS/WSS pour que les capteurs de mouvement du téléphone soient accessibles, et publie l'URL à l'UI par guihooks.trigger('externalUIURL', url). Usage : extensions.load('ui_extApp').",
+  "notes": [
+    "Les données de flux sont gérées côté C++ ; _handleData ne fait que journaliser une erreur « unknown command » pour tout message JSON reçu.",
+    "Le serveur écoute sur toutes les adresses ('any') ; l'adresse annoncée est celle choisie par wsUtils.createOrGetWS.",
+    "Au déchargement, externalUIURL est émis sans argument pour effacer l'URL côté UI."
+  ],
+  "functions": {
+    "requestUIData": {
+      "desc": "Renvoie à l'UI l'URL du serveur (guihooks.trigger('externalUIURL', url)). Alias de updateUIData.",
+      "internal": false
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook de chargement : crée ou récupère le serveur WebSocket/HTTPS, journalise l'URL et la publie à l'UI.",
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook de déchargement : détruit le serveur (BNGWebWSServer.destroy) et efface l'URL côté UI.",
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook par frame : lit les évènements des pairs WebSocket, décode les messages JSON de type 'D' et les passe à _handleData (qui journalise une erreur car tout est géré en C++).",
+      "internal": true
+    }
+  }
+}

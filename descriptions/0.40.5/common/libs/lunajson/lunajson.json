@@ -1,0 +1,16 @@
+{
+  "path": "lua/common/libs/lunajson/lunajson.lua",
+  "module": "Bibliothèque tierce lunajson (décodeur/encodeur JSON pur Lua, rapide). Ce fichier est le point d'entrée : il crée un décodeur et un encodeur par défaut et expose aussi l'analyseur SAX (événementiel). Pour avoir plusieurs contextes indépendants, on peut requérir directement lunajson/decoder ou lunajson/encoder. Le jeu fournit par ailleurs ses propres fonctions jsonEncode/jsonDecode ; ceci est la bibliothèque brute.",
+  "usage": "local lunajson = require('libs/lunajson/lunajson')\nlocal t = lunajson.decode('{\"a\":[1,2,3]}')\nlocal s = lunajson.encode(t)",
+  "notes": [
+    "Le fichier fait `require 'libs/lunajson/lunajson.decoder'` (séparateur point) ; les sous-modules sont des fichiers `lunajson/decoder.lua`, `encoder.lua` et `sax.lua`.",
+    "`decode(json, pos?, nullv?, arraylen?)` : si `pos` est donné, renvoie aussi la position où le décodage s'est arrêté (et n'exige pas la fin de la chaîne) ; `nullv` remplace le null JSON (nil par défaut) ; si `arraylen` est vrai, la longueur de chaque tableau décodé est stockée à l'indice 0 (`ary[0]`).",
+    "`encode(valeur, nullv?)` : les clés non-chaînes dans un objet et les références circulaires provoquent une erreur."
+  ],
+  "fields": {
+    "decode": {"type": "function", "desc": "Décode une chaîne JSON en valeur Lua (voir lunajson/decoder)."},
+    "encode": {"type": "function", "desc": "Encode une valeur Lua en chaîne JSON (voir lunajson/encoder)."},
+    "newparser": {"type": "function", "desc": "Crée un analyseur SAX sur une chaîne ou une fonction source (voir lunajson/sax)."},
+    "newfileparser": {"type": "function", "desc": "Crée un analyseur SAX lisant un fichier par blocs de 8192 octets (voir lunajson/sax)."}
+  }
+}

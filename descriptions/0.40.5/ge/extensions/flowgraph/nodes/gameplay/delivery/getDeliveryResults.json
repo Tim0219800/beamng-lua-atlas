@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/delivery/getDeliveryResults.lua",
+  "module": "Nœud flowgraph « Get Delivery Results » (catégorie provider, livraison). Fournit les résultats courants de la livraison sous forme de table (time, timeStr, goalsTotal, goalsCompleted, goalsRequired, goalsRequiredCompleted, allRequiredComplete, vehicleDamages). Sorties : results (nil si aucune livraison active) et isActive.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Remet results et isActive à nil/faux.", "internal": true},
+        "_executionStarted": {"desc": "Remet results et isActive à nil/faux.", "internal": true},
+        "_executionStopped": {"desc": "Remet results et isActive à nil/faux.", "internal": true},
+        "work": {"desc": "Appelle isActive() puis getResults() du module freeformDelivery si la livraison est active."}
+      }
+    }
+  }
+}

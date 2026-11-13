@@ -1,0 +1,102 @@
+{
+  "path": "lua/ge/extensions/editor/crawlEditor/boundaries.lua",
+  "module": "Sous-outil « Boundaries » de l'éditeur de crawl : édite les zones-frontières (objets gameplay/sites/zone) d'un niveau ou d'une mission. Le module renvoie un constructeur : require('editor_crawlEditor_boundaries')(crawlEditor) crée une instance C. L'outil liste les frontières, affiche le détail (nom, nom de fichier, sommets, aire, limites de hauteur haut/bas, champs personnalisés), permet d'ajouter/insérer/déplacer/supprimer des sommets au gizmo ou à la souris, de générer des plans (autoPlanes) et une clôture haute résolution, et de créer un DecalRoad suivant le contour. Les modifications de sommets et de plans passent par editor.history (annulables) et marquent la frontière comme modifiée (_dirty).",
+  "usage": "local boundaries = require('editor_crawlEditor_boundaries')(crawlEditorInstance)\nboundaries:setBoundary(maZone)\n-- à chaque frame, avec la table mouseInfo de crawlEditor/input :\nboundaries:draw(mouseInfo)",
+  "notes": [
+    "Commandes souris dans la vue : Shift + clic = ajoute un sommet à la fin (à la position du clic) ; Alt + clic sur le milieu d'une arête = insère un sommet ; clic = sélectionne le sommet ; Ctrl + clic = ajoute à la sélection. Les sommets sont affichés par des sphères de rayon distance_caméra/40.",
+    "Le déplacement des sommets au gizmo est accroché au terrain par défaut (snapToTerrain = true) ; endDragging réapplique le snap et enregistre « Manipulate Boundary Vertices ».",
+    "Dans dragging(), le décalage de translation du gizmo est divisé par 2 (posOffset = delta / 2) : comportement du code, probablement une compensation voulue mais non commentée.",
+    "dropToTerrain renvoie (pos, true) si core_terrain existe, même si getTerrainHeight renvoie nil (alors la hauteur d'origine est gardée) ; sinon (pos, false).",
+    "drawBoundaryDetail affiche deux fois le nombre de sommets et l'aire (bloc « Live boundary stats » puis « Vertex Count / Area »).",
+    "Le bouton Rename du nom de fichier appelle editor_crawlEditor.renameObjectFile(ancienChemin, nouveauChemin, 'boundary') si cette fonction existe.",
+    "« Create Decal Road » exige au moins 3 sommets : crée un DecalRoad (matériau a_asphalt_01_a, looped, largeur de nœud 0,1) dans MissionGroup."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance de l'outil frontières, créée par le constructeur renvoyé par le module. Champs principaux : crawlEditor, boundary (zone en cours d'édition), currentVertices (sommets sélectionnés), currentPlane (plan de hauteur sélectionné), snapToTerrain, fields (tampons imgui des champs personnalisés).",
+      "functions": {
+        "init": {
+          "desc": "Initialise l'instance (appelé par le constructeur).",
+          "params": {"crawlEditorParam": {"type": "table", "desc": "Instance/module crawlEditor parent"}},
+          "internal": true
+        },
+        "setFields": {
+          "desc": "Recopie le nom et le nom de fichier de la frontière dans les tampons de saisie imgui.",
+          "params": {"boundary": {"type": "table", "desc": "Frontière (zone)"}}
+        },
+        "setBoundary": {
+          "desc": "Définit la frontière éditée.",
+          "params": {"boundaryParam": {"type": "table|nil", "desc": "Zone à éditer"}}
+        },
+        "clearSelection": {
+          "desc": "Vide la sélection de sommets et de plan."
+        },
+        "drawBoundariesList": {
+          "desc": "Dessine la liste des frontières avec le bouton « Add Boundary » et un menu contextuel (clic droit) « Delete ». Remplit selection.index et selection.clicked.",
+          "params": {
+            "allBoundaries": {"type": "table", "desc": "Liste des frontières, modifiée en place"},
+            "selection": {"type": "table", "desc": "Table avec index (1 = première) et clicked"}
+          }
+        },
+        "drawBoundaryDetail": {
+          "desc": "Dessine le panneau de détail d'une frontière : Goto, statistiques, nom, nom de fichier, sommets, Auto Planes, High Res Fence, Create Decal Road, limites haute/basse, position de souris, champs personnalisés.",
+          "params": {"boundary": {"type": "table", "desc": "Frontière à afficher"}}
+        },
+        "getNewBoundary": {
+          "desc": "Crée une nouvelle zone vide nommée « New Boundary » via gameplay/sites/zone.",
+          "returns": [{"type": "table", "desc": "Nouvelle zone"}]
+        },
+        "findVert": {
+          "desc": "Dessine des sphères sur les points donnés (orange si sélectionnés) et renvoie le plus proche de la caméra dont le rayon de souris passe dans la sphère.",
+          "params": {
+            "mouseInfo": {"type": "table", "desc": "Table de crawlEditor/input (camPos, rayDir…)"},
+            "objects": {"type": "table", "desc": "Liste d'éléments {pos, index|orig, radius}"}
+          },
+          "returns": [{"type": "table|nil", "desc": "Élément touché, ou nil"}]
+        },
+        "tryInsert": {
+          "desc": "Cherche un clic sur le milieu d'une arête (Alt maintenu) et, si trouvé, insère un sommet via l'historique (« Insert Boundary Vertex »).",
+          "params": {"mouseInfo": {"type": "table", "desc": "Table de souris"}}
+        },
+        "input": {
+          "desc": "Traite l'entrée souris : Shift = ajout de sommet, Alt = insertion, sinon sélection (Ctrl = multiple) des sommets.",
+          "params": {"mouseInfo": {"type": "table", "desc": "Table de souris"}}
+        },
+        "updateTransform": {
+          "desc": "Place le gizmo d'axes au centroïde des sommets sélectionnés, ou sur le plan de hauteur sélectionné (orienté selon l'alignement local/global)."
+        },
+        "beginDrag": {
+          "desc": "Début de manipulation du gizmo : mémorise la position du gizmo, celles des sommets sélectionnés et la rotation du plan.",
+          "internal": true
+        },
+        "dragging": {
+          "desc": "Pendant la manipulation : translate (avec snap terrain) ou fait tourner autour du centroïde les sommets sélectionnés, ou déplace/oriente le plan sélectionné, puis recalcule la zone (processVertices).",
+          "internal": true
+        },
+        "dropToTerrain": {
+          "desc": "Pose un point sur la hauteur du terrain.",
+          "params": {"pos": {"type": "vec3", "desc": "Position"}},
+          "returns": [
+            {"type": "vec3", "desc": "Copie de la position avec z du terrain"},
+            {"type": "boolean", "desc": "true si core_terrain est disponible"}
+          ]
+        },
+        "endDragging": {
+          "desc": "Fin de manipulation : re-snap au terrain, enregistre l'action « Manipulate Boundary Vertices » dans l'historique, marque la frontière modifiée.",
+          "internal": true
+        },
+        "draw": {
+          "desc": "Appelée à chaque frame : met à jour le gizmo d'axes (begin/end/dragging), le dessine, traite l'entrée souris et met à jour sa transformation.",
+          "params": {"mouseInfo": {"type": "table", "desc": "Table de souris"}}
+        },
+        "drawBoundaryEditor": {
+          "desc": "Dessine le détail de la frontière courante, ou « No boundary selected »."
+        },
+        "drawCustomFields": {
+          "desc": "Dessine l'éditeur de champs personnalisés (string, number, vec3 avec repère 3D) avec boutons X, New String, New Number, Copy Fields et Paste Fields.",
+          "params": {"fields": {"type": "table", "desc": "Objet customFields de la frontière (names, types, values, add, remove, onSerialize…)"}}
+        }
+      }
+    }
+  }
+}

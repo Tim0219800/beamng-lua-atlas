@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/debug/numberSlider.lua",
+  "module": "Nœud flowgraph « Number Slider » (catégorie provider, tag util). Fournit jusqu'à cinq nombres réglables à la souris, avec des plages différentes : a [-1, 1], b [0, 1], c [0, 10], d [0, 100], e [0, 1000] (modifiables via data.aMin/aMax, bMin/bMax…). Seule la sortie a est visible par défaut ; b à e sont cachées. Les curseurs sont dans le nœud (pour les pins visibles) et dans le panneau de propriétés. Valeurs sauvegardées avec le graphe.",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Définit les plages par défaut et les valeurs initiales à 0.", "internal": true},
+        "drawCustomProperties": {"desc": "Dessine les cinq curseurs dans le panneau de propriétés.", "returns": [{"type": "nil", "desc": "aucune raison de modification"}], "internal": true},
+        "drawMiddle": {"desc": "Éditeur : dessine les curseurs des pins non cachés.", "params": {"builder": {"type": "table", "desc": "constructeur de nœud"}, "style": {"type": "table", "desc": "style"}}, "internal": true},
+        "work": {"desc": "Copie les valeurs des curseurs vers les pins a à e."},
+        "_onSerialize": {"desc": "Sauvegarde les valeurs a à e.", "params": {"res": {"type": "table", "desc": "table de sérialisation"}}, "internal": true},
+        "_onDeserialized": {"desc": "Restaure les valeurs a à e (0 par défaut).", "params": {"data": {"type": "table", "desc": "données chargées"}}, "internal": true}
+      }
+    }
+  }
+}

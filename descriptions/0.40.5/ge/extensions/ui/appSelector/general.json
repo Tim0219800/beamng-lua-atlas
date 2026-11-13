@@ -1,0 +1,228 @@
+{
+  "path": "lua/ge/extensions/ui/appSelector/general.lua",
+  "module": "Backend (`backendName = \"appSelector\"`) du sélecteur d'apps de l'interface, branché sur le composant générique GridSelector. Il liste les apps connues de `ui_apps.getUIAppsData()` sous forme de tuiles groupées par catégorie (Dashboard, Telemetry, General, Gameplay, Debug, puis les autres par ordre alphabétique), gère la recherche, le filtre par type, les options d'affichage (taille, contenu auxiliaire, enregistrées dans `/settings/appSelectorData.json`) et la fiche de détails avec le bouton « Ajouter au layout ». Utile pour comprendre comment l'écran d'édition des apps est alimenté ; peu utile directement à un moddeur.",
+  "notes": [
+    "En menu simple (`Engine.UI.isSimpleMenu()`), les apps auxiliaires, celles à interactivité obligatoire (`required`) et celles de type Debug sont masquées du sélecteur.",
+    "getTiles écarte aussi les apps `photomode == true` et, sauf option `includeAuxContent`, les apps auxiliaires.",
+    "Le bouton « Ajouter au layout » (et le double-clic) déclenche le hook UI `appContainer:spawn` puis navigue vers la route `pause.hudApps.editlayout`.",
+    "Les données sont recalculées au prochain accès après onModActivated, onModDeactivated ou onModManagerReady.",
+    "setDisplayDataOption et resetDisplayDataToDefaults utilisent directement `displayDataInstance`, qui n'est créé que paresseusement par getDisplayDataInstance (appelé via getAppData) : appelées avant tout accès aux données, elles échoueraient sur nil.",
+    "toggleFavourite, getManagementDetails, exploreFolder, goToMod, profilerFinish et closedFromUI sont des coquilles vides, présentes pour satisfaire l'API de GridSelector."
+  ],
+  "fields": {
+    "backendName": {"type": "string", "desc": "Nom du backend : \"appSelector\"."},
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : `{'ui_apps'}`."}
+  },
+  "functions": {
+    "getAppData": {
+      "desc": "Renvoie les données du sélecteur (apps, instance de filtres, liste de filtres, options d'affichage), en les (ré)initialisant si nécessaire.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Table avec `apps`, `filterInstance`, `filterList`, `activeFilters`, `lockedFiltersByProp`, `displayData`."}],
+      "internal": false
+    },
+    "getTiles": {
+      "desc": "Construit les groupes de tuiles d'apps (filtrés, triés : non auxiliaires d'abord puis par nom, groupés par catégorie).",
+      "params": {"path": {"type": "table", "desc": "Chemin de navigation (non utilisé pour le contenu)."}},
+      "returns": [{"type": "table<integer, table>", "desc": "Liste de `{label, tiles}`."}],
+      "internal": false
+    },
+    "getFilters": {
+      "desc": "Renvoie les filtres disponibles (filtre de type « set » sur les types d'apps).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Filtres du module de filtres."}],
+      "internal": false
+    },
+    "getActiveFilters": {
+      "desc": "Renvoie les filtres actuellement actifs.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Filtres actifs."}],
+      "internal": false
+    },
+    "toggleFilter": {
+      "desc": "Active ou désactive une valeur d'un filtre. Si `requestId` est fourni, renvoie aussi un instantané à l'UI.",
+      "params": {
+        "filterKey": {"type": "string", "desc": "Nom du filtre (par exemple \"Type\")."},
+        "value": {"type": "any", "desc": "Valeur à basculer."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant de requête côté UI."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat du module de filtres."}],
+      "internal": false
+    },
+    "updateRangeFilter": {
+      "desc": "Met à jour un filtre par intervalle (non utilisé par les filtres actuels, qui sont tous de type « set »).",
+      "params": {
+        "filterKey": {"type": "string", "desc": "Nom du filtre."},
+        "min": {"type": "number", "desc": "Minimum."},
+        "max": {"type": "number", "desc": "Maximum."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant de requête côté UI."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat du module de filtres."}],
+      "internal": false
+    },
+    "resetRangeFilter": {
+      "desc": "Réinitialise un filtre par intervalle.",
+      "params": {
+        "filterKey": {"type": "string", "desc": "Nom du filtre."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant de requête côté UI."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat du module de filtres."}],
+      "internal": false
+    },
+    "resetSetFilter": {
+      "desc": "Réinitialise un filtre de type « set ».",
+      "params": {
+        "filterKey": {"type": "string", "desc": "Nom du filtre."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant de requête côté UI."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat du module de filtres."}],
+      "internal": false
+    },
+    "clearAllFilters": {
+      "desc": "Efface tous les filtres.",
+      "params": {"requestId": {"type": "any|nil", "desc": "Identifiant de requête côté UI."}},
+      "returns": [{"type": "any", "desc": "Résultat du module de filtres."}],
+      "internal": false
+    },
+    "getDisplayDataOptions": {
+      "desc": "Renvoie les options d'affichage (taille des tuiles : list/tiny/small/medium/large/huge ; inclusion du contenu auxiliaire).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Options d'affichage."}],
+      "internal": false
+    },
+    "setDisplayDataOption": {
+      "desc": "Modifie une option d'affichage et la sauvegarde.",
+      "params": {
+        "key": {"type": "string", "desc": "Clé de l'option (displaySize, includeAuxContent)."},
+        "value": {"type": "any", "desc": "Nouvelle valeur."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant de requête côté UI."}
+      },
+      "returns": [{"type": "table", "desc": "Données d'affichage à jour."}],
+      "internal": false
+    },
+    "resetDisplayDataToDefaults": {
+      "desc": "Remet les options d'affichage à leurs valeurs par défaut.",
+      "params": {"requestId": {"type": "any|nil", "desc": "Identifiant de requête côté UI."}},
+      "returns": [{"type": "table", "desc": "Données d'affichage à jour."}],
+      "internal": false
+    },
+    "getSearchText": {
+      "desc": "Renvoie le texte de recherche courant.",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "Texte de recherche."}],
+      "internal": false
+    },
+    "setSearchText": {
+      "desc": "Définit le texte de recherche (comparé en minuscules au nom, au nom d'app et à la description traduits).",
+      "params": {
+        "val": {"type": "string", "desc": "Texte recherché."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant de requête côté UI."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat du module de filtres."}],
+      "internal": false
+    },
+    "getScreenHeaderTitleAndPath": {
+      "desc": "Construit le titre et le fil d'Ariane de l'écran (Menu, Édition des apps, Apps, puis « Filtré »/« Recherche : … » si besoin).",
+      "params": {"path": {"type": "table", "desc": "Chemin courant (non utilisé)."}},
+      "returns": [{"type": "table", "desc": "`{title, pathSegments, isFiltered}`."}],
+      "internal": false
+    },
+    "getDetails": {
+      "desc": "Construit la fiche d'une app : titre, aperçu, description, spécifications (interactivité, version, types, dossier hors build shipping) et bouton « Ajouter au layout ». Renvoie un titre de secours si l'app est inconnue.",
+      "params": {"details": {"type": "table", "desc": "Table contenant `appName`."}},
+      "returns": [{"type": "table", "desc": "`{headerTitle, preview, description, specifications, buttonInfo, appName}`."}],
+      "internal": false
+    },
+    "requestDetails": {
+      "desc": "Calcule la fiche d'une app et l'envoie à l'UI par le hook `appSelectorDetails`.",
+      "params": {
+        "item": {"type": "table", "desc": "Élément sélectionné (avec `appName`)."},
+        "requestId": {"type": "any", "desc": "Identifiant de requête côté UI."}
+      },
+      "returns": [{"type": "table", "desc": "Charge envoyée : `{backendName, requestId, item, details}`."}],
+      "internal": false
+    },
+    "executeButton": {
+      "desc": "Exécute le callback d'un bouton de la fiche via le module de boutons.",
+      "params": {
+        "buttonId": {"type": "any", "desc": "Identifiant du bouton."},
+        "data": {"type": "any", "desc": "Données transmises au callback."}
+      },
+      "returns": [{"type": "any", "desc": "Retour du callback."}],
+      "internal": false
+    },
+    "executeDoubleClick": {
+      "desc": "Sur double-clic d'une tuile, exécute le bouton « Ajouter au layout » de l'app.",
+      "params": {"details": {"type": "table", "desc": "Table contenant `appName`."}},
+      "internal": false
+    },
+    "getManagementDetails": {
+      "desc": "Fonction facultative de l'API GridSelector : renvoie toujours `{buttons = {}}`.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "`{buttons = {}}`."}],
+      "internal": false
+    },
+    "toggleFavourite": {
+      "desc": "Sans effet : les apps n'ont pas de favoris. Renvoie false.",
+      "params": {"itemDetails": {"type": "table", "desc": "Non utilisé."}},
+      "returns": [{"type": "boolean", "desc": "Toujours false."}],
+      "internal": false
+    },
+    "exploreFolder": {
+      "desc": "Sans effet : écrit seulement un message dans le log.",
+      "params": {"path": {"type": "any", "desc": "Chemin (loggé)."}},
+      "internal": false
+    },
+    "goToMod": {
+      "desc": "Sans effet : écrit seulement un message dans le log.",
+      "params": {"modId": {"type": "any", "desc": "Id du mod (loggé)."}},
+      "internal": false
+    },
+    "resolveCurrentSelectorPath": {
+      "desc": "Renvoie le chemin par défaut du sélecteur : `{keys = {\"allApps\"}}`.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Chemin normalisé."}],
+      "internal": false
+    },
+    "emitDisplayDataSnapshot": {
+      "desc": "Reconstruit l'instantané complet (tuiles, filtres, options, en-tête) et l'envoie à l'UI par `appSelectorDisplayDataSnapshot`.",
+      "params": {"requestId": {"type": "any", "desc": "Identifiant de requête côté UI."}},
+      "returns": [{"type": "boolean", "desc": "true si envoyé, false si la construction a échoué (erreur loggée)."}],
+      "internal": false
+    },
+    "onRouteMount": {
+      "desc": "Hook appelé par le routeur UI au montage de la route : attache à `data.appSelector` un instantané du sélecteur.",
+      "params": {
+        "context": {"type": "any", "desc": "Contexte de la route (non utilisé)."},
+        "toRoute": {"type": "any", "desc": "Route d'arrivée (non utilisé)."},
+        "fromRoute": {"type": "any", "desc": "Route de départ (non utilisé)."},
+        "data": {"type": "table", "desc": "Données de route auxquelles l'instantané est ajouté."}
+      },
+      "internal": true
+    },
+    "onModActivated": {
+      "desc": "Hook appelé quand un mod est activé : force le rechargement des données au prochain accès.",
+      "params": {},
+      "internal": true
+    },
+    "onModDeactivated": {
+      "desc": "Hook appelé quand un mod est désactivé : force le rechargement des données au prochain accès.",
+      "params": {},
+      "internal": true
+    },
+    "onModManagerReady": {
+      "desc": "Hook appelé quand le gestionnaire de mods est prêt : force le rechargement des données.",
+      "params": {},
+      "internal": true
+    },
+    "profilerFinish": {
+      "desc": "Fonction vide, présente pour l'API de GridSelector.",
+      "params": {},
+      "internal": true
+    },
+    "closedFromUI": {
+      "desc": "Fonction vide, présente pour l'API de GridSelector.",
+      "params": {},
+      "internal": true
+    }
+  }
+}

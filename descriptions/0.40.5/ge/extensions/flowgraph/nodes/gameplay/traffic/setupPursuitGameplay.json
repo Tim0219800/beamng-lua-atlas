@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/setupPursuitGameplay.lua",
+  "module": "Nœud flowgraph « Setup Pursuit Gameplay » (once_instant). Configure un gameplay de poursuite via gameplay_police.setupPursuitGameplay(suspectId, policeIds, {pursuitMode, preventAutoStart}). suspectId par défaut : véhicule joueur ; mainPoliceId (si fourni) remplace la liste policeIds. Sorties success/fail. En cas de succès, marque suspect et polices ignoreForceTeleport pour que le « scatter » du trafic ne les téléporte pas.",
+  "notes": [
+    "Si policeIds est nil (pas de pin relié) et succès, `ipairs(policeIds)` provoque une erreur Lua."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "workOnce": {
+          "desc": "Lance le setup de poursuite, écrit success/fail et positionne ignoreForceTeleport sur les véhicules concernés.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

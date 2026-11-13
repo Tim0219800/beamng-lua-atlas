@@ -1,0 +1,45 @@
+{
+  "path": "lua/ge/extensions/editor/editorRenderSettings.lua",
+  "module": "Fenêtre « Editor Render Settings » de l'éditeur : permet d'utiliser dans l'éditeur des réglages graphiques différents de ceux du jeu (anti-aliasing, résolution, qualité des meshes/terrain/clusters/nuages, herbe, ombres, réflexions dynamiques, SSAO, DOF, flou de mouvement, limite de FPS). Les valeurs sont stockées dans les préférences editor.renderSettings.* (followGameSettings, values). À l'activation de l'éditeur l'état graphique du jeu est capturé, puis restauré à la désactivation, à l'arrêt de l'éditeur ou au déchargement de l'extension.",
+  "notes": [
+    "Si « followGameSettings » est vrai (défaut), les réglages du jeu sont utilisés tels quels ; sinon les valeurs sauvegardées sont appliquées à l'activation de l'éditeur.",
+    "Certains réglages ne sont proposés que si l'objet correspondant existe dans la scène (CloudLayer, ScreenSpaceShadowsPostFx, SSAOPostFx, DOFPostEffect, PostFxMotionBlur)."
+  ],
+  "functions": {
+    "onEditorGui": {
+      "desc": "Dessine la fenêtre : case « suivre les réglages du jeu », bouton de synchronisation depuis le jeu, préréglages de qualité, puis sections Antialiasing, Qualité de scène, Ombres, Réflexions, Post-traitement et Limite de FPS.",
+      "params": {},
+      "internal": true
+    },
+    "onEditorRegisterPreferences": {
+      "desc": "Enregistre la catégorie « editor » et la sous-catégorie renderSettings (followGameSettings = true par défaut, values = {}).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur"}},
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Enregistre la fenêtre « editorRenderSettings » (420x700).",
+      "params": {},
+      "internal": true
+    },
+    "onEditorActivated": {
+      "desc": "Capture l'état graphique du jeu ; si followGameSettings est faux, sauvegarde et applique les valeurs de l'éditeur.",
+      "params": {},
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Restaure l'état graphique du jeu capturé à l'activation.",
+      "params": {},
+      "internal": true
+    },
+    "onEditorShutdown": {
+      "desc": "Même fonction que la restauration de l'état du jeu (alias).",
+      "params": {},
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Même fonction que la restauration de l'état du jeu (alias).",
+      "params": {},
+      "internal": true
+    }
+  }
+}

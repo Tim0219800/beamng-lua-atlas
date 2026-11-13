@@ -11,7 +11,7 @@ Sorties :
   stubs/<v>/lua/...                    fichiers ---@meta, même arborescence que le jeu
   doc/<v>/...                          Markdown
 """
-import json, os, re, sys, shutil
+import glob, json, os, re, sys, shutil
 from collections import defaultdict
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -59,6 +59,12 @@ def load_descriptions(v):
                         for cd in (it.get("classes") or {}).values():
                             if isinstance(cd, dict) and isinstance(cd.get("functions"), dict):
                                 cd["functions"] = {k.split(".")[-1].split(":")[-1]: v for k, v in cd["functions"].items()}
+                        # descriptions reportées d'une version précédente dont la signature a changé
+                        groups = [it.get("functions") or {}] + [(cd or {}).get("functions") or {} for cd in (it.get("classes") or {}).values() if isinstance(cd, dict)]
+                        for g in groups:
+                            for fd in g.values():
+                                if isinstance(fd, dict) and fd.get("aVerifier"):
+                                    fd["desc"] = f"⚠ À revérifier ({fd['aVerifier']}). " + (fd.get("desc") or "")
                         out[it["path"].replace("\\", "/").removeprefix("lua/")] = it
     return out
 
@@ -118,16 +124,16 @@ def stub_function(lines, owner, sep, name, f, fd):
     for p in ps:
         if p == "...":
             t, d = param_type(fd, "...")
-            lines.append(f"---@param ... {t} {d}".rstrip())
+            lines.append(f"---@param ... {t} {d}".replace("\n", " ").rstrip())
             continue
         t, d = param_type(fd, p)
-        lines.append(f"---@param {ident(p)} {t} {d}".rstrip())
+        lines.append(f"---@param {ident(p)} {t} {d}".replace("\n", " ").rstrip())
     rets = fd.get("returns")
     if isinstance(rets, str) and rets:
         rets = [rets]
     for r in rets or []:
         if isinstance(r, dict):
-            lines.append(f"---@return {r.get('type', 'any')} {r.get('name', '')} {r.get('desc', '')}".rstrip())
+            lines.append(f"---@return {r.get('type', 'any')} {r.get('name', '')} {r.get('desc', '')}".replace("\n", " ").rstrip())
         else:
             mm = re.match(r"^\s*([A-Za-z_][\w.|\[\]<>, ?]*)\s+[—-]\s*(.*)$", r)
             lines.append(f"---@return {mm.group(1)} # {mm.group(2)}" if mm else f"---@return any # {r}")
@@ -503,7 +509,7 @@ def main():
     L = [f"# Atlas de l'API Lua BeamNG.drive {vlabel}", "",
          "Généré par tim19Atlas à partir du code Lua du jeu (lecture seule). ",
          "✍ = description rédigée et vérifiée ; sinon : signatures et commentaires d'origine.", "",
-         "- [Hooks (évènements)](hooks.md)", "- [Classes C++ exposées](cpp.md)", "- [Mode d'emploi des stubs LuaLS](../../README.md)", ""]
+         "- [Hooks (évènements)](hooks.md)", "- [Classes C++ exposées](cpp.md)", *(["- [Changements depuis la version précédente](changements.md)"] if glob.glob(os.path.join(BASE, "donnees", ver, "diff-*.json")) else []), "- [Mode d'emploi des stubs LuaLS](../../README.md)", ""]
     for vm in ("vehicle", "ge", "common", "console"):
         L += [f"## {VM_LABEL[vm]}", ""]
         for kind in ("module", "controller", "powertrain", "energyStorage", "extension"):
@@ -548,6 +554,13 @@ def main():
         os.makedirs(os.path.dirname(p), exist_ok=True)
         with open(p, "w", encoding="utf-8") as fh:
             fh.write("\n".join(lines) + "\n")
+    # page des changements (diff-<ancienne>.json produit par comparer.py), recréée car doc/<v> est effacé plus haut
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from comparer import render
+    for dp in sorted(glob.glob(os.path.join(BASE, "donnees", ver, "diff-*.json"))):
+        dd = load(dp)
+        with open(os.path.join(ddir, "changements.md"), "w", encoding="utf-8") as fh:
+            fh.write(render(dd, dd["from"], dd["to"]))
     print(f"stubs + doc : {len(st['modules'])} modules, {len(descs)} descriptions, runtime ge={bool(rt['ge'])} vehicle={bool(rt['vehicle'])}")
 
 

@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/touching.lua",
+  "module": "Nœud « Vehicle Touch » (catégorie `repeat_instant`, tags collision/collide/hit). Détecte via `map.objects[vehIdA].objectCollisions` si un véhicule en touche un autre. Pins d'entrée : `flow`, `vehIdA`, `vehIdB` (optionnel). Sorties : `flow` (toujours true), `touching` (flux), `touchingb` (bool), et `vehId1` à `vehId5` (cachés : jusqu'à 5 ids touchés, triés, -1 si aucun). Sans `vehIdB`, teste toute collision.",
+  "notes": [
+    "Avec `vehIdB`, les sorties `vehId1..5` restent à -1.",
+    "Les descriptions de `vehId1..5` sont identiques (« lowest-id-ed vehicle »)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur vide.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Réinitialise les sorties puis les remplit selon la table de collisions du véhicule A.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/environment/setBulletTime.lua",
+  "module": "Nœud flowgraph « Bullet Time » (catégorie repeat_instant). Ralentit ou met en pause le temps de simulation via simTimeAuthority. Pins d'entrée : instant (bool, caché : applique la vitesse tout de suite au lieu d'y tendre progressivement) et value (number, 0 = pause du jeu, curseur 0 à 1). S'exécute à chaque frame tant que le flux d'entrée est actif ; à l'arrêt du graphe, remet la vitesse à 1.",
+  "notes": ["Si value vaut 0, simTimeAuthority.pause(true) est appelé ; sinon la vitesse est réglée puis la pause est levée.", "Si value est nil, la vitesse 1 est utilisée (mais le test value == 0 est fait avant)."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "_executionStopped": {"desc": "Appelé à l'arrêt du graphe : remet simTimeAuthority.set(1).", "internal": true},
+        "postInit": {"desc": "Configure le pin value comme curseur flottant de 0 à 1.", "internal": true},
+        "work": {"desc": "Si le flux est actif : pause si value == 0, sinon règle la vitesse (setInstant si instant, sinon set) et lève la pause."}
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "path": "lua/common/libs/lunajson/lunajson/sax.lua",
+  "module": "Bibliothèque tierce lunajson : analyseur JSON de type SAX (événementiel). On lui fournit une table de callbacks ; il les appelle au fil de la lecture sans construire l'arbre complet, ce qui permet de traiter de gros fichiers ou des flux découpés en morceaux.",
+  "usage": "local sax = require('libs/lunajson/lunajson.sax')\nlocal p = sax.newparser('{\"a\":[1,2]}', {\n  startobject = function() print('{') end,\n  key = function(k) print('key', k) end,\n  number = function(n) print('num', n) end,\n  endobject = function() print('}') end,\n})\np.run()",
+  "notes": [
+    "Callbacks reconnus dans `saxtbl` (tous facultatifs) : startobject, key, endobject, startarray, endarray, string, number, boolean, null.",
+    "L'objet renvoyé par newparser contient run() (lance l'analyse), tryc() (lit un caractère non blanc suivant), read(n) (lit n octets bruts, n >= 0) et tellpos() (position absolue dans le flux).",
+    "`src` peut être une chaîne ou une fonction sans argument qui renvoie successivement des morceaux de texte (nil à la fin)."
+  ],
+  "functions": {
+    "newparser": {
+      "desc": "Crée un analyseur SAX sur une chaîne JSON ou sur une fonction source qui fournit le texte par morceaux.",
+      "params": {
+        "src": {"type": "string|function", "desc": "Texte JSON, ou fonction renvoyant le morceau suivant (nil quand terminé)."},
+        "saxtbl": {"type": "table", "desc": "Table de callbacks : startobject, key, endobject, startarray, endarray, string, number, boolean, null."}
+      },
+      "returns": [{"type": "table", "desc": "Objet {run, tryc, read, tellpos}."}]
+    },
+    "newfileparser": {
+      "desc": "Comme newparser, mais lit le fichier `fn` par blocs de 8192 octets (le fichier est ouvert avec io.open puis refermé en fin de lecture).",
+      "params": {
+        "fn": {"type": "string", "desc": "Chemin du fichier JSON (io.open, chemin disque réel)."},
+        "saxtbl": {"type": "table", "desc": "Table de callbacks (voir newparser)."}
+      },
+      "returns": [{"type": "table", "desc": "Objet {run, tryc, read, tellpos}."}]
+    }
+  }
+}

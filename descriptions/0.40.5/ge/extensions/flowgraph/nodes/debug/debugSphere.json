@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/debug/debugSphere.lua",
+  "module": "Nœud flowgraph « Debug Sphere » (catégorie repeat_instant, tags util/draw). Dessine chaque frame une sphère de débogage (debugDrawer:drawSphere). Entrées : pos (vec3, requis), radius (caché, 1 sur le pin, 0.25 si nil), color (caché, rose {0.91,0.05,0.48,0.5} par défaut).",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Vide.", "internal": true},
+        "work": {"desc": "Si pos est défini, dessine la sphère."}
+      }
+    }
+  }
+}

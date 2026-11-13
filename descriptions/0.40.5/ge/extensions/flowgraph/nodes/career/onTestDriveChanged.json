@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/career/onTestDriveChanged.lua",
+  "module": "Nœud flowgraph « On Testdrive Changed » (catégorie repeat_instant, couleur/icône ui). Détecte le début (hook onTestDriveStarted) et la fin après fondu (onTestDriveEndedAfterFade) d'un essai de véhicule en carrière. Sorties en impulsion : started et ended.",
+  "notes": ["La description du nœud est « TBD » et celle du pin ended est copiée de started (« when the vehicle is spawned »).", "work() ne remet à faux que started ; ended reste à vrai après un évènement."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Crée la table de drapeaux.", "internal": true},
+        "work": {"desc": "Chaque frame : started à faux, applique puis efface les drapeaux.", "params": {"args": {"type": "any", "desc": "non utilisé"}}},
+        "onTestDriveStarted": {"desc": "Hook : lève started.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
+        "onTestDriveEndedAfterFade": {"desc": "Hook : lève ended.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true}
+      }
+    }
+  }
+}

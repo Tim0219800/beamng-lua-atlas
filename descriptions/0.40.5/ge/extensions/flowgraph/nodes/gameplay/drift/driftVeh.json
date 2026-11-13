@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/drift/driftVeh.lua",
+  "module": "Nœud flowgraph « Drift Veh » (catégorie repeat_instant, drift). Définit le véhicule de référence du module drift ; sans id précisé, le véhicule joueur est utilisé. Entrées : setVehId (impulsion) et vehId. Sortie : vehId courant (gameplay_drift_drift.getVehId()).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Sur impulsion setVehId appelle gameplay_drift_drift.setVehId(vehId) ; écrit toujours l'id courant en sortie."}
+      }
+    }
+  }
+}

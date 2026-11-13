@@ -1,0 +1,21 @@
+{
+  "path": "lua/common/libs/lua-websockets/websocket/client_copas.lua",
+  "module": "Backend client WebSocket de lua-websockets pour la bibliothèque coopérative 'copas' (sockets non bloquants dans des coroutines). Le module renvoie une fonction constructeur ; l'objet renvoyé est étendu par websocket/sync (méthodes connect, send, receive, close).",
+  "usage": "local newClient = require('libs/lua-websockets/websocket/client_copas')\nlocal ws = newClient({timeout = 2})\n-- à appeler dans une coroutine copas :\nws:connect('ws://127.0.0.1:8080', 'proto')",
+  "notes": [
+    "Nécessite libs/copas/copas et libs/luasocket/socket.socket.",
+    "Les entrées/sorties passent par copas.connect/send/receive/dohandshake, donc les appels doivent se faire depuis une coroutine gérée par copas."
+  ],
+  "classes": {
+    "client": {
+      "desc": "Objet renvoyé par le constructeur new(ws). ws est une table d'options facultative (champ timeout en secondes). Les méthodes connect/send/receive/close viennent de websocket/sync ; les méthodes sock_* ci-dessous fournissent le transport.",
+      "functions": {
+        "sock_connect": {"desc": "Crée un socket TCP (luasocket), applique ws.timeout et se connecte via copas.connect. Renvoie nil et l'erreur en cas d'échec (sauf 'already connected').", "params": {"host": {"type": "string", "desc": "Hôte."}, "port": {"type": "integer", "desc": "Port."}}, "returns": [{"type": "nil|string", "desc": "nil, message d'erreur en cas d'échec."}], "internal": true},
+        "sock_send": {"desc": "Envoie des données via copas.send sur le socket.", "internal": true},
+        "sock_receive": {"desc": "Lit des données via copas.receive sur le socket.", "internal": true},
+        "sock_close": {"desc": "Ferme le socket.", "internal": true},
+        "dohandshake": {"desc": "Délègue à copas.dohandshake (négociation TLS) sur le socket.", "internal": true}
+      }
+    }
+  }
+}

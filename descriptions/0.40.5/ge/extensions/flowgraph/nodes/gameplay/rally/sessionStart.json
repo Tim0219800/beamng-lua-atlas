@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/sessionStart.lua",
+  "module": "Nœud flowgraph « Rally Mode Session Start » (catégorie once_instant, tag rally). Charge ce qu'il faut pour le mode rally : extensions gameplay_rally, pont de boucle rally (extRallyLoop) et gameplay_rallyStartClock ; détermine la mission (via le gestionnaire de boucle rally si chargé, sinon RallyUtil.detectMissionIdHelper) ; appelle gameplay_rally.loadMission(missionId, missionDir, nil, voicepackPick, {owner = 'mission'}) ; si disableOnStart, désactive le traitement des pacenotes ; en mode boucle, appelle gameplay_rallyLoop.setupForNewMission() et sort le chemin du préfab de boucle (loopPrefab, rm:getLoopPrefabPath()). Si fireEvents, déclenche le hook onRallySessionStart. Entrées : fireEvents (défaut true), disableOnStart (défaut false). Sortie : loopPrefab (string).",
+  "notes": ["À l'arrêt du graphe, décharge gameplay_rallyStartClock et gameplay_rally (et le pont de boucle s'il a été chargé par ce nœud et qu'aucun gestionnaire de boucle n'existe) puis déclenche onRallySessionEnd si fireEvents.", "Si la mission n'est pas détectée, un encadré d'erreur est loggé et rien n'est chargé.", "La pin loopPrefab est déclarée type string avec default = false (incohérent)."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "_executionStopped": {"desc": "Décharge les extensions rally et émet onRallySessionEnd si fireEvents.", "internal": true},
+        "unloadExt": {"desc": "Décharge gameplay_rallyStartClock, gameplay_rally et, sous conditions, le pont de boucle rally.", "internal": true},
+        "loadExt": {"desc": "Charge l'extension gameplay_rally si besoin.", "internal": true},
+        "loadRallyLoopBridge": {"desc": "Charge le pont de boucle rally s'il n'est pas chargé et mémorise si c'est ce nœud qui l'a chargé.", "internal": true},
+        "workOnce": {"desc": "Exécute la séquence de démarrage de session décrite dans la description du module.", "internal": true}
+      }
+    }
+  }
+}

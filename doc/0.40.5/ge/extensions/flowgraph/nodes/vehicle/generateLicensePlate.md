@@ -4,11 +4,15 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/vehicle/generateLicensePlate")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud « Generate License Plate » (catégorie `once_instant`, tags plate/license). Génère une plaque d'immatriculation aléatoire pour un véhicule : `core_vehicles.regenerateVehicleLicenseText(veh)` puis `core_vehicles.setPlateText(texte, vehId)`. Pin d'entrée : `vehId` (défaut : joueur).
+
 ## Classe `C`
+
+Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:workOnce()` |  | 21 |
+| `C:workOnce()` | Génère un texte de plaque aléatoire et l'applique au véhicule. | 21 |
 
 ## Appels vers le moteur (C++)
 

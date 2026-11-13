@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/editor/flowgraph/nodePreview.lua",
+  "module": "Aperçu en infobulle de l'éditeur Flowgraph : affiche, dans un petit éditeur de nœuds dédié (200x200), un nœud de la bibliothèque, une macro ou un graphe survolé. Il crée son propre contexte d'éditeur, instancie le nœud dans un graphe factice (« nodePreview ») ou redessine les nœuds et liens du graphe, cadre le contenu, puis affiche le nom (et le chemin) sous l'aperçu.",
+  "notes": [
+    "Le mode (node, macro, graph) est choisi par setNode / setMacro / setGraph ; draw ne dessine que pour les modes node et graph (le mode macro n'est pas dessiné).",
+    "En mode graph, la position de chaque nœud est lue dans l'éditeur principal (self.fgEditor.ectx) puis recopiée dans l'aperçu.",
+    "Une erreur dans le dessin d'un nœud est interceptée (xpcall) et marquée comme erreur du nœud."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe de l'aperçu (windowKind = 'nodePreview').",
+      "functions": {
+        "attach": {"desc": "Associe le manager et crée le graphe factice 'nodePreview'.", "params": {"mgr": {"type": "table|nil", "desc": "Manager flowgraph."}}, "internal": false},
+        "init": {"desc": "Initialise l'état (survol, mode « node », taille d'aperçu 200x200).", "params": {}, "internal": true},
+        "setNode": {"desc": "Définit l'élément survolé comme nœud de bibliothèque (mode node).", "params": {"node": {"type": "table", "desc": "Entrée de bibliothèque (path, node, create)."}}, "internal": false},
+        "setMacro": {"desc": "Définit l'élément survolé comme macro (mode macro).", "params": {"macro": {"type": "table", "desc": "Macro."}}, "internal": false},
+        "setGraph": {"desc": "Définit l'élément survolé comme graphe (mode graph).", "params": {"graph": {"type": "table", "desc": "Graphe."}}, "internal": false},
+        "draw": {"desc": "Dessine l'infobulle d'aperçu si un élément est survolé, en sauvegardant/restaurant l'éditeur courant.", "params": {}, "internal": false}
+      }
+    }
+  }
+}

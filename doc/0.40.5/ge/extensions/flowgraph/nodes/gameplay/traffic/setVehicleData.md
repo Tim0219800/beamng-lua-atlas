@@ -4,12 +4,16 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/setVehicleData")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Set Traffic Vehicle Data » (once_instant). Règle un véhicule actif du trafic : role (veh:setRole), enableActions (inverse de role.lockAction), enableRespawn, enableTracking, enablePoolCycle (enableAutoPooling), changePaint (useRandomPaint). Seuls les pins non nil sont appliqués.
+
 ## Classe `C`
+
+Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:init()` |  | 26 |
-| `C:workOnce()` |  | 30 |
+| `C:init()` | Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph). | 26 |
+| `C:workOnce()` | Applique les pins non nil au véhicule de trafic vehId (s'il existe). | 30 |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/setVehicleData.lua`.*

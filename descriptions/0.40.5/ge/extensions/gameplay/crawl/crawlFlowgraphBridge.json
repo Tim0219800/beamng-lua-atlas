@@ -1,0 +1,137 @@
+{
+  "path": "lua/ge/extensions/gameplay/crawl/crawlFlowgraphBridge.lua",
+  "module": "Pont entre le mode « crawl » (franchissement lent de parcours à points de passage) et les nœuds flowgraph / missions. Il charge un parcours (trail) depuis gameplay_crawl_saveSystem, le configure (zone, chemin, position de départ, prefabs), démarre et arrête le crawl sur un véhicule via gameplay_crawl_general / gameplay_crawl_utils, et expose l'état courant (temps, points, noeud atteint, disqualification) et la liste des parcours. Un seul crawl actif à la fois, mémorisé dans bridgeState.",
+  "usage": "local trail = gameplay_crawl_crawlFlowgraphBridge.loadCrawlTrail(trailId)\nif trail and gameplay_crawl_crawlFlowgraphBridge.configureCrawl(trail) then\n  gameplay_crawl_crawlFlowgraphBridge.startCrawl()\nend",
+  "notes": [
+    "Ordre d'appel attendu : loadCrawlTrail -> configureCrawl -> startCrawl ; sans configureCrawl, startCrawl échoue (« No active trail configured »).",
+    "startCrawl sans vehicleId utilise be:getPlayerVehicle(0).",
+    "stopCrawl et resetCrawl vident l'état du pont (le parcours actif est oublié).",
+    "Incohérence : getCrawlEndData lit state.isCompleting et state.events.disqualified (champ remis à false dès que l'évènement est traité, donc quasi toujours faux), tandis que getCrawlRuntimeData lit state.isCompleted ; la version flowgraphBridge.lua, plus récente, utilise state.isCompleted et state.isDisqualified. Ce fichier semble être une ancienne variante de flowgraphBridge.lua.",
+    "Lorsque l'état du crawl n'existe plus ou n'est plus actif, getCrawlEndData et getCrawlRuntimeData retournent nil.",
+    "getPenaltyTypes : boundaryViolation, drivingBackwards, gateTouch, vehicleReset, wrongDirection, skippedCheckpoint, vehicleFlippedUpright, dnf.",
+    "Les logs des hooks utilisent eventData.time et eventData.points ; il faut donc fournir ces champs."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : gameplay_crawl_saveSystem, general, utils, boundary, display."}
+  },
+  "functions": {
+    "loadCrawlTrail": {
+      "desc": "Récupère un parcours par id depuis saveSystem.",
+      "params": {"trailId": {"type": "string|integer", "desc": "Id du parcours (type exact déduit du code)."}},
+      "returns": [{"type": "table|nil", "desc": "Le parcours, ou nil si l'id est manquant ou inconnu."}],
+      "internal": false
+    },
+    "configureCrawl": {
+      "desc": "Prépare le crawl actif à partir d'un parcours : résout sa zone (boundaryId), son chemin (pathId) et sa position de départ (startingPositionId) ; la zone et le chemin sont obligatoires.",
+      "params": {"trail": {"type": "table", "desc": "Parcours (name, boundaryId, pathId, startingPositionId, prefabs)."}},
+      "returns": [{"type": "boolean", "desc": "true si la configuration est valide."}],
+      "internal": false
+    },
+    "startCrawl": {
+      "desc": "Démarre le crawl configuré sur un véhicule (gameplay_crawl_general.startCrawl) et marque le pont actif.",
+      "params": {"vehicleId": {"type": "integer|nil", "desc": "Id du véhicule ; le véhicule du joueur 0 si nil."}},
+      "returns": [{"type": "boolean", "desc": "true si lancé."}],
+      "internal": false
+    },
+    "stopCrawl": {
+      "desc": "Arrête le crawl actif (gameplay_crawl_utils.stopCrawl) et réinitialise l'état du pont.",
+      "returns": [{"type": "boolean", "desc": "false s'il n'y avait pas de crawl actif."}],
+      "internal": false
+    },
+    "resetCrawl": {
+      "desc": "Réinitialise les données du crawler, téléporte le véhicule à la position de départ du parcours (orientation du premier noeud du chemin si disponible, spawn.safeTeleport) puis arrête le crawl.",
+      "returns": [{"type": "boolean", "desc": "true si la téléportation a eu lieu."}],
+      "internal": false
+    },
+    "getCrawlEndData": {
+      "desc": "Retourne un résumé de fin de crawl pour le crawler actif.",
+      "returns": [{"type": "table|nil", "desc": "{time, points, completed, pathnodesCompleted, pathnodeTimings, disqualified} ; nil si aucun crawl actif."}],
+      "internal": false
+    },
+    "getCrawlRuntimeData": {
+      "desc": "Retourne l'état en cours du crawl.",
+      "returns": [{"type": "table|nil", "desc": "{currentTime, currentPathnodeIndex, points, isCompleted, disqualified, crawlerPosition, crawlerDirection, vehicleId} ; nil si aucun crawl actif."}],
+      "internal": false
+    },
+    "getTrailInfo": {
+      "desc": "Retourne les métadonnées d'un parcours (celui indiqué, sinon le parcours actif).",
+      "params": {"trailId": {"type": "string|integer|nil", "desc": "Id du parcours."}},
+      "returns": [{"type": "table|nil", "desc": "{name, description, pathId, boundaryId, startingPositionId, pathReversed, rules, prefabs, metadata}."}],
+      "internal": false
+    },
+    "isCrawlActive": {
+      "desc": "Indique si un crawl est actif via ce pont.",
+      "returns": [{"type": "boolean", "desc": "État actif."}],
+      "internal": false
+    },
+    "getActiveCrawlerId": {
+      "desc": "Retourne l'id du véhicule en crawl.",
+      "returns": [{"type": "integer|nil", "desc": "Id du véhicule, nil si aucun."}],
+      "internal": false
+    },
+    "getAllTrails": {
+      "desc": "Liste tous les parcours connus de saveSystem.",
+      "returns": [{"type": "table", "desc": "Parcours."}],
+      "internal": false
+    },
+    "getAllStartingPositions": {
+      "desc": "Liste toutes les positions de départ connues de saveSystem.",
+      "returns": [{"type": "table", "desc": "Positions de départ."}],
+      "internal": false
+    },
+    "getPlayerTrailStats": {
+      "desc": "Retourne les statistiques du joueur sur un parcours (saveSystem).",
+      "params": {"trailId": {"type": "string|integer", "desc": "Id du parcours."}},
+      "returns": [{"type": "table|nil", "desc": "Statistiques."}],
+      "internal": false
+    },
+    "getDynamicObjectsFromPrefab": {
+      "desc": "Délègue à gameplay_crawl_utils.getDynamicObjectsFromPrefab : objets d'un prefab portant un nom dynamique donné.",
+      "params": {
+        "prefabId": {"type": "any", "desc": "Id du prefab."},
+        "dynamicName": {"type": "string", "desc": "Nom dynamique recherché."}
+      },
+      "returns": [{"type": "table", "desc": "Objets trouvés (déduit du code)."}],
+      "internal": false
+    },
+    "applyPenalty": {
+      "desc": "Applique une pénalité au crawler actif, avec le nombre de points défini dans gameplay_crawl_utils.infractionPoints. Sans effet si le crawl est inactif ou le type inconnu.",
+      "params": {"penaltyType": {"type": "string", "desc": "Un des types de getPenaltyTypes()."}},
+      "internal": false
+    },
+    "getPenaltyTypes": {
+      "desc": "Retourne la liste des types de pénalité.",
+      "returns": [{"type": "string[]", "desc": "Noms des pénalités."}],
+      "internal": false
+    },
+    "getLastRecoveryCheckpointIndex": {
+      "desc": "Retourne l'indice du dernier point de récupération du crawler actif.",
+      "returns": [{"type": "integer", "desc": "Indice, 0 si aucun crawl actif."}],
+      "internal": false
+    },
+    "setRecoveryCheckpoint": {
+      "desc": "Définit le point de récupération du crawler actif.",
+      "params": {"checkpoint": {"type": "any", "desc": "Point de passage (déduit du code)."}},
+      "returns": [{"type": "boolean", "desc": "false si aucun crawl actif ; sinon résultat de gameplay_crawl_utils.setRecoveryCheckpoint."}],
+      "internal": false
+    },
+    "onCrawlStarted": {
+      "desc": "Hook appelé quand un crawl démarre ; journalise seulement.",
+      "internal": true
+    },
+    "onCrawlResultsShown": {
+      "desc": "Hook appelé quand les résultats sont affichés ; journalise temps et points.",
+      "params": {"eventData": {"type": "table", "desc": "{time, points}."}},
+      "internal": true
+    },
+    "onCrawlPathnodeReached": {
+      "desc": "Hook appelé quand un noeud du chemin est atteint ; journalise indice et temps.",
+      "params": {"eventData": {"type": "table", "desc": "{pathnodeIndex, time}."}},
+      "internal": true
+    },
+    "cleanup": {
+      "desc": "Arrête le crawl éventuel et vide l'état du pont.",
+      "internal": false
+    }
+  }
+}

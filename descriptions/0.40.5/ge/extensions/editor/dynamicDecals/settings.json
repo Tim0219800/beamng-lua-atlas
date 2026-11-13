@@ -1,0 +1,42 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/settings.lua",
+  "module": "Section « Settings » (ordre 1040) de l'outil Dynamic Decals. Permet d'activer/désactiver l'API de decals, de choisir la position du curseur (UV) ou la souris, la couche UV (0 ou 1), les matériaux et les meshes du véhicule joueur qui reçoivent les decals, et la résolution des textures. Maintient la table nom de matériau <-> indice utilisée par les autres modules.",
+  "notes": [
+    "Changer la couche UV ou la résolution de texture reprojette tous les calques (peut être long).",
+    "updateMaterials ne fait rien si l'API n'est pas définie ou s'il n'y a pas de véhicule joueur.",
+    "getUsedMaterialNames dépend du dernier updateMaterials : sans mise à jour, des noms peuvent être nil.",
+    "À setup, la liste des meshes est récupérée dans un job retardé d'une frame (« sinon les noms ne sont pas prêts ») et stockée dans shapeMeshes, variable qui n'est pas relue ensuite : sectionGui rappelle api.getShapeMeshes() directement."
+  ],
+  "functions": {
+    "updateMaterials": {
+      "desc": "Relit api.getShapeMaterialNames() pour le véhicule joueur et reconstruit les tables nom->indice et indice->nom.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "getUsedMaterialNames": {
+      "desc": "Renvoie les noms des matériaux actuellement activés (indices d'api.getMaterialIndices()).",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Liste de noms de matériaux."}],
+      "internal": false
+    },
+    "registerEditorPreferences": {
+      "desc": "Ne déclare aucune préférence (corps commenté).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : prépare les listes (couches UV, résolutions), initialise les indices de résolution depuis l'API si elle est prête, met à jour les matériaux, lance le job de lecture des meshes et enregistre la section « Settings ».",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

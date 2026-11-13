@@ -1,0 +1,362 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/driveline/drivelineRoute.lua",
+  "module": "Deuxième version de la driveline de rallye, fondée sur gameplay/route/raceRoute. À partir d'un RacePath (race.json), d'un carnet de notes (NotebookPath) et d'une liste de points enregistrés (PointList), construit deux routes : une route dynamique (recalculée depuis la position du véhicule) et une route statique immuable (avec RallyRouteTracker pour suivre le véhicule et gérer la sortie de route). Les points de départ, de zone d'arrêt, les pathnodes de course et les waypoints de début/fin de virage (Cs/Ce) des notes sont insérés dans la polyligne. Ensuite, à chaque frame, onUpdate évalue la fenêtre de notes : quand le temps restant avant le début du virage passe sous (délai du copilote + durée parlée de la note), l'audio de la note est déclenché via les callbacks onPacenote*Hit. Fournit aussi des distances (course, fraction parcourue, splits), le replacement du véhicule (notes, récupération) et des dessins de débogage. Le module renvoie un constructeur : require(...)().",
+  "usage": "local dl = require('/lua/ge/extensions/gameplay/rally/driveline/drivelineRoute')()\ndl.onPacenoteCsDynamicHit = function(pacenote, shouldTriggerAudio) end\ndl:setVehicleTracker(vehicleTracker)\nif dl:loadRouteFromRecordedDriveline(racePath, notebookPath, pointList) then\n  -- chaque frame : dl:onUpdate(dtReal, dtSim, dtRaw)\nend",
+  "notes": [
+    "Les distances sont des 'distToTarget' (distance restante jusqu'à la fin de la route) : elles décroissent le long de la route ; distance depuis le départ = distToTarget du premier point - distToTarget du point.",
+    "Pour charger, racePath doit avoir une position de départ par défaut et une position 'STOP_ZONE', 'SS_stop_control' ou 'TC_out' ; sinon loadRouteFromRecordedDriveline échoue (false) et remet l'objet à zéro.",
+    "Seuls les types de déclenchement dynamic (1) et csImmediate (15) existent dans RallyEnums.triggerType ; les comparaisons avec csStatic, csHalf, csMinus5, ceMinus5, ceStatic valent donc nil et ne déclenchent jamais l'audio (les évènements sont tout de même enregistrés et leurs callbacks appelés sans audio).",
+    "Seuil dynamique : timeToCs < codriverDelayForSpeed(vitesse mph) + durée effective de la note ; timeToCs = (distance restante du véhicule - distance originale du waypoint Cs) / vitesse en m/s.",
+    "Paramètres : staticDistanceThresholdMeters 0,1 ; minEvalSpeedMph 1,0 ; minWaitTimeSinceRecalc 2,0 s ; lissage de la vitesse de déclenchement 0,25 s ; pacenoteLookbehindWindow 5 notes.",
+    "Les callbacks onPacenoteXxxHit (Dynamic, CsImmediate, CsStatic, CeStatic, CsOffset, CeOffset, CornerPercent) sont à renseigner par l'appelant ; ils ne sont pas appelés tant que recalcNeeded est vrai.",
+    "onUpdate n'évalue les notes qu'au moins minWaitTimeSinceRecalc après un recalcul. dtSimSumSinceRecalc reste nil jusqu'au premier recalcul : la comparaison dtSimSumSinceRecalc > minWaitTimeSinceRecalc provoquerait une erreur si la vitesse dépasse minEvalSpeedMph avant tout recalcul (déduit du code).",
+    "evaluatePacenoteEvents sort plusieurs fois avant profilerPopEvent sans l'appeler (déséquilibre du profileur, déduit du code).",
+    "Étiquettes des splits : un chiffre décimal (km) sauf doublons ou '0.0', auquel cas deux chiffres."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Driveline V2 renvoyée par le constructeur. Attributs principaux : racePath, notebookPath, route, routeStatic, staticTracker, vehicleTracker, events, eventLog, loaded, nextPacenoteIdxForEval, splitDataList, pathnodeObservationList, raceCompletionData, callbacks onPacenote*Hit.",
+      "functions": {
+        "init": {
+          "desc": "Initialise les callbacks (nil), les options de débogage souris, les listes de splits et l'état interne (_reset).",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "_reset": {
+          "desc": "Remet à zéro l'état de chargement et de suivi : routes, trackers, évènements, seuils de déclenchement (0,1 m, 1 mph, 2 s, lissage 0,25 s) et suivi souris.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "_abortLoadRoute": {
+          "desc": "Abandonne un chargement en cours (appelle _reset).",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "enableTriggerLogging": {
+          "desc": "Indique si le journal détaillé des déclenchements est actif (gameplay_rally.getDebugLogging()).",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "true si actif."}],
+          "internal": false
+        },
+        "isLoaded": {
+          "desc": "Indique si une route a été chargée avec succès.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "État."}],
+          "internal": false
+        },
+        "effectiveAudioLen": {
+          "desc": "Durée parlée effective d'une note, avec les écarts de recouvrement structurés (AudioManager:pacenoteEffectiveAudioLen) ; sinon la durée totale brute pacenote:audioLenTotal().",
+          "params": {"pacenote": {"type": "table", "desc": "Note."}},
+          "returns": [{"type": "number", "desc": "Secondes."}],
+          "internal": false
+        },
+        "codriverDelayForSpeed": {
+          "desc": "Délai du copilote pour une vitesse donnée, avec les réglages du pack vocal actif (mise à l'échelle par la vitesse, décalage) via gameplay_rally_codriverTiming.delayForSpeed.",
+          "params": {"speedMph": {"type": "number", "desc": "Vitesse en mph."}},
+          "returns": [{"type": "number", "desc": "Délai en secondes."}],
+          "internal": false
+        },
+        "setVehicleTracker": {
+          "desc": "Définit l'objet qui fournit la position et la vitesse du véhicule (méthodes getVehicle, speedMs, pos).",
+          "params": {"vehicleTracker": {"type": "table", "desc": "Suivi du véhicule."}},
+          "returns": [],
+          "internal": false
+        },
+        "getPacenotes": {
+          "desc": "Liste triée des notes du carnet chargé ({} si aucun carnet).",
+          "params": {},
+          "returns": [{"type": "table[]", "desc": "Notes."}],
+          "internal": false
+        },
+        "getNextPacenote": {
+          "desc": "Prochaine note à évaluer.",
+          "params": {},
+          "returns": [{"type": "table|nil", "desc": "Note."}],
+          "internal": false
+        },
+        "getAheadRoutePointPos": {
+          "desc": "Position du deuxième point de la route dynamique (point en avant du véhicule).",
+          "params": {},
+          "returns": [{"type": "vec3|nil", "desc": "Position."}],
+          "internal": false
+        },
+        "loadRouteFromRecordedDriveline": {
+          "desc": "Charge la route à partir d'une driveline enregistrée : construit la liste de points (driveline, position de départ, zone d'arrêt, pathnodes, waypoints Cs/Ce des notes), supprime ceux avant le départ et après l'arrêt, crée route dynamique et route statique, le suiveur statique, les longueurs de notes et les données de splits/pathnodes. Retourne false (et se remet à zéro) si les prérequis manquent.",
+          "params": {
+            "racePath": {"type": "table", "desc": "Objet RacePath."},
+            "notebookPath": {"type": "table", "desc": "Objet NotebookPath."},
+            "pointsList": {"type": "table", "desc": "PointList des points enregistrés."}
+          },
+          "returns": [{"type": "boolean", "desc": "true si la route est chargée."}],
+          "internal": false
+        },
+        "getNearestRoutePoint": {
+          "desc": "Position projetée sur la route statique du segment le plus proche (via kd-tree), si la projection est en avant du début du segment (xnorm > 0).",
+          "params": {"pos": {"type": "vec3", "desc": "Position."}},
+          "returns": [{"type": "vec3|nil", "desc": "Position sur la route."}],
+          "internal": false
+        },
+        "updateStaticTracker": {
+          "desc": "Met à jour le suiveur de route statique avec la position (RallyRouteTracker:update).",
+          "params": {
+            "pos": {"type": "vec3", "desc": "Position."},
+            "options": {"type": "table|nil", "desc": "{allowJump, forceFullSearch}."}
+          },
+          "returns": [{"type": "table|nil", "desc": "Projection."}],
+          "internal": false
+        },
+        "projectStaticRoute": {
+          "desc": "Projette une position sur la route statique sans modifier l'état.",
+          "params": {
+            "pos": {"type": "vec3", "desc": "Position."},
+            "options": {"type": "table|nil", "desc": "{forceFullSearch}."}
+          },
+          "returns": [{"type": "table|nil", "desc": "Projection."}],
+          "internal": false
+        },
+        "resetStaticTracker": {
+          "desc": "Réinitialise le suiveur statique, éventuellement à une position.",
+          "params": {"pos": {"type": "vec3|nil", "desc": "Position initiale."}},
+          "returns": [],
+          "internal": false
+        },
+        "getStaticTrackerState": {
+          "desc": "État du suiveur statique (voir RallyRouteTracker:getState).",
+          "params": {},
+          "returns": [{"type": "table|nil", "desc": "État."}],
+          "internal": false
+        },
+        "setStaticTrackerDebugCapture": {
+          "desc": "Active la capture de diagnostic du suiveur statique.",
+          "params": {"enabled": {"type": "boolean", "desc": "true pour activer."}},
+          "returns": [],
+          "internal": false
+        },
+        "setRouteCorridorWidth": {
+          "desc": "Règle la demi-largeur du corridor de route du suiveur statique.",
+          "params": {"width": {"type": "number", "desc": "Mètres (bornée à [0,1 ; 15] par le suiveur)."}},
+          "returns": [],
+          "internal": false
+        },
+        "getRouteCorridorWidth": {
+          "desc": "Demi-largeur actuelle du corridor.",
+          "params": {},
+          "returns": [{"type": "number|nil", "desc": "Mètres."}],
+          "internal": false
+        },
+        "getTrackedDistToTarget": {
+          "desc": "Distance restante jusqu'à la fin de la route : celle du suiveur statique ; à défaut celle du premier point de la route dynamique.",
+          "params": {},
+          "returns": [{"type": "number|nil", "desc": "Mètres."}],
+          "internal": false
+        },
+        "getRecoveryDistToTarget": {
+          "desc": "Distance restante où replacer le véhicule après une sortie de route (suiveur statique ; sinon distance suivie).",
+          "params": {"backoffDistance": {"type": "number|nil", "desc": "Recul en mètres."}},
+          "returns": [{"type": "number|nil", "desc": "distToTarget."}],
+          "internal": false
+        },
+        "recalculate": {
+          "desc": "Recalcule la route depuis la position courante : retrouve le prochain waypoint de début de virage (Cs) et le prochain pathnode, désactive les évènements des notes déjà passées (disabledByRecalc), fixe nextPacenoteIdxForEval, appelle route:recalculateRouteWithOriginalPositions et réinitialise le suiveur statique (sauf preserveStaticTracker).",
+          "params": {"options": {"type": "table|nil", "desc": "{preserveStaticTracker = boolean}."}},
+          "returns": [{"type": "boolean", "desc": "true."}],
+          "internal": false
+        },
+        "updateDynamicTriggerSpeed": {
+          "desc": "Lisse la vitesse utilisée pour les déclenchements (filtre exponentiel de constante 0,25 s) ; l'initialise à la vitesse courante si elle est nil ou si dtSim est invalide.",
+          "params": {
+            "speedMs": {"type": "number|nil", "desc": "Vitesse en m/s."},
+            "dtSim": {"type": "number|nil", "desc": "Pas de temps de simulation en s."}
+          },
+          "returns": [{"type": "number|nil", "desc": "Vitesse lissée en m/s."}],
+          "internal": false
+        },
+        "getPacenoteEvent": {
+          "desc": "Renvoie l'évènement mémorisé d'une note ou en crée un : disabledByRecalc, csDynamicHit, csImmediateHit, csStaticHit, csMeterOffsetHit[-40], cornerPercentHit[0.5], ceStaticHit, ceMeterOffsetHit[-5], audioTriggerComplete.",
+          "params": {"pacenote": {"type": "table", "desc": "Note."}},
+          "returns": [{"type": "table", "desc": "Évènement."}],
+          "internal": false
+        },
+        "evaluatePacenoteEvents": {
+          "desc": "Évalue les déclenchements d'une note : dynamique (temps avant Cs < délai copilote + durée parlée), immédiat, statique Cs, décalage -40 m et 50 % entre Cs et Ce, décalage -5 m et statique Ce. Appelle les callbacks correspondants avec shouldTriggerAudio (vrai une seule fois, pour le type de déclenchement de la note). Renvoie true si l'audio de la note vient d'être déclenché.",
+          "params": {
+            "pacenote": {"type": "table", "desc": "Note à évaluer."},
+            "speedMs": {"type": "number", "desc": "Vitesse lissée en m/s."}
+          },
+          "returns": [{"type": "boolean|nil", "desc": "true si la note est marquée comme jouée ce tick."}],
+          "internal": false
+        },
+        "callPacenoteEventCallback": {
+          "desc": "Appelle un callback d'évènement de note, sauf s'il est nil ou si un recalcul est en attente.",
+          "params": {
+            "callbackFn": {"type": "function|nil", "desc": "Callback."},
+            "...": {"type": "any", "desc": "Arguments transmis."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "getSpeed": {
+          "desc": "Vitesse du véhicule en m/s (ou celle de la souris en mode débogage). 0 sans suiveur de véhicule, nil sans véhicule.",
+          "params": {},
+          "returns": [{"type": "number|nil", "desc": "m/s."}],
+          "internal": false
+        },
+        "getPosition": {
+          "desc": "Position du véhicule (ou de la souris en mode débogage).",
+          "params": {},
+          "returns": [{"type": "vec3|nil", "desc": "Position."}],
+          "internal": false
+        },
+        "evaluatePacenotesWindow": {
+          "desc": "Évalue les notes de la fenêtre [prochaine - 5, prochaine] ; avance nextPacenoteIdxForEval à chaque audio déclenché.",
+          "params": {"speedMs": {"type": "number", "desc": "Vitesse lissée en m/s."}},
+          "returns": [],
+          "internal": false
+        },
+        "onUpdate": {
+          "desc": "Appelé à chaque frame : met à jour la souris en mode débogage, la vitesse, le suiveur statique et la vitesse de déclenchement lissée ; exécute un recalcul si demandé, sinon évalue les notes si la vitesse dépasse 1 mph et que 2 s se sont écoulées depuis le dernier recalcul. Ignore les vitesses > 1000 mph.",
+          "params": {
+            "dtReal": {"type": "number", "desc": "Temps réel (s)."},
+            "dtSim": {"type": "number", "desc": "Temps de simulation (s)."},
+            "dtRaw": {"type": "number", "desc": "Temps brut (s)."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "setRecalcNeeded": {
+          "desc": "Demande un recalcul de la route au prochain onUpdate.",
+          "params": {"options": {"type": "table|nil", "desc": "{preserveStaticTracker = boolean}."}},
+          "returns": [],
+          "internal": false
+        },
+        "setTrackMouseLikeVehicle": {
+          "desc": "Active/désactive le suivi de la souris comme s'il s'agissait du véhicule (débogage). La désactivation efface les données de souris.",
+          "params": {"val": {"type": "boolean", "desc": "État."}},
+          "returns": [],
+          "internal": false
+        },
+        "enableTrackMouseLikeVehicleMovement": {
+          "desc": "Autorise le déplacement de la position-souris (Maj + clic) en mode débogage.",
+          "params": {"val": {"type": "boolean", "desc": "État."}},
+          "returns": [],
+          "internal": false
+        },
+        "updateMouseLikeVehicle": {
+          "desc": "Met à jour la position et la vitesse simulées de la souris (raycast caméra, lissage 0,02) en mode débogage.",
+          "params": {"dtSim": {"type": "number", "desc": "Temps de simulation (s)."}},
+          "returns": [],
+          "internal": true
+        },
+        "getFinishLineDistOffset": {
+          "desc": "distToTarget du point de route statique du dernier pathnode (ligne d'arrivée) ; nil si indisponible.",
+          "params": {},
+          "returns": [{"type": "number|nil", "desc": "Mètres."}],
+          "internal": false
+        },
+        "getDistanceMeters": {
+          "desc": "Longueur de la course (du départ à la ligne d'arrivée) en mètres ; -1 si la ligne d'arrivée est inconnue ; nil sans route ou racePath.",
+          "params": {},
+          "returns": [{"type": "number|nil", "desc": "Mètres."}],
+          "internal": false
+        },
+        "getDistanceKmString": {
+          "desc": "Longueur de la course formatée '%.2f km', ou 'N/A'.",
+          "params": {},
+          "returns": [{"type": "string", "desc": "Texte."}],
+          "internal": false
+        },
+        "getRaceCompletionData": {
+          "desc": "Progression de la course : renvoie une table partagée {distM, distPct, distKm, totalDistM} (distance parcourue, fraction, texte '%.2fkm', longueur totale). Valeurs à 0 si la ligne d'arrivée est inconnue.",
+          "params": {},
+          "returns": [{"type": "table|nil", "desc": "Données de progression (table réutilisée)."}],
+          "internal": false
+        },
+        "getPointDistanceFromStartMeters": {
+          "desc": "Distance du départ à un point de la route, en mètres (0 sans route).",
+          "params": {"point": {"type": "table", "desc": "Point de route avec distToTarget."}},
+          "returns": [{"type": "number", "desc": "Mètres."}],
+          "internal": false
+        },
+        "getPointDistanceFromStartKm": {
+          "desc": "Distance du départ à un point de la route, en kilomètres.",
+          "params": {"point": {"type": "table", "desc": "Point de route."}},
+          "returns": [{"type": "number", "desc": "Kilomètres."}],
+          "internal": false
+        },
+        "positionAtDistToTarget": {
+          "desc": "Position sur la route statique pour une distance restante donnée (interpolation linéaire entre points).",
+          "params": {"targetDist": {"type": "number", "desc": "distToTarget en mètres."}},
+          "returns": [{"type": "vec3|nil", "desc": "Position, nil hors route."}],
+          "internal": false
+        },
+        "vehiclePlacementPosAndRotForPacenote": {
+          "desc": "Position et orientation pour replacer le véhicule distBefore mètres avant le début du virage (Cs) d'une note, cap pris vers un point tangentLookAhead mètres plus loin sur la route.",
+          "params": {
+            "pacenote": {"type": "table", "desc": "Note."},
+            "distBefore": {"type": "number|nil", "desc": "Distance avant Cs en m (10 par défaut)."},
+            "tangentLookAhead": {"type": "number|nil", "desc": "Distance de visée en m (min(distBefore, 5) par défaut)."}
+          },
+          "returns": [
+            {"type": "vec3|nil", "desc": "Position."},
+            {"type": "quat|nil", "desc": "Orientation."},
+            {"type": "vec3|nil", "desc": "Direction avant normalisée."}
+          ],
+          "internal": false
+        },
+        "vehiclePlacementPosAndRotForRecovery": {
+          "desc": "Position et orientation pour récupérer le véhicule après une sortie de route (distance de récupération du suiveur, bornée au début de la route).",
+          "params": {
+            "backoffDistance": {"type": "number|nil", "desc": "Recul en m."},
+            "tangentLookAhead": {"type": "number|nil", "desc": "Distance de visée en m (5 par défaut)."}
+          },
+          "returns": [
+            {"type": "vec3|nil", "desc": "Position."},
+            {"type": "quat|nil", "desc": "Orientation."},
+            {"type": "string|nil", "desc": "Message d'erreur en cas d'échec."},
+            {"type": "vec3|nil", "desc": "Direction avant."},
+            {"type": "number|nil", "desc": "distToTarget de placement."}
+          ],
+          "internal": false
+        },
+        "drawDebugTriggerPoint": {
+          "desc": "Dessine une sphère orange à l'endroit où la prochaine note se déclenchera à la vitesse actuelle.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "drawDebugDrivelineRoute": {
+          "desc": "Dessine la route (dynamique ou statique) : sphères arc-en-ciel et prismes, indices de points, métadonnées, pathnodes de course et étiquettes de notes (drawLimit étiquettes au plus).",
+          "params": {
+            "drawRoute": {"type": "boolean|nil", "desc": "Dessiner la route."},
+            "drawPacenotes": {"type": "boolean|nil", "desc": "Dessiner les étiquettes Cs/Ce des notes."},
+            "drawLimit": {"type": "integer|nil", "desc": "Nombre maximal d'étiquettes de notes (4 par défaut)."},
+            "monochrome": {"type": "boolean|nil", "desc": "Route en gris foncé surélevée de 2 m."},
+            "static": {"type": "boolean|nil", "desc": "Utiliser la route statique."},
+            "drawHiddenPathnodes": {"type": "boolean|nil", "desc": "Afficher aussi les pathnodes masqués."},
+            "drawRoutePathnodes": {"type": "boolean|nil", "desc": "Afficher les étiquettes de pathnodes et de splits."},
+            "drawPointI": {"type": "boolean|nil", "desc": "Afficher l'indice des points."},
+            "drawPointMetadata": {"type": "boolean|nil", "desc": "Afficher les métadonnées des points."},
+            "drawPacenoteText": {"type": "boolean|nil", "desc": "Ajouter l'aperçu du texte de la note."}
+          },
+          "returns": [],
+          "internal": false
+        },
+        "drawDebugDrivelineRouteShort": {
+          "desc": "Dessine en vert la route statique devant le véhicule sur une distance donnée.",
+          "params": {"dist": {"type": "number|nil", "desc": "Longueur dessinée en m (100 par défaut)."}},
+          "returns": [],
+          "internal": false
+        },
+        "buildElevationProfile": {
+          "desc": "Construit le profil d'altitude : un élément {x, y, z, distFromStart, splitLabel, isRacePathnode} par point de la route statique jusqu'à la ligne d'arrivée incluse.",
+          "params": {},
+          "returns": [{"type": "table[]", "desc": "Profil."}],
+          "internal": false
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/input/blacklistAction.lua",
+  "module": "Nœud flowgraph « Set Input Actions » (once_instant, dépend de core_input_actionFilter). Bloque ou autorise une liste d'actions d'entrée, comme le fait un scénario. La liste (self.list) se choisit dans les propriétés (préréglages Empty/Scenario, recherche, catégories). Pins : block (défaut true : bloque, sinon autorise), ignoreUnrestriced (ignore le nœud si « restrictScenarios » est désactivé dans les réglages), id d'entrée (réutiliser une liste existante) et id de sortie (identifiant de la liste, pour l'annuler plus tard).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_onDeserialized": {
+          "desc": "Restaure les réglages propres au nœud à partir des données sauvegardées.",
+          "internal": true,
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "données sauvegardées du nœud"
+            }
+          }
+        },
+        "_onSerialize": {
+          "desc": "Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe.",
+          "internal": true,
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "table de sérialisation à remplir"
+            }
+          }
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine l'éditeur de liste d'actions (préréglages, ajout par recherche ou catégorie, liste courante).",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche le nombre d'actions et renomme le nœud en Block/Allow Input Actions si block est codé en dur.",
+          "internal": true,
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "constructeur de nœud de l'éditeur (builder:Middle())"
+            },
+            "style": {
+              "type": "table",
+              "desc": "style de dessin du nœud"
+            }
+          }
+        },
+        "drawSearchInput": {
+          "desc": "Dessine le champ de recherche d'actions et met à jour les résultats.",
+          "internal": false
+        },
+        "highlightText": {
+          "desc": "Dessine `label` en surlignant les occurrences de `highlightText`.",
+          "internal": false,
+          "params": {
+            "label": {
+              "type": "any",
+              "desc": "texte à afficher"
+            },
+            "highlightText": {
+              "type": "any",
+              "desc": "texte à surligner"
+            }
+          }
+        },
+        "init": {
+          "desc": "Initialise la liste avec le préréglage Scénario et le moteur de recherche.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Enregistre la liste dans le module action du flowgraph (registerList) si pas déjà fait, puis appelle blockActions(id) ou allowActions(id).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

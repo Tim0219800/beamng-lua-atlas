@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/gameplay/missions/poiTest.lua",
+  "module": "Extension de test du système de points d'intérêt (POI). Elle ajoute un POI factice « poiTest » sur chaque place de parking définie dans le fichier gameplay/parkingSpotTests.sites.json, et un bouton « Do the Test » dans la fenêtre de détail du POI qui affiche seulement « Test Successfull! » dans le log. Elle ne sert qu'aux développeurs du jeu pour tester gameplay_markerInteraction / rawPois ; un moddeur peut s'en inspirer comme exemple minimal de fournisseur de POI.",
+  "usage": "-- Exemple minimal d'un fournisseur de POI (même structure que poiTest)\nlocal function onGetRawPoiListForLevel(levelIdentifier, elements)\n  table.insert(elements, {id='monPoi', pos=vec3(0,0,0), rot=quat(0,0,0,1), scl=vec3(1,1,1), radius=3, visibleInPlayMode=true, interactableInPlayMode=true, clusterType='parkingMarker', data={type='monPoi', id='monPoi', name='Mon POI'}})\nend",
+  "notes": [
+    "Le fichier de sites gameplay/parkingSpotTests.sites.json est chargé via gameplay_sites_sitesManager.loadSites à chaque appel de onGetRawPoiListForLevel ; s'il n'existe pas, l'accès à .parkingSpots.sorted peut lever une erreur (déduit du code).",
+    "Chaque POI créé a pour id « Test-PS-<id de la place> », un rayon de 3 et clusterType « parkingMarker ».",
+    "À son chargement, onExtensionLoaded vide le cache de gameplay_markerInteraction pour forcer la reconstruction de la liste des POI."
+  ],
+  "functions": {
+    "onGetRawPoiListForLevel": {
+      "desc": "Hook appelé par le système de POI (gameplay_rawPois) quand il reconstruit la liste des POI d'un niveau. Ajoute dans `elements` un POI de type « poiTest » par place de parking du fichier de test (champs id, pos, rot, scl, radius=3, visibleInPlayMode, interactableInPlayMode, clusterType, data).",
+      "params": {
+        "levelIdentifier": {"type": "string", "desc": "Identifiant du niveau (non utilisé par cette fonction)."},
+        "elements": {"type": "table", "desc": "Liste de POI à compléter (table.insert)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onPoiDetailPromptOpening": {
+      "desc": "Hook appelé à l'ouverture de la fenêtre de détail d'un POI. Si un des éléments est de type « poiTest », ajoute dans `promptData` un bouton « Do the Test » dont l'action écrit « Test Successfull! » dans la console.",
+      "params": {
+        "elemData": {"type": "table", "desc": "Liste des données (`data`) des POI sous le curseur / dans le cluster."},
+        "promptData": {"type": "table", "desc": "Liste des boutons à compléter ({label, buttonText, buttonFun})."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Appelé au chargement de l'extension : vide le cache de gameplay_markerInteraction (clearCache) pour que les POI de test apparaissent.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

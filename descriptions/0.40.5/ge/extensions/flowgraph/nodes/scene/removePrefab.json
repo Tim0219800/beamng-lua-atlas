@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/removePrefab.lua",
+  "module": "Noeud flowgraph « Remove Prefab » (repeat_instant). Supprime un prefab par son id via self.mgr.modules.prefab:deletePrefab(id, true). Entrées : flow, id (number, 0 par défaut).",
+  "notes": [
+    "L'icône référence ui_flowgraph_editor.nodeIcons.svene (faute de frappe pour scene) : icône nil.",
+    "La description du pin id est tronquée (« If not present »)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "work": {
+          "desc": "Appelle deletePrefab(id, true) du module prefab à chaque exécution avec flow.",
+          "internal": false
+        },
+        "_executionStopped": {
+          "desc": "Ne fait rien.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/cameraCircle.lua",
+  "module": "Noeud flowgraph 'Camera Auto Circle' (categorie once_p_duration). Fait tourner la camera libre en cercle autour d'un vehicule (vehId, defaut vehicule joueur) ou d'un point (centerPos) : rayon 'radius' (5 par defaut), hauteur 'height', vitesse angulaire 'speed' en degres/s (10 par defaut, negatif pour le sens inverse), angle de depart 'startAngle' (relatif a l'orientation du vehicule si vehId est donne), 'snapHeight' pour suivre le relief. La camera regarde toujours le centre.",
+  "notes": [
+    "L'angle avance avec mgr.dtReal (temps reel, pas simulation).",
+    "Le centre suit le centre de la boite englobante (OOBB) du vehicule a chaque frame."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Appelle onNodeReset.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Remet centre, decalage, position camera et angle a zero.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Passe en camera libre et fixe l'angle de depart (+180 degres, plus l'orientation du vehicule si vehId).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Calcule le centre, la position sur le cercle, la hauteur (avec lissage 5 % si snapHeight), oriente la camera vers le centre (core_camera.setPosRot) puis incremente l'angle de dtReal * speed.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "path": "lua/ge/extensions/editor/rallyEditor/aiCompetitorsTab.lua",
+  "module": "Onglet « AI Competitors Configuration » de l'éditeur de rallye. Il permet de régler les paramètres globaux du modèle de résultats des concurrents IA (26 curseurs regroupés), le temps de référence de la spéciale et les traits d'un concurrent à la fois (Pace = skill, Consistency, Risk), avec un aperçu en direct : parts de chaque résultat en % et courbe de distribution des temps d'arrivée. Boutons Reload / Save : relit ou écrit gameplay/rally/aiCompetitorsConfig.json via aiCompetitorsEditorModel. Le module renvoie une fonction sans argument qui crée l'onglet : require('/lua/ge/extensions/editor/rallyEditor/aiCompetitorsTab')().",
+  "notes": [
+    "Les modifications ne sont écrites sur disque qu'avec le bouton Save ; le temps de référence saisi est enregistré dans ui.default_player_time_sec (minimum 1 s, défaut 100 s).",
+    "Les valeurs chargées sont bornées à la plage de leur curseur (clampParamToSliderRange).",
+    "Bug : drawTraitSliders lit aiCompetitorsTexts.driverPreviewSection.emptycompetitors (minuscules) alors que la clé définie est emptyCompetitors ; si la liste de concurrents était vide, im.Text recevrait nil. Peu probable en pratique car configWithDefaults fournit toujours au moins un concurrent.",
+    "Un seul concurrent est prévisualisé à la fois ; Prev / Next recopient d'abord les curseurs dans le concurrent courant."
+  ],
+  "classes": {
+    "Panel": {
+      "desc": "Onglet de configuration des concurrents IA (windowDescription = « AI Competitors Configuration »). Champs principaux : competitors (liste copiée pour l'édition), ui, selectedCompetitorIndex, generalFloatPtrs (un FloatPtr par paramètre général), referenceTimePtr et traitSkillPtr / traitConsistencyPtr / traitRiskPtr. Appelé par la fenêtre de l'éditeur de rallye (draw).",
+      "functions": {
+        "init": {
+          "desc": "Crée les pointeurs ImGui (paramètres généraux par défaut, temps de référence, traits à 0.5) puis charge le fichier de configuration.",
+          "internal": true
+        },
+        "gatherGeneralTable": {
+          "desc": "Relit les valeurs des curseurs dans une table des paramètres généraux.",
+          "returns": [{"type": "table<string, number>", "desc": "Paramètres généraux courants."}]
+        },
+        "applyGeneralTable": {
+          "desc": "Applique une table de paramètres généraux aux curseurs, chaque valeur étant bornée à sa plage.",
+          "params": {"general": {"type": "table<string, number>", "desc": "Paramètres généraux."}}
+        },
+        "syncTraitsIntoSelectedCompetitor": {
+          "desc": "Copie les trois curseurs de traits dans le concurrent sélectionné (sans effet si aucun concurrent ou index invalide)."
+        },
+        "applySelectedCompetitorToTraitSliders": {
+          "desc": "Met les curseurs de traits aux valeurs du concurrent sélectionné (index borné à la liste ; valeur par défaut ui.default_slider_value ou 0.5 si le trait est absent)."
+        },
+        "competitorDisplayName": {
+          "desc": "Renvoie le nom affichable d'un concurrent, ou « ? » s'il est absent ou vide.",
+          "params": {"competitor": {"type": "table|nil", "desc": "Concurrent {name, skill, consistency, risk}."}},
+          "returns": [{"type": "string", "desc": "Nom ou « ? »."}]
+        },
+        "loadFromDisk": {
+          "desc": "Relit la configuration (loadRawConfig puis configWithDefaults), met à jour curseurs, concurrents, ui et temps de référence, et resélectionne le premier concurrent."
+        },
+        "parseReferenceTimeSeconds": {
+          "desc": "Valide le temps de référence saisi : remplace une valeur invalide (NaN) par la valeur par défaut et impose un minimum de 1 s.",
+          "returns": [{"type": "number", "desc": "Temps de référence en secondes."}]
+        },
+        "buildVisualization": {
+          "desc": "Synchronise les traits puis calcule les données d'aperçu (aiCompetitorsEditorPreview.computeVisualization) avec les traits ramenés à [0,1] selon slider_min/slider_max.",
+          "returns": [{"type": "table", "desc": "{weights, density, weightedComponents, yMax, timeLo, timeHi}."}]
+        },
+        "drawGeneralParameterGroups": {
+          "desc": "Dessine les groupes de curseurs des paramètres généraux avec titres, descriptions, infobulles et valeur formatée.",
+          "internal": true
+        },
+        "drawTraitSliders": {
+          "desc": "Dessine la navigation Prev / Next entre concurrents et les curseurs Pace, Consistency et Risk.",
+          "internal": true
+        },
+        "drawReferenceAndDriversColumn": {
+          "desc": "Dessine la colonne de droite : champ du temps de référence puis les curseurs de traits.",
+          "internal": true
+        },
+        "trySaveToDisk": {
+          "desc": "Synchronise les traits, met à jour ui.default_player_time_sec et écrit le fichier via saveConfig ; journalise « Wrote ... » (I) ou « Failed to save ... » (E)."
+        },
+        "draw": {
+          "desc": "Appelé à chaque frame par la fenêtre de l'éditeur de rallye : barre d'outils (Reload / Save), parts de résultats, graphique, puis deux colonnes (paramètres généraux, référence et concurrents). Les arguments sont ignorés.",
+          "params": {
+            "_mouseInfo": {"type": "table|nil", "desc": "Non utilisé."},
+            "_dtReal": {"type": "number|nil", "desc": "Non utilisé."},
+            "_dtSim": {"type": "number|nil", "desc": "Non utilisé."},
+            "_dtRaw": {"type": "number|nil", "desc": "Non utilisé."}
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

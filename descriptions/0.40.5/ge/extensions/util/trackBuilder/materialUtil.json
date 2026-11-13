@@ -1,0 +1,45 @@
+{
+  "path": "lua/ge/extensions/util/trackBuilder/materialUtil.lua",
+  "module": "Gère les huit jeux de matériaux (lettres A à H) du Track Builder. Chaque lettre correspond à deux matériaux de la scène, 'track_editor_<lettre>_center' et 'track_editor_<lettre>_border'. Le module lit et écrit leurs couleurs, textures (base, specular, normal, décalques centre/bordure), l'éclat (glow/emissive) et le type de sol (groundtype) ; il sait aussi revenir aux valeurs d'origine et ne renvoyer que les valeurs différentes des défauts.",
+  "notes": [
+    "Un matériau est une table avec : baseCenterColor, baseBorderColor, centerColor, borderColor (tableaux {r,g,b,a} de 0 à 1), baseTexture, baseTextureN, baseTextureS, centerTexture, borderTexture, centerGlow, borderGlow (booléens), groundtype (ASPHALT par défaut).",
+    "Les matériaux de la scène sont retrouvés par scenetree.findObject ; les fonctions échouent si 'track_editor_X_center' ou '_border' n'existent pas.",
+    "loadMaterial (local) relit l'état réel depuis les objets matériaux sauf si skipSet est vrai, et utilise editor.texObj : cela suppose l'éditeur chargé.",
+    "Bug : M.loadMaterials est exporté mais loadMaterials n'est pas défini dans le fichier (l'appel est commenté), donc le champ vaut nil.",
+    "resetMaterialsToDefault(letter) appelle dump() deux fois (traces de débogage laissées dans le code)."
+  ],
+  "fields": {
+    "currentMaterials": {"type": "table<string, table>", "desc": "État courant des matériaux, indexé par lettre (A à H)."},
+    "loadMaterials": {"type": "nil", "desc": "Toujours nil : référence à une fonction non définie (bug)."}
+  },
+  "functions": {
+    "getMaterials": {
+      "desc": "Relit les 8 matériaux depuis la scène et renvoie, par lettre, uniquement les valeurs qui diffèrent des valeurs d'origine (removeDefaults).",
+      "params": {},
+      "returns": [{"type": "table<string, table>", "desc": "Matériaux allégés, indexés par lettre."}],
+      "internal": false
+    },
+    "setMaterials": {
+      "desc": "Applique plusieurs matériaux : complète chaque entrée avec les valeurs d'origine manquantes (fillDefaults) puis appelle setSingleMaterial. Sans argument, ne fait rien.",
+      "params": {
+        "materials": {"type": "table<string, table>|nil", "desc": "Matériaux indexés par lettre."},
+        "skipSet": {"type": "boolean|nil", "desc": "Si vrai, ne relit pas l'état courant des objets de la scène avant d'appliquer."}
+      },
+      "internal": false
+    },
+    "setSingleMaterial": {
+      "desc": "Applique un matériau à la lettre donnée : textures, couleurs, glow, groundtype, puis flush et reload des matériaux centre et bordure ; met à jour currentMaterials.",
+      "params": {
+        "letter": {"type": "string", "desc": "Lettre 'A' à 'H'."},
+        "material": {"type": "table", "desc": "Table de matériau complète (voir module)."},
+        "skipSet": {"type": "boolean|nil", "desc": "Voir setMaterials."}
+      },
+      "internal": false
+    },
+    "resetMaterialsToDefault": {
+      "desc": "Remet les matériaux aux valeurs d'origine : tous si letter est nil, sinon seulement cette lettre.",
+      "params": {"letter": {"type": "string|nil", "desc": "Lettre 'A' à 'H', ou nil pour tous."}},
+      "internal": false
+    }
+  }
+}

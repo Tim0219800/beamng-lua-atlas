@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftData.lua",
+  "module": "Nœud flowgraph « Set Drift Data » (catégorie repeat_instant). Charge les données de drift (par exemple les zones de cascade) depuis un fichier (pin driftDataFile) via gameplay_drift_saveLoad.loadDriftData.",
+  "notes": ["Chemin résolu avec mgr:getRelativeAbsolutePath ; ignoré s'il est invalide.", "Appelé à chaque frame tant que le nœud est atteint."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Résout le chemin puis appelle gameplay_drift_saveLoad.loadDriftData(file)."}
+      }
+    }
+  }
+}

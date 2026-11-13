@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/statsFooter.lua",
+  "module": "Pied de page de statistiques partagé par les outils « kit » de l'éditeur : affiche des stats « Libellé N » en ImGui et la ligne dynamique des triangles dessinés, de la distance et du nombre de pièces affichées (calculés par triLive). Utilise la palette 'crystal' de style.lua.",
+  "notes": [
+    "À appeler dans une fenêtre ImGui ; les fonctions dessinent directement avec im.TextColored et im.SameLine.",
+    "Tant que triLive a des formes à mesurer (toScan > 0), liveRow n'affiche que « Drawn tris : scanning N shapes »."
+  ],
+  "functions": {
+    "item": {
+      "desc": "Dessine une stat « Libellé N » : libellé terne, nombre coloré, barre « | » ternie devant (sauf en début de ligne).",
+      "params": {
+        "label": {"type": "string", "desc": "Libellé."},
+        "val": {"type": "any", "desc": "Valeur affichée via tostring ; 0 si nil/false."},
+        "col": {"type": "ImVec4", "desc": "Couleur du nombre."},
+        "lead": {"type": "boolean|nil", "desc": "Vrai : début de ligne, pas de barre."},
+        "tip": {"type": "string|nil", "desc": "Infobulle."}
+      },
+      "returns": []
+    },
+    "liveRow": {
+      "desc": "Affiche triangles dessinés (« Drawn tris »), portée (« Range », en mètres) et pièces dessinées sur placées (« Drawing »). `unique` est ajouté tel quel aux triangles car sans LOD. Met à jour triLive (note si fresh, scanStep, update).",
+      "params": {
+        "instances": {"type": "table", "desc": "Entrées triLive."},
+        "unique": {"type": "number", "desc": "Triangles de la géométrie unique, ajoutés en entier."},
+        "fresh": {"type": "boolean|nil", "desc": "La liste a changé depuis la dernière fois (peut contenir une forme jamais mesurée)."}
+      },
+      "returns": []
+    }
+  }
+}

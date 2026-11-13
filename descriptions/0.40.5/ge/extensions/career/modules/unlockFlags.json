@@ -1,0 +1,40 @@
+{
+  "path": "lua/ge/extensions/career/modules/unlockFlags.lua",
+  "module": "Drapeaux de déblocage de la carrière. Les définitions viennent des autres extensions via le hook onGetUnlockFlagDefinitions (chacune ajoute {unlockedFunction, icon, level, label} dans la table reçue) ; la valeur d'un drapeau est calculée à la demande avec unlockedFunction puis mise en cache, ou forcée avec setFlag.",
+  "notes": [
+    "Les définitions sont rechargées et le cache vidé à chaque onCareerActivated.",
+    "getFlag ne met pas en cache la valeur false (la condition `not flagCache[flagName]` est vraie) : unlockedFunction est donc ré-évaluée à chaque appel tant que le drapeau est faux. Une définition manquante donne false.",
+    "setFlag émet le hook onUnlockFlagChanged(flagName, value).",
+    "onSaveCurrentProfile est vide (rien n'est sauvegardé par ce module).",
+    "getFlagLockedReason existe dans le code mais n'est pas exporté."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{\"career_saveSystem\"}."}
+  },
+  "functions": {
+    "getFlag": {
+      "desc": "Retourne la valeur d'un drapeau (en l'évaluant via sa définition si besoin). false si le drapeau n'a pas de définition.",
+      "params": {"flagName": {"type": "string", "desc": "Nom du drapeau."}},
+      "returns": [{"type": "boolean", "desc": "Valeur du drapeau."}],
+      "internal": false
+    },
+    "getFlagDefinition": {
+      "desc": "Retourne la définition enregistrée d'un drapeau.",
+      "params": {"flagName": {"type": "string", "desc": "Nom du drapeau."}},
+      "returns": [{"type": "table|nil", "desc": "Définition {unlockedFunction, icon, level, label} ou nil."}],
+      "internal": false
+    },
+    "setFlag": {
+      "desc": "Force la valeur d'un drapeau dans le cache et émet onUnlockFlagChanged.",
+      "params": {"flagName": {"type": "string", "desc": "Nom du drapeau."}, "value": {"type": "boolean", "desc": "Nouvelle valeur."}},
+      "internal": false
+    },
+    "resetFlags": {"desc": "Vide le cache des valeurs de drapeaux (les définitions restent).", "internal": false},
+    "onCareerActivated": {"desc": "Hook appelé à l'activation de la carrière : vide le cache et recharge les définitions via le hook onGetUnlockFlagDefinitions.", "internal": true},
+    "onSaveCurrentProfile": {
+      "desc": "Hook de sauvegarde du profil ; ne fait rien dans cette version.",
+      "params": {"currentSavePath": {"type": "string", "desc": "Dossier de sauvegarde du profil."}},
+      "internal": true
+    }
+  }
+}

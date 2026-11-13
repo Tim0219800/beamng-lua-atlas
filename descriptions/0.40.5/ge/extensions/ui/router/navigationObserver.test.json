@@ -1,0 +1,130 @@
+{
+  "path": "lua/ge/extensions/ui/router/navigationObserver.test.lua",
+  "module": "Tests unitaires du module non-shipping NavigationObserver (classification duplicate_navigation / conflicting_navigation, attribution de l'appelant, avertissement unique, reset). Ce n'est pas une API pour moddeur : fichier lancé par le framework de tests.",
+  "notes": [
+    "Lancement : extensions.testFramework_TestManager:runTestFiles(\"navigationObserver\")."
+  ],
+  "functions": {
+    "testIdenticalRequestsAreDuplicate": {
+      "desc": "Vérifie que deux requêtes identiques (route, portée, params, options) sont classées duplicate_navigation.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testDifferentRouteIsConflict": {
+      "desc": "Vérifie qu'une route différente donne conflicting_navigation.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testDifferentParamsIsConflict": {
+      "desc": "Vérifie que des paramètres effectifs différents donnent conflicting_navigation.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testDifferentScopeIsConflict": {
+      "desc": "Vérifie qu'une portée différente donne conflicting_navigation.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testDifferentOptionsIsConflict": {
+      "desc": "Vérifie que des options de routeur différentes donnent conflicting_navigation.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testBeginAttemptAttributesExternalCaller": {
+      "desc": "Vérifie que beginAttempt ignore les cadres internes du routeur et attribue l'appelant Lua externe.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testBeginAttemptFallsBackToBridgeUnknown": {
+      "desc": "Vérifie le repli sur « bridge/unknown » quand aucun cadre Lua n'est disponible.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testPreemptedAttemptIsReportedOnlyOnce": {
+      "desc": "Vérifie qu'une tentative préemptée n'est signalée qu'une fois.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testResetClearsCounterAndReportState": {
+      "desc": "Vérifie que reset() remet à zéro le compteur, la tentative courante et l'état de déduplication.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testMissingAttemptsAreNotReported": {
+      "desc": "Vérifie que reportPreemption ne fait rien si une des tentatives manque.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testSelfPreemptionIsNotReported": {
+      "desc": "Vérifie qu'une tentative ne se préempte jamais elle-même.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de tests (setDescription, assert, assertEqual)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

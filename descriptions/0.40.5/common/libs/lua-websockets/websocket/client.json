@@ -1,0 +1,6 @@
+{
+  "path": "lua/common/libs/lua-websockets/websocket/client.lua",
+  "module": "Sélecteur de backend client WebSocket de lua-websockets. Renvoie une table vide dont le __index charge à la demande le module 'websocket/client_<nom>' pour les noms 'sync', 'copas', 'ev' et 'new' (alias de 'sync'). Tout autre nom renvoie nil sans rien charger.",
+  "usage": "local client = require('libs/lua-websockets/websocket.client')\nlocal ws = client.new({timeout = 1})   -- backend synchrone\nlocal wsCopas = client.copas()         -- backend copas",
+  "notes": ["Le backend chargé est mis en cache dans la table (client.sync, client.copas…) ; client.new est le même objet que client.sync."]
+}

@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/ui/legal.lua",
+  "module": "Vérifie si l'utilisateur a répondu à l'assistant de consentement en ligne (réglages `onlineFeatures` et `telemetry`, valeur \"ask\" = pas encore répondu). Sert au routeur d'UI pour interdire de quitter l'écran de consentement tant qu'il n'est pas validé.",
+  "notes": [
+    "En menu simple (Engine.UI.isSimpleMenu()), si le consentement n'est pas donné, le module active automatiquement onlineFeatures et telemetry (\"enable\"), demande la sauvegarde des réglages et considère le consentement comme donné (les CGU sont supposées acceptées)."
+  ],
+  "functions": {
+    "isOnlineConsentSet": {
+      "desc": "Renvoie true si telemetry et onlineFeatures sont tous deux différents de \"ask\". Effet de bord en menu simple : active les deux réglages et sauvegarde.",
+      "returns": [{"type": "boolean", "desc": "Consentement renseigné."}]
+    },
+    "canLeaveOnlineConsent": {
+      "desc": "Indique si la navigation hors de la route courante est permise : toujours true à l'intérieur de l'arbre de routes `legal.*` (pour finir l'assistant), sinon dépend de isOnlineConsentSet().",
+      "params": {"route": {"type": "table", "desc": "Route de l'UI (champ name de type « legal.xxx »)."}},
+      "returns": [{"type": "boolean", "desc": "true si on peut quitter."}]
+    }
+  }
+}

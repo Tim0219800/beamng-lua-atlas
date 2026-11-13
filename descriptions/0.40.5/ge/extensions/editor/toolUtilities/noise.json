@@ -1,0 +1,58 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/noise.lua",
+  "module": "Bruit fractal partagé en coordonnées monde pour les outils de terrain et de maillage de l'éditeur (terraform, éditeur de route héros). Source unique pour que le maillage d'une route et le terrain autour d'elle échantillonnent le même champ avec la même correspondance rugosité/échelle et s'accordent bosse pour bosse sur leur bord commun. Aucune graine par outil : les coordonnées sont les XY monde bruts.",
+  "usage": "local noise = require('editor/toolUtilities/noise')\nlocal f, s, oct, lac, gain = noise.mapNoiseParameters(0.5, 0.5)\nlocal h = s * noise.fbm(x * f, y * f, oct, lac, gain)",
+  "notes": [
+    "Utilise editor/toolUtilities/simplex (simplex.noise(x, y)) ; clamp et lerp sont des globales de common/mathlib.lua.",
+    "Les deux fonctions de correspondance renvoient la fréquence (1/m), la force (m, hauteur de crête), les octaves, la lacunarité et le gain, dans cet ordre.",
+    "fbm applique la fréquence par octave ; passer x*freq et y*freq en entrée donne la longueur d'onde de base voulue."
+  ],
+  "fields": {
+    "defaultFbmLacunarity": {"type": "number", "desc": "Multiplicateur de fréquence par octave (2.0)."},
+    "defaultFbmGain": {"type": "number", "desc": "Multiplicateur d'amplitude par octave (0.5)."}
+  },
+  "functions": {
+    "fbm": {
+      "desc": "Mouvement brownien fractionnaire au point monde (x, y) : somme de bruit simplex sur plusieurs octaves, normalisée par l'amplitude totale.",
+      "params": {
+        "x": {"type": "number", "desc": "X monde (déjà multiplié par la fréquence de base si voulu)."},
+        "y": {"type": "number", "desc": "Y monde."},
+        "octaves": {"type": "integer", "desc": "Nombre d'octaves."},
+        "lacunarity": {"type": "number", "desc": "Multiplicateur de fréquence par octave."},
+        "gain": {"type": "number", "desc": "Multiplicateur d'amplitude par octave."}
+      },
+      "returns": [{"type": "number", "desc": "Valeur normalisée d'environ [-1, 1]."}],
+      "internal": false
+    },
+    "mapNoiseParameters": {
+      "desc": "Convertit rugosité et échelle utilisateur ([0,1], bornées) en paramètres de fbm pour de GRANDES ondulations de terrain : force 0 à 1 m, fréquence 0.02 (bosses d'environ 50 m) à 0.2 (environ 5 m), octaves 3 à 6.",
+      "params": {
+        "roughness": {"type": "number", "desc": "Rugosité 0 à 1 (amplitude)."},
+        "scale": {"type": "number", "desc": "Échelle 0 à 1 (0 = grandes bosses, 1 = petites)."}
+      },
+      "returns": [
+        {"type": "number", "desc": "noiseFreq."},
+        {"type": "number", "desc": "noiseStrength (m)."},
+        {"type": "integer", "desc": "fbmOctaves."},
+        {"type": "number", "desc": "fbmLacunarity (2.0)."},
+        {"type": "number", "desc": "fbmGain (0.5)."}
+      ],
+      "internal": false
+    },
+    "mapRoadNoiseParameters": {
+      "desc": "Même champ, mais réglé pour une SURFACE DE ROUTE (bosses de rallye) : bande plus fine et amplitude plus faible, force 0 à 0.18 m de hauteur de crête, fréquence 0.06 (environ 16 m) à 0.5 (environ 2 m), octaves 3 à 5.",
+      "params": {
+        "roughness": {"type": "number", "desc": "Rugosité 0 à 1."},
+        "scale": {"type": "number", "desc": "Échelle 0 à 1."}
+      },
+      "returns": [
+        {"type": "number", "desc": "noiseFreq."},
+        {"type": "number", "desc": "noiseStrength (m)."},
+        {"type": "integer", "desc": "fbmOctaves."},
+        {"type": "number", "desc": "fbmLacunarity."},
+        {"type": "number", "desc": "fbmGain."}
+      ],
+      "internal": false
+    }
+  }
+}

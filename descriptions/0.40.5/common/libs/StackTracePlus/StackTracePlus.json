@@ -1,0 +1,76 @@
+{
+  "path": "lua/common/libs/StackTracePlus/StackTracePlus.lua",
+  "module": "StackTracePlus : bibliothèque tierce (Ignacio Burgueño, licence MIT) qui produit des traces de pile Lua détaillées : noms de fonctions deviné quand ils manquent, fonctions et tables connues de la bibliothèque standard, et vidage des variables locales de chaque niveau. Utilisable comme gestionnaire d'erreur pour xpcall ou pcall. Le module renvoie la table _M.",
+  "usage": "local stp = require(\"libs/StackTracePlus/StackTracePlus\")\nlocal ok, trace = xpcall(maFonction, function(e) return (stp.stacktrace(e)) end)",
+  "notes": [
+    "stacktrace et stacktraceSimple acceptent un premier argument thread facultatif : s'il n'est pas de type thread, les paramètres sont décalés (message, level, level_limit, dump_locals).",
+    "dump_locals vaut true par défaut. level vaut 1 par défaut et level_limit arrête la remontée.",
+    "stacktrace renvoie deux valeurs : la trace (string) et l'erreur d'origine (string ou rendu d'un objet d'erreur table).",
+    "add_known_table et add_known_function lèvent une erreur si l'élément est déjà connu du module (« Cannot override… »)."
+  ],
+  "functions": {
+    "stacktrace": {
+      "desc": "Collecte une trace de pile détaillée (bornée par « Stack Traceback >> START/END »), avec les variables locales de chaque niveau Lua. Adaptée comme gestionnaire d'erreur de xpcall.",
+      "params": {
+        "thread": {"type": "thread|nil", "desc": "Coroutine à inspecter (défaut : la coroutine courante)"},
+        "message": {"type": "string|table|nil", "desc": "Message ou objet d'erreur placé en tête de la trace"},
+        "level": {"type": "integer|nil", "desc": "Niveau de pile de départ (défaut 1)"},
+        "level_limit": {"type": "integer|nil", "desc": "Niveau maximal à afficher"},
+        "dump_locals": {"type": "boolean|nil", "desc": "Afficher les variables locales (défaut true)"}
+      },
+      "returns": [
+        {"type": "string", "desc": "La trace complète"},
+        {"type": "string|nil", "desc": "Le message d'erreur d'origine"}
+      ]
+    },
+    "stacktraceSimple": {
+      "desc": "Variante de stacktrace avec les mêmes paramètres, produisant une trace plus simple (déduit du code : même squelette, sans la même mise en forme détaillée).",
+      "params": {
+        "thread": {"type": "thread|nil", "desc": "Coroutine à inspecter"},
+        "message": {"type": "string|table|nil", "desc": "Message d'erreur"},
+        "level": {"type": "integer|nil", "desc": "Niveau de départ (défaut 1)"},
+        "level_limit": {"type": "integer|nil", "desc": "Niveau maximal"},
+        "dump_locals": {"type": "boolean|nil", "desc": "Afficher les locales (défaut true)"}
+      },
+      "returns": [{"type": "string", "desc": "La trace"}]
+    },
+    "add_known_table": {
+      "desc": "Ajoute une table à la liste des tables connues, avec une description utilisée à l'affichage des variables locales.",
+      "params": {
+        "tab": {"type": "table", "desc": "Table à nommer"},
+        "description": {"type": "string", "desc": "Nom affiché"}
+      }
+    },
+    "add_known_function": {
+      "desc": "Ajoute une fonction à la liste des fonctions connues, avec une description utilisée dans les traces.",
+      "params": {
+        "fun": {"type": "function", "desc": "Fonction à nommer"},
+        "description": {"type": "string", "desc": "Nom affiché"}
+      }
+    }
+  },
+  "classes": {
+    "Dumper": {
+      "desc": "Objet interne qui analyse une pile (créé par Dumper.new(thread)) et accumule les lignes de la trace.",
+      "functions": {
+        "new": {
+          "desc": "Crée un Dumper lié à une coroutine ; adapte getinfo/getlocal (décalage d'un niveau si c'est la coroutine courante).",
+          "params": {"thread": {"type": "thread", "desc": "Coroutine inspectée"}},
+          "internal": true
+        },
+        "add": {"desc": "Ajoute une ligne de texte au tampon.", "params": {"text": {"type": "string", "desc": "Texte"}}, "internal": true},
+        "add_f": {
+          "desc": "Ajoute du texte formaté (string.format).",
+          "params": {"fmt": {"type": "string", "desc": "Format"}, "...": {"type": "any", "desc": "Valeurs"}},
+          "internal": true
+        },
+        "concat_lines": {"desc": "Concatène les lignes accumulées en une chaîne.", "returns": [{"type": "string", "desc": "Texte final"}], "internal": true},
+        "DumpLocals": {
+          "desc": "Parcourt et ajoute à la trace les variables locales d'un niveau de pile.",
+          "params": {"level": {"type": "integer", "desc": "Niveau de pile de la fonction"}},
+          "internal": true
+        }
+      }
+    }
+  }
+}

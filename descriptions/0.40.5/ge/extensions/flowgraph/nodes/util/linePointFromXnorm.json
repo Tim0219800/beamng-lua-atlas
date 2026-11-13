@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/linePointFromXnorm.lua",
+  "module": "Nœud « Line Point From Xnorm » (repeat_instant). Renvoie la position située entre deux points d'une ligne selon un ratio xnorm (0 = posA, 1 = posB ; 0,5 par défaut si non fourni). Entrées : posA, posB (vec3), xnorm. Sortie : pos (vec3 en table).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "work": {
+          "desc": "Si posA et posB sont connectés, appelle la fonction globale linePointFromXnorm et écrit le résultat dans pos.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

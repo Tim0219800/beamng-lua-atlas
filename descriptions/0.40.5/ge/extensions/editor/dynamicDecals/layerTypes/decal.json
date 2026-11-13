@@ -1,0 +1,61 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/layerTypes/decal.lua",
+  "module": "Type de calque « Decal » de l'outil Dynamic Decals, le plus important : un decal unique avec couleur, textures (color, alpha, metallic, normal, roughness), échelle, rotation, skew, UV, masque alpha, miroir, dégradé et propriétés SDF (Signed Distance Fields : contours, adoucissement). Fournit la section « Decal Properties » (réglages du decal courant, ordre 60), la GUI d'inspecteur du type decal, la fenêtre d'introduction SDF, la fenêtre de choix d'un caractère de police et les pages de documentation (Decal Layers, Properties, SDF).",
+  "notes": [
+    "Une texture est « compatible SDF » si son fichier sidecar (texturesApi.readSidecarFile) contient isSdfCompatible = true.",
+    "La fenêtre d'intro SDF s'ouvre à l'apparition d'une texture couleur compatible SDF, tant que la préférence `dynamicDecalsTool.decalProperties.doNotShowSdfIntroAgain` est false et que la fenêtre n'a pas été fermée dans la session.",
+    "Dans l'inspecteur, la mise à jour de decalScale n'écrit que .x et .z (pas .y) ; les modifications d'un widget passent par widgets.draw puis api.setLayer(layer, true) quand l'édition est terminée.",
+    "La préférence `dynamicDecalsTool.inspector.applyMirroredPropertyToChildren` (défaut true) propage mirrored et flipMirroredDecal aux calques enfants (via setPropertyInChildrenRec).",
+    "Le fichier enregistre aussi deux propriétés ajoutées localement : « mirroredDebug » (trace la ligne du plan de miroir sur la forme) et « mirrorOffsetProperty » (décale le plan, de -1 à 1)."
+  ],
+  "functions": {
+    "isTexturesSdfCompatible": {
+      "desc": "Indique si la texture donnée est compatible SDF, d'après son fichier de métadonnées.",
+      "params": {"texturePath": {"type": "string|nil", "desc": "Chemin de la texture ; par défaut la texture couleur courante du decal (api.getDecalTexturePath(\"color\"))."}},
+      "returns": [{"type": "boolean", "desc": "true si la métadonnée isSdfCompatible est vraie."}],
+      "internal": false
+    },
+    "checkColorDecalTexturesSdfCompatible": {
+      "desc": "Si la texture couleur courante est compatible SDF, affiche la fenêtre d'introduction SDF (sauf si elle a été fermée ou si la préférence doNotShowSdfIntroAgain est vraie).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "showSdfIntroWindow": {
+      "desc": "Ouvre la fenêtre « Dynamic Decals - SDF Introduction ».",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "hideSdfIntroWindow": {
+      "desc": "Ferme la fenêtre d'introduction SDF.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "editModeUpdate": {
+      "desc": "Appelé à chaque frame par le mode d'édition (via tool.registerEditorOnUpdateFn) : décompte le minuteur de mise en évidence des propriétés SDF.",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."}, "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}},
+      "returns": [],
+      "internal": true
+    },
+    "registerEditorPreferences": {
+      "desc": "Enregistre `dynamicDecalsTool.decalProperties` : scaleStep (float 0.025, de 0.001 à 0.25), rotationStep (float 15 degrés, de 1 à 360), texturePreviewSize (float 128, de 32 à 512), doNotShowSdfIntroAgain (bool false) ; et `dynamicDecalsTool.inspector.applyMirroredPropertyToChildren` (bool true).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : récupère les modules liés, enregistre les fenêtres (SDF 400x400, caractère de police 550x550), la section « Decal Properties », les callbacks d'update et de GUI, la GUI d'inspecteur du type decal, les pages de documentation et la liste des blend modes.",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

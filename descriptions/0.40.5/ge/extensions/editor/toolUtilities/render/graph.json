@@ -1,0 +1,76 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/render/graph.lua",
+  "module": "Rendu des barres de vitesse et du graphe de navigation IA (lignée roadArchitect / drivePath) : barres et courbe de vitesses, sélection de nœuds du navgraph et surcouche du graphe IA du monde. Séparé de render.lua car seuls les outils de graphe et de vitesse l'utilisent. Module composite qui dessine via render/spheres, lines, tris et markup, avec sa propre réserve de vec3 temporaires.",
+  "notes": [
+    "Les hauteurs de barres sont la vitesse (m/s) multipliée par geom.getBarScale(), posées sur le sol trouvé par util.vertRaycast.",
+    "unitsInt : 0 ou autre = m/s, 1 = mph, 2 = kph (util.msToMph / util.msToKph).",
+    "À défaut de vitesses (vels/velLimits vides), 30.0 m/s est utilisé.",
+    "renderWorldGraphNodes utilise le kd-tree graph.kdNodes ; le graphe attend nodeX/nodeY/nodeZ/nodeDepth, éventuellement nodeGroupId, groupCols, defaultNodeCol et sphereRadius (défaut 1.5)."
+  ],
+  "functions": {
+    "renderVelocities": {
+      "desc": "Dessine les barres de vitesse d'une spline : courbe plafond (Catmull-Rom sur barPoints) colorée selon la hauteur, lignes de chute vers le sol et étiquettes de vitesse à chaque point. Sans effet pour moins de 2 nœuds.",
+      "params": {
+        "spline": {"type": "table", "desc": "Spline avec nodes, barPoints, vels, velLimits, isLoop."},
+        "isBarsLimit": {"type": "boolean", "desc": "true : utilise velLimits (limites), false : vels (valeurs réelles)."},
+        "unitsInt": {"type": "integer", "desc": "Unité d'affichage : 0 m/s, 1 mph, 2 kph."},
+        "elevScale": {"type": "number", "desc": "Hauteur correspondant au rouge de la rampe de couleur."}
+      },
+      "returns": []
+    },
+    "renderVelocitiesGraph": {
+      "desc": "Comme renderVelocities pour un chemin de graphe : si spline.divPoints existe, la courbe suit le chemin navgraph calculé et les vitesses sont interpolées linéairement entre les nœuds choisis (graphNodes/graphPath) ; sinon repli sur barPoints. Étiquettes seulement aux nœuds choisis.",
+      "params": {
+        "spline": {"type": "table", "desc": "Spline avec graphNodes, graphPath, divPoints, barPoints, vels, velLimits, isLoop."},
+        "unitsInt": {"type": "integer", "desc": "Unité d'affichage : 0 m/s, 1 mph, 2 kph."},
+        "elevScale": {"type": "number", "desc": "Échelle des couleurs d'élévation."},
+        "isBarsLimit": {"type": "boolean", "desc": "true : velLimits, false : vels."}
+      },
+      "returns": []
+    },
+    "renderNavGraph": {
+      "desc": "Dessine le graphe de navigation : rubans triangulés entre sphères, ligne centrale et sphères de nœuds avec halo. Le nœud survolé pulse.",
+      "params": {
+        "navGraph": {"type": "table|nil", "desc": "Graphe avec lines (pL, pR, qL, qR, cL, cR) et nodes (table de vec3)."},
+        "hoverNode": {"type": "vec3|nil", "desc": "Nœud survolé (comparé par identité)."}
+      },
+      "returns": []
+    },
+    "renderGraphPath": {
+      "desc": "Dessine un chemin de graphe : sphères de nœuds de chemin et lignes entre nœuds consécutifs.",
+      "params": {
+        "path": {"type": "table", "desc": "Liste de clés de nœuds dans graphData.nodes."},
+        "graphData": {"type": "table", "desc": "Données de graphe avec le champ nodes."}
+      },
+      "returns": []
+    },
+    "renderChosenNodes": {
+      "desc": "Dessine les nœuds navGraph choisis avec une grosse sphère pulsée (pour indiquer qu'ils font partie de la sélection) et une étiquette numérotée.",
+      "params": {
+        "nodes": {"type": "table", "desc": "Liste de clés de nœuds choisis."},
+        "graphData": {"type": "table", "desc": "Données de graphe avec le champ nodes."}
+      },
+      "returns": []
+    },
+    "renderWorldGraphNodes": {
+      "desc": "Dessine les sphères des nœuds du graphe IA du monde situés dans le rayon donné autour de la caméra (requête kd-tree). La sphère est posée en nodeZ + nodeDepth + 0.05 m et colorée par groupe si groupCols existe.",
+      "params": {
+        "graph": {"type": "table|nil", "desc": "Graphe monde (nodeCount, kdNodes, nodeX, nodeY, nodeZ, nodeDepth…)."},
+        "drawRadiusMeters": {"type": "number", "desc": "Rayon de dessin autour de la caméra, en mètres."}
+      },
+      "returns": []
+    },
+    "renderWorldGraphNodeBackdrops": {
+      "desc": "Dessine des sphères de fond agrandies derrière une liste de nœuds du graphe monde (mise en évidence).",
+      "params": {
+        "graph": {"type": "table|nil", "desc": "Graphe monde."},
+        "drawRadiusMeters": {"type": "number", "desc": "Rayon de dessin autour de la caméra, en mètres."},
+        "nodeIds": {"type": "integer[]", "desc": "Identifiants de nœuds (les valeurs <= 0 sont ignorées)."},
+        "nodeIdCount": {"type": "integer", "desc": "Nombre d'identifiants valides dans nodeIds."},
+        "sphereRadiusMul": {"type": "number|nil", "desc": "Multiplicateur du rayon (défaut 1.6)."},
+        "col": {"type": "integer|nil", "desc": "Couleur packée (défaut style.colourNodeDull)."}
+      },
+      "returns": []
+    }
+  }
+}

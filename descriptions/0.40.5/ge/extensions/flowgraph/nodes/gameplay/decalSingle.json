@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/decalSingle.lua",
+  "module": "Nœud flowgraph « Decal Single » (catégorie repeat_instant, util/draw). Dessine un décalque unique dans le monde. Pins d'entrée : pos, rot (quat), scl, decalPath (parkDecalStripes.png par défaut), clrA, clrB (couleurs, alternance en ping-pong) et clrFrequency (2).",
+  "notes": ["La couleur oscille entre clrA et clrB selon os.clockhp() * clrFrequency.", "work lit pinIn.clrA.value[i] sans test : plante si les couleurs sont nil (elles ont une valeur par défaut hardcoded)."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Vide.", "internal": true},
+        "work": {"desc": "Calcule la couleur, construit le décalque et l'envoie à Engine.Render.DynamicDecalMgr.addDecals."}
+      }
+    }
+  }
+}

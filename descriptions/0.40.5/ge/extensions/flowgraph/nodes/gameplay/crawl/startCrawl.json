@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/crawl/startCrawl.lua",
+  "module": "Nœud flowgraph « Start Crawl » (catégorie once_instant, crawl). Démarre la course et le timer du crawl ; nécessite que Setup Crawl ait été exécuté (utilise son trail et son véhicule). Sorties : success, failed.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Charge le bridge du crawl.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
+        "work": {"desc": "Appelle bridge.startCrawl(nil, nil) et renseigne success/failed."}
+      }
+    }
+  }
+}

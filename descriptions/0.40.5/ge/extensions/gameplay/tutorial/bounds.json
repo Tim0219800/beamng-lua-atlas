@@ -1,0 +1,98 @@
+{
+  "path": "lua/ge/extensions/gameplay/tutorial/bounds.lua",
+  "module": "Gère les limites de la zone du tutoriel de carrière. Il vérifie que le joueur reste dans les zones actives des sites du tutoriel ; sinon il affiche un avertissement avec un compte à rebours de 5 s dans la liste de tâches, puis déclenche un retour automatique via des callbacks (hooks onCareerTutorial...). Peut aussi dessiner les zones actives en debug.",
+  "usage": "gameplay_tutorial_bounds.setActiveZones({'evalZone'})\ngameplay_tutorial_bounds.setDebugDrawBounds(true)",
+  "notes": [
+    "Constantes : compte à rebours de 5 s (OOB_AUTO_RESET_SECONDS), message « retour automatique » affiché 1 s avant le callback de timeout.",
+    "Callbacks par défaut : onOutOfBoundsStarted -> hook onCareerTutorialOutOfBoundsStarted ; onOutOfBoundsEnded -> onCareerTutorialOutOfBoundsEnded ; onOutOfBoundsTimedOut(stepId) -> hook onCareerTutorialOutOfBoundsTimedOut si l'étape courante est '04timeTrial', sinon onCareerTutorialLeftBounds ; onOutOfBoundsWhileNotAllowed -> onCareerTutorialLeftBounds.",
+    "Sans zone active ou sans sites chargés, le joueur est toujours considéré dans les limites.",
+    "Les textes d'avertissement sont en anglais et codés en dur (pas de clé de traduction).",
+    "La position testée est celle du véhicule du joueur 0, ou de la caméra s'il n'y en a pas.",
+    "Le suivi est inactif tant que le getter d'activité du runtime (setRuntimeActiveGetter) renvoie false."
+  ],
+  "functions": {
+    "setRuntimeActiveGetter": {
+      "desc": "Définit la fonction qui indique si le tutoriel est actif. Une valeur non fonctionnelle la remet à une fonction renvoyant false.",
+      "params": {"getter": {"type": "function", "desc": "Fonction sans argument renvoyant un booléen."}},
+      "returns": []
+    },
+    "setCurrentStepGetter": {
+      "desc": "Définit la fonction qui renvoie l'identifiant de l'étape courante du tutoriel (transmis au callback de timeout).",
+      "params": {"getter": {"type": "function", "desc": "Fonction sans argument renvoyant l'id d'étape (string) ou nil."}},
+      "returns": []
+    },
+    "setCallbacks": {
+      "desc": "Remplace tout ou partie des callbacks de sortie de limites ; les clés absentes conservent leur callback actuel.",
+      "params": {"newCallbacks": {"type": "table", "desc": "Clés possibles : onOutOfBoundsStarted, onOutOfBoundsEnded, onOutOfBoundsTimedOut(currentStepId), onOutOfBoundsWhileNotAllowed."}},
+      "returns": []
+    },
+    "setSites": {
+      "desc": "Définit l'objet de sites (avec zones) utilisé pour tester les limites. S'il est nil, update le charge depuis gameplay_tutorial_setup.",
+      "params": {"newSites": {"type": "table|nil", "desc": "Objet sites avec sites.zones.byName / sites.zones.objects ou la méthode getZonesForPosition."}},
+      "returns": []
+    },
+    "setActiveZones": {
+      "desc": "Définit la liste des zones dans lesquelles le joueur est autorisé (remplace la liste précédente).",
+      "params": {"names": {"type": "string[]|nil", "desc": "Noms de zones ; nil vide la liste (plus de limite)."}},
+      "returns": []
+    },
+    "setZoneEnabled": {
+      "desc": "Active ou désactive temporairement une zone sans la retirer de la liste active.",
+      "params": {
+        "zoneName": {"type": "string", "desc": "Nom de la zone."},
+        "enabled": {"type": "boolean", "desc": "false pour ignorer cette zone."}
+      },
+      "returns": []
+    },
+    "getZoneEnabled": {
+      "desc": "Indique si une zone est activée (true par défaut si jamais réglée).",
+      "params": {"zoneName": {"type": "string", "desc": "Nom de la zone."}},
+      "returns": [{"type": "boolean", "desc": "État d'activation."}]
+    },
+    "getActiveZoneNames": {
+      "desc": "Renvoie la liste triée des noms de zones actives.",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Noms triés par ordre alphabétique."}]
+    },
+    "getEnabledZones": {
+      "desc": "Renvoie la table interne zoneEnabled (nom -> booléen), référence directe.",
+      "params": {},
+      "returns": [{"type": "table<string, boolean>", "desc": "Zones explicitement activées/désactivées."}]
+    },
+    "setDebugDrawBounds": {
+      "desc": "Active ou coupe le dessin debug des zones actives (jaune semi-transparent), effectué dans onPreRender.",
+      "params": {"enabled": {"type": "boolean", "desc": "true pour dessiner."}},
+      "returns": []
+    },
+    "getDebugDrawBounds": {
+      "desc": "Indique si le dessin debug des zones est actif.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "État du dessin debug."}]
+    },
+    "isInBounds": {
+      "desc": "Indique si le joueur est dans les limites. Renvoie true si le tutoriel n'est pas actif.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si dans une zone active et activée (ou si rien à contrôler)."}]
+    },
+    "update": {
+      "desc": "À appeler chaque frame : si le tutoriel est actif, teste les limites ; hors limites, affiche l'avertissement avec compte à rebours, et après 5 s déclenche (via un job de 1 s de pause) le callback onOutOfBoundsTimedOut. Si le retour automatique n'est pas autorisé (gameplay_tutorial_setup.isOutOfBoundsResetAllowed), appelle seulement onOutOfBoundsWhileNotAllowed.",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel en secondes."}},
+      "returns": []
+    },
+    "onPreRender": {
+      "desc": "Hook de rendu appelé chaque frame ; dessine les zones actives si le debug est activé et le tutoriel actif.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel."},
+        "dtSim": {"type": "number", "desc": "Delta temps de simulation."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "cleanup": {
+      "desc": "Quitte l'état hors limites et remet à zéro sites, zones actives, zones désactivées et debug.",
+      "params": {},
+      "returns": []
+    }
+  }
+}

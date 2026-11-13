@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/perlin.lua",
+  "module": "Bruit de Perlin 2D classique (table de permutation fixe de 256 entrées, courbe fade de Perlin améliorée), déterministe. Sert aux outils de l'éditeur pour générer des variations pseudo-aléatoires reproductibles.",
+  "usage": "local perlin = extensions.editor_toolUtilities_perlin\nlocal n = perlin.noise(x * 0.1, y * 0.1) -- valeur lissée",
+  "notes": [
+    "Le résultat est périodique de période 256 en x et en y (masque band(floor(x),255)).",
+    "Utilise la fonction globale lerp du jeu.",
+    "La page auto signale une globale affectée « i » : la boucle d'initialisation est en réalité `for i = 0, 255` (variable locale de boucle), donc fausse alerte."
+  ],
+  "functions": {
+    "noise": {
+      "desc": "Renvoie le bruit de Perlin 2D au point (x, y). Valeur continue, nulle aux coordonnées entières, d'amplitude voisine de [-1, 1] environ.",
+      "params": {"x": {"type": "number", "desc": "Coordonnée x."}, "y": {"type": "number", "desc": "Coordonnée y."}},
+      "returns": [{"type": "number", "desc": "Valeur de bruit."}],
+      "internal": false
+    }
+  }
+}

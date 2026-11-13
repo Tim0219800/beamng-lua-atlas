@@ -1,0 +1,56 @@
+{
+  "path": "lua/ge/extensions/career/modules/branches/landing.lua",
+  "module": "Fournit à l'UI carrière les données de la page d'accueil de progression (domaines, branches, compétences) : titres, fils d'Ariane, niveau/XP, déblocages, ligues et missions formatées. Ajoute aussi le bouton 'landing page APM' dans le menu ordinateur. Un moddeur l'utilise surtout pour comprendre le format des tables envoyées à l'écran career.branchPage.",
+  "usage": "local data = career_modules_branches_landing.getLandingPageData('apm')\nprint(data.heading, #data.branches)",
+  "notes": [
+    "Sans pathId (nil, '' ou 'undefined'), getLandingPageData liste les domaines (branch.isDomain) avec target 'landing' s'ils ont des branches enfants, sinon 'skillPage'.",
+    "Avec un pathId, la page liste les enfants (target 'skillPage'), calcule niveau/XP (career_branches.calcBranchLevelFromValue), multiplicateur de récompense hérité des parents et, pour une branche ou compétence, ses ligues avec missions formatées.",
+    "Le domaine par défaut des suggestions est 'apm'."
+  ],
+  "functions": {
+    "getBranchSkillCardData": {
+      "desc": "Renvoie les infos d'une carte de branche/compétence pour l'UI (nom, descriptions, niveau, libellé de niveau, niveau max atteint, débloquée, icône, couleur…). Appelle career_branches.checkUnlocks() au préalable.",
+      "params": {"branchId": {"type": "string", "desc": "Id de la branche."}},
+      "returns": [{"type": "table", "desc": "branchInfo pour l'UI."}]
+    },
+    "openBigMapWithMissionSelected": {
+      "desc": "Ouvre la grande carte (freeroam_bigMapMode.enterBigMap) instantanément avec la mission sélectionnée, route de retour 'career.branchPage.bigmap'.",
+      "params": {"missionId": {"type": "string", "desc": "Id de la mission à sélectionner."}},
+      "returns": []
+    },
+    "formatMission": {
+      "desc": "Formate une mission pour l'UI : skill, id, icône, label, description, type, progression formatée, startable, aperçu, vignette, verrouillée (non visible) et canStartFromProgressScreen (déclencheur de type 'league').",
+      "params": {"m": {"type": "table", "desc": "Mission (gameplay_missions_missions)."}},
+      "returns": [{"type": "table", "desc": "Mission formatée pour l'UI."}]
+    },
+    "formatDriftSpot": {
+      "desc": "Formate un spot de drift comme une mission pour l'UI (skill 'drift', icône 'drift02', objectifs accomplis en étoiles par défaut).",
+      "params": {"ds": {"type": "table", "desc": "Spot de drift (champs id, info, saveData)."}},
+      "returns": [{"type": "table", "desc": "Entrée formatée pour l'UI."}]
+    },
+    "getSuggestedMissionsForDomain": {
+      "desc": "Parcourt récursivement les branches/compétences du domaine (hors en développement) et renvoie jusqu'à deux missions suggérées : une jamais jouée (0 étoile) et une partiellement terminée (sinon une seconde jamais jouée).",
+      "params": {"domainId": {"type": "string|nil", "desc": "Id du domaine ; 'apm' par défaut."}},
+      "returns": [{"type": "table[]", "desc": "Missions formatées suggérées."}]
+    },
+    "resolveBranchTitle": {
+      "desc": "Titre traduit d'une branche (branchHeading ou name) ; si absente ou manquante, renvoie le titre traduit de la page d'accueil (ui.career.landingPage.name).",
+      "params": {"pathId": {"type": "string|nil", "desc": "Id de la branche."}},
+      "returns": [{"type": "string", "desc": "Titre traduit."}]
+    },
+    "getLandingPageData": {
+      "desc": "Construit toute la table de la page de progression : heading, description, branches, breadcrumbs, et pour une branche : skillInfo, skills, leagues (missions formatées), isBranch.",
+      "params": {"pathId": {"type": "string|nil", "desc": "Id du domaine/branche ; nil, '' ou 'undefined' pour la page racine."}},
+      "returns": [{"type": "table", "desc": "Données de la page pour l'UI."}]
+    },
+    "onComputerAddFunctions": {
+      "desc": "Hook de career_modules_computer : si la facilité a la fonction 'apmLandingPage', ajoute un bouton général qui navigue vers 'career.branchPage' (pathId 'apm', retour 'career.computer'), désactivé tant que le véhicule de départ n'est pas acheté.",
+      "params": {
+        "menuData": {"type": "table", "desc": "Données du menu (computerFacility, hasBoughtStarterVehicle…)."},
+        "computerFunctions": {"type": "table", "desc": "Table {general, vehicleSpecific} à compléter."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

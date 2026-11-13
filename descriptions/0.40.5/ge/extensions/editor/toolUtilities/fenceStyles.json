@@ -1,0 +1,46 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/fenceStyles.lua",
+  "module": "Styles de clôture déclaratifs pour les outils de l'éditeur (clôtures, rambardes). Chaque style donne la hauteur de poteau (qui choisit la forme cuite fence_post_sq_*), la bande de hauteur des lisses, le nombre de lisses et l'espacement par défaut des poteaux. Fournit aussi le calcul des hauteurs de lisses selon un préréglage de disposition.",
+  "usage": "local fs = require('editor/toolUtilities/fenceStyles')\nlocal style = fs.get('deck')\nlocal h = fs.railHeights(style, 3, 'pinned', {})",
+  "notes": [
+    "Deux styles existent : 'postrail' (Post & Rail, poteau 1.4 m, 1 à 7 lisses, lisses entre 0.35 et 1.25 m, espacement 2.4 m) et 'deck' (Deck Railing, poteau 1.0 m, 1 à 5 lisses, lisses entre 0.30 et 0.90 m, espacement 1.8 m).",
+    "Hauteurs en mètres (Z du centre de la lisse). Les dispositions reconnues : 'pinned' (défaut), 'even', 'topGroup', 'bottomGroup', 'split'.",
+    "Les fonctions réécrivent le tableau 'out' fourni (table.clear puis remplissage) et le renvoient."
+  ],
+  "fields": {
+    "styles": {"type": "table<string, table>", "desc": "Définitions des styles indexées par id ('postrail', 'deck'). Champs : id, name, postHeight, railCountDefault/Min/Max, railBottom, railTop, spacingDefault."},
+    "styleOrder": {"type": "string[]", "desc": "Ordre d'affichage des styles : { 'postrail', 'deck' }."}
+  },
+  "functions": {
+    "get": {
+      "desc": "Renvoie le style d'id donné, ou le style 'postrail' si l'id est inconnu.",
+      "params": {"id": {"type": "string", "desc": "Id du style ('postrail' ou 'deck')."}},
+      "returns": [{"type": "table", "desc": "Table du style."}],
+      "internal": false
+    },
+    "railFractions": {
+      "desc": "Calcule les positions fractionnaires des lisses dans [0,1] (0 = bas, 1 = haut) pour un préréglage de disposition. Avec une seule lisse, elle est à 0.5. Les dispositions de groupe plafonnent pitchFrac à 0.9/max(1,count-2).",
+      "params": {
+        "count": {"type": "integer", "desc": "Nombre de lisses (minimum 1)."},
+        "layout": {"type": "string|nil", "desc": "'pinned' (défaut, réparties de 0 à 1), 'even', 'topGroup', 'bottomGroup' ou 'split'."},
+        "out": {"type": "table", "desc": "Tableau de sortie, vidé puis rempli."},
+        "pitchFrac": {"type": "number|nil", "desc": "Pas fractionnaire entre lisses groupées (défaut 0.18)."}
+      },
+      "returns": [{"type": "table", "desc": "Le tableau out."}],
+      "internal": false
+    },
+    "railHeights": {
+      "desc": "Calcule les hauteurs Z (m) du centre des lisses pour un style, un nombre de lisses et une disposition. Pour les dispositions de groupe, le haut de la bande est relevé pour que la lisse du haut arrive juste sous le chapeau du poteau.",
+      "params": {
+        "style": {"type": "table", "desc": "Style (voir get)."},
+        "count": {"type": "integer|nil", "desc": "Nombre de lisses ; défaut style.railCountDefault."},
+        "layout": {"type": "string|nil", "desc": "Préréglage de disposition (voir railFractions)."},
+        "out": {"type": "table", "desc": "Tableau de sortie."},
+        "railH": {"type": "number|nil", "desc": "Hauteur d'une lisse (m) ; sert à calculer le pas des groupes (railH * 1.25)."},
+        "postH": {"type": "number|nil", "desc": "Hauteur du poteau (m) ; sert à relever le haut de bande pour les dispositions de groupe."}
+      },
+      "returns": [{"type": "table", "desc": "Le tableau out, rempli de hauteurs Z."}],
+      "internal": false
+    }
+  }
+}

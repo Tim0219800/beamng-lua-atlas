@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/stageRuntimeState.lua",
+  "module": "Nœud flowgraph « Rally Stage Runtime State » (catégorie repeat_instant, tag rally). Lit l'état d'exécution de la spéciale tenu par le RallyManager : met le manager en mode d'autorité 'tracker', active la spéciale (setStageRuntimeActive(true)) et envoie onRallyDataUpdated avec l'état stageActive tant que flow est actif. Sorties : flow, active (spéciale active), complete (suivi terminé, via getStageObserverState().stageComplete) et time (temps de spéciale en s : currentSSTime ou getStageRuntimeTime, dernière valeur conservée).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise lastTime à 0.", "internal": true},
+        "_executionStarted": {"desc": "Remet lastTime à 0.", "internal": true},
+        "work": {"desc": "Chaque frame : remet les sorties à zéro puis les remplit depuis le rally manager.", "internal": true}
+      }
+    }
+  }
+}

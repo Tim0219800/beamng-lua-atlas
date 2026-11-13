@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/isCoupled.lua",
+  "module": "Nœud « Is Coupled » (catégorie `repeat_instant`, tags event/attach/detach). Teste si deux véhicules sont attelés (`mgr.modules.vehicle:isCoupledTo(vehA, vehB)`). Pins d'entrée : `vehA`, `vehB`. Sorties : flux `coupled`, flux `decoupled`, bool `isCoupled`.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "work": {
+          "desc": "Remplit `coupled`, `decoupled` et `isCoupled` depuis le résultat de `isCoupledTo`. Paramètre `args` non utilisé.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "path": "lua/common/libs/luasocket/socket/socket.lua",
+  "module": "Bibliothèque tierce LuaSocket (Diego Nehab) : module d'aide au-dessus du noyau `socket` natif. Il ajoute connect4/connect6 (connexion forcée en IPv4/IPv6), bind (serveur TCP avec choix de la famille d'adresse), choose (sélecteur de variantes) et les sources/sinks LTN12 sur socket (sink : close-when-done, keep-open ; source : by-length, until-closed). Il modifie et renvoie la table `socket` elle-même.",
+  "notes": [
+    "Le module renvoie `socket` (le noyau natif) enrichi : `require('socket.socket')` et `require('socket')` donnent la même table.",
+    "`bind` active tcp-nodelay et reuseaddr, accepte host == '*' (devient 0.0.0.0), essaie chaque adresse renvoyée par socket.dns.getaddrinfo et renvoie le premier socket qui a réussi bind + listen.",
+    "BLOCKSIZE vaut 2048 octets (taille des lectures des sources)."
+  ],
+  "fields": {
+    "BLOCKSIZE": {"type": "integer", "desc": "Taille des blocs lus par les sources de socket (2048)."},
+    "try": {"type": "function", "desc": "Résultat de socket.newtry() : lève une erreur si son premier argument est nil/false, sinon renvoie les arguments."},
+    "sourcet": {"type": "table<string, function>", "desc": "Fabriques de sources LTN12 : \"by-length\", \"until-closed\", \"default\" (= until-closed)."},
+    "sinkt": {"type": "table<string, function>", "desc": "Fabriques de sinks LTN12 : \"close-when-done\", \"keep-open\", \"default\" (= keep-open)."},
+    "source": {"type": "function", "desc": "socket.source(nom, sock, longueur?) : choisit une source dans sourcet (nom omis = \"default\")."},
+    "sink": {"type": "function", "desc": "socket.sink(nom, sock) : choisit un sink dans sinkt (nom omis = \"default\")."}
+  },
+  "functions": {
+    "connect4": {
+      "desc": "Se connecte à une adresse en forçant la famille IPv4 (appelle socket.connect avec \"inet\").",
+      "params": {
+        "address": {"type": "string", "desc": "Adresse ou nom d'hôte distant."},
+        "port": {"type": "integer", "desc": "Port distant."},
+        "laddress": {"type": "string|nil", "desc": "Adresse locale à lier."},
+        "lport": {"type": "integer|nil", "desc": "Port local à lier."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Socket connecté, ou nil suivi d'un message d'erreur."}]
+    },
+    "connect6": {
+      "desc": "Comme connect4 mais en IPv6 (\"inet6\").",
+      "params": {
+        "address": {"type": "string", "desc": "Adresse ou nom d'hôte distant."},
+        "port": {"type": "integer", "desc": "Port distant."},
+        "laddress": {"type": "string|nil", "desc": "Adresse locale à lier."},
+        "lport": {"type": "integer|nil", "desc": "Port local à lier."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Socket connecté, ou nil suivi d'un message d'erreur."}]
+    },
+    "bind": {
+      "desc": "Crée un socket TCP serveur : résout `host`, lie le port, puis écoute.",
+      "params": {
+        "host": {"type": "string", "desc": "Hôte ou \"*\" pour toutes les interfaces IPv4."},
+        "port": {"type": "integer", "desc": "Port d'écoute."},
+        "backlog": {"type": "integer|nil", "desc": "Longueur de la file d'attente de listen."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Socket serveur en écoute, ou nil suivi d'une erreur."}]
+    },
+    "choose": {
+      "desc": "Renvoie une fonction (nom, opt1, opt2) qui appelle table[nom](opt1, opt2). Si le premier argument n'est pas une chaîne, le nom \"default\" est utilisé. Lève une erreur « unknown key » si le nom est inconnu.",
+      "params": {"table": {"type": "table<string, function>", "desc": "Table de variantes."}},
+      "returns": [{"type": "function", "desc": "Sélecteur."}]
+    }
+  }
+}

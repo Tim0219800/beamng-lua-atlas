@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/editor/rendererComponents.lua",
+  "module": "Fenêtre « Renderer Components » de l'éditeur (menu Debug) pour régler en direct les effets de rendu : profondeur de champ (DOF), HDR, SSAO, anti-aliasing, flou de mouvement, bloom, ombres en espace écran, CloudLayer, et en build non-shipping Coconut, Cluster Shading et Shadows. Chaque onglet n'apparaît que si l'objet post-effet correspondant existe dans la scène. Un menu « Reset All » et des boutons de réinitialisation par onglet remettent les valeurs par défaut. S'appuie sur core/settings/graphic et client/postFx/ssao.",
+  "notes": [
+    "Le commentaire du fichier dit que c'est un utilitaire pour les créateurs de niveaux.",
+    "L'onglet Weather du CloudLayer permet de régénérer la weather map avec une graine aléatoire (max 2147483647).",
+    "onEditorActivated applique à DOFPostEffect l'état enregistré (debugModeEnabled, enable/disable) ; il suppose que DOFSettings est initialisé."
+  ],
+  "functions": {
+    "onEditorGui": {"desc": "Hook : dessine la fenêtre avec barre de menu et barre d'onglets ; un onglet n'est affiché que si le post-effet/objet existe.", "internal": true},
+    "onEditorInitialized": {"desc": "Hook : ajoute les entrées de menu Debug (Renderer Components, et Cluster Shading hors shipping), enregistre la fenêtre (300x500), initialise les réglages et capture les valeurs par défaut des ombres en espace écran.", "internal": true},
+    "onEditorActivated": {"desc": "Hook : à l'activation de l'éditeur, initialise les réglages si besoin et réapplique l'état du DOFPostEffect (mode debug, enable/disable).", "internal": true}
+  }
+}

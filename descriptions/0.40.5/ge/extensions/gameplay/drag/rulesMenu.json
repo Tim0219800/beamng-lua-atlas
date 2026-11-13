@@ -1,0 +1,61 @@
+{
+  "path": "lua/ge/extensions/gameplay/drag/rulesMenu.lua",
+  "module": "Contexte de l'écran de règles de drag (interface Vue « mission.dragRules »). Il retrouve la piste associée à une installation (facility.id, avec suffixe « Rules » retiré), fournit à l'UI les options (dragType heads-up/bracket, arbre .400/.500, timers disponibles, valeurs par défaut et sauvegardées) et enregistre ou restaure les règles choisies pour une piste. Il pose aussi une laisse de 12 m autour de la porte de l'installation : le menu se ferme tout seul si le véhicule du joueur s'éloigne.",
+  "notes": [
+    "Les règles sont stockées dans un presetManager de repli en mémoire (presetManagerFallback) : le vrai presetManager multijoueur est commenté dans getPresetManager. Les règles ne survivent donc pas à un rechargement de l'extension ou du jeu via ce module.",
+    "Règles par défaut : dragType 'headsUpRace', treeType '.500', importantTimerId 'time_1_4'.",
+    "Types de timers renvoyés à l'UI : 'velocity' ou 'distanceTimer' (tout ce qui n'est pas 'velocity' devient distanceTimer).",
+    "Le rayon de laisse est POI_RADIUS = 12 m."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Liste vide."}
+  },
+  "functions": {
+    "applyRulesRestore": {
+      "desc": "Renvoie les règles sauvegardées d'une piste pour que l'UI puisse les restaurer (bouton Restore).",
+      "params": {"levelId": {"type": "string", "desc": "Identifiant de niveau."}, "stripId": {"type": "string", "desc": "Identifiant de piste."}},
+      "returns": [{"type": "table|nil", "desc": "{dragType, treeType, importantTimerId} ou nil."}]
+    },
+    "applyRulesSave": {
+      "desc": "Enregistre les règles d'une piste (bouton Save de l'UI). Ne fait rien si un argument manque.",
+      "params": {"levelId": {"type": "string", "desc": "Identifiant de niveau."}, "stripId": {"type": "string", "desc": "Identifiant de piste."}, "rules": {"type": "table", "desc": "{dragType, treeType, importantTimerId}."}},
+      "returns": []
+    },
+    "closeMenu": {
+      "desc": "Ferme le contexte de règles : supprime la laisse, oublie l'installation et les données de piste.",
+      "params": {},
+      "returns": []
+    },
+    "getCurrentFacility": {
+      "desc": "Installation ouverte via un POI d'installation.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Installation ou nil."}]
+    },
+    "getRulesScreenData": {
+      "desc": "Données pour l'écran Vue des règles : levelId, stripId, stripName, location (titre du niveau), numLanes, timers (id, label, labelKey, shortLabel, type, distance), dragTypeOptions, treeTypeOptions, defaults (issus de la piste) et saved (préréglage sauvegardé ou créé).",
+      "params": {"facilityIdOrStripId": {"type": "string", "desc": "Identifiant d'installation (par ex. 'alderStripRules') ou de piste."}},
+      "returns": [{"type": "table|nil", "desc": "Données, nil si la piste est introuvable dans le niveau courant."}]
+    },
+    "getSavedRulesForStrip": {
+      "desc": "Règles sauvegardées d'une piste (dragType, treeType, importantTimerId), utilisées par poi.applyUserRulesToData au démarrage depuis un POI.",
+      "params": {"levelId": {"type": "string", "desc": "Identifiant de niveau."}, "stripId": {"type": "string", "desc": "Identifiant de piste."}},
+      "returns": [{"type": "table|nil", "desc": "Règles ou nil."}]
+    },
+    "isMenuOpen": {
+      "desc": "Vrai si le contexte de règles est actif.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "Menu ouvert ou non."}]
+    },
+    "onUpdate": {
+      "desc": "Hook par frame : ferme le menu si le véhicule du joueur (joueur 0) sort de la laisse de 12 m (ou n'existe plus).",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."}, "dtRaw": {"type": "number", "desc": "Delta brut (s)."}},
+      "returns": [],
+      "internal": true
+    },
+    "openMenu": {
+      "desc": "Ouvre le contexte de règles pour une installation : charge les données de la piste correspondante et pose la laisse sur la porte la plus proche (freeroam_facilities).",
+      "params": {"facility": {"type": "table", "desc": "Installation (champ id)."}},
+      "returns": []
+    }
+  }
+}

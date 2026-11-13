@@ -1,0 +1,171 @@
+{
+  "path": "lua/ge/extensions/editor/rallyEditor/measurementsTab.lua",
+  "module": "Onglet « Measurements » de l'éditeur de rallye : outil de mesure de distances le long de la route (snaproad). L'utilisateur crée des mesures, y clique des points dans la vue 3D (accrochés à la snaproad à moins de 5 m), les réordonne, les déplace par glisser, et lit la distance totale, soit en suivant la route (option « Follow Route »), soit en ligne droite. Les mesures sont sauvegardées automatiquement dans <mission>/measurements.json. Le module renvoie un constructeur (classe C).",
+  "notes": [
+    "Format du fichier measurements.json : { measurements = { [\"id\"] = {id, name, points = [{x,y,z}], followRoute, color = {r,g,b}, textColor = {r,g,b}} }, nextMeasurementId, updatedAt }.",
+    "Distances en mètres. La couleur d'une nouvelle mesure est aléatoire (HSV vive) et la couleur du texte est noire ou blanche selon la luminance.",
+    "Rayon de sélection d'un point : 8 m (pointSelectRadius). Sans snaproad, les points ne sont pas accrochés.",
+    "Chaque modification (création, suppression, ajout/retrait/déplacement de point) appelle saveMeasurements(). updateMeasurement (renommage) ne sauvegarde pas immédiatement.",
+    "getMeasurementsFilePath() utilise rallyEditor.getMissionDir(), alors que les autres onglets utilisent getCurrentMissionDir()."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet onglet renvoyé par le constructeur (new(rallyEditor)). Champs : measurements (table id -> mesure {id, name, points (vec3), totalDistance, followRoute, color, textColor}), selectedMeasurementId, selectedPointIndex, nextMeasurementId, snaproad, updatedAt. windowDescription = 'Measurements'.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur interne : initialise les mesures et l'état d'interaction (survol, glisser).",
+          "params": {"rallyEditor": {"type": "table", "desc": "Instance de l'éditeur de rallye."}},
+          "internal": true
+        },
+        "clearState": {
+          "desc": "Vide les mesures, la sélection et l'état d'interaction.",
+          "internal": true
+        },
+        "getMeasurementsFilePath": {
+          "desc": "Chemin du fichier measurements.json dans le dossier de la mission.",
+          "returns": [{"type": "string|nil", "desc": "Chemin, ou nil (avec erreur au log) sans dossier de mission."}],
+          "internal": false
+        },
+        "serialize": {
+          "desc": "Convertit les mesures en table compatible JSON (les points vec3 deviennent {x,y,z}).",
+          "returns": [{"type": "table", "desc": "{measurements, nextMeasurementId, updatedAt}."}],
+          "internal": false
+        },
+        "deserialize": {
+          "desc": "Reconstruit les mesures depuis les données JSON, avec couleurs par défaut (jaune / noir), et recalcule nextMeasurementId (plus grand id + 1).",
+          "params": {"data": {"type": "table|nil", "desc": "Données lues du fichier ; rien n'est fait si nil."}},
+          "internal": false
+        },
+        "saveMeasurements": {
+          "desc": "Met à jour updatedAt et écrit le fichier measurements.json (sauvegarde automatique).",
+          "returns": [{"type": "boolean", "desc": "false si le chemin du fichier est inconnu."}],
+          "internal": false
+        },
+        "loadMeasurements": {
+          "desc": "Lit measurements.json s'il existe (updatedAt pris dans la date du fichier s'il manque), désérialise puis recalcule les distances.",
+          "returns": [{"type": "boolean", "desc": "true si le fichier a été chargé."}],
+          "internal": false
+        },
+        "setPath": {
+          "desc": "Définit le carnet courant (le commentaire du code note que « path » désigne en fait le carnet).",
+          "params": {"path": {"type": "table", "desc": "Carnet."}},
+          "internal": true
+        },
+        "setSnaproad": {
+          "desc": "Définit la snaproad utilisée pour l'accrochage et le calcul des distances.",
+          "params": {"snaproad": {"type": "table|nil", "desc": "Objet snaproad."}},
+          "internal": false
+        },
+        "selected": {
+          "desc": "Appelée par l'éditeur quand l'onglet est sélectionné : récupère la snaproad de la fenêtre pacenotes, charge measurements.json et émet onEditorEditModeChanged(nil, nil).",
+          "internal": true
+        },
+        "unselect": {
+          "desc": "Appelée quand l'onglet est quitté : émet onEditorEditModeChanged(nil, nil).",
+          "internal": true
+        },
+        "drawDebugEntrypoint": {
+          "desc": "Rendu 3D appelé à chaque image : dessine la snaproad (noire) puis les points et lignes de mesure.",
+          "internal": true
+        },
+        "drawMeasurementPoints": {
+          "desc": "Dessine en 3D les points (sphères), les segments, le suivi de route et les libellés de distance de chaque mesure.",
+          "internal": true
+        },
+        "createMeasurement": {
+          "desc": "Crée une mesure vide (followRoute = true, couleur aléatoire), la sélectionne et sauvegarde.",
+          "params": {"name": {"type": "string|nil", "desc": "Nom ; par défaut « Measurement <id> »."}},
+          "returns": [{"type": "table", "desc": "La mesure créée."}],
+          "internal": false
+        },
+        "getMeasurement": {
+          "desc": "Renvoie une mesure par identifiant.",
+          "params": {"measurementId": {"type": "integer", "desc": "Identifiant."}},
+          "returns": [{"type": "table|nil", "desc": "Mesure, ou nil."}],
+          "internal": false
+        },
+        "updateMeasurement": {
+          "desc": "Renomme une mesure (sans sauvegarde immédiate).",
+          "params": {
+            "measurementId": {"type": "integer", "desc": "Identifiant."},
+            "name": {"type": "string", "desc": "Nouveau nom."}
+          },
+          "internal": false
+        },
+        "deleteMeasurement": {
+          "desc": "Supprime une mesure, désélectionne si besoin, recalcule nextMeasurementId et sauvegarde.",
+          "params": {"measurementId": {"type": "integer", "desc": "Identifiant."}},
+          "internal": false
+        },
+        "selectMeasurement": {
+          "desc": "Sélectionne une mesure et annule la sélection de point.",
+          "params": {"measurementId": {"type": "integer|nil", "desc": "Identifiant."}},
+          "internal": false
+        },
+        "addPointToMeasurement": {
+          "desc": "Ajoute un point en fin de mesure, le sélectionne, recalcule la distance et sauvegarde.",
+          "params": {
+            "measurementId": {"type": "integer", "desc": "Identifiant."},
+            "point": {"type": "vec3", "desc": "Position monde."}
+          },
+          "internal": false
+        },
+        "removePointFromMeasurement": {
+          "desc": "Retire un point (ajuste l'indice sélectionné), recalcule la distance et sauvegarde.",
+          "params": {
+            "measurementId": {"type": "integer", "desc": "Identifiant."},
+            "pointIndex": {"type": "integer", "desc": "Indice du point (à partir de 1)."}
+          },
+          "internal": false
+        },
+        "movePointUp": {
+          "desc": "Échange le point avec le précédent (indice - 1), recalcule et sauvegarde.",
+          "params": {
+            "measurementId": {"type": "integer", "desc": "Identifiant."},
+            "pointIndex": {"type": "integer", "desc": "Indice du point."}
+          },
+          "internal": false
+        },
+        "movePointDown": {
+          "desc": "Échange le point avec le suivant (indice + 1), recalcule et sauvegarde.",
+          "params": {
+            "measurementId": {"type": "integer", "desc": "Identifiant."},
+            "pointIndex": {"type": "integer", "desc": "Indice du point."}
+          },
+          "internal": false
+        },
+        "calculateMeasurementDistance": {
+          "desc": "Calcule et stocke totalDistance en mètres. Avec followRoute et une snaproad, la distance suit la route entre points consécutifs ; sinon c'est la somme des distances directes. 0 s'il y a moins de 2 points.",
+          "params": {"measurementId": {"type": "integer", "desc": "Identifiant."}},
+          "returns": [{"type": "number", "desc": "Distance totale en mètres."}],
+          "internal": false
+        },
+        "findNearestPoint": {
+          "desc": "Cherche, toutes mesures confondues, le point le plus proche d'une position.",
+          "params": {"mousePos": {"type": "vec3", "desc": "Position de référence."}},
+          "returns": [
+            {"type": "integer|nil", "desc": "Identifiant de la mesure."},
+            {"type": "integer|nil", "desc": "Indice du point."},
+            {"type": "vec3|nil", "desc": "Point."},
+            {"type": "number", "desc": "Distance (math.huge s'il n'y a aucun point)."}
+          ],
+          "internal": false
+        },
+        "handleMouseInput": {
+          "desc": "Gère la souris dans la vue 3D : survol, sélection, glisser-déplacer et ajout de points accrochés à la snaproad (distance < 5 m).",
+          "internal": true
+        },
+        "draw": {
+          "desc": "Dessine l'interface imgui : création/suppression de mesures, liste, options (Follow Route, couleurs), distance totale, liste des points et boutons Move Up / Move Down / Delete Point.",
+          "params": {
+            "mouseInfo": {"type": "table", "desc": "Informations souris."},
+            "dtReal": {"type": "number", "desc": "Delta temps réel."},
+            "dtSim": {"type": "number", "desc": "Delta temps simulation."},
+            "dtRaw": {"type": "number", "desc": "Delta temps brut."}
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

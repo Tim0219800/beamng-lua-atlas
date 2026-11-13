@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/debug/display.lua",
+  "module": "Nœud flowgraph « Display Value » (type simple, catégorie repeat_instant, tag util). Affiche dans le corps du nœud la valeur reçue sur le pin d'entrée « value » (any) ; si c'est une table, un bouton « Dump » l'envoie dans la console (dump). Aucune sortie.",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Mémorise la dernière valeur reçue."},
+        "drawMiddle": {"desc": "Éditeur : affiche la valeur (dumpsz, profondeur 2) et le bouton Dump pour les tables.", "params": {"builder": {"type": "table", "desc": "constructeur de nœud"}, "style": {"type": "table", "desc": "style"}}, "internal": true}
+      }
+    }
+  }
+}

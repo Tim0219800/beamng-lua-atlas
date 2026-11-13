@@ -1,0 +1,42 @@
+{
+  "path": "lua/ge/extensions/ui/apps/missionControls.lua",
+  "module": "Gère la liste des indications de commandes (« control hints ») affichées par l'app d'interface missionControls pendant une mission. Chaque indication est repérée par une catégorie, ce qui permet d'en ajouter ou retirer une sans toucher aux autres (par exemple depuis un nœud flowgraph). La liste triée par order est envoyée à l'interface via l'événement SetMissionControls.",
+  "usage": "ui_apps_missionControls.setControl({action='accelerate', label='Accélérer', order=1})\nui_apps_missionControls.setControl({action='accelerate', clear=true})",
+  "notes": [
+    "La catégorie par défaut est args.category, sinon args.action, sinon args.uiEvent ; sans aucune des trois, setControl ne fait rien.",
+    "Dans setControls, si l'indication n'a ni category, ni action, ni uiEvent, l'indice dans la liste sert de clé ; order vaut par défaut l'indice.",
+    "L'extension reste chargée en permanence (déchargement manuel)."
+  ],
+  "functions": {
+    "setControl": {
+      "desc": "Ajoute, met à jour ou supprime (clear=true) une indication, puis renvoie toute la liste à l'interface.",
+      "params": {"args": {"type": "table", "desc": "{category|action|uiEvent, action=string|nil, uiEvent=string|nil, label=string|nil, order=number|nil (0 par défaut), clear=boolean|nil}."}},
+      "returns": [],
+      "internal": false
+    },
+    "setControls": {
+      "desc": "Remplace toutes les indications par la liste fournie, puis l'envoie à l'interface.",
+      "params": {"list": {"type": "table<integer, table>|nil", "desc": "Indications au même format que setControl."}},
+      "returns": [],
+      "internal": false
+    },
+    "clearControls": {
+      "desc": "Supprime toutes les indications et envoie SetMissionControlsResetAll à l'interface.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "sendAllData": {
+      "desc": "Renvoie la liste courante à l'interface (utile au montage de l'app).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onInit": {
+      "desc": "Hook d'initialisation : place l'extension en déchargement manuel.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

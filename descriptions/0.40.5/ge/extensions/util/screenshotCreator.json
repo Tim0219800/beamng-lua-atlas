@@ -1,0 +1,85 @@
+{
+  "path": "lua/ge/extensions/util/screenshotCreator.lua",
+  "module": "Point d'entrée de l'outil interne de génération de vignettes (thumbnails) de véhicules. Ce fichier est une façade : il déclare comme dépendances tous les sous-modules util_screenshotCreator_* (interface ImGui, réglages, cadrage, capture, job de traitement par lots, etc.) et délègue vers eux. Il sert à ouvrir la fenêtre de l'outil, lancer la génération par lots, cadrer un véhicule, prendre une capture hors écran et choisir le mode de cadrage.",
+  "usage": "extensions.load('util_screenshotCreator')\nextensions.util_screenshotCreator.openWindow()",
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Liste des extensions util_screenshotCreator_* chargées avec celle-ci"},
+    "state": {"type": "table", "desc": "État du module, initialement {show = false}"}
+  },
+  "notes": [
+    "Dans takeThumbnailScreenshot, la résolution, le sur-échantillonnage, le champ de vision et le plan proche viennent des réglages de util_screenshotCreator_settings et non d'arguments.",
+    "Le champ state.show n'est pas utilisé dans ce fichier."
+  ],
+  "functions": {
+    "openWindow": {
+      "desc": "Ouvre la fenêtre ImGui de l'outil (délègue à util_screenshotCreator_ui.openWindow).",
+      "params": {},
+      "returns": [{"type": "any", "desc": "Valeur renvoyée par util_screenshotCreator_ui.openWindow"}],
+      "internal": false
+    },
+    "startWork": {
+      "desc": "Démarre la génération de vignettes par lots (délègue à util_screenshotCreator_job.startWork).",
+      "params": {"workOptions": {"type": "table", "desc": "Options du traitement (déduit du code : transmises telles quelles au module job)"}},
+      "returns": [{"type": "any", "desc": "Valeur renvoyée par util_screenshotCreator_job.startWork"}],
+      "internal": false
+    },
+    "frameVehicle": {
+      "desc": "Calcule la position et l'orientation de caméra qui cadrent un véhicule avec le cadrage procédural, d'après le contexte de cadrage des réglages.",
+      "params": {
+        "vehicle": {"type": "userdata", "desc": "Objet véhicule à cadrer"},
+        "fov": {"type": "number|nil", "desc": "Champ de vision en degrés (défaut : valeur des réglages)"},
+        "nearPlane": {"type": "number|nil", "desc": "Plan proche de la caméra (défaut : réglages)"},
+        "aspectRatio": {"type": "number|nil", "desc": "Rapport largeur/hauteur (défaut : réglages)"},
+        "resolution": {"type": "table|nil", "desc": "Résolution {largeur, hauteur} utilisée pour le contexte de cadrage"},
+        "configName": {"type": "string|nil", "desc": "Nom de la configuration du véhicule"}
+      },
+      "returns": [
+        {"type": "vec3|nil", "desc": "Position de la caméra"},
+        {"type": "quat|nil", "desc": "Rotation de la caméra"},
+        {"type": "table|nil", "desc": "Données de cadrage (framingData)"}
+      ],
+      "internal": false
+    },
+    "takeThumbnailScreenshot": {
+      "desc": "Prend une capture hors écran depuis la caméra donnée et l'enregistre dans filepath (délègue à util_screenshotCreator_capture), avec les paramètres de capture des réglages.",
+      "params": {
+        "filepath": {"type": "string", "desc": "Chemin du fichier image à écrire"},
+        "camera": {"type": "table", "desc": "Caméra {pos, rot, fov?, nearPlane?, screenshotDelay?}"},
+        "callback": {"type": "function|nil", "desc": "Appelé à la fin de la capture"},
+        "uniqueId": {"type": "any", "desc": "Identifiant transmis au module de capture"}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "listFramingModes": {
+      "desc": "Liste les modes de cadrage disponibles (délègue à util_screenshotCreator_framingManager.listModes).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Modes de cadrage enregistrés"}],
+      "internal": false
+    },
+    "getFramingMode": {
+      "desc": "Renvoie l'identifiant du mode de cadrage sélectionné.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "Identifiant du mode"}],
+      "internal": false
+    },
+    "setFramingMode": {
+      "desc": "Sélectionne le mode de cadrage.",
+      "params": {"modeId": {"type": "string", "desc": "Identifiant du mode (par exemple « fixedIsometric » ou « configured »)"}},
+      "returns": [{"type": "any", "desc": "Valeur renvoyée par framingManager.setSelectedModeId"}],
+      "internal": false
+    },
+    "onDeserialized": {
+      "desc": "Hook appelé après un rechargement d'extensions : si les données contiennent un état d'interface (windowOpen, resolutionPtr, reviewData ou skipCustomCameras), les transmet à util_screenshotCreator_ui.onDeserialized.",
+      "params": {"data": {"type": "table|nil", "desc": "Données sauvegardées par la sérialisation"}},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook appelé au déchargement : restaure l'environnement modifié par les réglages (restoreEnvironment) et logue le déchargement.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

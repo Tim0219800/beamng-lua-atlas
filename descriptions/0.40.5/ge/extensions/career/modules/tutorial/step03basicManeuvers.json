@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/career/modules/tutorial/step03basicManeuvers.lua",
+  "module": "Étape 3 du tutoriel de carrière (« basicManeuvers ») : le joueur conduit librement (message sur le changement de caméra) puis doit garer le véhicule sur la place de parking nommée simpleCourseStart (marqueur + décalque au sol). Le objectif est validé quand le véhicule reste immobile dans la place pendant 1 s (gameplay_tutorial_markers.checkParkGoalWithStationaryTime) ; l'étape suivante est alors activée après 1,5 s.",
+  "notes": [
+    "Si la place simpleCourseStart est introuvable dans les sites du tutoriel, un avertissement est loggé et l'objectif de parking ne peut pas se valider.",
+    "Les hooks sont appelés par le runtime du tutoriel."
+  ],
+  "functions": {
+    "setup": {
+      "desc": "Appelé à l'activation : réinitialise l'objectif, active la zone evalZone, installe le reset de sortie de zone, puis démarre directement la phase de parking (débloque les vitesses, dégèle le véhicule, crée le marqueur).",
+      "params": {"stepData": {"type": "any", "desc": "Données de l'étape (non utilisées)."}},
+      "internal": true
+    },
+    "onCareerTutorialLeftBounds": {"desc": "Hook de sortie de zone : lance le reset de sortie de zone de l'étape.", "internal": true},
+    "onUpdate": {
+      "desc": "Appelé chaque frame : teste l'objectif de parking ; une fois validé, passe à l'étape suivante après 1,5 s.",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta simulation (s)."}, "dtRaw": {"type": "number", "desc": "Delta brut (s)."}},
+      "internal": true
+    },
+    "cleanup": {"desc": "Appelé à la fin de l'étape : retire le reset de sortie de zone, vide la liste de tâches, supprime marqueur et décalque.", "internal": true},
+    "onDebugMenu": {
+      "desc": "Affiche l'état des objectifs et un bouton « Skip Step 3 » (téléporte le véhicule sur la place et avance).",
+      "params": {"im": {"type": "table", "desc": "Table ui_imgui."}},
+      "internal": true
+    }
+  }
+}

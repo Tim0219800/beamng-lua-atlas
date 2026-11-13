@@ -1,0 +1,95 @@
+{
+  "path": "lua/ge/extensions/campaign/campaignsLoader.lua",
+  "module": "Chargeur de campagnes : trouve les fichiers /campaigns/*.json dont header.type vaut « campaign », les charge (avec infos de mod et image d'aperçu), valide et prépare une campagne, la démarre (ou reprend une sauvegarde) et gère les sauvegardes dans /saves/campaigns/ (fichiers slotN.json de header.type « campaignSave »). Les modules de la campagne sont campaign_campaigns, campaign_comics, campaign_rewards, campaign_dealer et campaign_photoSafari (M.campaignModules).",
+  "notes": [
+    "Sauvegarde : saveCampaign lance le hook onSaveCampaign(callback) ; chaque module appelle le callback avec (alias global, données) ; le résultat est écrit en JSON avec un header {version = 1, type = 'campaignSave', title}. Rien n'est sauvegardé si meta.enableSaves est faux.",
+    "La sauvegarde correspond à une campagne par son titre (meta.title).",
+    "resumeSavedCampaign appelle onResumeCampaign sur chaque module sauvegardé via _G (sauf campaign_campaigns, repris en dernier avec campaign_campaigns.resumeCampaign).",
+    "Bug : M.onInit = onInit exporte une variable non définie dans ce fichier (nil).",
+    "Bug : startByFolder appelle campaign_campaigns.start, qui n'est pas exportée par campaigns.lua (celui-ci exporte startCampaign) ; l'appel échoue. Utiliser plutôt campaign_campaignsLoader.start.",
+    "Bug : processCampaignStartInternal teste « if campaign then stop() » avec des globales non définies dans ce fichier ; seul un échec de validation (inatteignable car validate retourne toujours true) ferait retourner nil.",
+    "splitFieldByToken construit le motif \"([^\"..token..\".]+)\" : le point est toujours exclu en plus du jeton donné.",
+    "start attend la fin du niveau courant (scenetree.MissionGroup) avant de lancer la campagne, via endActiveGameMode et triggerDelayedStartGenerator."
+  ],
+  "fields": {
+    "campaignModules": {"type": "string[]", "desc": "Modules d'extension chargés pour une campagne."},
+    "onInit": {"type": "nil", "desc": "Toujours nil : référence à une variable non définie dans le fichier."}
+  },
+  "functions": {
+    "loadCampaign": {
+      "desc": "Lit le JSON d'une campagne et ajoute sourceFile, sourcePath, official, modID/modName/modTitle (valeurs « BeamNG » / « BeamNG.drive » si ce n'est pas un mod) et previews (image .jpg du dossier de la campagne).",
+      "params": {"campaignfile": {"type": "string", "desc": "Chemin du fichier JSON de la campagne."}},
+      "returns": [{"type": "table", "desc": "Données de la campagne enrichies."}],
+      "internal": false
+    },
+    "getCampaignFilenames": {
+      "desc": "Liste les fichiers JSON de /campaigns/ (1 niveau) dont header.type == 'campaign'. Retourne {} si le dossier n'existe pas.",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Chemins des fichiers de campagne."}],
+      "internal": false
+    },
+    "getList": {
+      "desc": "Charge toutes les campagnes trouvées avec loadCampaign et les retourne ; coopère avec util_asyncBulkLoader si un chargement groupé est en cours.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Liste des campagnes."}],
+      "internal": false
+    },
+    "getCampaignScenarios": {
+      "desc": "Retourne la liste mise en cache scenariosInAllCampaigns (vide dans ce fichier : jamais remplie ici ; generateCampaignScenariosList existe mais n'est pas appelée).",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Chemins de scénarios."}],
+      "internal": false
+    },
+    "splitFieldByToken": {
+      "desc": "Découpe une chaîne par un caractère jeton (en excluant aussi le point) et retourne les morceaux.",
+      "params": {
+        "field": {"type": "string", "desc": "Chaîne à découper."},
+        "token": {"type": "string", "desc": "Jeton de séparation."}
+      },
+      "returns": [{"type": "string[]", "desc": "Morceaux."}],
+      "internal": false
+    },
+    "start": {
+      "desc": "Démarre une campagne choisie dans l'interface. Si un niveau est chargé, attend sa fermeture ; sinon décharge les extensions automatiques, charge celles du scénario, du quick race et de la campagne, prépare la campagne, puis reprend une sauvegarde existante ou appelle campaign_campaigns.startCampaign.",
+      "params": {
+        "newCampaign": {"type": "table", "desc": "Campagne (issue de loadCampaign)."},
+        "endCallback": {"type": "function|nil", "desc": "Mémorisée comme endCampaignCallback."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "startByFolder": {
+      "desc": "Cherche la campagne dont sourcePath est path et la démarre.",
+      "params": {
+        "path": {"type": "string", "desc": "Dossier source de la campagne."},
+        "endCallback": {"type": "function|nil", "desc": "Callback de fin."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "checkSaveExists": {
+      "desc": "Retourne le nom du fichier de sauvegarde correspondant à un titre de campagne, ou nil.",
+      "params": {
+        "title": {"type": "string", "desc": "Titre de la campagne."},
+        "savesEnabled": {"type": "boolean", "desc": "Si faux, retourne nil sans rien chercher."}
+      },
+      "returns": [{"type": "string|nil", "desc": "Chemin de la sauvegarde."}],
+      "internal": false
+    },
+    "saveCampaign": {
+      "desc": "Sauvegarde l'état de la campagne (voir notes) dans /saves/campaigns/ ; réutilise le fichier existant du même titre, sinon prend le prochain « slotN.json ».",
+      "params": {"campaign": {"type": "table", "desc": "Campagne traitée ({meta, state}) ; meta.enableSaves et meta.title sont lus."}},
+      "returns": [],
+      "internal": false
+    },
+    "resumeSavedCampaign": {
+      "desc": "Relit un fichier de sauvegarde, rappelle onResumeCampaign de chaque module concerné, puis campaign_campaigns.resumeCampaign.",
+      "params": {
+        "campaign": {"type": "table", "desc": "Campagne traitée à reprendre."},
+        "saveFilename": {"type": "string", "desc": "Chemin du fichier de sauvegarde."}
+      },
+      "returns": [],
+      "internal": false
+    }
+  }
+}

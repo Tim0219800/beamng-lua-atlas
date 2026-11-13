@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/math/quaternion/direction.lua",
+  "module": "Noeud flowgraph 'Direction' (categorie simple). Convertit un angle 'deg' en degres en quaternion de rotation autour de l'axe Z (setFromEuler(0,0,angle)). Le resultat est recalcule seulement quand l'angle change.",
+  "notes": [
+    "Le quaternion 'rot' est une variable locale au module, partagee par toutes les instances du noeud, alors que le cache oldIn est par instance : deux noeuds avec des angles differents peuvent s'ecraser.",
+    "Si l'angle d'entree est nil, work provoque une erreur d'arithmetique sur nil."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "oldIn = nil.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Recalcule le quaternion (variable locale du module) si l'angle a change, ecrit la table du quaternion sur 'value'.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

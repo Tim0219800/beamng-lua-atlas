@@ -1,0 +1,31 @@
+{
+  "path": "lua/ge/extensions/ui/gridSelectorRouteLifecycleCallbacks.lua",
+  "module": "Callbacks de cycle de vie des routes de l'UI pour les écrans à sélecteur en grille. À l'entrée ou au montage d'une route, il calcule un instantané (ui_gridSelector.getSelectorSnapshot) à partir de la config `meta.gridSelector` de la route et l'ajoute à `data.gridSelector` (et `data.vehicleSelector` pour le backend vehicleSelector). Il relaie aussi les hooks onPauseEnter/onPauseMount/onPauseLeave à `ui_pause_routeLifecycleCallbacks` quand la route est une route de pause.",
+  "notes": [
+    "Config par route : `route.meta.gridSelector = { backendName, routePath, defaultPath }`. Défaut intégré uniquement pour `pause.vehicleSelector` (backend vehicleSelector, routePath /vehicle-selector-pause, chemin { keys = { \"allModels\" } }).",
+    "Le chemin vient de `toRoute.params` (path, keys ou pathMatch sous forme de table ou de chaîne « a/b/c »), sinon du chemin par défaut.",
+    "Sans config valide, un avertissement est loggé et aucun instantané n'est joint.",
+    "Une route est une route de pause si son nom est `pause`, commence par `pause.` ou par `menu.pause`.",
+    "onRouteLeave ne joint pas d'instantané : il ne fait que relayer onPauseLeave."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Charge ui_gridSelector avant ce module."}
+  },
+  "functions": {
+    "onRouteEnter": {
+      "desc": "Appelée par le routeur d'UI à l'entrée dans une route. Relaie onPauseEnter si c'est une route de pause, puis joint l'instantané du sélecteur à `data`.",
+      "params": {"context": {"type": "any", "desc": "Contexte du routeur."}, "toRoute": {"type": "table", "desc": "Route cible (name, params, meta)."}, "fromRoute": {"type": "table|nil", "desc": "Route quittée."}, "data": {"type": "table", "desc": "Table de données de la route, enrichie de gridSelector."}},
+      "internal": true
+    },
+    "onRouteMount": {
+      "desc": "Appelée par le routeur d'UI au montage de la route. Relaie onPauseMount si route de pause, puis joint l'instantané du sélecteur à `data`.",
+      "params": {"context": {"type": "any", "desc": "Contexte du routeur."}, "toRoute": {"type": "table", "desc": "Route cible."}, "fromRoute": {"type": "table|nil", "desc": "Route quittée."}, "data": {"type": "table", "desc": "Données de la route."}},
+      "internal": true
+    },
+    "onRouteLeave": {
+      "desc": "Appelée par le routeur d'UI en quittant une route. Relaie seulement onPauseLeave pour les routes de pause.",
+      "params": {"context": {"type": "any", "desc": "Contexte du routeur."}, "toRoute": {"type": "table|nil", "desc": "Route cible."}, "fromRoute": {"type": "table", "desc": "Route quittée."}, "data": {"type": "table|nil", "desc": "Données de la route."}},
+      "internal": true
+    }
+  }
+}

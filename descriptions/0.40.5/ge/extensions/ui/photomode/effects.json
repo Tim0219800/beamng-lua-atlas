@@ -1,0 +1,89 @@
+{
+  "path": "lua/ge/extensions/ui/photomode/effects.lua",
+  "module": "Effets de post-traitement du mode photo : profondeur de champ (DOF, avec mise au point automatique), SSAO, occlusion spéculaire, ombres en espace écran, réflexions SSR, flou de mouvement, qualité des réflexions dynamiques et des rétroviseurs, visibilité des occupants, plus l'état du flash (délégué à ui_photomode_flash). Le module lit et écrit ces valeurs via les objets postFX de scenetree, les variables $DOFPostFx::* et les réglages graphiques, sauvegarde l'état de départ de la session (y compris sur disque avec ui_photomode_postFxPersistence) et le restaure à la fin.",
+  "usage": "local res = ui_photomode_effects.setEffectsState({dofEnabled = true, dofAutofocus = true, ssrQualityMode = \"High\"})\nif not res.ok then log('W', 'x', res.reason) end",
+  "notes": [
+    "Les fonctions d'écriture exigent une session de mode photo active (ui_photomode_shared.S.sessionActive), sinon elles renvoient {ok = false, reason = \"session_inactive\"}.",
+    "Raisons d'échec possibles : effects_state_invalid, effects_patch_empty, effect_unavailable, effect_set_failed, ssao_quality_invalid, ssr_quality_invalid, reflection_quality_invalid, mirrors_quality_invalid, screen_space_shadows_set_failed, effects_defaults_unavailable, preset_part_invalid, flash_set_failed.",
+    "Bornes appliquées par clamp (défaut en cas de valeur invalide) : dofMaxBlurNear 0 à 1 (0), dofMaxBlurFar 0 à 1 (0.15), dofFocusRange -100 à 250 (50), dofAperture 0.1 à 100 (8), dofFalloffSharpness 0.1 à 100 (1), motionBlurStrength 0 à 2 (0.5).",
+    "Correspondance avec les variables du moteur : dofMaxBlurNear = $DOFPostFx::BlurMin, dofMaxBlurFar = BlurMax, dofFocusRange = FocusRangeMax, dofAperture = BlurCurveFar, dofFalloffSharpness = FocusRangeMin.",
+    "Avec dofAutofocus actif et sans dofFocusRange fourni, la portée manuelle est mémorisée puis FocusRangeMax passe à 0 ; elle est rétablie à la désactivation de l'autofocus.",
+    "Modes acceptés : reflectionQualityMode et mirrorsQualityMode = Disabled, Lowest, Low, Normal, High, Ultra ; ssrQualityMode = Off, Low, Medium, High ; ssaoQualityMode = Off, Normal, High (Low est ramené à Normal ; un nombre >= 64 d'échantillons donne High).",
+    "applyPresetState accepte options.part (all, dof, ssao, specularOcclusion, screenSpaceShadows, ssr, motionBlur, reflections, occupants, flash) pour n'appliquer qu'une partie d'un preset ; dans ce découpage, mirrorsQualityMode fait partie de « reflections ».",
+    "Dans resetEffectsToDefaults, les résultats de applyEffectsStatePatch et restoreDofEffectsState ne sont pas vérifiés : la fonction renvoie ok = true même si une étape a échoué."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "ui_photomode_shared, ui_photomode_postFxPersistence, ui_photomode_flash, core_settings_graphic"}
+  },
+  "functions": {
+    "setEffectsState": {
+      "desc": "Applique un patch partiel d'effets : dofEnabled, dofAutofocus, dofMaxBlurNear, dofMaxBlurFar, dofFocusRange, dofAperture, dofFalloffSharpness, ssaoQualityMode (alias ssaoQuality, ssaoSamples, ssaoEnabled), screenSpaceShadowsEnabled, specularOcclusionEnabled, ssrQualityMode, motionBlurEnabled, motionBlurStrength, reflectionQualityMode, mirrorsQualityMode, occupantsVisible. Valeurs numériques bornées, modes validés. S'arrête à la première erreur (les champs déjà appliqués restent appliqués).",
+      "params": {"partialState": {"type": "table", "desc": "Champs à modifier"}},
+      "returns": [{"type": "table", "desc": "{ok, reason?, state}"}],
+      "internal": false
+    },
+    "getEffectsState": {
+      "desc": "Renvoie l'état courant des effets (valeurs, availability, defaults, defaultsAvailable, sessionActive, flash) avec ok = session active, et reason = session_inactive sinon.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "État d'affichage"}],
+      "internal": false
+    },
+    "resetEffectsToDefaults": {
+      "desc": "Réapplique l'état capturé au début de la session, y compris le flash.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{ok, reason?, state?}"}],
+      "internal": false
+    },
+    "buildState": {
+      "desc": "Construit l'état d'affichage des effets (même fonction que le local buildEffectsState).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "État avec valeurs, availability, defaults, sessionActive, flash"}],
+      "internal": false
+    },
+    "buildMetadataState": {
+      "desc": "Sous-ensemble de l'état à écrire dans les métadonnées d'une photo : les 16 réglages d'effets plus flash.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Réglages"}],
+      "internal": false
+    },
+    "captureSerializableState": {
+      "desc": "Lit directement les valeurs actuelles dans le moteur (objets postFX, variables $DOFPostFx::*, réglages graphiques) et les renvoie sous forme brute ; les valeurs illisibles valent nil.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "État brut"}],
+      "internal": false
+    },
+    "captureRestoreState": {
+      "desc": "Capture l'état de départ de la session et le sauvegarde via ui_photomode_postFxPersistence.saveRestoreState (fusion avec la version persistée), pour restauration à la fin. Appelée au début d'une session du mode photo.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "restoreState": {
+      "desc": "Restaure l'état de départ (relu depuis la persistance si elle a réussi, sinon depuis la mémoire) : d'abord les effets hors DOF, puis le DOF. Appelée à la fin d'une session.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "capturePresetState": {
+      "desc": "État à enregistrer dans un preset (identique à buildMetadataState).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Réglages"}],
+      "internal": false
+    },
+    "captureDefaultPresetState": {
+      "desc": "État par défaut pour un preset (état de départ de la session, avec le flash par défaut), ou nil si l'état de départ n'a pas été capturé.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Réglages initiaux"}],
+      "internal": false
+    },
+    "applyPresetState": {
+      "desc": "Applique un preset d'effets, en totalité ou pour une partie (options.part), puis délègue la sous-table flash à ui_photomode_flash.applyPresetState.",
+      "params": {
+        "state": {"type": "table", "desc": "État de preset"},
+        "options": {"type": "table|nil", "desc": "{part = nom de partie} (facultatif)"}
+      },
+      "returns": [{"type": "table", "desc": "{state} en cas de succès, sinon {ok = false, reason}"}],
+      "internal": false
+    }
+  }
+}

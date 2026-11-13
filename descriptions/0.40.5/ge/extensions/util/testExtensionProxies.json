@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/util/testExtensionProxies.lua",
+  "module": "Extension de test du système d'ExtensionProxy. Au chargement, elle crée 11 objets ExtensionProxyTester (id 0 à 10) et les soumet comme « event sinks » à un proxy créé par newExtensionProxy(M), de sorte que les hooks de l'extension (comme onUpdate) soient redistribués à chaque instance. Utile seulement pour comprendre ce mécanisme ou le déboguer.",
+  "notes": [
+    "onExtensionUnloaded appelle extProxy:destroy() ; le commentaire précise que le système d'extensions nettoie de toute façon.",
+    "Dans onExtensionLoaded, newExtensionProxyTester(id) reçoit une variable globale id (nil) que la fonction ignore : l'id est ensuite fixé à la main (e.id = i)."
+  ],
+  "functions": {
+    "onExtensionLoaded": {
+      "desc": "Appelé au chargement de l'extension. Crée 11 testeurs, un proxy d'extension, et lui soumet les testeurs avec submitEventSinks.",
+      "params": {},
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Appelé au déchargement de l'extension. Détruit le proxy d'extension.",
+      "params": {},
+      "internal": true
+    }
+  },
+  "classes": {
+    "ExtensionProxyTester": {
+      "desc": "Objet de test avec un champ id ; reçoit les hooks redistribués par le proxy.",
+      "functions": {
+        "onUpdate": {
+          "desc": "Hook de mise à jour : affiche dans la console l'id du testeur et dtReal.",
+          "params": {
+            "dtReal": {"type": "number", "desc": "Temps réel écoulé (s)."},
+            "dtSim": {"type": "number", "desc": "Temps de simulation écoulé (s)."},
+            "dtRaw": {"type": "number", "desc": "Temps brut écoulé (s)."}
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

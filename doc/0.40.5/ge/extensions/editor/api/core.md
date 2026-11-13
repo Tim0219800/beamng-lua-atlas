@@ -4,68 +4,97 @@
 
 **Accès :** extension `editor_api_core` : `extensions.load("editor_api_core")`, puis la globale `editor_api_core`
 
+Noyau de l'objet editor du World Editor : initialize(editor) y installe les constantes (FloatMin/Max, IntMin/Max, AuxControl_*), l'état (history, levelPath, dirty, editModes, selection) et les fonctions de base : création/ouverture/sauvegarde de niveaux, état « modifié » (dirty) du niveau et des outils, annuler/refaire, types de visualisation, visibilité/sélectionnabilité des classes d'objets, modes d'édition et actions copier/coller/supprimer routées vers le mode courant. Un moddeur d'outil d'éditeur s'en sert via editor.xxx.
+
+## Exemple
+
+```lua
+editor.registerVisualizationType({name = "$Lua.myFlag", displayName = "Mon overlay", type = editor.varTypes.LuaVar})
+editor.selectEditMode({displayName = "Mon mode", onActivate = function() end, onDeactivate = function() end})
+editor.setDirty()
+```
+
+## Remarques
+
+- Le module n'exporte que initialize ; tout est posé sur l'objet editor.
+- Les actions cut/copy/paste/duplicate/selectAll/deselect/deleteSelection appellent d'abord le callback du mode d'édition courant (onCut, onCopy…), puis émettent le hook global correspondant (onEditorCut…).
+- Types de visualisation (editor.varTypes) : ConVar=1 (VariableRegistry), LuaVar=2 (variable globale Lua évaluée par loadstring), Custom=3 (getter/setter), Setting=4 (settings). Un callback optionnel de typeData est appelé après setVisualizationType.
+- saveLevel écrit d'abord dans <level>/__main puis remplace <level>/main ; en cas d'échec de sérialisation, un log FATAL est émis mais les hooks onEditorAfterSaveLevel et resetDirty s'exécutent quand même.
+- copyDirectory/copyLevelFolder utilisent gsub avec les chemins comme motifs Lua (les caractères spéciaux comme '-' ou '.' ne sont pas échappés).
+- checkDirtyAndSave : l'expression « editor.dirty or anyToolDirty() and editor.initialized » est évaluée avec la priorité Lua (and avant or) : editor.initialized ne conditionne que anyToolDirty.
+
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `editor_api_core.initialize(editorInstance)` |  | 715 |
+| `editor_api_core.initialize(editorInstance)` | Installe constantes, variables d'état et fonctions sur l'objet editor. *(interne)* | 715 |
+
+### Détail des paramètres
+
+#### `editor_api_core.initialize(editorInstance)`
+
+Installe constantes, variables d'état et fonctions sur l'objet editor.
+
+- `editorInstance` (*table*) : Objet editor
 
 ## Classe `editor`
+
+Fonctions ajoutées à l'objet editor par initialize.
 
 Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `editor.anyToolDirty()` |  | 544 |
-| `editor.autoSaveLevel()` | Save a copy of the level's scene tree to an autosave folder | 150 |
-| `editor.checkDirtyAndSave(noCancelButton)` |  | 553 |
-| `editor.clearUndoHistory()` | Clears the current undo history (along with redo information), basically acting like a collapse of operations. From this moment all the past operations are irreversible. | 309 |
-| `editor.clearVisualizationTypes()` |  | 371 |
-| `editor.copy()` | Copy the current selection. The copy action is routed to the current edit mode, calling its ``onCopy()`` callback, see `Edit Modes`.<br> The global extension hook ``onEditorCopy`` will also be invoked, which can be used by other tools if they're in focus and don't have edit modes registered. | 474 |
-| `editor.copyDirectory(srcPath, dstPath)` |  | 20 |
-| `editor.copyLevelFolder(srcPath, dstPath)` |  | 32 |
-| `editor.cut()` | Cut the current selection. The cut action is routed to the current edit mode, calling its ``onCut()`` callback, see `Edit Modes`.<br> The global extension hook ``onEditorCut`` will also be invoked, which can be used by other tools if they're in focus and don't have edit modes registered. | 465 |
-| `editor.deleteObject(objectId)` | Delete an object by its id. | 275 |
-| `editor.deleteSelection()` | Delete the items in the current selection. The delete selection action is routed to the current edit mode, calling its ``onDeleteSelection()`` callback, see `Edit Modes`.<br> The global extension hook ``onEditorDeleteSelection`` will also be invoked, which can be used by other tools if they're in focus and don't have edit modes registered. | 521 |
-| `editor.deselect()` | Deselect the current selection. The deselect action is routed to the current edit mode, calling its ``onDeselect()`` callback, see `Edit Modes`.<br> The global extension hook ``onEditorDeselect`` will also be invoked, which can be used by other tools if they're in focus and don't have edit modes registered. | 512 |
-| `editor.doNewLevel()` | Used by editor UI to do new level, complete with all the open dialog | 569 |
-| `editor.doOpenLevel()` | Used by editor UI to open a level, complete with open file dialog | 584 |
-| `editor.doSaveLevel()` | Used by editor UI to save level, will ask for folder is no level path was set | 596 |
-| `editor.doSaveLevelAs()` | Used by editor UI to save a level into another folder, as a new level, complete with open folder dialog | 606 |
-| `editor.duplicate()` | Duplicate the current selection. The duplicate action is routed to the current edit mode, calling its ``onDuplicate()`` callback, see `Edit Modes`.<br> The global extension hook ``onEditorDuplicate`` will also be invoked, which can be used by other tools if they're in focus and don't have edit modes registered. | 494 |
-| `editor.enableHeadless(enabled, toolName)` |  | 625 |
-| `editor.getCurrentEditModeName()` | Returns the current edit mode name, from the key name of the editMode table | 456 |
-| `editor.getLevelName()` | Return the current level name. | 530 |
-| `editor.getLevelPath()` | Return the current level path. | 539 |
-| `editor.getObjectTypeSelectable(typeName)` | Return true if object type is editable/selectable.<br> @param typeName the name of the C++ object class/type | 398 |
-| `editor.getObjectTypeVisible(typeName)` | Returns true/false for class visibility<br> Get the object type visibility.<br> @param typeName the name of the C++ object class/type | 385 |
-| `editor.getVisualizationType(name)` | Return a visualization type current value.<br> @param name the vizualization's name<br> @return true if the vizualization is active | 338 |
-| `editor.getVisualizationTypes()` | Returns the available visualization types. You can add custom ones adding an item to ``editor.registerVisualizationType(...)`` | 356 |
-| `editor.isHeadlessToolActive(toolName)` |  | 647 |
-| `editor.linkifyPath(targetPath)` |  | 665 |
-| `editor.muteAudio(muteIt)` |  | 651 |
-| `editor.newLevel()` | Reset everything and create a new level from a default template | 74 |
-| `editor.openLevel(path)` | Open an existing level from disk. Will remove any unsaved changes made to the current level.<br> @param path the level folder, relative to game root | 88 |
-| `editor.paste()` | Paste the current selection. The paste action is routed to the current edit mode, calling its ``onPaste()`` callback, see `Edit Modes`.<br> The global extension hook ``onEditorPaste`` will also be invoked, which can be used by other tools if they're in focus and don't have edit modes registered. | 484 |
-| `editor.quitEditor()` | Hides and deactivates the editor. | 265 |
-| `editor.quitGame()` | Quit the actual game. | 270 |
-| `editor.redo(steps)` | Redo (revert the last undo steps) the last operation(s).<br> @param steps the number of redo steps to be performed, if omitted, then this is 1 | 293 |
-| `editor.registerVisualizationType(typeData)` | Add a new user visualization type.<br> @param typeData the visualization type info | 366 |
-| `editor.resetAllDirtyTools()` |  | 252 |
-| `editor.resetDirty()` | Set the editor state to clean, no need to save it. | 258 |
-| `editor.resetDirtyTool(name)` |  | 248 |
-| `editor.saveDirtyToolsUi()` |  | 177 |
-| `editor.saveLevel()` | Save the current level data. There must be a level opened. This function will call the Save As if the level is unnamed. | 115 |
-| `editor.saveLevelAs(levelPath)` | Save the level's scene tree to the specified path. | 143 |
-| `editor.selectAll()` | Select all items. The select all action is routed to the current edit mode, calling its ``onSelectAll()`` callback, see `Edit Modes`.<br> The global extension hook ``onEditorSelectAll`` will also be invoked, which can be used by other tools if they're in focus and don't have edit modes registered. | 503 |
-| `editor.selectEditMode(newEditMode)` | Select the current edit mode<br> @param mode the edit mode table, with the fields:<br>  **displayName** - the display name shown in the title bar for the current edit mode, example: "Edit Terrain"<br>  **onActivate** - a function called when the edit mode gets selected, optional<br>  **onDeactivate** - a function called when the edit mode gets deselected, optional<br>  **onUpdate** - a function called when the edit mode needs to update/check internal state<br>  **onCut** - a function called when the edit mode is required to cut the selection, optional<br>  **onCopy** - a function called when the edit mode is required to copy the selection, optional<br>  **onPaste** - a function called when the edit mode is required to paste the selection, optional<br>  **onDuplicate** - a function called when the edit mode is required to duplicate(clone) the selection, optional<br>  **onSelectAll** - a function called when the edit mode is required to select all items, optional<br>  **onDeselect** - a function called when the edit mode is required to deselect the selection, optional<br>  **onDeleteSelection** - a function called when the edit mode is required to delete the selected items, optional<br>  **onToolbar** - a function called when the edit mode is selected and it needs to render icon buttons in the vertical edit mode toolbar, optional<br>  **actionMap** - an action map for the input, which will be pushed to the action map stack when the edit mode is selected, optional<br>  **icon** - an icon for the edit mode, you can find the icons in the editor.icons table, if nil, no toolbar button will be shown in the edit modes toolbar<br>  **iconTooltip** - a tooltip for the button in the edit modes toolbar, optional | 419 |
-| `editor.setDirty()` | Set the editor state to dirty, level needs to be saved. | 238 |
-| `editor.setDirtyTool(name, saveFn)` |  | 243 |
-| `editor.setObjectTypeSelectable(typeName, selectable)` | Set a certain object type from being editable/selectable.<br> @param typeName the name of the C++ object class/type<br> @param selectable true/false for class selectability | 392 |
-| `editor.setObjectTypeVisible(typeName, visible)` | Set the object type visibility.<br> @param typeName the name of the C++ object class/type to be visible<br> @param visible true/false for class visibility | 378 |
-| `editor.setUndoHistory(history)` | Allows the user to change the current history table instance.<br> This is useful for context aware undo, for example if the editor uses multiple windows/panes and when switching editing actions back and forth, each window/pane should keep its own undo context to allow proper undo/redo operation.<br> @param history the history table instance to be used from now on. If this is nil then the default history will be used. | 300 |
-| `editor.setVisualizationType(name, on)` | Set a visualization type's status on or off.<br> @param name the name of the type, allowed values can be found using [editor.getVisualizationTypes()][{{editor.getVisualizationTypes()}}]<br> @param on true to activate the vizualization | 316 |
-| `editor.undo(steps)` | Undo the last operation(s).<br> @param steps the number of undo steps to be performed, if omitted, then this is 1 | 287 |
+| `editor.anyToolDirty()` | Si des outils sont modifiés, ouvre la fenêtre modale saveDirtyTools et renvoie true. | 544 |
+| `editor.autoSaveLevel()` | Sauvegarde une copie du niveau dans /temp/level_autosaves/<niveau>/<compteur>/ en tournant sur files.autoSave.maxAutoSaveCountPerSession, puis restaure levelPath et l'état dirty. | 150 |
+| `editor.checkDirtyAndSave(noCancelButton)` | Si le niveau/les outils sont modifiés, affiche une boîte de dialogue : Oui sauvegarde, Annuler appelle Engine.cancelShutdown(), Non remet tout à propre. | 553 |
+| `editor.clearUndoHistory()` | Vide l'historique d'annulation et de refaire ; les actions passées deviennent irréversibles. | 309 |
+| `editor.clearVisualizationTypes()` | Supprime tous les types de visualisation enregistrés. | 371 |
+| `editor.copy()` | Copier : appelle onCopy du mode courant puis le hook onEditorCopy. | 474 |
+| `editor.copyDirectory(srcPath, dstPath)` | Copie récursivement les fichiers de srcPath vers dstPath (FS:findFiles + FS:copyFile) et le logue. | 20 |
+| `editor.copyLevelFolder(srcPath, dstPath)` | Copie un dossier de niveau (défaut levels/template/) vers un nouveau, remplace le nom de l'ancien niveau par le nouveau dans les .json/.cs et renomme les fichiers contenant l'ancien nom. Peut être long. | 32 |
+| `editor.cut()` | Couper : appelle onCut du mode d'édition courant puis le hook onEditorCut. | 465 |
+| `editor.deleteObject(objectId)` | Supprime un objet par id s'il existe et n'est pas verrouillé, puis marque l'éditeur modifié. | 275 |
+| `editor.deleteSelection()` | Supprimer la sélection : appelle onDeleteSelection du mode courant, émet onEditorDeleteSelection et vide editor.selection. | 521 |
+| `editor.deselect()` | Désélectionner : appelle onDeselect du mode courant puis le hook onEditorDeselect. | 512 |
+| `editor.doNewLevel()` | Pour l'UI : propose de sauver, ouvre un sélecteur de dossier sous /levels, copie le niveau template vers le nouveau dossier, puis newLevel() et openLevel(). | 569 |
+| `editor.doOpenLevel()` | Pour l'UI : propose de sauver, ouvre un sélecteur de dossier sous /levels et ouvre le niveau choisi. | 584 |
+| `editor.doSaveLevel()` | Pour l'UI : sauvegarde le niveau, ou appelle doSaveLevelAs si levelPath est vide. | 596 |
+| `editor.doSaveLevelAs()` | Pour l'UI : sélecteur de dossier, copie le dossier du niveau vers le nouveau puis saveLevelAs. Refuse /levels directement (il faut un sous-dossier). | 606 |
+| `editor.duplicate()` | Dupliquer : appelle onDuplicate du mode courant puis le hook onEditorDuplicate. | 494 |
+| `editor.enableHeadless(enabled, toolName)` | Active/désactive le mode headless d'un outil : sauvegarde et charge les dispositions de fenêtres, renseigne editor.headless/headlessToolName et émet onEditorHeadlessChange(enabled, toolName). | 625 |
+| `editor.getCurrentEditModeName()` | Clé du mode courant dans editor.editModes, "" si aucun. | 456 |
+| `editor.getLevelName()` | Nom du niveau courant (dernier dossier du chemin de mission). | 530 |
+| `editor.getLevelPath()` | Chemin du dossier du niveau courant, "" si inconnu. | 539 |
+| `editor.getObjectTypeSelectable(typeName)` | Indique si une classe d'objets est sélectionnable. | 398 |
+| `editor.getObjectTypeVisible(typeName)` | Indique si une classe d'objets est rendue. | 385 |
+| `editor.getVisualizationType(name)` | Valeur courante d'un type de visualisation ; nil si le nom est inconnu. | 338 |
+| `editor.getVisualizationTypes()` | Liste des types de visualisation, triée par displayName si besoin. | 356 |
+| `editor.isHeadlessToolActive(toolName)` | Indique si cet outil est actuellement en mode headless. | 647 |
+| `editor.linkifyPath(targetPath)` | Crée dans le dossier du niveau un fichier .link (JSON {path = targetPath}) qui pointe vers targetPath, et renvoie le chemin du lien (sans .link). Renvoie targetPath tel quel si aucun niveau n'est ouvert, "" si targetPath est vide. | 665 |
+| `editor.muteAudio(muteIt)` | Coupe le canal audio maître (mémorise le volume) ou le rétablit. | 651 |
+| `editor.newLevel()` | Remet l'éditeur à zéro pour un nouveau niveau : hooks onEditorExitLevel puis onEditorBeforeNewLevel, vide l'historique, levelPath = "", compteur d'autosave à 1, puis onEditorAfterNewLevel et resetDirty. Ne détruit pas le scenetree. | 74 |
+| `editor.openLevel(path)` | Ouvre un niveau existant : désactive les signaux Sim, hook onEditorBeforeOpenLevel, newLevel(), shutdown de l'éditeur puis core_levels.startLevel(path), puis hook onEditorAfterOpenLevel. Les modifications non sauvées sont perdues. | 88 |
+| `editor.paste()` | Coller : appelle onPaste du mode courant puis le hook onEditorPaste. | 484 |
+| `editor.quitEditor()` | Cache et désactive l'éditeur. | 265 |
+| `editor.quitGame()` | Quitte le jeu (quit()). | 270 |
+| `editor.redo(steps)` | Refait la ou les dernières opérations annulées. | 293 |
+| `editor.registerVisualizationType(typeData)` | Enregistre un type de visualisation personnalisé. | 366 |
+| `editor.resetAllDirtyTools()` | Vide la liste des outils modifiés et remet cleanExit à true. | 252 |
+| `editor.resetDirty()` | Marque le niveau comme propre, efface le flag de scène du moteur et remet cleanExit à true. | 258 |
+| `editor.resetDirtyTool(name)` | Retire un outil de la liste des outils modifiés. | 248 |
+| `editor.saveDirtyToolsUi()` | Dessine la fenêtre modale « Save Tool Windows Data » listant les outils modifiés (Save All, Save Selected, Don't Save Any, Cancel). | 177 |
+| `editor.saveLevel()` | Sauvegarde le MissionGroup dans <levelPath>main (via __main), avec hooks onEditorBeforeSaveLevel/onEditorAfterSaveLevel, resetDirty, notification, et copie de sauvegarde si la préférence files.autoSave.saveBackupCopy est active (hooks onEditorBefore/AfterSaveLevelBackup). | 115 |
+| `editor.saveLevelAs(levelPath)` | Change editor.levelPath et le nom de mission (info.json) puis sauvegarde le niveau à cet emplacement. | 143 |
+| `editor.selectAll()` | Tout sélectionner : appelle onSelectAll du mode courant puis le hook onEditorSelectAll. | 503 |
+| `editor.selectEditMode(newEditMode)` | Active un mode d'édition : désactive l'ancien (onDeactivate, hook onEditorEditModeDeactivated, pop de son actionMap), active le nouveau (onActivate, hook onEditorEditModeActivated, push de son actionMap en priorité maximale) puis émet onEditorEditModeChanged(old, new). Champs du mode : displayName, onActivate, onDeactivate, onUpdate, onCut, onCopy, onPaste, onDuplicate, onSelectAll, onDeselect, onDeleteSelection, onToolbar, actionMap, icon, iconTooltip, hideObjectIcons. | 419 |
+| `editor.setDirty()` | Marque le niveau comme modifié et enregistre l'info d'arrêt non propre (préférences general.internal.cleanExit/lastLevel). | 238 |
+| `editor.setDirtyTool(name, saveFn)` | Déclare un outil comme ayant des données non sauvées, avec sa fonction de sauvegarde. | 243 |
+| `editor.setObjectTypeSelectable(typeName, selectable)` | Autorise ou interdit la sélection d'une classe d'objets. | 392 |
+| `editor.setObjectTypeVisible(typeName, visible)` | Rend visible/invisible une classe d'objets C++ dans l'éditeur. | 378 |
+| `editor.setUndoHistory(history)` | Change l'instance d'historique utilisée (utile pour un undo par fenêtre/panneau). nil rétablit l'historique par défaut. | 300 |
+| `editor.setVisualizationType(name, on)` | Active/désactive un type de visualisation enregistré (selon son type ConVar/LuaVar/Custom/Setting) puis appelle son callback éventuel. Ignore un nom inconnu. | 316 |
+| `editor.undo(steps)` | Annule la ou les dernières opérations de l'historique courant. | 287 |
 
 ## Hooks émis
 

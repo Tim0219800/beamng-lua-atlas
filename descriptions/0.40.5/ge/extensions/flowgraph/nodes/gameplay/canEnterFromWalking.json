@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/canEnterFromWalking.lua",
+  "module": "Nœud flowgraph « Can Enter From Walking » (catégorie repeat_instant, dépend de gameplay_walk). Vérifie que le joueur marche et est près d'un véhicule à l'arrêt qu'il peut entrer. Sorties : canEnter (flux), vehId (véhicule le plus proche ou nil), closeButNotStopped (flux caché, véhicule proche mais en mouvement).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Utilise gameplay_walk.isWalking, getVehicleInFront et isAtParkingSpeed pour remplir les pins de sortie.", "params": {"args": {"type": "table", "desc": "Arguments du flowgraph"}}},
+        "drawMiddle": {"desc": "Affiche une icône de véhicule verte si l'entrée est possible.", "internal": true}
+      }
+    }
+  }
+}

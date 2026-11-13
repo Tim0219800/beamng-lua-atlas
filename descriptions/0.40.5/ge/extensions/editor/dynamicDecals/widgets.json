@@ -1,0 +1,54 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/widgets.lua",
+  "module": "Bibliothèque de widgets imgui de l'outil Dynamic Decals. draw() affiche une propriété (nom, infobulle de description, éventuel choix du type de widget) puis le widget adapté à son type : bool (case à cocher), int (Input/Slider/Drag/Combo), float (Input/Slider/Drag), Point2F (Input/Slider/Drag), Point3F et Point4F (Slider/Color), string (Input/InputMultiline), Texture (File/ImageButton), File, ColorI et MultiColor (dégradé). Les propriétés viennent de l'API dynamicDecals (api.propertiesMap, api.types, api.widgetTypes). Gère aussi la mise en évidence temporaire d'une propriété avec défilement automatique.",
+  "notes": [
+    "Un type de propriété inconnu est affiché en rouge avec le nom de la propriété.",
+    "La plupart des widgets proposent un bouton de remise à la valeur par défaut (icône refresh) si property.default est défini ; la nouvelle valeur est écrite dans property.value.",
+    "Si property.widgetType est absent, le widget par défaut du type est utilisé. Si api.widgetTypes[type] existe, un bouton « Widget Type » ouvre un popup pour changer property.widgetType.",
+    "En mode debug de l'outil (préférence dynamicDecalsTool.general.debug), l'infobulle ajoute l'identifiant du widget.",
+    "Préférences enregistrées : texturePreviewSize (float, 128, 32 à 512) et multiColorWidgetWidth (float, 128, 32 à 512)."
+  ],
+  "functions": {
+    "draw": {
+      "desc": "Dessine une propriété et son widget. Renvoie true si la valeur a été modifiée cette frame ; editEnded[0] est mis à jour pour indiquer la fin d'une édition (relâchement de la souris, validation).",
+      "params": {
+        "value": {"type": "any", "desc": "Valeur actuelle de la propriété (type selon property.type)"},
+        "property": {"type": "table", "desc": "Propriété {id, name?, description?, type?, widgetType?, default?, value, ...} ; id sert à retrouver api.propertiesMap"},
+        "guiId": {"type": "string", "desc": "Suffixe d'identifiant imgui pour rendre le widget unique (widgetId = \"##guiId_property.id\")"},
+        "editEnded": {"type": "table|nil", "desc": "Pointeur booléen imgui ([0]) mis à true à la fin de l'édition"},
+        "widgetOptions": {"type": "table|nil", "desc": "Options de rendu, par exemple widthMod (ajustement de largeur en pixels)"}
+      },
+      "returns": [{"type": "boolean|nil", "desc": "true si modifié, sinon nil"}]
+    },
+    "defaultButton": {
+      "desc": "Dessine un bouton icône « refresh » suivi de SameLine ; appelle cbFunc au clic.",
+      "params": {
+        "widgetId": {"type": "string", "desc": "Identifiant du widget (le bouton est « widgetId_resetButton »)"},
+        "cbFunc": {"type": "function", "desc": "Fonction appelée au clic"},
+        "tooltipMsg": {"type": "string|nil", "desc": "Infobulle optionnelle"}
+      }
+    },
+    "highlight": {
+      "desc": "Met en évidence une propriété (cadre de la couleur BeamNG) et fait défiler la fenêtre jusqu'à elle. Remplace toute mise en évidence précédente.",
+      "params": {
+        "id": {"type": "string", "desc": "Identifiant de widget complet, au format \"##guiId_propertyId\""},
+        "time": {"type": "number", "desc": "Durée en secondes (décrémentée avec dtReal)"}
+      }
+    },
+    "setup": {
+      "desc": "Initialise avec l'outil parent, récupère l'API dynamicDecals et le helper, et enregistre la mise à jour qui fait expirer les mises en évidence.",
+      "params": {"tool_in": {"type": "table", "desc": "Module editor_dynamicDecalsTool"}},
+      "internal": true
+    },
+    "registerEditorPreferences": {
+      "desc": "Enregistre les préférences texturePreviewSize et multiColorWidgetWidth.",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences"}},
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook de préférence vide.",
+      "params": {"path": {"type": "string", "desc": "Chemin"}, "value": {"type": "any", "desc": "Valeur"}},
+      "internal": true
+    }
+  }
+}

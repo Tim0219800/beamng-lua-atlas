@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/recording/stopReplay.lua",
+  "module": "Noeud flowgraph 'Stop Replay' (categorie repeat_instant). Arrete la relecture en cours : si core_replay.state.state vaut 'playback', appelle core_replay.stop(). Aucun pin.",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "work": {
+          "desc": "Arrete le replay s'il est en lecture.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

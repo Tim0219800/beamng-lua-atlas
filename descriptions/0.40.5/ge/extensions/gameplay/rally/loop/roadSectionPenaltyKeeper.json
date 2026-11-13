@@ -1,0 +1,32 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/loop/roadSectionPenaltyKeeper.lua",
+  "module": "Surveille les sections de liaison (road sections) d'une boucle de rallye : si le joueur déclenche trop de recalculs d'itinéraire dans une fenêtre de temps (il sort de la route de liaison), une pénalité « liaison_deviation » est enregistrée auprès du gestionnaire. Les pénalités sont escaladantes : 30 s, 60 s, 120 s, 180 s.",
+  "notes": [
+    "Constantes : fenêtre RECALC_TIME_WINDOW = 10 s, seuil RECALC_THRESHOLD = 5 recalculs, MAX_VIOLATIONS = 1.",
+    "Avec MAX_VIOLATIONS = 1, onUpdate ne déclenche qu'une seule violation par instance (condition violationCount < 1), donc seule la pénalité de 30 s est en pratique appliquée ; les paliers 60/120/180 s ne sont jamais atteints par onUpdate.",
+    "Le module renvoie un constructeur : require('gameplay_rally_loop_roadSectionPenaltyKeeper')(manager). Le temps vient de manager.clock."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Détecteur de pénalités de liaison. Champs : manager, recalcCount, violationCount, lastCheckTime.",
+      "functions": {
+        "init": {
+          "desc": "Mémorise le gestionnaire et remet les compteurs à zéro. Appelé par le constructeur.",
+          "params": {"manager": {"type": "table", "desc": "rallyLoopManager (utilise manager.clock et manager:recordRouteRecalcPenalty)."}},
+          "internal": true
+        },
+        "reset": {"desc": "Remet recalcCount et violationCount à 0."},
+        "registerRecalc": {"desc": "Incrémente le compteur de recalculs d'itinéraire ; à appeler à chaque recalcul de route détecté."},
+        "createPenaltyData": {
+          "desc": "Incrémente violationCount et renvoie la donnée de pénalité {type = 'liaison_deviation', amount, data = {violationNumber, recalcCount}} avec amount = 30, 60, 120 puis 180 s.",
+          "returns": [{"type": "table", "desc": "Données de pénalité."}]
+        },
+        "onUpdate": {
+          "desc": "Appelé à chaque frame par le gestionnaire. Toutes les 10 s (temps manager.clock), si recalcCount > 5 et violationCount < MAX_VIOLATIONS, appelle manager:recordRouteRecalcPenalty(createPenaltyData()) et remet recalcCount à 0.",
+          "returns": [{"type": "boolean|nil", "desc": "false si la fenêtre de 10 s n'est pas écoulée, sinon nil."}],
+          "internal": true
+        }
+      }
+    }
+  }
+}

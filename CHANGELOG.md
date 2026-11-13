@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased (0.40.5, next release)
+
+- Written descriptions (French) now cover all 2507 modules (was 560): every GE, common, vehicle and console file, including the flowgraph nodes, the editor tools, career, gameplay, UI router and bundled third-party libraries.
+- New tools: `comparer.py` (API diff between versions, generates `changements.md`), `reporter_descriptions.py` (carries descriptions over, flags changed signatures),
+  `verifier_mod.py` (mod checker), `bissecter.py` (mod bisection). Procedure for the next game version in `NOUVELLE_VERSION.md`.
+- Generator: descriptions flagged `aVerifier` are shown as "⚠ À revérifier"; line breaks inside parameter/return descriptions no longer break the stubs.
+- GitHub Actions upgraded to checkout/setup-python/setup-node v7 (Node 24) and Pages actions v5/v6; CI also checks that the tools compile.
+
 ## 0.40.5-1 (2026-11-13)
 
 First release, for BeamNG.drive 0.40.5.0 (build 302427).

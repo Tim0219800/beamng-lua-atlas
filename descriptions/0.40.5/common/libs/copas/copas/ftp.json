@@ -1,0 +1,25 @@
+{
+  "path": "lua/common/libs/copas/copas/ftp.lua",
+  "module": "Sous-module FTP de la bibliothèque tierce Copas : identique à socket.ftp de LuaSocket, mais utilise des sockets Copas asynchrones (copas.wrap). Définit copas.ftp avec get, put et command. Les constantes PORT, TIMEOUT, PASSWORD et USER sont redirigées vers le module socket.ftp d'origine quand on les affecte.",
+  "notes": [
+    "Bug : parseRequest construit la table t mais ne la renvoie pas (pas de `return t`) ; get/put appelés avec une URL en chaîne reçoivent donc nil. La forme table (get{...}/put{...}) fonctionne.",
+    "get et put sont enveloppés par socket.protect."
+  ],
+  "functions": {
+    "parseRequest": {
+      "desc": "Convertit la forme courte en forme avancée : avec body c'est un PUT (source = body), sinon un GET avec champ target recevant le résultat.",
+      "params": {
+        "u": {"type": "string", "desc": "URL ftp://…"},
+        "body": {"type": "string|nil", "desc": "Contenu à envoyer (PUT)"}
+      }
+    },
+    "command": {
+      "desc": "Envoie une commande FTP brute (comme socket.ftp.command) avec un socket Copas.",
+      "params": {"cmdt": {"type": "table", "desc": "Table de commande LuaSocket"}}
+    }
+  },
+  "fields": {
+    "get": {"type": "function", "desc": "Télécharge un fichier : get(url_ou_table). En forme chaîne, renvoie le contenu concaténé."},
+    "put": {"type": "function", "desc": "Envoie un fichier : put(url_ou_table, body)."}
+  }
+}

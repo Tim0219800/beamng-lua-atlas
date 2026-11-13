@@ -1,0 +1,52 @@
+{
+  "path": "lua/ge/extensions/career/modules/debug/vehicleSpawn.lua",
+  "module": "Outil de debug « Vehicle Spawn » : ajoute un marqueur de point d'intérêt au parking 'debugParking' de west_coast_usa (facilities.sites.json) dont la fenêtre de détail propose de faire apparaître un véhicule ou une remorque 'loués' (sunburst/race_M, boxutility/loaded_200), éventuellement ajoutés à l'inventaire (owned = false). spawnVehicle enchaîne fondu au noir, spawn, initPartConditions, attente puis fondu retour via util_stepHandler.",
+  "usage": "career_modules_debug_vehicleSpawn.spawnVehicle('boxutility', 'loaded_200', true)",
+  "notes": ["Dépend de gameplay_sites_sitesManager.", "Le chemin /levels/west_coast_usa/facilities.sites.json est en dur : l'outil ne fonctionne que sur cette carte.", "buttonPressed appelle buttonOptions[i], table qui n'est jamais remplie dans ce fichier (les boutons passent par luaCallback)."],
+  "fields": {
+    "debugName": {"type": "string", "desc": "'Vehicle Spawn'."},
+    "debugOrder": {"type": "number", "desc": "Ordre de tri (12)."},
+    "dependencies": {"type": "string[]", "desc": "{\"gameplay_sites_sitesManager\"}."}
+  },
+  "functions": {
+    "onGetRawPoiListForLevel": {
+      "desc": "Hook de la liste de POI : si le parking 'debugParking' est chargé, ajoute un élément 'debugVehicleSpawn' avec un marqueur de parking (path, pos, rot, scl).",
+      "params": {
+        "levelIdentifier": {"type": "string", "desc": "Identifiant du niveau."},
+        "elements": {"type": "table[]", "desc": "Liste de POI à compléter."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "drawDebugMenu": {
+      "desc": "À la première frame charge les sites de west_coast_usa et récupère 'debugParking' ; dessine la fenêtre 'Vehicle Spawn' avec un bouton 'Spawn and rent a vehicle' (sunburst/race_M, ajouté à l'inventaire).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "spawnVehicle": {
+      "desc": "Fait apparaître un véhicule avec fondu au noir, initialise ses part conditions, attend la réponse du véhicule (ping) puis fait le fondu retour ; si addToInventory est vrai, l'ajoute à l'inventaire avec owned = false.",
+      "params": {
+        "model": {"type": "string", "desc": "Modèle JBeam (ex. 'sunburst')."},
+        "config": {"type": "string", "desc": "Nom de configuration (ex. 'race_M')."},
+        "addToInventory": {"type": "boolean|nil", "desc": "Ajoute le véhicule à l'inventaire (non possédé)."}
+      },
+      "returns": []
+    },
+    "buttonPressed": {
+      "desc": "Exécute buttonOptions[i]() ; cette table n'est jamais remplie dans le module.",
+      "params": {"i": {"type": "integer", "desc": "Index du bouton."}},
+      "returns": [],
+      "internal": true
+    },
+    "onPoiDetailPromptOpening": {
+      "desc": "Hook : si l'élément est 'debugVehicleSpawn', ajoute à promptData un bouton 'Open Debug Menu' qui affiche un dialogue (guihooks 'showConfirmationDialog') avec trois choix de spawn.",
+      "params": {
+        "elemData": {"type": "table[]", "desc": "Éléments POI concernés."},
+        "promptData": {"type": "table[]", "desc": "Liste de boutons du prompt à compléter."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

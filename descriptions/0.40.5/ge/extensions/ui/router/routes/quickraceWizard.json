@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/ui/router/routes/quickraceWizard.lua",
+  "module": "Assistant Vue de la course rapide (portage de l'ancien module Angular quickrace, séparé de « menu.quickrace » pour coexister derrière un drapeau). La racine est l'écran d'aperçu/options ; level (> middle = choix du tracé) et vehicle sont des étapes qui reviennent à la racine. Configurateur : quickrace_quickraceConfigurator ; backend commun oneshotRaceCore.lua.",
+  "notes": [
+    "Module de configuration de routes : il n'exporte aucune fonction. routeManager le lit (via l'extension ui_router_routes_<nom>) quand routes.lua l'inclut par `{ include = \"<nom>\" }`.",
+    "Les clés de `Children` forment les segments du nom pointé : « <module>.<enfant> ». `children` (minuscule) dans un nœud désigne ses sous-routes ; `include` y monte un autre module.",
+    "`ui` est hérité par les routes enfants (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause) : un enfant ne le redéfinit que pour ce qui change."
+  ],
+  "fields": {
+    "Root": {
+      "type": "table",
+      "desc": "{screenId = \"quickraceWizard\", title = \"ui.playmodes.quickrace\", onEnter = \"quickrace_quickraceConfigurator.onWizardRouteEnter\", Vue uniquement, barres masquées}"
+    },
+    "Children": {
+      "type": "table<string, table>",
+      "desc": "level (onWizardLevelRouteEnter, titre ui.quickrace.quickraceLevels ; sous-route mineure middle -> onWizardMiddleRouteEnter, titre ui.quickrace.quickraceTracks), vehicle (onWizardVehicleRouteEnter) ; scopeTree de sélecteur en grille."
+    },
+    "ModuleName": {
+      "type": "string",
+      "desc": "Nom du module de routes (premier segment du nom pointé)."
+    }
+  }
+}

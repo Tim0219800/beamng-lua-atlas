@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/editor/missionEditor/progressSetup.lua",
+  "module": "Onglet « Progress » (configuration de progression) de l'éditeur de missions. Il récupère la définition de progression du type de mission (gameplay_missions_missions.getMissionProgressSetupData) et propose un mode « Raw » pour éditer le JSON de saveData. Le module renvoie un constructeur : require(...)(missionEditor). Fichier apparemment incomplet.",
+  "notes": [
+    "Bug : draw appelle self:drawProgress(), qui n'est pas définie dans ce fichier (copie de progressSingle) ; hors mode Raw, l'appel provoque une erreur Lua.",
+    "Bug : self.missionInstance n'est jamais défini dans setMission, alors que le mode Raw lit self.missionInstance.saveData.",
+    "Le mode Raw affiche missionInstance.saveData mais écrit le résultat dans mission.saveData."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance de l'onglet. Champs : missionEditor, mission, progressSetup, rawEditPerMission.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur.",
+          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "internal": true
+        },
+        "setMission": {
+          "desc": "Définit la mission courante et charge progressSetup pour son type.",
+          "params": {"mission": {"type": "table", "desc": "Mission courante."}},
+          "internal": true
+        },
+        "draw": {
+          "desc": "Dessine l'en-tête avec la case Raw puis la vue de progression ou l'éditeur JSON brut (Edit / Finish Editing / Cancel).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

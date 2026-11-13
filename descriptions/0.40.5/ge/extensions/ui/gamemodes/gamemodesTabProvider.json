@@ -1,0 +1,51 @@
+{
+  "path": "lua/ge/extensions/ui/gamemodes/gamemodesTabProvider.lua",
+  "module": "Façade utilisée par l'onglet « modes de jeu » de l'UI. Selon qu'une session multijoueur existe (multiplayer_sessionManager.getCurrentSession() non nil), les appels sont redirigés vers multiplayer_uiBackend_multiplayerUIManager, sinon vers gameplay_multiseat_gamemodeManager (écran partagé). Chaque fonction vérifie que le module cible est chargé et ne fait rien sinon.",
+  "notes": [
+    "restartGamemode ne fait rien en session réseau ; selectGamemode, deselectGamemode, startReadyUp, stopReadyUp, setOwnerPreReadyRole et requestSetOwnGamemodeRole ne font rien hors session réseau."
+  ],
+  "functions": {
+    "requestGamemodeData": {
+      "desc": "Demande à envoyer à l'UI les données des modes de jeu (requestMultiplayerTabData en réseau, requestGamemodeData en écran partagé)."
+    },
+    "startGamemode": {
+      "desc": "Démarre un mode de jeu (multiplayerUIManager.startGamemode ou gamemodeManager.start).",
+      "params": {
+        "name": {"type": "string", "desc": "Nom du mode de jeu."},
+        "settings": {"type": "table|nil", "desc": "Réglages du mode (déduit du code : transmis tels quels)."}
+      }
+    },
+    "stopGamemode": {
+      "desc": "Arrête le mode de jeu en cours (stopGamemode en réseau, stop en écran partagé)."
+    },
+    "restartGamemode": {
+      "desc": "Redémarre un mode de jeu en écran partagé (gamemodeManager.restart). Sans effet en session réseau.",
+      "params": {
+        "name": {"type": "string", "desc": "Nom du mode de jeu."},
+        "settings": {"type": "table|nil", "desc": "Réglages du mode."}
+      }
+    },
+    "selectGamemode": {
+      "desc": "Réseau uniquement : l'hôte sélectionne un mode (selectGamemodeForOwner).",
+      "params": {"name": {"type": "string", "desc": "Nom du mode de jeu."}}
+    },
+    "deselectGamemode": {
+      "desc": "Réseau uniquement : l'hôte désélectionne le mode (deselectGamemodeForOwner)."
+    },
+    "startReadyUp": {
+      "desc": "Réseau uniquement : lance la phase « prêt » des joueurs pour un mode.",
+      "params": {"gamemodeInfo": {"type": "table", "desc": "Informations du mode (déduit du code : transmises telles quelles)."}}
+    },
+    "stopReadyUp": {
+      "desc": "Réseau uniquement : arrête la phase « prêt »."
+    },
+    "setOwnerPreReadyRole": {
+      "desc": "Réseau uniquement : définit le rôle de l'hôte avant la phase « prêt ».",
+      "params": {"role": {"type": "any", "desc": "Rôle (déduit du code : transmis tel quel)."}}
+    },
+    "requestSetOwnGamemodeRole": {
+      "desc": "Réseau uniquement : demande à changer son propre rôle dans le mode de jeu.",
+      "params": {"role": {"type": "any", "desc": "Rôle souhaité (déduit du code : transmis tel quel)."}}
+    }
+  }
+}

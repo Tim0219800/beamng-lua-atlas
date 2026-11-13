@@ -1,0 +1,41 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/startCamPath.lua",
+  "module": "Noeud flowgraph « Start Cam Path » (once_instant). Fait suivre a la camera le chemin d'un objet CameraPath (fichier .camPath.json). Entrees : pathName (string), loop (bool). Sorties : activated (flow impulsion, une seule frame) et id (number) du chemin. Utilise le module flowgraph camera (self.mgr.modules.camera).",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Rien a initialiser.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Restreint le pin pathName au selecteur de fichiers « Camera Path Files » (.camPath.json).",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Trouve le chemin (modules.camera:findPath), le demarre (startPath avec loop), ecrit id et leve l'impulsion activated.",
+          "internal": false
+        },
+        "work": {
+          "desc": "Retombe activated a false a la frame suivant l'activation (flag activatedFlag).",
+          "internal": false
+        },
+        "drawMiddle": {
+          "desc": "Zone centrale du noeud (rien d'affiche).",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

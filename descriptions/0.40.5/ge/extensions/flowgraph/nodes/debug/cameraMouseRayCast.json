@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/debug/cameraMouseRayCast.lua",
+  "module": "Nœud flowgraph « Camera Mouse Raycast » (catégorie repeat_instant, tags util/click). Tire un rayon depuis la caméra vers la position de la souris (cameraMouseRayCast) et sort le résultat. Sorties : clicking (impulsion au clic gauche), hold (maintenu), objID, objName, et pins cachés distance, pos (vec3), normal (vec3), face. Les clics sont ignorés si l'interface ImGui capture la souris. Le jeu note qu'il n'est peut-être plus nécessaire (nœud « mouse tool »).",
+  "notes": ["C.todo du jeu : « Might not be needed anymore, since we have mouse tool node. »", "Sans impact, toutes les sorties sont mises à nil/faux."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Chaque frame : lance le rayon et remplit les pins (position, normale en tables {x,y,z}, objet touché) ; remet tout à nil/faux s'il n'y a pas de collision."}
+      }
+    }
+  }
+}

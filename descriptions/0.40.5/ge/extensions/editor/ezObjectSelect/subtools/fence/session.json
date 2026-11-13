@@ -1,0 +1,58 @@
+{
+  "path": "lua/ge/extensions/editor/ezObjectSelect/subtools/fence/session.lua",
+  "module": "Session d'édition de clôture d'Easy Object Select. begin() découvre une clôture existante à partir de l'objet sélectionné (fence/anchors) ou démarre une création ; la clôture est représentée par une spline éditable (splineInput, nœuds sphères) sur laquelle le moteur populationEngine de meshSpline place des pièces TSStatic en aperçu (max 512). La validation crée/modifie les objets en une action d'historique annulable (« Edit Fence » ou « Delete Fence »).",
+  "usage": "local s = extensions.editor_ezObjectSelect_subtools_fence_session\nlocal ok, err = s.begin({assetPaths = {\"art/shapes/fence.dae\"}, anchorDistance = 0.5, noOverlap = true})\n-- à chaque frame : s.update(true)\n-- puis : s.exitAndCommit()",
+  "notes": [
+    "La touche Échap annule la session (update appelle cancel).",
+    "En création initiale, un clic sur le terrain pose le premier nœud puis glisser définit le second ; un glisser trop court est ignoré.",
+    "Les objets finaux sont ajoutés à editor.resolveAddGroup(MissionGroup) et le hook onEditorObjectAdded est émis lors des restaurations (undo/redo).",
+    "exitAndCommit et deleteAndCommit refusent d'agir (retour 0 et message) si isCapped() est vrai.",
+    "Utilise des upvalues locaux : une seule session peut être active à la fois."
+  ],
+  "functions": {
+    "begin": {
+      "desc": "Démarre une session. Échoue si une session est déjà active ou si aucun asset n'est choisi. Si des objets sont sélectionnés, démarre depuis le dernier ; sinon démarre une création vierge. Sauvegarde la sélection d'origine et enregistre l'outil de spline.",
+      "params": {
+        "options": {"type": "table|nil", "desc": "assetPaths (string[]), anchorDistance (m), noOverlap (boolean, vrai par défaut sauf false explicite)."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si la session démarre."}, {"type": "string|nil", "desc": "Message d'erreur en cas d'échec."}],
+      "internal": false
+    },
+    "update": {
+      "desc": "À appeler chaque frame : gère Échap, la création initiale ou l'édition de spline, reconstruit l'aperçu si la spline est modifiée et dessine nœuds et spline.",
+      "params": {"canAcceptInput": {"type": "boolean", "desc": "true si les entrées peuvent être traitées."}},
+      "returns": [{"type": "boolean", "desc": "false si aucune session active."}],
+      "internal": false
+    },
+    "exitAndCommit": {
+      "desc": "Valide la clôture : sérialise l'état final, termine la session et enregistre l'action d'historique « Edit Fence » (annulable).",
+      "params": {},
+      "returns": [{"type": "integer", "desc": "Nombre de pièces créées ; 0 si rien ou en cas d'erreur."}],
+      "internal": false
+    },
+    "deleteAndCommit": {
+      "desc": "Supprime les objets d'origine de la clôture en une action d'historique « Delete Fence ».",
+      "params": {},
+      "returns": [{"type": "integer", "desc": "Nombre de pièces supprimées ; 0 si impossible."}],
+      "internal": false
+    },
+    "cancel": {
+      "desc": "Annule la session : restaure les objets sources et la sélection d'origine.",
+      "params": {},
+      "internal": false
+    },
+    "isActive": {"desc": "true si une session est active.", "params": {}, "returns": [{"type": "boolean", "desc": "Session active."}], "internal": false},
+    "isDragging": {"desc": "true si un glisser (création initiale ou nœud de spline) est en cours.", "params": {}, "returns": [{"type": "boolean", "desc": "Glisser en cours."}], "internal": false},
+    "getPieceCount": {"desc": "Nombre de pièces de l'aperçu.", "params": {}, "returns": [{"type": "integer", "desc": "Nombre de placements."}], "internal": false},
+    "getSelectedPieceCount": {"desc": "Nombre de pièces d'origine sélectionnées au démarrage.", "params": {}, "returns": [{"type": "integer", "desc": "Nombre."}], "internal": false},
+    "getNodeCount": {"desc": "Nombre de nœuds de la spline (0 sans spline).", "params": {}, "returns": [{"type": "integer", "desc": "Nombre de nœuds."}], "internal": false},
+    "isLoop": {"desc": "true si la spline est fermée en boucle.", "params": {}, "returns": [{"type": "boolean", "desc": "Boucle."}], "internal": false},
+    "isCapped": {"desc": "true si la découverte ou l'aperçu a atteint la limite de sécurité ; la validation est alors bloquée.", "params": {}, "returns": [{"type": "boolean", "desc": "Limite atteinte."}], "internal": false},
+    "setNoOverlap": {
+      "desc": "Active/désactive le mode sans chevauchement (longueurs de mesh entières, reste laissé vide en bout) et marque la spline à reconstruire.",
+      "params": {"enabled": {"type": "boolean", "desc": "true pour activer."}},
+      "internal": false
+    },
+    "getStatusMessage": {"desc": "Dernier message d'état (erreur de validation, etc.).", "params": {}, "returns": [{"type": "string|nil", "desc": "Message."}], "internal": false}
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/keep.lua",
+  "module": "Nœud « Keep Vehicle » (catégorie `once_instant`). Marque un véhicule à conserver à l'arrêt du flowgraph (par défaut les véhicules créés pendant l'exécution sont supprimés) via `mgr.modules.vehicle:setKeepVehicle(vehId, keep)`. Pins d'entrée : `vehId`, `keep` (bool).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur vide.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Appelle `setKeepVehicle` si `vehId` est défini et recopie le flux d'entrée sur la sortie.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

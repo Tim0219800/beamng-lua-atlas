@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/getTrafficState.lua",
+  "module": "Nœud flowgraph « Get Traffic State » (repeat_instant). Lit l'état du trafic (gameplay_traffic.getState : on, off, spawning, loading) et le nombre de véhicules : sorties flow on/spawning/loading/off, onBool, state, amount (getNumOfTraffic), activeAmount (getNumOfTraffic(true), issus du vehicle pool).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "work": {
+          "desc": "Écrit l'état et les compteurs de trafic sur les sorties à chaque frame.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

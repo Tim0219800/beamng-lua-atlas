@@ -1,0 +1,84 @@
+{
+  "path": "lua/ge/extensions/util/logStreams.lua",
+  "module": "Petit utilitaire d'entrée/sortie pour sauvegarder et relire les « streams » (flux de données de véhicule) journalisés, sous trois formats dans le dossier utilisateur : loggedStreams.json, loggedStreams.txt (wikitable) et loggedStreams.rst. Les fonctions ne font que lire/écrire ces fichiers ; la génération du contenu se fait ailleurs.",
+  "notes": [
+    "readWikitable et readRst remplacent les retours à la ligne par la séquence littérale \\n (« huge hack » selon le commentaire du code), pour pouvoir transmettre le texte sous forme de chaîne.",
+    "readWikitable/readRst échouent (erreur Lua sur nil) si le fichier n'existe pas, car readFile renvoie nil."
+  ],
+  "functions": {
+    "saveJson": {
+      "desc": "Écrit data dans loggedStreams.json (jsonWriteFile, format lisible).",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Données à sérialiser"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "readJson": {
+      "desc": "Lit et décode loggedStreams.json.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Contenu décodé, ou nil si le fichier est absent"
+        }
+      ],
+      "internal": false
+    },
+    "saveWikitable": {
+      "desc": "Écrit le texte fourni dans loggedStreams.txt.",
+      "params": {
+        "data": {
+          "type": "string",
+          "desc": "Texte au format wikitable"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "readWikitable": {
+      "desc": "Lit loggedStreams.txt en remplaçant chaque retour à la ligne par la séquence littérale \\n.",
+      "params": {},
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Contenu avec \\n échappés"
+        },
+        {
+          "type": "integer",
+          "desc": "Nombre de remplacements (second retour de gsub)"
+        }
+      ],
+      "internal": false
+    },
+    "saveRst": {
+      "desc": "Écrit le texte fourni dans loggedStreams.rst.",
+      "params": {
+        "data": {
+          "type": "string",
+          "desc": "Texte au format reStructuredText"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "readRst": {
+      "desc": "Lit loggedStreams.rst en remplaçant chaque retour à la ligne par la séquence littérale \\n.",
+      "params": {},
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Contenu avec \\n échappés"
+        },
+        {
+          "type": "integer",
+          "desc": "Nombre de remplacements (second retour de gsub)"
+        }
+      ],
+      "internal": false
+    }
+  }
+}

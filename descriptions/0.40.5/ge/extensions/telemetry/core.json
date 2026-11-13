@@ -1,0 +1,121 @@
+{
+  "path": "lua/ge/extensions/telemetry/core.lua",
+  "module": "Noyau de la télémétrie de BeamNG (extension GE telemetry_core, dépend de telemetry_configManager). Il décide si la télémétrie est active (consentement dans les réglages, arguments de lancement, config serveur), tamponne les événements envoyés par les trackers (addEvent), les écrit en JSON Lines dans /telemetry/sessions/<id>.jsonl, charge automatiquement les trackers du dossier telemetry/trackers/ activés par la config et le reporter jsonFileReporter qui envoie les sessions des exécutions précédentes. Un moddeur n'a normalement pas à l'appeler ; il peut seulement observer le hook onTelemetryEventAdded.",
+  "usage": "-- depuis un tracker : événement ponctuel et durée\ntelemetry_core.addEvent({name = \"monEvenement\", valeur = 3})\ntelemetry_core.startActivity(\"menu\", {page = \"options\"})\ntelemetry_core.endActivity(\"menu\")",
+  "notes": [
+    "Désactivation : plateforme ps5/ps5pro ; argument -notelemetry (prioritaire sur tout) ; mode agent IA (Engine.isAgentMode) ; licence tech vérifiée ; sinon il faut settings onlineFeatures == 'enable' et telemetry == 'enable' (la valeur 'ask' garde la télémétrie coupée).",
+    "Argument -telemetryLocal : tous les trackers actifs, aucun envoi, données dans /telemetry/local/. Argument -telemetry, ou toute build non shipping : télémétrie forcée (un commentaire du code dit que le cas non shipping est temporaire).",
+    "Quand la télémétrie est coupée, eventBuffer vaut nil et addEvent renvoie false sans rien faire.",
+    "Les événements sont écrits sur disque tous les 100 événements, à la désactivation et sur triggerReportWrite. Chaque événement reçoit un champ t = os.clockhp() ; ne pas définir event.t soi-même (une erreur est loguée).",
+    "L'identifiant de session est 'AAAA-MM-JJTHH-MM-SSZ_<sha256 d'octets aléatoires>' (85 caractères). Après un rechargement des VM Lua (luaVmStartReason == 'reload'), la session est reprise si les runIds n'ont pas changé.",
+    "Le tracker 'session' est chargé en premier (priorité 1), les autres à la priorité 500 ; au déchargement l'ordre est inversé. Un tracker absent ou désactivé dans moduleConfigs n'est pas chargé.",
+    "Si les runIds changent après l'ouverture de la session, une nouvelle session est créée ; l'ancienne est supprimée si elle ne collectait pour aucune exécution (session « stub » du démarrage)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{'telemetry_configManager'} : déclarée mais non appelée à la demande, pour que les trackers ne démarrent pas avant l'initialisation de la config."}
+  },
+  "functions": {
+    "addEvent": {
+      "desc": "Ajoute un événement au tampon de la session. L'événement doit être une table avec un champ name (chaîne non vide). Lui ajoute t = os.clockhp(), appelle le hook onTelemetryEventAdded(event), l'encode en JSON sur une ligne et vide le tampon sur disque tous les 100 événements.",
+      "params": {"event": {"type": "table", "desc": "Événement : name obligatoire, autres champs libres, t interdit."}},
+      "returns": [{"type": "boolean", "desc": "true si l'événement a été stocké, false s'il a été refusé (télémétrie inactive, table invalide, name manquant)."}],
+      "internal": false
+    },
+    "startActivity": {
+      "desc": "Ajoute l'événement {name = activityName, type = 'start'} fusionné avec data, pour mesurer une durée avec endActivity.",
+      "params": {
+        "activityName": {"type": "string", "desc": "Nom de l'activité."},
+        "data": {"type": "table|nil", "desc": "Champs supplémentaires de l'événement."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "endActivity": {
+      "desc": "Ajoute l'événement {name = activityName, type = 'end'} fusionné avec data.",
+      "params": {
+        "activityName": {"type": "string", "desc": "Nom de l'activité commencée."},
+        "data": {"type": "table|nil", "desc": "Champs supplémentaires de l'événement."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "triggerReportWrite": {
+      "desc": "Écrit immédiatement les événements en tampon dans le fichier de session, pour qu'ils survivent à un plantage.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "getDataFolder": {
+      "desc": "Dossier des données de télémétrie : '/telemetry/local/' en mode -telemetryLocal (sessions et sondages séparés, jamais envoyés par le reporter d'une exécution normale), sinon '/telemetry/'.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "Chemin du dossier."}],
+      "internal": false
+    },
+    "getSessionFile": {
+      "desc": "Fichier .jsonl de la session en cours. Le reporter ne doit ni l'envoyer ni le supprimer.",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "Chemin, ou nil si aucune session."}],
+      "internal": false
+    },
+    "getSessionId": {
+      "desc": "Identifiant de la session : horodatage plus octets aléatoires, sans lien avec le jeton de compte ni une identité. Sert à reconnaître un renvoi en double après une réponse perdue.",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "Identifiant de session."}],
+      "internal": false
+    },
+    "getRunTime": {
+      "desc": "Temps écoulé en secondes (os.clockhp()), utilisé par les trackers pour mesurer des durées.",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Secondes."}],
+      "internal": false
+    },
+    "getRunIds": {
+      "desc": "Liste des exécutions de télémétrie (runIds de la config serveur) pour lesquelles la session collecte. Fixée avant le chargement des trackers.",
+      "params": {},
+      "returns": [{"type": "string[]|nil", "desc": "Identifiants de run."}],
+      "internal": false
+    },
+    "isSessionContinued": {
+      "desc": "Indique si la session actuelle reprend celle d'avant un rechargement Lua.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si la session est reprise."}],
+      "internal": false
+    },
+    "isPlatformSupported": {
+      "desc": "Renvoie false pour les plateformes 'ps5' et 'ps5pro', true sinon.",
+      "params": {"platform": {"type": "string", "desc": "Valeur de Engine.Platform.getPlatform() ('' sur PC)."}},
+      "returns": [{"type": "boolean", "desc": "true si la télémétrie peut tourner."}],
+      "internal": false
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook de chargement : met le mode de déchargement en manuel, active la télémétrie si shouldTelemetryBeActive() ; sinon clôt la session précédente et reste en mode sans effet.",
+      "params": {"previousSession": {"type": "table|nil", "desc": "Données renvoyées par onSerialize avant un rechargement Lua (sessionId, runIds)."}},
+      "returns": [{"type": "boolean", "desc": "Toujours true (reste chargée)."}],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook de déchargement : désactive la télémétrie (écrit les événements restants, décharge trackers et reporter) et coupe le polling de la config.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExit": {
+      "desc": "Hook appelé à la fermeture du jeu ; même fonction que onExtensionUnloaded.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook de sérialisation : lors d'un rechargement Lua (reason == 'reload') avec une session valide, renvoie {sessionId, runIds} pour reprendre la session ensuite.",
+      "params": {"reason": {"type": "string", "desc": "Motif de la sérialisation ('reload'…)."}},
+      "returns": [{"type": "table|nil", "desc": "Données de reprise."}],
+      "internal": true
+    },
+    "onSettingsChanged": {
+      "desc": "Hook appelé quand les réglages changent : active ou désactive la télémétrie selon le consentement, et coupe le polling de config si elle est inactive.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "path": "lua/ge/extensions/editor/flowgraph/variables.lua",
+  "module": "Fenêtre « Variables » (fg_variables) de l'éditeur Flowgraph. Elle montre les variables du graphe courant (mgr.graph.variables) et celles du projet (mgr.variables) sous forme de cartes dépliables, avec la valeur courte, un éditeur de variable, la création d'un nœud getter (types/getVariable) ou setter (types/setVariable) par clic ou glisser-déposer, et le réordonnancement par glisser.",
+  "notes": [
+    "Les boutons de création de nœuds ne sont actifs que si mgr.allowEditing est vrai.",
+    "Le nouvel ordre des variables est appliqué avec changeCustomVariableOrder puis une entrée d'historique « Changed Variable Order ».",
+    "drawGraph, drawRecursive et drawSortedGraphs ne sont pas appelées depuis draw() dans ce fichier (code disponible pour afficher les variables de tous les graphes)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe de la fenêtre (windowName 'fg_variables', windowDescription 'Variables').",
+      "functions": {
+        "init": {"desc": "Initialise les champs de saisie, le payload de glisser-déposer et enregistre la fenêtre.", "internal": true},
+        "draw": {"desc": "Dessine l'en-tête « Current Graph Variables », le bouton d'ajout (popup addVariablePopup), les variables du graphe puis celles du projet.", "internal": true},
+        "getAutoTypeFromName": {"desc": "Déduit un type de variable à partir d'un nom via ui_flowgraph_editor.getAutoTypeFromName.", "params": {"name": {"type": "string", "desc": "Nom de variable."}}, "returns": [{"type": "string|nil", "desc": "Type deviné (déduit du code)."}]},
+        "drawVariableCard": {"desc": "Dessine la carte d'une variable : icône de type, nom, valeur, boutons getter/setter, poignée de glisser et éditeur déplié.", "params": {"target": {"type": "table", "desc": "Conteneur de variables (graphe ou projet)."}, "varName": {"type": "string", "desc": "Nom de la variable."}, "global": {"type": "boolean|nil", "desc": "true pour une variable de projet."}}},
+        "drawTarget": {"desc": "Dessine toutes les variables d'un conteneur dans l'ordre customVariableOrder et gère le dépôt pour changer l'ordre.", "params": {"target": {"type": "table", "desc": "Conteneur de variables."}, "name": {"type": "string", "desc": "Nom affiché."}, "id": {"type": "string|nil", "desc": "Identifiant (défaut target.id)."}, "global": {"type": "boolean|nil", "desc": "true pour variables de projet."}}},
+        "drawGraph": {"desc": "Dessine les variables d'un graphe, avec « (current) » si c'est le graphe courant.", "params": {"graph": {"type": "table", "desc": "Graphe."}}},
+        "drawRecursive": {"desc": "Dessine un graphe dans un TreeNode puis ses enfants triés par id.", "params": {"graph": {"type": "table", "desc": "Graphe racine."}}},
+        "drawSortedGraphs": {"desc": "Dessine récursivement les graphes racines (sans parentId) d'une table, triés par id.", "params": {"source": {"type": "table<integer, table>", "desc": "Table de graphes."}}},
+        "_onSerialize": {"desc": "Hook de sérialisation : vide.", "params": {"data": {"type": "table", "desc": "Table de sauvegarde."}}, "internal": true},
+        "_onDeserialized": {"desc": "Hook de désérialisation : vide.", "params": {"data": {"type": "table", "desc": "Données restaurées."}}, "internal": true}
+      }
+    }
+  }
+}

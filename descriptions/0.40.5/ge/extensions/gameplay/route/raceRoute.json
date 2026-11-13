@@ -1,0 +1,121 @@
+{
+  "path": "lua/ge/extensions/gameplay/route/raceRoute.lua",
+  "module": "Variante synchrone de route.lua pour les courses et le rallye : chemin sur le navgraph avec métadonnées par point (metadata), callbacks de fusion et de recalcul, et mémorisation des points fixes d'origine pour pouvoir recalculer la route complète. Le chemin se raccourcit au fil du suivi, avec un seuil « sur le chemin » de 15 m. Le module renvoie un constructeur : `require(...)(removeFirst, useMapPathfinding, closeDistSquared, logTag)`.",
+  "usage": "local RaceRoute = require('/lua/ge/extensions/gameplay/route/raceRoute')\nlocal r = RaceRoute(true, true, 1)\nr:setupPathMultiWithMetadata({{pos = p1}, {pos = p2, metadata = {name = 'cp'}}})\nlocal idx, d = r:trackPosition(vehPos)",
+  "notes": [
+    "Callbacks disponibles dans self.callbacks : onPointProcessed(point) après construction, shouldPointBeFixedForRecalc(point) pour recalculateRouteWithOriginalPositions, onRouteShortened (déclaré mais non appelé ici), onMetadataMerge(i, last, cur) -> newPoint, newMetadata lors de la fusion de points proches.",
+    "Différences avec route.lua : tout est synchrone (pas de core_jobsystem), onPathDist = 15 m, setupPathMultiWithMetadata fixe chaque arrivée comme point fixed et peut ne pas utiliser le pathfinding de la carte (useMapPathfinding = false).",
+    "L'argument logTag de init est local et sans effet (il masque la variable de module).",
+    "calcDistance plante si le chemin est vide (self.path[1] est nil), contrairement à route.lua qui gère ce cas.",
+    "recalculateRoute et recalculateRouteWithOriginalPositions émettent le hook onRecalculatedRoute avec l'argument 'raceRoute'.",
+    "originalFixedPositions est rempli une seule fois, au premier setupPathMultiWithMetadata, et n'est pas vidé par clear().",
+    "updatePathForPos remet à nil la metadata du premier point si celui-ci est repositionné (resetMetadata)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Itinéraire de course. Champs : path, removeFirst, useMapPathfinding, closeDistSquared, originalFixedPositions, dirMult, callbacks, trackingMutationEnabled, done, plus les paramètres de recherche (cutOffDrivability, penaltyAboveCutoff, penaltyBelowCutoff, wD, wZ).",
+      "functions": {
+        "init": {
+          "desc": "Constructeur avec options.",
+          "params": {
+            "removeFirst": {"type": "boolean|nil", "desc": "true (défaut) : le premier point n'est pas fixe. false : il est marqué fixed."},
+            "useMapPathfinding": {"type": "boolean|nil", "desc": "true (défaut) : utilise le navgraph ; false : relie simplement les positions."},
+            "closeDistSquared": {"type": "number|nil", "desc": "Distance au carré (m2) sous laquelle deux points sont fusionnés ; défaut 1."},
+            "logTag": {"type": "string|nil", "desc": "Sans effet réel (voir notes)."}
+          },
+          "internal": true
+        },
+        "setTrackingMutationEnabled": {
+          "desc": "Si false, updatePathForPos ne modifie plus le chemin (ni recalcul ni raccourcissement) et renvoie seulement l'offset.",
+          "params": {"enabled": {"type": "boolean", "desc": "Autorise la mutation du chemin."}}
+        },
+        "setRouteParams": {
+          "desc": "Fixe les paramètres de recherche du navgraph.",
+          "params": {
+            "cutOffDrivability": {"type": "number|nil", "desc": "Seuil de praticabilité."},
+            "dirMult": {"type": "number|nil", "desc": "Multiplicateur de sens ; défaut 1e3."},
+            "penaltyAboveCutoff": {"type": "number|nil", "desc": "Pénalité au-dessus du seuil."},
+            "penaltyBelowCutoff": {"type": "number|nil", "desc": "Pénalité en dessous du seuil."},
+            "wD": {"type": "number|nil", "desc": "Poids de distance (déduit du nom)."},
+            "wZ": {"type": "number|nil", "desc": "Poids d'altitude (déduit du nom)."}
+          }
+        },
+        "stepAhead": {
+          "desc": "Point situé à stepDist mètres plus loin sur la route (même logique que route.lua).",
+          "params": {
+            "stepDist": {"type": "number", "desc": "Distance à avancer (m)."},
+            "reset": {"type": "boolean|nil", "desc": "true pour repartir du début."}
+          },
+          "returns": [{"type": "table|nil", "desc": "{n1, n2, idx, pos, xnorm}, nil si moins de 2 points."}]
+        },
+        "calcDistance": {
+          "desc": "Recalcule distToTarget de chaque point.",
+          "returns": [{"type": "number", "desc": "Longueur totale en mètres."}]
+        },
+        "setupPath": {
+          "desc": "Itinéraire entre deux positions.",
+          "params": {
+            "fromPos": {"type": "vec3", "desc": "Départ."},
+            "toPos": {"type": "vec3", "desc": "Arrivée."}
+          }
+        },
+        "setupPathMultiWaypoints": {
+          "desc": "Ajoute au chemin les nœuds du navgraph entre waypoints donnés (map.getPath).",
+          "params": {"wpList": {"type": "string[]", "desc": "Noms de nœuds du navgraph."}}
+        },
+        "setupPathMulti": {
+          "desc": "Construit le chemin pour une liste de positions simples (les enveloppe en {pos=...} puis appelle setupPathMultiWithMetadata).",
+          "params": {"positions": {"type": "vec3[]", "desc": "Positions à relier."}}
+        },
+        "setupPathMultiWithMetadata": {
+          "desc": "Construit le chemin pour des positions avec métadonnées optionnelles. Chaque arrivée devient un point fixed qui garde sa metadata ; les points trop proches sont fusionnés (callback onMetadataMerge possible) ; les extrémités sont ajustées ; onPointProcessed est appelé pour chaque point ; les points fixes d'origine sont mémorisés au premier appel.",
+          "params": {"positions": {"type": "table[]", "desc": "Liste de {pos = vec3, wp = string|nil, metadata = any}. Seul pos est requis."}}
+        },
+        "clear": {"desc": "Vide le chemin (sans toucher à originalFixedPositions)."},
+        "getNextFixedWP": {
+          "desc": "Position du premier point fixed du chemin.",
+          "returns": [{"type": "vec3|nil", "desc": "Position, nil si aucun."}]
+        },
+        "recalculateRoute": {
+          "desc": "Reconstruit le chemin depuis startPos en repassant par tous les points fixed restants, puis émet onRecalculatedRoute('raceRoute').",
+          "params": {"startPos": {"type": "vec3", "desc": "Nouveau départ."}}
+        },
+        "recalculateRouteWithOriginalPositions": {
+          "desc": "Comme recalculateRoute mais part des points fixes d'origine (non raccourcis). Un point d'origine est gardé si le callback shouldPointBeFixedForRecalc renvoie true, et le dernier point est toujours gardé. Émet onRecalculatedRoute('raceRoute').",
+          "params": {"startPos": {"type": "vec3", "desc": "Nouveau départ."}}
+        },
+        "getPositionOffset": {
+          "desc": "Cherche le segment le plus proche d'une position (seuil 15 m).",
+          "params": {"currentPos": {"type": "vec3", "desc": "Position à tester."}},
+          "returns": [
+            {"type": "integer", "desc": "Indice du segment, 0 si hors chemin."},
+            {"type": "number", "desc": "Distance minimale au chemin en mètres."}
+          ]
+        },
+        "shortenPath": {
+          "desc": "Supprime les points avant l'indice idx.",
+          "params": {"idx": {"type": "integer", "desc": "Indice du segment courant."}}
+        },
+        "trackVehicle": {
+          "desc": "Suit un véhicule.",
+          "params": {"veh": {"type": "table", "desc": "Objet véhicule."}},
+          "returns": [{"type": "integer|nil", "desc": "Indice du segment."}, {"type": "number|nil", "desc": "Distance au chemin."}]
+        },
+        "trackCamera": {
+          "desc": "Suit la caméra (core_camera.getPosition).",
+          "returns": [{"type": "integer|nil", "desc": "Indice du segment."}, {"type": "number|nil", "desc": "Distance au chemin."}]
+        },
+        "trackPosition": {
+          "desc": "Suit une position quelconque.",
+          "params": {"pos": {"type": "vec3", "desc": "Position."}},
+          "returns": [{"type": "integer|nil", "desc": "Indice du segment."}, {"type": "number|nil", "desc": "Distance au chemin."}]
+        },
+        "updatePathForPos": {
+          "desc": "Met à jour la route pour une position : recalcule si on est hors chemin (>= 15 m), raccourcit le chemin et ajuste le premier point (en remettant sa metadata à nil). Sans mutation autorisée, ne fait que calculer l'offset.",
+          "params": {"pos": {"type": "vec3", "desc": "Position actuelle."}},
+          "returns": [{"type": "integer|nil", "desc": "Indice du segment."}, {"type": "number|nil", "desc": "Distance au chemin."}]
+        }
+      }
+    }
+  }
+}

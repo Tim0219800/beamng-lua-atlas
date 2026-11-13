@@ -4,12 +4,16 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/debug/debugLine")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Debug Line » (catégorie repeat_instant, tags util/draw). Dessine chaque frame une ligne de débogage (debugDrawer:drawLine) de posA à posB. Entrées : posA, posB (vec3, requis), color (caché, rose {0.91,0.05,0.48,0.5} par défaut).
+
 ## Classe `C`
+
+Classe du nœud.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:init()` |  | 23 |
-| `C:work()` |  | 26 |
+| `C:init()` | Vide. | 23 |
+| `C:work()` | Si posA et posB sont définis, trace la ligne avec la couleur donnée. | 26 |
 
 ## Appels vers le moteur (C++)
 

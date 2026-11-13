@@ -1,0 +1,52 @@
+{
+  "path": "lua/ge/extensions/gameplay/sites/location.lua",
+  "module": "Classe « Location » d'un jeu de sites (fichier *.sites.json) : un point nommé de la carte avec une position, un rayon et une couleur. Sert à marquer des lieux (départ, arrivée, point d'intérêt) dans les scénarios, missions et le trafic. Le module renvoie un constructeur : require('/lua/ge/extensions/gameplay/sites/location')(sites, name, forceId).",
+  "usage": "local loc = require('/lua/ge/extensions/gameplay/sites/location')(sitesObj, 'Garage')\nloc:set(vec3(0,0,0), 8)\nlocal info = loc:findClosestRoadInfo()",
+  "notes": [
+    "Rayon par défaut 5 m ; drawMode par défaut 'faded' ; sortOrder par défaut 999999.",
+    "onDeserialized fixe le rayon via set(...) puis le réécrit avec « data.radius or 5 » ; si data.radius vaut nil, set() met d'abord radius à nil avant la correction.",
+    "findClosestRoadInfo nécessite le module global map (renvoie nil sinon)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet location. Champs : sites, id, name, color (vec3), pos (vec3), radius, customFields (gameplay/util/customFields).",
+      "functions": {
+        "init": {
+          "desc": "Constructeur appelé par le module. Prend un identifiant unique de l'objet sites si forceId est absent, nom par défaut « Location <id> ».",
+          "params": {
+            "sites": {"type": "table", "desc": "Objet sites parent (fournit getNextUniqueIdentifier)."},
+            "name": {"type": "string|nil", "desc": "Nom affiché."},
+            "forceId": {"type": "integer|nil", "desc": "Identifiant imposé (utilisé à la désérialisation)."}
+          },
+          "internal": true
+        },
+        "onSerialize": {
+          "desc": "Renvoie une table sérialisable (name, pos, radius, color, oldId, customFields).",
+          "returns": [{"type": "table", "desc": "Données JSON-compatibles."}]
+        },
+        "onDeserialized": {
+          "desc": "Restaure name, color, position, rayon et champs personnalisés depuis une table sérialisée.",
+          "params": {"data": {"type": "table", "desc": "Table produite par onSerialize."}}
+        },
+        "set": {
+          "desc": "Définit la position et le rayon de la location.",
+          "params": {
+            "pos": {"type": "vec3", "desc": "Position monde (copiée)."},
+            "radius": {"type": "number", "desc": "Rayon en mètres."}
+          }
+        },
+        "drawDebug": {
+          "desc": "Dessine une sphère de debug (et le nom si le mode n'est pas 'faded'). En mode 'highlight', dessine aussi la route la plus proche. Rien au-delà de la distance de visualisation (300 m, ou la préférence de l'éditeur).",
+          "params": {
+            "drawMode": {"type": "string|nil", "desc": "'none', 'faded', 'normal' ou 'highlight' ; par défaut self._drawMode."},
+            "clr": {"type": "table|nil", "desc": "Couleur {r,g,b} ; par défaut la couleur de la location."}
+          }
+        },
+        "findClosestRoadInfo": {
+          "desc": "Cherche le segment de route le plus proche via map.findClosestRoad et renvoie le point projeté sur ce segment, avec le rayon interpolé. Les nœuds a et b sont permutés pour que a soit le plus proche.",
+          "returns": [{"type": "table|nil", "desc": "{name_a, name_b, a, b, distance, pos, radius} ou nil si aucune route / map absent."}]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "path": "lua/ge/extensions/editor/missionEditor/dev.lua",
+  "module": "Section « Dev Notes » du Mission Editor : édite mission.devNotes (texte libre, mode silent/info/warning/error, case « Dev Mission » qui cache la mission hors mode développeur). Le module renvoie un constructeur. Chaque modification met mission._dirty = true.",
+  "notes": [
+    "Dans missionEditor.lua la ligne qui crée cette fenêtre est commentée : le module n'est actuellement pas instancié.",
+    "mission.devNotes doit exister (setMission lit devNotes.text et devNotes.devMission sans test) sinon erreur.",
+    "Modes : silent, info, warning, error (icônes visibility_off, info, warning, error, déclarées mais non affichées ici)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Sous-fenêtre des notes de développement.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur : mémorise la référence au missionEditor.",
+          "params": {"missionEditor": {"type": "table", "desc": "Module editor_missionEditor."}},
+          "returns": [],
+          "internal": true
+        },
+        "setMission": {
+          "desc": "Sélectionne la mission : crée le tampon du texte (2048 caractères) et la case devMission à partir de mission.devNotes.",
+          "params": {"mission": {"type": "table", "desc": "Données de mission avec devNotes."}},
+          "returns": [],
+          "internal": false
+        },
+        "draw": {
+          "desc": "Dessine le texte multiligne, le sélecteur de mode et la case « Dev Mission » (infobulle : la mission n'apparaît que si le mode dev est activé).",
+          "params": {},
+          "returns": [],
+          "internal": false
+        }
+      }
+    }
+  }
+}

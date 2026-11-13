@@ -1,0 +1,73 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/curveWiden.lua",
+  "module": "Élargissement de chaussée dans les virages pour les routes « engineered » des outils de route de l'éditeur. Calcule, par station de la ligne centrale (group.divPoints), un élargissement automatique selon la courbure soutenue (plus le virage est serré par rapport au rayon de conception group.engRadiusM, plus la route s'élargit, jusqu'à curveWidenMaxM) auquel s'ajoutent les extraWidenM par virage. Tout est lissé sur une distance physique (longueur d'arc), pas sur un nombre de stations.",
+  "notes": [
+    "Actif uniquement si group.geometryMode == 'engineered' ; les routes lisses (Catmull-Rom) ne s'élargissent pas.",
+    "Champs lus du groupe : curveWidenMaxM (défaut 2.5 m, total des deux côtés), curveWidenRunoffM (défaut 20 m, longueur d'entrée/sortie), engRadiusM (défaut 40 m), divCurv (courbure exacte si de longueur n), discMap, corners[i].extraWidenM, divWidths.",
+    "Début d'élargissement au rayon de conception, plein élargissement à 0.35 x ce rayon (plancher 6 m) ; rampe en smoothstep.",
+    "edgeWiden : véhicule de conception de 6 m (offtrackLenM), seuil minimal par voie 0.3 m.",
+    "smoothByDistance modifie le tableau en place."
+  ],
+  "fields": {
+    "DEFAULT_MAX": {"type": "number", "desc": "Élargissement maximal par défaut (2.5 m au total, répartis sur les deux côtés)."},
+    "DEFAULT_RUNOFF": {"type": "number", "desc": "Longueur par défaut (20 m) sur laquelle l'élargissement entre/sort."}
+  },
+  "functions": {
+    "signedCurvatureAt": {
+      "desc": "Courbure horizontale signée à la station i (0 aux extrémités ou si dégénérée). Positif = virage à gauche, négatif = à droite.",
+      "params": {
+        "div": {"type": "table", "desc": "Points de la ligne centrale {x,y,z}"},
+        "i": {"type": "integer", "desc": "Indice de station"},
+        "n": {"type": "integer", "desc": "Nombre de stations"}
+      },
+      "returns": [{"type": "number", "desc": "Courbure en 1/m."}]
+    },
+    "arcLengths": {
+      "desc": "Longueur d'arc cumulée le long des divPoints (s[1] = 0), en 3D. Sert à exprimer le runoff en vraie distance.",
+      "params": {
+        "div": {"type": "table", "desc": "Points {x,y,z}"},
+        "n": {"type": "integer", "desc": "Nombre de points"}
+      },
+      "returns": [{"type": "number[]", "desc": "Tableau s des longueurs cumulées (m)."}]
+    },
+    "smoothByDistance": {
+      "desc": "Lisse en place un tableau signé par moyenne en boîte sur une demi-fenêtre physique hw (m), chaque échantillon étant pondéré par la longueur d'arc qu'il représente. Évite que la zone dense d'un virage domine la moyenne et crée un décrochement latéral à la jonction droite/arc.",
+      "params": {
+        "arr": {"type": "number[]", "desc": "Valeurs à lisser (modifié en place)"},
+        "s": {"type": "number[]", "desc": "Table de longueurs d'arc"},
+        "n": {"type": "integer", "desc": "Nombre d'échantillons"},
+        "hw": {"type": "number", "desc": "Demi-fenêtre en mètres ; sans effet si <= 0 ou n < 3"}
+      }
+    },
+    "stationWiden": {
+      "desc": "Élargissement TOTAL par station (m, réparti sur les deux côtés) : élargissement automatique de courbure plus extraWidenM par virage, lissé en longueur d'arc. Zéro en ligne droite, si curveWidenMaxM = 0 sans surcharge de virage, et hors mode engineered.",
+      "params": {
+        "group": {"type": "table", "desc": "Groupe/route (geometryMode, curveWidenMaxM, curveWidenRunoffM, engRadiusM, divCurv, discMap, corners)."},
+        "div": {"type": "table", "desc": "divPoints"},
+        "s": {"type": "number[]", "desc": "Résultat de arcLengths"},
+        "n": {"type": "integer", "desc": "Nombre de stations"}
+      },
+      "returns": [{"type": "number[]", "desc": "Élargissement par station (m)."}]
+    },
+    "applyDivWidthWiden": {
+      "desc": "Ajoute l'élargissement par station à group.divWidths en place (à appeler une fois par passe 'dirty', juste après l'échantillonnage des largeurs de base). Pour les outils dont le mesh est symétrique selon divWidths, cela élargit le bitume lui-même ; heroRoad élargit son mesh séparément et ne s'en sert que pour déplacer marquages/ruban. Sans effet si rien ne s'élargit.",
+      "params": {"group": {"type": "table", "desc": "Groupe avec divPoints et divWidths."}}
+    },
+    "edgeWiden": {
+      "desc": "Élargissement réel par station sur chaque bord (gauche et droit par rapport au sens de marche) : chaque voie prend le « offtracking » du véhicule de conception sur le rayon soutenu, R - sqrt(R^2 - L^2) avec L = 6 m, supprimé sous 0.3 m, le tout plafonné à curveWidenMaxM. Va sur le bord intérieur du virage ; une route à chaussées séparées élargit chaque chaussée sur son bord extérieur (le terre-plein n'a pas de place).",
+      "params": {
+        "group": {"type": "table", "desc": "Groupe/route."},
+        "div": {"type": "table", "desc": "divPoints"},
+        "s": {"type": "number[]", "desc": "Longueurs d'arc"},
+        "n": {"type": "integer", "desc": "Nombre de stations"},
+        "lanesL": {"type": "number", "desc": "Nombre de voies à gauche"},
+        "lanesR": {"type": "number", "desc": "Nombre de voies à droite"},
+        "divided": {"type": "boolean", "desc": "true si chaussées séparées"}
+      },
+      "returns": [
+        {"type": "number[]", "desc": "Élargissement du bord gauche par station (m)"},
+        {"type": "number[]", "desc": "Élargissement du bord droit par station (m)"}
+      ]
+    }
+  }
+}

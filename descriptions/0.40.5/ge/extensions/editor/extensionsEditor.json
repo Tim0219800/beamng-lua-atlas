@@ -1,0 +1,31 @@
+{
+  "path": "lua/ge/extensions/editor/extensionsEditor.lua",
+  "module": "Fenêtre « Extensions Editor » de l'éditeur : liste toutes les extensions d'éditeur (editor.allExtensionNames) et permet d'activer/désactiver leur chargement en cliquant sur l'icône. L'état est stocké dans editor.extensionsSettings[nom].disabled puis sauvegardé par editor.saveExtensionsSettings(). Un rechargement du Lua (Ctrl+L) est nécessaire pour appliquer le changement ; le mode sans échec de l'éditeur (Ctrl+F11) permet de désactiver une extension fautive.",
+  "functions": {
+    "onEditorGui": {
+      "desc": "Dessine la fenêtre : texte d'aide et tableau à une colonne avec un bouton-icône par extension (coche = active, icône rouge « do_not_disturb » = désactivée). Un clic inverse le drapeau disabled et sauvegarde les réglages.",
+      "params": {},
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Enregistre la fenêtre « extensionsEditor » (taille 915x600) et l'entrée de menu « Extensions Editor ».",
+      "params": {},
+      "internal": true
+    },
+    "onEditorPreferenceValueChanged": {
+      "desc": "Hook vide (aucune préférence gérée).",
+      "params": {
+        "path": {"type": "string", "desc": "Chemin de la préférence modifiée"},
+        "value": {"type": "any", "desc": "Nouvelle valeur"}
+      },
+      "internal": true
+    },
+    "onEditorRegisterPreferences": {
+      "desc": "Hook vide : n'enregistre aucune préférence.",
+      "params": {
+        "prefsRegistry": {"type": "table", "desc": "Registre des préférences de l'éditeur"}
+      },
+      "internal": true
+    }
+  }
+}

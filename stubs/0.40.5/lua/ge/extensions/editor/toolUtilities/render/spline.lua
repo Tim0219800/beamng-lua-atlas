@@ -2,111 +2,102 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/render/spline.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
+--- Rendu fil de fer et surfaces des splines et couches pour les outils d'édition de splines (l'essentiel de l'ancien render.lua). Module composite : dessine via render/spheres, lines, tris et markup, avec sa propre réserve de vec3 temporaires. handleSplineRendering dessine nœuds, noms, nervures, barres et élévations ; les autres fonctions dessinent coques, rubans, surfaces homologuées ou projetées sur le sol et aperçus. À appeler chaque frame depuis un outil d'éditeur.
 --- Accès : extension `editor_toolUtilities_render_spline` : `extensions.load("editor_toolUtilities_render_spline")`, puis la globale `editor_toolUtilities_render_spline`
 ---@class editor_toolUtilities_render_spline
 editor_toolUtilities_render_spline = {}
 
---- Function to draw a circular arc, to some granularity.
+--- Dessine un arc de cercle (16 segments) du point a au point b autour de center, avec l'étiquette d'angle de torsion au milieu pour le nœud sélectionné.
 ---Source : lua/ge/extensions/editor/toolUtilities/render/spline.lua:58
----@param center any
----@param isSelectedNode any
----@param a any
----@param b any
----@param axis any
----@param twistAngle any
+---@param center vec3 Centre de l'arc.
+---@param isSelectedNode boolean true pour afficher l'angle de torsion.
+---@param a vec3 Point de départ.
+---@param b vec3 Point d'arrivée.
+---@param axis vec3 Axe de rotation.
+---@param twistAngle number Angle de torsion ; son signe donne le sens de l'arc.
 function editor_toolUtilities_render_spline.drawArc(center, isSelectedNode, a, b, axis, twistAngle) end
 
---- Draw the bar points.
+--- Dessine les poignées de barre et leur ligne de chute vers le sol (raycast vertical), colorée selon l'élévation. Sans effet s'il y a moins de 2 barres.
 ---Source : lua/ge/extensions/editor/toolUtilities/render/spline.lua:104
----@param bars any
----@param elevScale any
+---@param bars vec3[] Points de barre.
+---@param elevScale number Hauteur correspondant au rouge de la rampe.
 function editor_toolUtilities_render_spline.drawBarPoints(bars, elevScale) end
 
---- Draw the rib points.
+--- Dessine les points de nervure (sphères) et les lignes de nervure : pour une spline complète, gauche et droite reliées ; pour une demi-spline, seulement le bord droit relié au nœud central.
 ---Source : lua/ge/extensions/editor/toolUtilities/render/spline.lua:81
----@param ribs any
----@param spline any
+---@param ribs vec3[] Points de nervure, par paires gauche/droite.
+---@param spline table Spline (tileSet ou spacing signale une demi-spline ; nodes).
 function editor_toolUtilities_render_spline.drawRibPoints(ribs, spline) end
 
---- Handles the rendering of splines.
----  hiddenNodeSet (optional): a set { [nodeIdx] = true } of selected-spline nodes whose fat sphere / highlight / elevation line are
----  suppressed. Used by heroRoad engineered corners, where a tight bend flings the PI node far off-road and an on-apex grip stands in
----  for it, so the stray node shouldn't also draw. Nil for every other tool.
----  noNames (optional): suppresses the name label on unselected splines. For networks of hundreds of links, where a label per link
----  buries the map in text. The selected spline keeps its own name/length.
+--- Dessine toutes les splines : la sélectionnée avec ses nœuds, surbrillance, gizmo/rotation, nervures, barres, élévation et nom/longueur ; les autres en version atténuée avec leur nom.
 ---Source : lua/ge/extensions/editor/toolUtilities/render/spline.lua:124
----@param splines any
----@param splineIdx any
----@param nodeIdx any
----@param isGizmoActive any
----@param isUseRot any
----@param isShapeLocked any
----@param isShowElevation any
----@param isShowRibs any
----@param elevScale any
----@param hiddenNodeSet any
----@param noNames any
+---@param splines table Liste de splines.
+---@param splineIdx integer Indice de la spline sélectionnée.
+---@param nodeIdx integer Indice du nœud sélectionné.
+---@param isGizmoActive boolean Le gizmo de translation est actif.
+---@param isUseRot boolean Mode rotation (affichage de torsion).
+---@param isShapeLocked boolean Forme verrouillée.
+---@param isShowElevation boolean Afficher élévations et lignes de chute.
+---@param isShowRibs boolean Afficher les nervures.
+---@param elevScale number Échelle de couleur d'élévation.
+---@param hiddenNodeSet table<integer, boolean>|nil Ensemble de nœuds de la spline sélectionnée dont la grosse sphère, la surbrillance et la ligne d'élévation sont supprimées (coins ingénierés de heroRoad où le nœud PI est loin de la route).
+---@param noNames boolean|nil Supprime le nom des splines non sélectionnées (réseaux de centaines de liens).
 function editor_toolUtilities_render_spline.handleSplineRendering(splines, splineIdx, nodeIdx, isGizmoActive, isUseRot, isShapeLocked, isShowElevation, isShowRibs, elevScale, hiddenNodeSet, noNames) end
 
---- Renders a quadrilateral surface with raycasted z values.
+--- Dessine une surface quadrilatérale fil de fer dont les z sont obtenus par raycast sur le sol, le long de divPoints (une ligne sur deux).
 ---Source : lua/ge/extensions/editor/toolUtilities/render/spline.lua:555
----@param spline any
+---@param spline table|nil Spline avec divPoints, divWidths, binormals.
 function editor_toolUtilities_render_spline.renderDrivePathSurface(spline) end
 
---- Renders the wire-frame for half splines.
+--- Dessine le fil de fer des demi-splines (par ex. trottoirs).
 ---Source : lua/ge/extensions/editor/toolUtilities/render/spline.lua:403
----@param splines any
----@param selSplineIdx any
----@param binormalSpacing any
+---@param splines table Liste de splines.
+---@param selSplineIdx integer Indice de la spline sélectionnée.
+---@param binormalSpacing integer Espacement des lignes binormales.
 function editor_toolUtilities_render_spline.renderHalfSplineWireFrame(splines, selSplineIdx, binormalSpacing) end
 
---- Renders the wire-frame for Master Splines, with heatmap surface for selected spline.
+--- Dessine le fil de fer des splines maîtres, avec une surface en carte de chaleur pour la spline sélectionnée.
 ---Source : lua/ge/extensions/editor/toolUtilities/render/spline.lua:481
----@param splines any
----@param selSplineIdx any
+---@param splines table Liste de splines.
+---@param selSplineIdx integer Indice de la spline sélectionnée.
 function editor_toolUtilities_render_spline.renderHomologatedSurface(splines, selSplineIdx) end
 
---- Renders the wire-frame for the given layer.
----  [Layer - The layer to render.]
----  [Spline - The spline which contains the layer.]
+--- Dessine le fil de fer d'une couche d'une spline (avec décalage binormal), éventuellement projeté au sol par raycast.
 ---Source : lua/ge/extensions/editor/toolUtilities/render/spline.lua:245
----@param layer any
----@param spline any
----@param isRaycast any
----@param binormalSpacing any
+---@param layer table Couche à dessiner.
+---@param spline table Spline contenant la couche.
+---@param isRaycast boolean Projeter les points sur le sol.
+---@param binormalSpacing integer Espacement des lignes binormales, en points de division.
 function editor_toolUtilities_render_spline.renderLayer(layer, spline, isRaycast, binormalSpacing) end
 
---- Renders the wire-frame for a master spline layer without applying binormal offset.
----  [Layer - The layer to render.]
----  [Spline - The spline which contains the layer.]
+--- Comme renderLayer pour une couche de spline maître, sans appliquer le décalage binormal.
 ---Source : lua/ge/extensions/editor/toolUtilities/render/spline.lua:313
----@param layer any
----@param spline any
----@param isRaycast any
----@param binormalSpacing any
+---@param layer table Couche à dessiner.
+---@param spline table Spline contenant la couche.
+---@param isRaycast boolean Projeter sur le sol.
+---@param binormalSpacing integer Espacement des lignes binormales.
 function editor_toolUtilities_render_spline.renderMasterLayer(layer, spline, isRaycast, binormalSpacing) end
 
---- Renders the give preview ribbon.
+--- Dessine un ruban d'aperçu : sphères de nœuds, lignes de largeur et d'arêtes et surface de prévisualisation. Les binormales sont calculées en 2D (horizontales).
 ---Source : lua/ge/extensions/editor/toolUtilities/render/spline.lua:600
----@param nodes any
----@param widths any
+---@param nodes vec3[] Nœuds du ruban.
+---@param widths number[] Largeur du ruban à chaque nœud, en mètres.
 function editor_toolUtilities_render_spline.renderPreviewRibbon(nodes, widths) end
 
---- Renders the shells of the given splines (just a basic wireframe with markup for when tool is inactive).
+--- Dessine les coques des splines (fil de fer simple avec étiquettes) quand l'outil est inactif.
 ---Source : lua/ge/extensions/editor/toolUtilities/render/spline.lua:377
----@param splines any
+---@param splines table Liste de splines.
 function editor_toolUtilities_render_spline.renderShells(splines) end
 
---- Renders polylines for specific spline tools (mesh spline, assembly spline, rail spline, decal spline).
----  Selected splines get thicker, clearer polylines while unselected ones get dull polylines.
+--- Dessine les polylignes des outils de spline de maillage, d'assemblage, de rail et de décalque : trait épais pour la spline sélectionnée, atténué pour les autres. Une spline isPolyline est tracée par ses nœuds (fermée si isLoop), sinon par divPoints ; les splines désactivées ou isLink sont ignorées.
 ---Source : lua/ge/extensions/editor/toolUtilities/render/spline.lua:641
----@param splines any
----@param selectedSplineIdx any
+---@param splines table|nil Liste de splines.
+---@param selectedSplineIdx integer Indice de la spline sélectionnée.
 function editor_toolUtilities_render_spline.renderSplinePolylines(splines, selectedSplineIdx) end
 
---- Renders a wire-frame outline for the given splines.
+--- Dessine un contour fil de fer des splines données.
 ---Source : lua/ge/extensions/editor/toolUtilities/render/spline.lua:432
----@param splines any
+---@param splines table Liste de splines.
 function editor_toolUtilities_render_spline.renderWireframeRibbons(splines) end
 
 ---@type number

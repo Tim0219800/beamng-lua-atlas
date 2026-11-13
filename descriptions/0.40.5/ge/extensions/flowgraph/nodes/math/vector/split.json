@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/math/vector/split.lua",
+  "module": "Noeud flowgraph 'Split' (categorie simple). Decompose une table (vec3, color ou quat, 4 elements max) en nombres x, y, z, w.",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Ecrit table[1..4] sur x, y, z, w (table vide si l'entree est nil).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

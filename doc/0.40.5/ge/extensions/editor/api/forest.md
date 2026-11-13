@@ -4,25 +4,44 @@
 
 **Accès :** extension `editor_api_forest` : `extensions.load("editor_api_forest")`, puis la globale `editor_api_forest`
 
+API de l'éditeur pour manipuler les éléments de forêt (arbres, rochers… instanciés via ForestData). initialize(editor) ajoute sur editor des fonctions pour ajouter, retirer, mettre à jour, tourner et sélectionner des ForestItem. Les fonctions qui modifient la forêt mettent editor.forestDirty = true et appellent editor.setDirty().
+
+## Remarques
+
+- updateForestItem et rotateForestSelection remplacent l'item : il faut utiliser l'objet renvoyé (updateItem renvoie un nouvel item).
+- rotateForestSelection n'agit que sur editor.selection.forestItem ; une seule sélection tourne autour de son axe (ou du monde selon editor.getAxisGizmoAlignment()), plusieurs tournent autour de centerPoint.
+- rotateForestSelection ne marque pas forestDirty lui-même.
+- Le commentaire de createForestItem dit « from where to remove the item » pour forestData (copié-collé), il s'agit en fait de la forêt où l'item est créé.
+
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `editor_api_forest.initialize(editorInstance)` |  | 104 |
+| `editor_api_forest.initialize(editorInstance)` | Installe les fonctions de ce module sur l'objet editor. *(interne)* | 104 |
+
+### Détail des paramètres
+
+#### `editor_api_forest.initialize(editorInstance)`
+
+Installe les fonctions de ce module sur l'objet editor.
+
+- `editorInstance` (*table*) : Objet editor
 
 ## Classe `editor`
+
+Fonctions ajoutées à l'objet editor par initialize.
 
 Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `editor.addForestItem(forestData, item)` | Add a new forest item to the forest data.<br> @param forestData the ForestData C++ class where to add the item<br> @param item the C++ ForestItem to be added | 47 |
-| `editor.createForestItem(forestData, itemData, transform, scale)` | Add and transform a forest item, by using an existing item as a template<br> @param forestData the ForestData C++ class from where to remove the item<br> @param itemData the stored data of an existing C++ ForestItem<br> @param transform the new transform (MatrixF)<br> @param scale the new scale (number)<br> @return the newly created forest item | 68 |
-| `editor.removeForestItem(forestData, item)` | Remove a forest item<br> @param forestData the ForestData C++ class from where to remove the item<br> @param item the C++ ForestItem to be removed | 56 |
-| `editor.rotateForestSelection(forestData, deltaEulerRotation, centerPoint, originalTransforms)` | Rotate forest items selection.<br> @param forestData the ForestData C++ class where the forest items are held<br> @param deltaEulerRotation eurler rotation to be added<br> @param centerPoint center point around where rotation will happen<br> @param originalTransforms the previous transforms of the forest items | 16 |
-| `editor.setForestItemCustomData(forestData, key, customData)` | Set the opaque per-instance custom data of a forest item<br> @param forestData the ForestData C++ class that contains the item<br> @param key the key of the item<br> @param customData the packed custom data value (-1 = none)<br> @return the forest item | 94 |
-| `editor.setForestItemSelected(forestData, key, selected)` |  | 100 |
-| `editor.updateForestItem(forestData, key, keyPos, newData, newTrans, newScale, newUid)` | Update a forest item instance information<br> @param forestData the ForestData C++ class that contains the item<br> @param key the key of the item<br> @param keyPos the original position of the item<br> @param newData the stored data of the item<br> @param newTrans the new transform (MatrixF)<br> @param newScale the new scale (number)<br> @param newUid unique id<br> @return the forest item | 83 |
+| `editor.addForestItem(forestData, item)` | Ajoute un ForestItem existant à la forêt. | 47 |
+| `editor.createForestItem(forestData, itemData, transform, scale)` | Crée un nouvel item en prenant un item existant comme modèle, avec une transformation et une échelle. | 68 |
+| `editor.removeForestItem(forestData, item)` | Retire un ForestItem de la forêt. | 56 |
+| `editor.rotateForestSelection(forestData, deltaEulerRotation, centerPoint, originalTransforms)` | Applique une rotation delta aux items de forêt sélectionnés à partir de leurs transformations d'origine. | 16 |
+| `editor.setForestItemCustomData(forestData, key, customData)` | Définit la donnée personnalisée opaque d'un item. | 94 |
+| `editor.setForestItemSelected(forestData, key, selected)` | Marque un item comme sélectionné ou non (ne marque pas la forêt modifiée). | 100 |
+| `editor.updateForestItem(forestData, key, keyPos, newData, newTrans, newScale, newUid)` | Met à jour les informations d'une instance (données, transformation, échelle, uid). | 83 |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/forest.lua`.*

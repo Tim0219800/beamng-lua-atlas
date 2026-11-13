@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/editor/missionPlaybook/unlockedMissionsViewer.lua",
+  "module": "Fenêtre « Playbook Unlocked Missions Viewer » associée à editor_missionPlaybook. Après chaque étape du playbook, elle classe les missions de carrière en trois listes (startable, visible, invisible) d'après gameplay_missions_unlocks.isMissionStartable / isMissionVisible et les range dans resultData.unlockedMissions. La fenêtre affiche trois colonnes pour la page courante et met en vert les missions devenues démarrables à cette étape (unlockChange.byId).",
+  "notes": [
+    "La fenêtre n'est dessinée que si « Mission Playbook » est visible.",
+    "Bug : M.onEditorRegisterPreferences est assigné à une variable globale non définie (nil).",
+    "Une mission « visible » mais non démarrable va dans visible ; une mission démarrable mais non visible va dans invisible."
+  ],
+  "functions": {
+    "show": {
+      "desc": "Affiche les fenêtres « Mission Playbook » et « Playbook Unlocked Missions Viewer »."
+    },
+    "onEditorGui": {
+      "desc": "Hook d'éditeur appelé à chaque frame : dessine les trois colonnes de missions pour book.results[book.page].",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre (500x500) et l'entrée de menu « Missions ».",
+      "internal": true
+    },
+    "onPlaybookLogAfterStep": {
+      "desc": "Hook émis après chaque instruction du playbook : ajoute resultData.unlockedMissions = {startable, visible, invisible} (listes d'ids).",
+      "params": {"resultData": {"type": "table", "desc": "Résultat de l'étape, modifié sur place."}},
+      "internal": true
+    }
+  }
+}

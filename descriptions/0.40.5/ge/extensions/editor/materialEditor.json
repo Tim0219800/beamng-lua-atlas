@@ -1,0 +1,129 @@
+{
+  "path": "lua/ge/extensions/editor/materialEditor.lua",
+  "module": "Éditeur de matériaux du monde (fenêtre « materialEditor » de l'éditeur de niveau). Il liste les matériaux du niveau et de art/, permet de modifier leurs propriétés par couche (textures, couleurs, flottants, cases à cocher, animation, mélange alpha, cubemap…), avec undo/redo, aperçu 3D (cube de art/shapes/material_preview), détection de problèmes de textures, estimation de taille GPU, usage du matériau dans la scène, focus/isolation dans la vue et sauvegarde des matériaux modifiés. Les fonctions exportées servent surtout à d'autres outils de l'éditeur : sélectionner un matériau, changer une propriété, réutiliser les widgets.",
+  "usage": "local me = extensions.editor_materialEditor\nme.showMaterialEditor()\nme.selectMaterialByName('road_asphalt_2lane', true)",
+  "notes": [
+    "setProperty modifie le matériau courant (currentMaterial) si materialObj est nil, via editor.setMaterialProperty, puis le marque dirty et rafraîchit l'aperçu ; il ne crée pas d'entrée d'historique (les widgets utilisent setPropertyWithUndo en interne).",
+    "Les widgets exportés (inputFloat, colorEdit4, imageButton, deleteMapButton) lisent currentMaterial et la couche courante o.layer[0] si layer est nil ; ils n'ont de sens que dans un contexte imgui de l'éditeur.",
+    "Matériaux custom proposés par défaut : 'Standard' et 'MetalicCarPaint' (customMaterialsArray).",
+    "onFilesChanged recharge la liste des matériaux quand un fichier main.materials.json de /levels/ ou /art/ change.",
+    "Préférences enregistrées (catégorie materialEditor.general) : thumbnailSize (32 à 256, défaut 64), maxMaterialPreviewSize (64 à 1024, défaut 256), textFilterResultsWithSameFirstCharAtTop (true), showEstimatedSizeInList (false), plus columnSizes et levelMaterialNames cachés ; la sélection est mémorisée par niveau dans levelMaterialNames.",
+    "onEditorObjectSelectionChanged et onEditorDeleteSelection sont des hooks vides."
+  ],
+  "fields": {
+    "dbg": {"type": "boolean", "desc": "Drapeau de debug (copie de la valeur locale initiale, false)."},
+    "v": {"type": "table", "desc": "État de l'interface : materialNameList, currentMaterialIndex, dirtyMaterials, materialUsage, inputWidgetHeight, style…"},
+    "o": {"type": "table", "desc": "Pointeurs imgui des options de l'éditeur, notamment o.layer (IntPtr, couche courante) et o.reflectionMode."},
+    "customMaterialsArray": {"type": "string[]", "desc": "Classes de matériaux proposées : 'Standard', 'MetalicCarPaint'."},
+    "customMaterialsArrayPtr": {"type": "any", "desc": "Tableau de chaînes imgui (ArrayCharPtrByTbl) construit à partir de customMaterialsArray."}
+  },
+  "functions": {
+    "showMaterialEditor": {
+      "desc": "Affiche la fenêtre de l'éditeur de matériaux, ou lui donne le focus si elle est déjà visible."
+    },
+    "selectMaterialByName": {
+      "desc": "Sélectionne dans la liste le matériau portant ce nom, met à jour ses propriétés affichées et mémorise le choix pour le niveau courant dans la préférence levelMaterialNames. Si le nom est introuvable, l'indice courant passe à 0. Ne fait rien tant que la liste n'est pas chargée (éditeur non activé).",
+      "params": {
+        "matName": {"type": "string", "desc": "Nom du matériau."},
+        "clearFilter": {"type": "boolean|nil", "desc": "Si vrai, vide d'abord le filtre texte (sinon la sélection peut échouer)."}
+      }
+    },
+    "setMaterialDirty": {
+      "desc": "Marque le matériau comme modifié (v.dirtyMaterials[nom] = true) pour qu'il soit sauvegardé.",
+      "params": {"materialObj": {"type": "userdata|nil", "desc": "Objet matériau ; matériau courant si nil."}}
+    },
+    "setProperty": {
+      "desc": "Définit une propriété d'une couche du matériau via editor.setMaterialProperty ; en cas de succès, marque dirty, invalide l'estimation de taille et redessine l'aperçu. Mémorise la valeur précédente pour l'undo.",
+      "params": {
+        "materialObj": {"type": "userdata|nil", "desc": "Matériau à modifier ; courant si nil."},
+        "property": {"type": "string", "desc": "Nom du champ (ex. diffuseMap, diffuseColor)."},
+        "layer": {"type": "integer", "desc": "Indice de couche du matériau."},
+        "value": {"type": "any", "desc": "Nouvelle valeur."}
+      }
+    },
+    "deleteMapButton": {
+      "desc": "Dessine un bouton d'icône qui vide la texture de la propriété (valeur \"\") avec undo.",
+      "params": {
+        "label": {"type": "string", "desc": "Libellé utilisé dans l'infobulle « Remove … »."},
+        "property": {"type": "string", "desc": "Propriété texture à vider."},
+        "layer": {"type": "integer|nil", "desc": "Couche ; o.layer[0] si nil."}
+      }
+    },
+    "imageButton": {
+      "desc": "Widget imgui : miniature de la texture d'une propriété, avec aperçu, glisser-déposer et sélection de fichier ; modifie la propriété avec undo.",
+      "params": {
+        "label": {"type": "string", "desc": "Libellé du widget."},
+        "property": {"type": "string", "desc": "Propriété texture."},
+        "layer": {"type": "integer|nil", "desc": "Couche ; o.layer[0] si nil."},
+        "additionalGuiFn": {"type": "function|nil", "desc": "Fonction de dessin additionnelle (déduit du code)."}
+      }
+    },
+    "colorEdit4": {
+      "desc": "Widget imgui : éditeur de couleur RGBA lié à une propriété du matériau courant ; applique la valeur en direct et crée une entrée d'undo en fin d'édition.",
+      "params": {
+        "label": {"type": "string", "desc": "Libellé (affiché si non vide)."},
+        "property": {"type": "string", "desc": "Propriété couleur (chaîne « r g b a »)."},
+        "id": {"type": "string|nil", "desc": "Identifiant imgui ; property par défaut."},
+        "layer": {"type": "integer|nil", "desc": "Couche ; o.layer[0] si nil."},
+        "labelSameLine": {"type": "boolean|nil", "desc": "Si vrai, le widget est placé sur la même ligne que le libellé."}
+      }
+    },
+    "inputFloat": {
+      "desc": "Widget imgui : champ numérique lié à une propriété flottante du matériau courant ; applique en direct et ajoute une entrée d'undo en fin d'édition.",
+      "params": {
+        "label": {"type": "string", "desc": "Libellé."},
+        "property": {"type": "string", "desc": "Propriété flottante."},
+        "float_step": {"type": "number|nil", "desc": "Pas (0.01 par défaut)."},
+        "float_step_fast": {"type": "number|nil", "desc": "Pas rapide (0.1 par défaut)."},
+        "string_format": {"type": "string|nil", "desc": "Format d'affichage (\"%.2f\" par défaut)."},
+        "layer": {"type": "integer|nil", "desc": "Couche ; o.layer[0] si nil."},
+        "tooltip": {"type": "string|nil", "desc": "Texte d'aide affiché à côté du libellé."}
+      }
+    },
+    "onEditorGui": {
+      "desc": "Hook appelé à chaque image de l'éditeur : dessine la fenêtre principale et les fenêtres annexes (aperçu, usage du matériau, création, copie, matériaux par tag), gère le focus et les travaux d'arrière-plan.",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook d'initialisation de l'éditeur : ajoute le menu « Material Editor », enregistre les six fenêtres (cinq annexes masquées) et lance le job de cartographie des tags.",
+      "internal": true
+    },
+    "onEditorActivated": {
+      "desc": "Hook appelé à l'activation de l'éditeur : charge matériaux, ground models et meshes d'aperçu, prépare les aperçus 3D (cube_1m.dae) et le chemin du niveau.",
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Hook appelé à la désactivation de l'éditeur : retire le focus de scène, libère listes de matériaux, caches de taille et meshes d'aperçu.",
+      "internal": true
+    },
+    "onEditorDeleteSelection": {"desc": "Hook de suppression de la sélection ; vide.", "internal": true},
+    "onEditorObjectSelectionChanged": {"desc": "Hook de changement de sélection d'objets ; vide.", "internal": true},
+    "onEditorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change ; réagit à thumbnailSize, maxMaterialPreviewSize, textFilterResultsWithSameFirstCharAtTop (recharge la liste) et showEstimatedSizeInList.",
+      "params": {
+        "path": {"type": "string", "desc": "Chemin de la préférence, ex. materialEditor.general.thumbnailSize."},
+        "value": {"type": "any", "desc": "Nouvelle valeur."}
+      },
+      "internal": true
+    },
+    "onEditorRegisterPreferences": {
+      "desc": "Hook d'enregistrement des préférences : crée la catégorie materialEditor et la sous-catégorie general.",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "internal": true
+    },
+    "onFilesChanged": {
+      "desc": "Hook appelé quand des fichiers changent sur disque ; recharge les matériaux si un main.materials.json sous /levels/ ou /art/ est concerné.",
+      "params": {"files": {"type": "table[]", "desc": "Liste d'entrées avec un champ filename."}},
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook appelé au changement de véhicule joué ; si la fenêtre est visible et l'éditeur actif, relance le job de tags et recharge les matériaux.",
+      "params": {
+        "oid": {"type": "integer", "desc": "Id de l'ancien véhicule."},
+        "nid": {"type": "integer", "desc": "Id du nouveau véhicule."},
+        "player": {"type": "integer", "desc": "Indice du joueur (non utilisé)."}
+      },
+      "internal": true
+    }
+  }
+}

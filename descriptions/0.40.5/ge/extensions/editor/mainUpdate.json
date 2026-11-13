@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/editor/mainUpdate.lua",
+  "module": "Boucle de mise à jour de l'éditeur, appelée à chaque frame via onUpdate quand l'éditeur est actif. Elle met à jour et dessine les icônes d'objets, diffuse les changements de préférences (et les sauvegarde), appelle l'onUpdate du mode d'édition courant, puis présente l'interface (GUI, menus contextuels, boîtes modales, dialogue de sauvegarde des outils modifiés).",
+  "notes": [
+    "Ne fait rien si editor.active est faux.",
+    "La sauvegarde des préférences se fait dès qu'une préférence a changé dans la frame ; le code contient un TODO pour ajouter un délai.",
+    "M.onEditorInitialized est explicitement mis à nil."
+  ],
+  "functions": {
+    "onUpdate": {
+      "desc": "Boucle par frame de l'éditeur : icônes d'objets, préférences modifiées, editMode.onUpdate, gizmos (si editor.hideObjectIcons est faux) puis editor.guiModule.presentGui.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta de temps réel de la frame (s), transmis au mode d'édition et à presentGui."},
+        "dtSim": {"type": "number", "desc": "Delta de temps de simulation (s)."},
+        "dtRaw": {"type": "number", "desc": "Delta de temps brut (s)."}
+      },
+      "internal": true
+    },
+    "onExtensionLoaded": {"desc": "Hook de chargement. Corps vide.", "params": {}, "internal": true},
+    "onExtensionUnloaded": {"desc": "Hook de déchargement. Corps vide.", "params": {}, "internal": true}
+  }
+}

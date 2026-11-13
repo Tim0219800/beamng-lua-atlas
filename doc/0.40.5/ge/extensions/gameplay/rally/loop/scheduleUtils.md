@@ -4,14 +4,50 @@
 
 **Accès :** extension `gameplay_rally_loop_scheduleUtils` : `extensions.load("gameplay_rally_loop_scheduleUtils")`, puis la globale `gameplay_rally_loop_scheduleUtils`
 
+Petites fonctions utilitaires de calcul d'horaires pour les boucles de rallye : arrondi à la minute supérieure, conversion de créneaux (slots) minutes vers secondes, calcul du prochain créneau, comparaison de temps avec tolérance. Tous les temps sont en secondes.
+
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `gameplay_rally_loop_scheduleUtils.calculateNextSlotTime(currentTime, slotSizeMinutes, roundToMinute)` | Calculate the next slot time by adding slot duration and rounding to minute boundary<br> @param currentTime: Current time in seconds<br> @param slotSizeMinutes: Size of time slot in minutes (default: 1)<br> @param roundToMinute: If true, rounds result to next minute boundary (default: true)<br> @return: Next slot time in seconds | 27 |
-| `gameplay_rally_loop_scheduleUtils.isLaterTime(newTime, currentTime, tolerance)` | Check if one time is later than another (with optional tolerance)<br> @param newTime: Time to check<br> @param currentTime: Time to compare against<br> @param tolerance: Optional tolerance in seconds (default: 0)<br> @return: true if newTime > currentTime (accounting for tolerance) | 45 |
-| `gameplay_rally_loop_scheduleUtils.roundToNextMinute(timeSecs)` | Round time up to the next minute boundary (60 second intervals)<br> @param timeSecs: Time in seconds<br> @return: Time rounded up to next minute | 11 |
-| `gameplay_rally_loop_scheduleUtils.slotMinutesToSeconds(slotSizeMinutes)` | Convert slot size from minutes to seconds<br> @param slotSizeMinutes: Slot size in minutes<br> @return: Slot size in seconds | 18 |
+| `gameplay_rally_loop_scheduleUtils.calculateNextSlotTime(currentTime, slotSizeMinutes, roundToMinute)` | Ajoute la durée du créneau au temps courant puis, par défaut, arrondit à la minute supérieure. | 27 |
+| `gameplay_rally_loop_scheduleUtils.isLaterTime(newTime, currentTime, tolerance)` | Teste si newTime est strictement supérieur à currentTime + tolérance. | 45 |
+| `gameplay_rally_loop_scheduleUtils.roundToNextMinute(timeSecs)` | Arrondit un temps à la minute supérieure : ceil(t / 60) * 60. | 11 |
+| `gameplay_rally_loop_scheduleUtils.slotMinutesToSeconds(slotSizeMinutes)` | Convertit une taille de créneau de minutes en secondes (1 minute par défaut si nil). | 18 |
+
+### Détail des paramètres
+
+#### `gameplay_rally_loop_scheduleUtils.calculateNextSlotTime(currentTime, slotSizeMinutes, roundToMinute)`
+
+Ajoute la durée du créneau au temps courant puis, par défaut, arrondit à la minute supérieure.
+
+- `currentTime` (*number*) : Temps courant en secondes.
+- `slotSizeMinutes` (*number|nil*) : Taille du créneau en minutes (défaut 1).
+- `roundToMinute` (*boolean|nil*) : true par défaut ; false pour ne pas arrondir.
+- **renvoie** : number Prochain créneau en secondes.
+
+#### `gameplay_rally_loop_scheduleUtils.isLaterTime(newTime, currentTime, tolerance)`
+
+Teste si newTime est strictement supérieur à currentTime + tolérance.
+
+- `newTime` (*number*) : Temps à tester.
+- `currentTime` (*number*) : Temps de référence.
+- `tolerance` (*number|nil*) : Tolérance en secondes (défaut 0).
+- **renvoie** : boolean true si newTime > currentTime + tolerance.
+
+#### `gameplay_rally_loop_scheduleUtils.roundToNextMinute(timeSecs)`
+
+Arrondit un temps à la minute supérieure : ceil(t / 60) * 60.
+
+- `timeSecs` (*number*) : Temps en secondes.
+- **renvoie** : number Temps arrondi, en secondes.
+
+#### `gameplay_rally_loop_scheduleUtils.slotMinutesToSeconds(slotSizeMinutes)`
+
+Convertit une taille de créneau de minutes en secondes (1 minute par défaut si nil).
+
+- `slotSizeMinutes` (*number|nil*) : Taille du créneau en minutes.
+- **renvoie** : number Secondes.
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/loop/scheduleUtils.lua`.*

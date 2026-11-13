@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/editor/logHelper.lua",
+  "module": "Extension d'éditeur qui affiche dans la barre de menu principale de l'éditeur le compteur d'erreurs (rouge, suffixe E) et d'avertissements (jaune, suffixe W) du log de développement, via Lua:getDevLogStats().",
+  "notes": [
+    "Le test de garde utilise `Lua.getDevLogStats` (point) alors que l'appel utilise `Lua:getDevLogStats()` (deux-points).",
+    "Le commentaire du code indique que le positionnement à droite de la barre (SameLine) ne fonctionne plus : le texte s'affiche à la suite des menus."
+  ],
+  "functions": {
+    "onEditorMainMenuBar": {
+      "desc": "Hook de dessin de la barre de menu principale. Écrit « LogStats: » puis le nombre d'erreurs et d'avertissements s'ils sont supérieurs à 0. Ne fait rien si Lua.getDevLogStats n'existe pas.",
+      "params": {"windowSize": {"type": "table", "desc": "Taille de la fenêtre (non utilisée : la ligne SameLine est commentée)."}},
+      "internal": true
+    }
+  }
+}

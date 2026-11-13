@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/test/testRouteFix.lua",
+  "module": "Extension de test de développement pour le module gameplay/route/route : au chargement, elle crée une Route avec un petit chemin de 3 points codés en dur, puis à chaque frame dessine le chemin (sphères, prismes, numéros) via debugDrawer et fait suivre le véhicule joueur par route:trackVehicle. Se charge avec extensions.load('gameplay_rally_test_testRouteFix'). Sans intérêt en jeu normal.",
+  "notes": [
+    "Les coordonnées du chemin sont fixes (monde de test) ; les fonctions drawMousePos et drawPath existent mais leur appel est commenté dans onUpdate.",
+    "Le commentaire d'en-tête du fichier mentionne « extension name: gameplay_rally », ce qui ne correspond pas au nom réel de l'extension."
+  ],
+  "functions": {
+    "onUpdate": {
+      "desc": "Hook appelé à chaque frame : dessine la route et appelle route:trackVehicle sur le véhicule joueur 0 s'il existe.",
+      "params": {},
+      "internal": true
+    },
+    "onVehicleResetted": {
+      "desc": "Hook appelé quand un véhicule est remis en place ; corps vide.",
+      "params": {},
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement de l'extension : crée la Route et appelle setupPathMulti sur le chemin de test.",
+      "params": {},
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook appelé au déchargement de l'extension ; corps vide.",
+      "params": {},
+      "internal": true
+    }
+  }
+}

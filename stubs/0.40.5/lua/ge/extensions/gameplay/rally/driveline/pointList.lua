@@ -2,65 +2,71 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/driveline/pointList.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe locale `C` de lua/ge/extensions/gameplay/rally/driveline/pointList.lua (instanciée par la fonction renvoyée par le module)
+--- Liste de points renvoyée par le constructeur ; attribut self.points.
 ---@class gameplay_rally_driveline_pointList
 local gameplay_rally_driveline_pointList = {}
 
---- Calculate total length of the point list
+--- Longueur totale du chemin (0 s'il y a moins de 2 points).
 ---Source : lua/ge/extensions/gameplay/rally/driveline/pointList.lua:76
+---@return number  Longueur en mètres.
 function gameplay_rally_driveline_pointList:calculateLength() end
 
---- Get number of points
+--- Nombre de points.
 ---Source : lua/ge/extensions/gameplay/rally/driveline/pointList.lua:91
+---@return integer  Nombre de points.
 function gameplay_rally_driveline_pointList:count() end
 
---- Create a new point with the standard format
+--- Crée un point au format standard (normal (0,0,1), pacenoteDistances vide, cachedPacenotes vide). N'ajoute pas le point à la liste.
 ---Source : lua/ge/extensions/gameplay/rally/driveline/pointList.lua:17
----@param pos any
----@param quat any
----@param ts any
+---@param pos vec3 Position.
+---@param quat quat|nil Orientation (voir le bug dans notes : ne pas l'omettre).
+---@param ts number|nil Horodatage en secondes (0 par défaut).
+---@return table  Le point.
 function gameplay_rally_driveline_pointList:createPoint(pos, quat, ts) end
 
---- Downsample stub (for compatibility with DrivelineRoute)
----  DrivelineV3 already performs simplification, so this just returns self
+--- Stub de compatibilité avec DrivelineRoute : renvoie la liste elle-même (drivelineV3 simplifie déjà).
 ---Source : lua/ge/extensions/gameplay/rally/driveline/pointList.lua:134
+---@return table  self.
 function gameplay_rally_driveline_pointList:downsample() end
 
---- Draw debug visualization of all points
+--- Dessine une sphère par point (couleur recce_driveline_clr, alpha 0,3) et, si demandé, l'horodatage ts en étiquette. À appeler à chaque frame.
 ---Source : lua/ge/extensions/gameplay/rally/driveline/pointList.lua:139
----@param drawLabels any
+---@param drawLabels boolean|nil true pour afficher les étiquettes ts.
 function gameplay_rally_driveline_pointList:drawDebug(drawLabels) end
 
---- Find nearest point to a given position
+--- Point le plus proche d'une position (distance 3D, parcours linéaire).
 ---Source : lua/ge/extensions/gameplay/rally/driveline/pointList.lua:113
----@param srcPos any
+---@param srcPos vec3 Position de référence.
+---@return table|nil  Point le plus proche, nil si la liste est vide.
 function gameplay_rally_driveline_pointList:findNearestPoint(srcPos) end
 
---- Get point at index
+--- Point à l'indice donné.
 ---Source : lua/ge/extensions/gameplay/rally/driveline/pointList.lua:96
----@param index any
+---@param index integer Indice à partir de 1.
+---@return table|nil  Point.
 function gameplay_rally_driveline_pointList:get(index) end
 
---- Get all points
+--- Table interne de tous les points (pas une copie).
 ---Source : lua/ge/extensions/gameplay/rally/driveline/pointList.lua:101
+---@return table[]  Points.
 function gameplay_rally_driveline_pointList:getAll() end
 
---- PointList represents a series of points along a path
----  Each point has: pos, quat, ts, normal, prev, next, id, pacenoteDistances, cachedPacenotes
+--- Mémorise la liste de points fournie (vide par défaut) sans calculer relations ni normales.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/gameplay/rally/driveline/pointList.lua:12
----@param points any
+---@param points table[]|nil Points déjà au format standard.
 function gameplay_rally_driveline_pointList:init(points) end
 
---- Set all points (and update relationships/normals)
+--- Remplace tous les points puis recalcule relations et normales.
 ---Source : lua/ge/extensions/gameplay/rally/driveline/pointList.lua:106
----@param points any
+---@param points table[] Nouveaux points.
 function gameplay_rally_driveline_pointList:setAll(points) end
 
---- Calculate and set normals for all points
+--- Calcule la normale de chaque point avec snaproadNormals.forwardNormalVec et crée pacenoteDistances/cachedPacenotes s'ils manquent.
 ---Source : lua/ge/extensions/gameplay/rally/driveline/pointList.lua:56
 function gameplay_rally_driveline_pointList:setupPointNormals() end
 
---- Set up prev/next relationships and IDs for all points
+--- Renseigne id (indice), prev et next de chaque point.
 ---Source : lua/ge/extensions/gameplay/rally/driveline/pointList.lua:39
 function gameplay_rally_driveline_pointList:setupPointRelationships() end
 

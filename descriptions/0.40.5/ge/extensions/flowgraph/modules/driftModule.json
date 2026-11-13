@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/flowgraph/modules/driftModule.lua",
+  "module": "Module flowgraph (moduleOrder 0, dépend de gameplay_drift_general) qui relaie les évènements du gameplay de drift vers les nœuds flowgraph. Il écoute les hooks onDriftSpinout, onDriftCrash, onDonutDriftScored, onTightDriftScored et onDriftCompletedScored, et conserve chaque évènement dans une table de callbacks avec une durée de vie (ttl) de 2 ticks que les nœuds peuvent lire.",
+  "notes": [
+    "Les callbacks connus à l'init sont tight, donut, spinout, crash, tap, scored ; chacun a ttl = 0 au départ.",
+    "Un évènement est considéré actif tant que ttl > 0 ; onUpdate décrémente le ttl d'un par appel.",
+    "addCallback fixe ttl = 2 : l'évènement reste visible environ 2 mises à jour.",
+    "onDonutZoneReactivated n'est pas déclaré dans C.hooks ; il est appelé directement et relaie vers gameplay_drift_drift.onDonutZoneReactivated()."
+  ],
+  "functions": {
+    "resetModule": {"desc": "Recrée la table callbacks avec tous les évènements à ttl = 0.", "internal": true},
+    "init": {"desc": "Appelé à la création du module : appelle resetModule().", "internal": true},
+    "onUpdate": {"desc": "Appelé à chaque mise à jour du manager : décrémente le ttl de chaque callback positif.", "internal": true},
+    "getCallBacks": {"desc": "Renvoie la table des callbacks (clé = nom, valeur = {ttl, data}).", "returns": [{"type": "table<string, table>", "desc": "callbacks par nom"}]},
+    "addCallback": {"desc": "Enregistre (ou remplace) un évènement avec ttl = 2 et des données.", "params": {"name": {"type": "string", "desc": "nom de l'évènement (tight, donut, spinout, crash, scored…)"}, "data": {"type": "table|nil", "desc": "données associées"}}},
+    "onDriftSpinout": {"desc": "Hook : le joueur a fait un tête-à-queue ; enregistre 'spinout'.", "internal": true},
+    "onDriftCrash": {"desc": "Hook : crash en drift ; enregistre 'crash'.", "internal": true},
+    "onTightDriftScored": {"desc": "Hook : drift serré marqué ; enregistre 'tight' avec {score}.", "params": {"score": {"type": "number", "desc": "score obtenu"}}, "internal": true},
+    "onDonutDriftScored": {"desc": "Hook : donut marqué ; enregistre 'donut' avec {score}.", "params": {"score": {"type": "number", "desc": "score obtenu"}}, "internal": true},
+    "onDriftCompletedScored": {"desc": "Hook : drift terminé et compté ; enregistre 'scored' avec addedScore, cachedScore et combo.", "params": {"data": {"type": "table", "desc": "champs addedScore, cachedScore, combo"}}, "internal": true},
+    "onDonutZoneReactivated": {"desc": "Relaie vers gameplay_drift_drift.onDonutZoneReactivated().", "params": {}}
+  }
+}

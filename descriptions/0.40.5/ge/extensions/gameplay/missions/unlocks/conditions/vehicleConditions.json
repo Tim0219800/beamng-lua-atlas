@@ -1,0 +1,11 @@
+{
+  "path": "lua/ge/extensions/gameplay/missions/unlocks/conditions/vehicleConditions.lua",
+  "module": "Type de condition de déblocage de missions lié au véhicule : vehicleDriven. Chargé par gameplay_missions_unlocks.",
+  "notes": [
+    "vehicleDriven annonce « le joueur doit être dans un véhicule » mais conditionMet renvoie toujours true sans rien vérifier.",
+    "busDriven est commenté dans le code (inactif)."
+  ],
+  "fields": {
+    "vehicleDriven": {"type": "table", "desc": "Condition {type='vehicleDriven'} : label 'Driving a vehicle', conditionMet renvoie toujours true, {}."}
+  }
+}

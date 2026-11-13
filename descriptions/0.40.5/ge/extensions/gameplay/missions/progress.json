@@ -1,0 +1,212 @@
+{
+  "path": "lua/ge/extensions/gameplay/missions/progress.lua",
+  "module": "Gère la progression (sauvegarde) des missions : tentatives (attempts), agrégats (meilleur résultat, nombre d'essais, classements), étoiles débloquées, déblocage du voyage rapide et des réglages, récompenses de carrière et succès Steam. Les données sont écrites dans settings/cloud/missionProgress/<emplacement>/<id de mission>.json. Il formate aussi ces données pour l'interface (écran de mission, grande carte). Un moddeur s'en sert pour enregistrer une tentative (newAttempt puis aggregateAttempt) ou lire la progression d'une mission.",
+  "usage": "local attempt = gameplay_missions_progress.newAttempt('completed', {time = 42.3})\nattempt.unlockedStars = {justFinish = true}\nlocal change = gameplay_missions_progress.aggregateAttempt('gridmap_v2/timeTrial/x', attempt)\ngameplay_missions_progress.saveMissionSaveData('gridmap_v2/timeTrial/x')",
+  "notes": [
+    "Priorité des types de tentative (la plus petite est la meilleure) : completed=0, passed=10, attempted=20, abandoned=50, failed=100, none=1000.",
+    "sanitizeAttempt (appelée par aggregateAttempt) recalcule le type de la tentative à partir des étoiles : 'passed' si au moins une étoile par défaut est obtenue, 'completed' si toutes les étoiles par défaut ET bonus actives sont obtenues, sinon 'none'. Le type passé à newAttempt est donc écrasé. Seules les étoiles actives, visibles et activées pour les réglages courants (mission.lastUserSettings) sont conservées.",
+    "En carrière, les récompenses de chaque étoile sont ajoutées aux attributs du joueur ; l'argent (money) est multiplié par le multiplicateur de niveau de la branche (career_branches.getLevelRewardMultiplier). reduceCareerRewardsForDefaultStars réduit ensuite l'argent à 10 % pour une étoile déjà obtenue, et met les bons (vouchers) à 0.",
+    "En mode batch (startBatchMode), aggregateAttempt n'émet ni calcul de déblocages ni journal permanent et renvoie {} : utile pour injecter beaucoup de tentatives de test. Hors mode batch (et hors version shipping), le résultat est écrit dans permaMissionProgressLog.json (qui grossit à chaque tentative).",
+    "aggregateAttempt n'enregistre PAS sur disque : il faut ensuite appeler saveMissionSaveData (ou career_modules_missionWrapper.saveMission en carrière).",
+    "missionHasQuickTravelUnlocked et missionHasUserSettingsUnlocked renvoient toujours true dans les cas qui comptent : le code utilisant saveData.quickTravelUnlocked / userSettingsUnlocked est commenté (le déblocage existe encore dans aggregateAttempt, mais n'est plus consulté).",
+    "Plusieurs champs exportés valent nil : formatAggregatesForMissionTypeWithProgKey, getProgressAggregateCache, getSaveSlotVersion, setSaveSlotVersion et startConditionMet sont assignés à M.xxx à partir de locales jamais définies dans le fichier (reliquats d'ancien code).",
+    "exportAllProgressToCSV est une fonction vide.",
+    "Dans missionHasQuickTravelUnlocked et missionHasUserSettingsUnlocked, le message d'erreur utilise la variable `id` qui n'existe pas (le paramètre s'appelle missionId) : il affichera nil.",
+    "La constante version vaut 20 (« augmenter la version purge toutes les sauvegardes de dev/test »).",
+    "onExtensionLoaded charge tous les fichiers du dossier gameplay/missions/progress/conditions et enregistre leurs types de conditions."
+  ],
+  "fields": {
+    "formatAggregatesForMissionTypeWithProgKey": {"type": "nil", "desc": "Vaut nil : la locale du même nom n'existe pas dans le fichier."},
+    "getProgressAggregateCache": {"type": "nil", "desc": "Vaut nil : la locale du même nom n'existe pas dans le fichier."},
+    "getSaveSlotVersion": {"type": "nil", "desc": "Vaut nil : la locale du même nom n'existe pas dans le fichier."},
+    "setSaveSlotVersion": {"type": "nil", "desc": "Vaut nil : la locale du même nom n'existe pas dans le fichier."},
+    "startConditionMet": {"type": "nil", "desc": "Vaut nil : la locale du même nom n'existe pas dans le fichier."},
+    "testHelper": {"type": "table", "desc": "Outils de test internes (ex. testHelper.randomAttemptType, utilisé par sanitizeMissionAfterCreation pour getRandomizedAttempt)."}
+  },
+  "functions": {
+    "newAttempt": {
+      "desc": "Crée une table de tentative {type, date (os.time), humanDate (ISO 8601 UTC), data}.",
+      "params": {
+        "type": {"type": "string", "desc": "Type de résultat : completed, passed, attempted, abandoned, failed ou none (sera recalculé par aggregateAttempt)."},
+        "data": {"type": "table|nil", "desc": "Données propres au type de mission."}
+      },
+      "returns": [{"type": "table", "desc": "Tentative."}]
+    },
+    "aggregateAttempt": {
+      "desc": "Enregistre une tentative dans la progression d'une mission : assainit la tentative, l'ajoute à progress.attempts, met à jour l'agrégat (meilleur type, nombre d'essais, DNF, classement « recent »), émet onMissionAttemptAggregated(attempt, mission, progressKey), débloque les étoiles, succès (CHALLENGE_ONE_STAR, CHALLENGE_THREE_STARS et celui du type de mission), applique les agrégats automatiques et mission:aggregateAttempt, distribue les récompenses de carrière et calcule les déblocages (missions, ligues, voyage rapide, réglages).",
+      "params": {
+        "id": {"type": "string", "desc": "Id de la mission."},
+        "attempt": {"type": "table", "desc": "Tentative (newAttempt) ; modifiée en place (type, unlockedStars, attemptNumber, dnfCount)."},
+        "progressKey": {"type": "string|nil", "desc": "Clé de progression ; par défaut mission.defaultProgressKey ou 'default'."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Hors mode batch : {formattedAttempt, aggregateChange, unlockChange, nextMissionsUnlock, unlockedMissions, unlockedStarsAttempt, unlockedStarsChanged, starRewards, formattedRewards, unlockedLeagues?, quickTravelUnlockedChange?, userSettingsUnlockedChange?}. En mode batch : {}. nil si la mission n'existe pas."}]
+    },
+    "addCareerRewardInfo": {
+      "desc": "Prépare, pour l'interface de fin de mission en carrière, le détail des récompenses par attribut (total, icône, détail par étoile obtenue, durée et hauteur de son d'animation calculées par une courbe de type sigmoïde). Ne fait rien hors carrière.",
+      "params": {
+        "starRewards": {"type": "table", "desc": "Table starRewards construite par aggregateAttempt (originalRewardsPerStar, sums...)."},
+        "mission": {"type": "table", "desc": "Mission."},
+        "attempt": {"type": "table", "desc": "Tentative (champ unlockedStars)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "{list = {...}} ou nil hors carrière."}]
+    },
+    "setSaveSlot": {
+      "desc": "Change l'emplacement de sauvegarde : le chemin devient settings/cloud/missionProgress/<slotName>/.",
+      "params": {"slotName": {"type": "string", "desc": "Nom de l'emplacement (« default » par défaut)."}},
+      "returns": []
+    },
+    "setSavePath": {
+      "desc": "Définit directement le dossier de sauvegarde ; sans argument, revient à l'emplacement par défaut.",
+      "params": {"path": {"type": "string|nil", "desc": "Dossier se terminant par « / »."}},
+      "returns": []
+    },
+    "getSaveSlot": {
+      "desc": "Renvoie le nom de l'emplacement de sauvegarde courant et son dossier.",
+      "params": {},
+      "returns": [
+        {"type": "string", "desc": "Nom de l'emplacement."},
+        {"type": "string", "desc": "Dossier de sauvegarde."}
+      ]
+    },
+    "saveMissionSaveData": {
+      "desc": "Écrit mission.saveData dans <dossier>/<id>.json (JSON indenté) après y avoir fixé dirtyDate.",
+      "params": {
+        "id": {"type": "string", "desc": "Id de la mission."},
+        "dirtyDate": {"type": "number|nil", "desc": "Date de modification pour la synchronisation carrière."}
+      },
+      "returns": [{"type": "boolean|nil", "desc": "Résultat de jsonWriteFile ; nil si la mission n'existe pas."}]
+    },
+    "loadMissionSaveData": {
+      "desc": "Charge les données de progression d'une mission depuis le disque (convertit les anciens booléens d'étoiles en compteurs, prévient la carrière, met à jour si la version est ancienne, appelle mission:loadSaveData). Renvoie des données vierges si le fichier manque ou est illisible.",
+      "params": {"mission": {"type": "table", "desc": "Mission construite."}},
+      "returns": [
+        {"type": "table", "desc": "saveData de la mission."},
+        {"type": "boolean|nil", "desc": "true si les données ont été mises à jour vers une version plus récente."}
+      ],
+      "internal": true
+    },
+    "ensureProgressExistsForKey": {
+      "desc": "Crée, si elle manque, la progression d'une clé (agrégat vierge bestType='none', attempts vide, classement « recent » vide).",
+      "params": {
+        "missionInstance": {"type": "table", "desc": "Mission construite."},
+        "progressKey": {"type": "string", "desc": "Clé de progression."}
+      },
+      "returns": []
+    },
+    "reduceCareerRewardsForDefaultStars": {
+      "desc": "En carrière, réduit les récompenses de chaque étoile active déjà obtenue (argent à 10 % de la valeur d'origine, bons à 0) puis recalcule les sommes de récompenses. Hors carrière, recalcule seulement les sommes.",
+      "params": {"mission": {"type": "table", "desc": "Mission construite."}},
+      "returns": []
+    },
+    "setDynamicStarRewards": {
+      "desc": "Pour chaque étoile, demande à mission:getDynamicStarReward(key, userSettings) une récompense dépendant des réglages et la substitue si elle existe, puis recalcule les sommes.",
+      "params": {
+        "mission": {"type": "table", "desc": "Mission construite."},
+        "userSettings": {"type": "table|nil", "desc": "Réglages ; par défaut mission.lastUserSettings."}
+      },
+      "returns": []
+    },
+    "missionHasQuickTravelUnlocked": {
+      "desc": "Indique si le voyage rapide vers la mission est débloqué. Renvoie toujours true pour une mission existante (la condition de sauvegarde est commentée).",
+      "params": {"missionId": {"type": "string", "desc": "Id de la mission."}},
+      "returns": [{"type": "boolean", "desc": "true (false si la mission n'existe pas)."}]
+    },
+    "missionHasUserSettingsUnlocked": {
+      "desc": "Indique si les réglages utilisateur de la mission sont débloqués. Renvoie toujours true pour une mission existante.",
+      "params": {"missionId": {"type": "string", "desc": "Id de la mission."}},
+      "returns": [{"type": "boolean", "desc": "true (false si la mission n'existe pas)."}]
+    },
+    "getLeaderboardChangeKeys": {
+      "desc": "Renvoie la table classement -> clé de nouveau record : 'recent' -> 'newRecentLeaderboardEntryKey', plus celles des agrégats automatiques (leaderboardKey -> newLeaderboardEntryKey).",
+      "params": {"missionId": {"type": "string", "desc": "Id de la mission."}},
+      "returns": [{"type": "table<string, string>", "desc": "Correspondance (vide si la mission n'existe pas)."}]
+    },
+    "formatAttemptSimple": {
+      "desc": "Met en forme une tentative pour l'interface : liste {value, label, mainResult} d'après mission.autoUiAttemptProgress.",
+      "params": {
+        "attempt": {"type": "table", "desc": "Tentative."},
+        "mission": {"type": "table", "desc": "Mission."}
+      },
+      "returns": [{"type": "table", "desc": "{list = {...}}."}]
+    },
+    "tryBuildContext": {
+      "desc": "Construit une table de contexte de traduction à partir de `data` en ne gardant que les valeurs chaîne ou nombre (converties en chaîne). Renvoie {} si label est nil.",
+      "params": {
+        "label": {"type": "any", "desc": "Libellé ; s'il est nil, le contexte est vide."},
+        "data": {"type": "table", "desc": "Données source."}
+      },
+      "returns": [{"type": "table<string, string>", "desc": "Contexte."}]
+    },
+    "formatStars": {
+      "desc": "Met en forme les étoiles de la mission pour l'interface (liste triée, nombre débloqué par défaut/bonus, total). Renvoie {disabled=true} si la mission n'a pas d'étoiles actives.",
+      "params": {"mission": {"type": "table", "desc": "Mission."}},
+      "returns": [{"type": "table", "desc": "Étoiles formatées."}]
+    },
+    "formatSaveDataForUi": {
+      "desc": "Met en forme toute la progression d'une mission (par clé de progression) pour l'écran de mission, y compris les enregistrements de replay automatiques (core_replay.getMissionReplayFiles).",
+      "params": {
+        "id": {"type": "string", "desc": "Id de la mission."},
+        "onlyKey": {"type": "string|nil", "desc": "Limite à une clé de progression."},
+        "includeMostRecentAttempt": {"type": "boolean|nil", "desc": "Inclure la tentative la plus récente."},
+        "fillAttempts": {"type": "boolean|nil", "desc": "Inclure la liste complète des tentatives (déduit du code)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Données formatées ; nil si la mission n'existe pas."}]
+    },
+    "formatSaveDataForBigmap": {
+      "desc": "Met en forme la progression pour la grande carte (agrégats configurés dans mission.autoUiBigmap, étoiles débloquées).",
+      "params": {"id": {"type": "string", "desc": "Id de la mission."}},
+      "returns": [{"type": "table|nil", "desc": "Données formatées ; nil si la mission n'existe pas. Contient notamment unlockedStars (formatStars)."}]
+    },
+    "getUnlockedStarCountsForMissionById": {
+      "desc": "Compte les étoiles débloquées : renvoie le nombre d'étoiles par défaut et le nombre d'étoiles bonus débloquées.",
+      "params": {"id": {"type": "string", "desc": "Id de la mission."}},
+      "returns": [
+        {"type": "integer", "desc": "Étoiles par défaut débloquées."},
+        {"type": "integer", "desc": "Étoiles bonus débloquées (0 si pas d'étoiles ; 0, 0, 0 si la mission est introuvable)."}
+      ]
+    },
+    "onExtensionLoaded": {
+      "desc": "Charge tous les types de conditions de gameplay/missions/progress/conditions/*.lua dans la table interne conditionTypes.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "generateAttempt": {
+      "desc": "Outil de test : crée une tentative aléatoire (mission:getRandomizedAttempt), y ajoute addAttemptData, l'agrège puis sauvegarde (via career_modules_missionWrapper en carrière, sinon saveMissionSaveData). Fait des dump() dans la console.",
+      "params": {
+        "id": {"type": "string", "desc": "Id de la mission."},
+        "addAttemptData": {"type": "table", "desc": "Champs ajoutés à la tentative (ne doit pas être nil)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Résultat d'aggregateAttempt."}]
+    },
+    "generateAttempts": {
+      "desc": "Outil de test : agrège `amount` tentatives aléatoires pour chaque clé de progression de la mission.",
+      "params": {
+        "id": {"type": "string", "desc": "Id de la mission."},
+        "amount": {"type": "integer", "desc": "Nombre de tentatives par clé."},
+        "dumpChange": {"type": "boolean|nil", "desc": "Afficher le changement agrégé."}
+      },
+      "returns": []
+    },
+    "startBatchMode": {
+      "desc": "Active le mode batch : aggregateAttempt saute les calculs de déblocages et le journal permanent.",
+      "params": {},
+      "returns": []
+    },
+    "endBatchMode": {
+      "desc": "Désactive le mode batch.",
+      "params": {},
+      "returns": []
+    },
+    "getBatchMode": {
+      "desc": "Indique si le mode batch est actif.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si actif."}]
+    },
+    "exportAllProgressToCSV": {
+      "desc": "Fonction vide (non implémentée).",
+      "params": {},
+      "returns": []
+    }
+  }
+}

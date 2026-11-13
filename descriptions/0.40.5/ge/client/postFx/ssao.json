@@ -1,0 +1,48 @@
+{
+  "path": "lua/ge/client/postFx/ssao.lua",
+  "module": "Occlusion ambiante en espace écran (SSAO, avec normales courbées / GTAO). À l'import, crée l'objet « SSAOPostFx » (PostEffectSSAO) s'il manque, puis règle sa propriété bentNormals d'après le réglage PostFXSpecularOcclusionEnabled, et crée « SSAOVizPostFx » pour visualiser #ssaoMask. Le module garde en mémoire le contraste et le rayon courants et les transmet à l'objet.",
+  "usage": "local ssao = require('client/postFx/ssao')\nssao.setRadius(2.0)\nssao.setContrast(1.5)\nprint(ssao.getRadius(), ssao.getContrast())",
+  "notes": [
+    "Valeurs par défaut : contraste 2, rayon 1,5 (variables defaultContrast / defaultRadius).",
+    "setContrast et setRadius appliquent tonumber ; une valeur non numérique est ignorée sans erreur."
+  ],
+  "fields": {},
+  "functions": {
+    "setContrast": {
+      "desc": "Mémorise le contraste du SSAO et l'applique à SSAOPostFx (méthode setContrast de l'objet). Ignoré si la valeur n'est pas convertible en nombre.",
+      "params": {"value": {"type": "number|string", "desc": "Nouveau contraste."}},
+      "returns": [],
+      "internal": false
+    },
+    "setRadius": {
+      "desc": "Mémorise le rayon du SSAO et l'applique à SSAOPostFx. Ignoré si la valeur n'est pas numérique.",
+      "params": {"value": {"type": "number|string", "desc": "Nouveau rayon (unité de la scène, déduit du code)."}},
+      "returns": [],
+      "internal": false
+    },
+    "getContrast": {
+      "desc": "Retourne le contraste mémorisé.",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Contraste courant."}],
+      "internal": false
+    },
+    "getRadius": {
+      "desc": "Retourne le rayon mémorisé.",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Rayon courant."}],
+      "internal": false
+    },
+    "applyDefaults": {
+      "desc": "Fixe $SSAOPostFx::Enable à true et rétablit le contraste (2) et le rayon (1,5) par défaut.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setBentNormalDebugEnabled": {
+      "desc": "Active ou désactive un effet de débogage (GTAOBentNormalsVizPostFx, créé à la demande) qui affiche la carte des normales courbées #gtaoOutput. Sans coût tant qu'il est désactivé.",
+      "params": {"enabled": {"type": "boolean", "desc": "true pour afficher, false pour masquer."}},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

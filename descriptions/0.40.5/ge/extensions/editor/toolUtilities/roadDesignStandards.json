@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/roadDesignStandards.lua",
+  "module": "Normes de conception routière partagées par plusieurs outils de l'éditeur. Définit six préréglages ordonnés, du plus rigoureux au plus rustique, chacun avec quatre contraintes : pente longitudinale maximale (ratio), rayon de courbure minimal (m), dévers maximal (degrés) et gradient de largeur maximal.",
+  "usage": "local rds = extensions.editor_toolUtilities_roadDesignStandards\nfor _, name in ipairs(rds.getPresetStrings()) do\n  local p = rds.getPresetsMap()[name]\n  print(name, p.maxSlope, p.minRadius, p.maxBanking, p.maxWidthGradient)\nend",
+  "notes": [
+    "Préréglages (maxSlope / minRadius / maxBanking / maxWidthGradient) : Freeway / Autobahn 0.04 / 500 / 5 / 0.02 ; Major Rural Road 0.06 / 200 / 7 / 0.03 ; Secondary Road 0.08 / 100 / 9 / 0.05 ; Mountain Pass 0.12 / 40 / 12 / 0.07 ; Unpaved Trail 0.18 / 20 / 14 / 0.10 ; Off-Road / F-Road 0.24 / 12 / 18 / 0.12.",
+    "Unités : maxSlope en ratio montée/distance, minRadius en mètres, maxBanking en degrés.",
+    "Les fonctions renvoient les tables internes (pas des copies) : ne pas les modifier."
+  ],
+  "functions": {
+    "getPresetStrings": {
+      "desc": "Renvoie le tableau ordonné des noms de préréglages.",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Noms des six préréglages."}],
+      "internal": false
+    },
+    "getPresetsMap": {
+      "desc": "Renvoie la table nom de préréglage -> paramètres {maxSlope, minRadius, maxBanking, maxWidthGradient}.",
+      "params": {},
+      "returns": [{"type": "table<string, table>", "desc": "Paramètres de chaque préréglage."}],
+      "internal": false
+    }
+  }
+}

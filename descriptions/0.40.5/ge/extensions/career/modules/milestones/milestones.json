@@ -1,0 +1,114 @@
+{
+  "path": "lua/ge/extensions/career/modules/milestones/milestones.lua",
+  "module": "Module central des jalons (milestones) de la carrière : sauvegarde (milestones.json), liste agrégée pour l'UI via le hook onGetMilestones, réclamation de récompenses (une par une ou toutes), compteur de jalons non réclamés et notifications. Fournit aussi des fonctions de récompense et des couleurs communes aux sous-systèmes (generalMilestones/*).",
+  "usage": "local data = career_modules_milestones_milestones.getMilestones({\"money\"})\nfor _, m in ipairs(data.list) do print(m.label, m.claimable) end",
+  "notes": [
+    "saveData est chargé depuis <save>/career/milestones.json ; saveData.unclaimedMilestonesCount vaut 0 par défaut et saveData.general est rempli par milestones/general.lua.",
+    "Chaque appel à getMilestones recalcule la liste, réattribue des claimId (index de la liste) et recompte unclaimedMilestonesCount ; les claimId ne sont valides que pour la dernière liste générée.",
+    "claim(id) appelle claimFunction puis claimRefreshFunction, et envoie guihooks milestoneClaimed (sauf noGuiEvent).",
+    "onGetMilestones de ce fichier est vide (stub) ; le travail est fait par milestones/general.lua.",
+    "sortByTimeAndId est défini mais jamais utilisé."
+  ],
+  "fields": {
+    "saveData": {"type": "table", "desc": "Données sauvegardées : general (par id : claimedStep, notificationStep) et unclaimedMilestonesCount."},
+    "colorGeneralGray": {"type": "string", "desc": "Couleur CSS var(--bng-cool-gray-700-rgb)."},
+    "colorMissionBlue": {"type": "string", "desc": "Couleur CSS var(--bng-add-blue-500-rgb)."},
+    "colorOrange": {"type": "string", "desc": "Couleur CSS var(--bng-orange-500-rgb)."}
+  },
+  "functions": {
+    "claim": {
+      "desc": "Réclame le jalon repéré par son claimId (index dans la dernière liste). Exécute sa claimFunction, met à jour les fonctions de refresh et notifie l'UI (milestoneClaimed avec replacementEntry).",
+      "params": {
+        "id": {"type": "integer", "desc": "claimId de la liste courante."},
+        "noGuiEvent": {"type": "boolean|nil", "desc": "Si vrai, n'envoie pas l'événement UI."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Nouvelle fiche du jalon (palier suivant) ou nil."}],
+      "internal": false
+    },
+    "claimAllUnclaimed": {
+      "desc": "Réclame tous les jalons claimable de la liste complète, relance getMilestones et envoie guihooks allMilestonesClaimed.",
+      "params": {},
+      "returns": [{"type": "{claimed: integer, unclaimedMilestonesCount: integer}", "desc": "Nombre réclamé et compteur restant."}],
+      "internal": false
+    },
+    "getMilestones": {
+      "desc": "Collecte les jalons via le hook onGetMilestones(list, filter), attribue les claimId, compte les jalons réclamables et renvoie la liste avec les filtres disponibles.",
+      "params": {"filter": {"type": "string[]|nil", "desc": "Filtres (general, mission, branch, delivery, money, speedTrap, insurance, all…)."}},
+      "returns": [{"type": "{list: table[], filters: string[]}", "desc": "Fiches et clés de filtres triées."}],
+      "internal": false
+    },
+    "requestMilestones": {
+      "desc": "Envoie getMilestones(filter) à l'UI via guihooks milestonesData.",
+      "params": {"filter": {"type": "string[]|nil", "desc": "Filtres."}},
+      "internal": false
+    },
+    "milestoneReached": {
+      "desc": "Affiche un toast « jalon atteint » (label chaîne ou {txt, context}) et incrémente unclaimedMilestonesCount. Prévu pour être éventuellement différé pendant une mission.",
+      "params": {"label": {"type": "string|table", "desc": "Texte ou table de traduction {txt, context}."}},
+      "internal": false
+    },
+    "unclaimedMilestonesCount": {
+      "desc": "Nombre de jalons atteints et non réclamés.",
+      "params": {},
+      "returns": [{"type": "integer", "desc": "Compteur sauvegardé."}],
+      "internal": false
+    },
+    "loadSaveData": {
+      "desc": "Charge saveData depuis career/milestones.json du profil courant.",
+      "params": {},
+      "internal": true
+    },
+    "minorLinear": {
+      "desc": "Fonction de récompense : 100 * (step + 1) en argent.",
+      "params": {"step": {"type": "integer", "desc": "Indice de palier (à partir de 0)."}},
+      "returns": [{"type": "{attributeKey: string, rewardAmount: number}[]", "desc": "Une récompense money."}],
+      "internal": false
+    },
+    "majorLinear": {
+      "desc": "Fonction de récompense : 250 * (step + 1) en argent.",
+      "params": {"step": {"type": "integer", "desc": "Indice de palier (à partir de 0)."}},
+      "returns": [{"type": "{attributeKey: string, rewardAmount: number}[]", "desc": "Une récompense money."}],
+      "internal": false
+    },
+    "onGetMilestones": {
+      "desc": "Hook vide (stub) ; l'ajout des fiches est fait par milestones/general.lua.",
+      "params": {"list": {"type": "table[]", "desc": "Liste à compléter."}},
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook : charge saveData si la carrière est déjà active (renvoie false sinon).",
+      "params": {},
+      "internal": true
+    },
+    "onCareerActive": {
+      "desc": "Hook : affiche un toast si des jalons sont non réclamés.",
+      "params": {"active": {"type": "boolean", "desc": "Rien si false."}},
+      "internal": true
+    },
+    "onSaveCurrentProfile": {
+      "desc": "Hook de sauvegarde : écrit saveData dans <save>/career/milestones.json.",
+      "params": {"currentSavePath": {"type": "string", "desc": "Dossier de sauvegarde."}},
+      "internal": true
+    },
+    "onMilestonesRouteEnter": {
+      "desc": "Cycle de vie du routeur UI : appelle onPauseEnter de ui_pause_routeLifecycleCallbacks s'il existe et ajoute data.milestones.filterOptions.",
+      "params": {
+        "context": {"type": "any", "desc": "Contexte du routeur."},
+        "toRoute": {"type": "any", "desc": "Route cible."},
+        "fromRoute": {"type": "any", "desc": "Route précédente."},
+        "data": {"type": "table", "desc": "routeData."}
+      },
+      "internal": true
+    },
+    "onMilestonesRouteMount": {
+      "desc": "Cycle de vie du routeur UI : appelle onPauseMount puis ajoute data.milestones.filterOptions (options de filtre traduites).",
+      "params": {
+        "context": {"type": "any", "desc": "Contexte du routeur."},
+        "toRoute": {"type": "any", "desc": "Route cible."},
+        "fromRoute": {"type": "any", "desc": "Route précédente."},
+        "data": {"type": "table", "desc": "routeData."}
+      },
+      "internal": true
+    }
+  }
+}

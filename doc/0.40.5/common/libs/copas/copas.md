@@ -4,95 +4,238 @@
 
 **Accès :** `require("libs/copas/copas")`
 
-Copas is free software: it can be used for both academic and commercial purposes at absolutely no
-cost. There are no royalties or GNU-like "copyleft" restrictions. Copas qualifies as Open Source
-software. Its licenses are compatible with GPL. Copas is not in the public domain and the Kepler
-Project keep its copyright. The legal details are below.
+Copas 2.0.2 : bibliothèque tierce (Kepler Project) — « Coroutine Oriented Portable Asynchronous Services », un répartiteur à base de coroutines pour serveurs et clients TCP/UDP, qui s'appuie sur LuaSocket. Les sockets sont enveloppés (copas.wrap) pour que send/receive/connect cèdent la main au lieu de bloquer ; copas.loop ou copas.step font tourner le tout. Copas sert de base aux sous-modules copas.http, copas.ftp, copas.smtp, copas.timer, copas.lock, copas.semaphore et copas.limit.
 
-The spirit of the license is that you are free to use Copas for any purpose at no cost without having
-to ask us. The only requirement is that if you do use Copas, then you should give us credit by
-including the appropriate copyright notice somewhere in your product or its documentation.
+## Exemple
 
-Copas was designed and implemented by Andr� Carregal and Javier Guerra. The implementation is not
-derived from licensed software.
+```lua
+local copas = require("libs/copas/copas")
+copas.addthread(function()
+  copas.sleep(1)
+  print("1 s plus tard")
+end)
+copas.loop() -- ou copas.step(0) à chaque frame
+```
 
-Copyright � 2005-2010 Kepler Project.
+## Remarques
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-associated documentation files (the "Software"), to deal in the Software without restriction,
-including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial
-portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
---
- Copas - Coroutine Oriented Portable Asynchronous Services
- A dispatcher based on coroutines that can be used by TCP/IP servers.
- Uses LuaSocket as the interface with the TCP/IP stack.
- Authors: Andre Carregal, Javier Guerra, and Fabio Mascarenhas
- Contributors: Diego Nehab, Mike Pall, David Burgess, Leonardo Godinho,
-               Thomas Harning Jr., and Gary NG
- Copyright 2005-2016 - Kepler Project (www.keplerproject.org)
- $Id: copas.lua,v 1.37 2009/04/07 22:09:52 carregal Exp $
+- Dans BeamNG, préférer copas.step(timeout) appelé périodiquement plutôt que copas.loop (boucle sans fin qui bloquerait le jeu) (déduit de la nature des fonctions).
+- copas.sleep(sleeptime) avec une valeur négative endort la coroutine jusqu'à copas.wakeup(co).
+- dohandshake lève une erreur (au lieu de renvoyer nil+erreur) pour éviter de continuer en clair par mégarde ; il faut remplacer toutes les références à l'ancien socket par le socket SSL renvoyé.
+- useSocketTimeoutErrors(true) renvoie les erreurs d'origine de LuaSocket (timeout, wantread, wantwrite, Operation already in progress) ; sinon toujours « timeout ».
 
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `libs_copas_copas.addthread(handler, ...)` | Adds an new coroutine thread to Copas dispatcher | 903 |
-| `libs_copas_copas.connect(skt, host, port)` | waits until connection is completed | 565 |
-| `libs_copas_copas.dohandshake(skt, sslt)` | Peforms an (async) ssl handshake on a connected TCP client socket.<br> NOTE: replace all previous socket references, with the returned new ssl wrapped socket<br> Throws error and does not return nil+error, as that might silently fail<br> in code like this;<br>   copas.addserver(s1, function(skt)<br>       skt = copas.wrap(skt, sparams)<br>       skt:dohandshake()   --> without explicit error checking, this fails silently and<br>       skt:send(body)      --> continues unencrypted<br> @param skt Regular LuaSocket CLIENT socket object<br> @param sslt Table with ssl parameters<br> @return wrapped ssl socket, or throws an error | 611 |
-| `libs_copas_copas.finished()` | Check whether there is something to do.<br> returns false if there are no sockets for read/write nor tasks scheduled<br> (which means Copas is in an empty spin) | 1166 |
-| `libs_copas_copas.flush()` | flushes a client write buffer (deprecated) | 651 |
-| `libs_copas_copas.handler(handler, sslparams)` | Wraps a handler in a function that deals with wrapping the socket and doing the<br> optional ssl handshake. | 769 |
-| `libs_copas_copas.loop(initializer, timeout)` | Dispatcher endless loop.<br> Listen to client requests and handles them forever | 1175 |
-| `libs_copas_copas.receive(client, pattern, part)` | reads a pattern from a client and yields to the reading set on timeouts<br> UDP: a UDP socket expects a second argument to be a number, so it MUST<br> be provided as the 'pattern' below defaults to a string. Will throw a<br> 'bad argument' error if omitted. | 398 |
-| `libs_copas_copas.receivePartial(client, pattern, part)` | same as above but with special treatment when reading chunks,<br> unblocks on any data received. | 468 |
-| `libs_copas_copas.receivefrom(client, size)` | receives data from a client over UDP. Not available for TCP.<br> (this is a copy of receive() method, adapted for receivefrom() use) | 438 |
-| `libs_copas_copas.removeserver(server, keep_open)` |  | 882 |
-| `libs_copas_copas.removethread(thread)` |  | 912 |
-| `libs_copas_copas.send(client, data, from, to)` | sends data to a client. The operation is buffered and<br> yields to the writing set on timeouts<br> Note: from and to parameters will be ignored by/for UDP sockets | 509 |
-| `libs_copas_copas.sendto(client, data, ip, port)` |  | 559 |
-| `libs_copas_copas.setErrorHandler(err, default)` |  | 798 |
-| `libs_copas_copas.settimeout(skt, timeout)` |  | 380 |
-| `libs_copas_copas.sleep(sleeptime)` | yields the current coroutine and wakes it after 'sleeptime' seconds.<br> If sleeptime < 0 then it sleeps until explicitly woken up using 'wakeup' | 926 |
-| `libs_copas_copas.step(timeout)` | Dispatcher loop step.<br> Listen to client requests and handles them<br> Returns false if no socket-data was handled, or true if there was data<br> handled (or nil + error message) | 1136 |
-| `libs_copas_copas.useSocketTimeoutErrors(bool)` | if `bool` is truthy, then the original socket errors will be returned in case of timeouts;<br> `timeout, wantread, wantwrite, Operation already in progress`. If falsy, it will always<br> return `timeout`. | 809 |
-| `libs_copas_copas.wakeup(co)` | Wakes up a sleeping coroutine 'co'. | 931 |
-| `libs_copas_copas.wrap(skt, sslt)` | Wraps a LuaSocket socket object in an async Copas based socket object.<br> @param skt The socket to wrap<br> @sslt (optional) Table with ssl parameters, use an empty table to use ssl with defaults<br> @return wrapped socket object | 755 |
+| `libs_copas_copas.addserver(server, handler, timeout)` | Enregistre un socket serveur TCP et un handler appelé dans une nouvelle coroutine pour chaque connexion acceptée (fonction définie dans le code, non listée par l'extracteur automatique). (assignée dynamiquement) | dyn |
+| `libs_copas_copas.addthread(handler, ...)` | Ajoute une nouvelle coroutine au répartiteur ; elle démarre au prochain pas de boucle. | 903 |
+| `libs_copas_copas.connect(skt, host, port)` | Connecte le socket et attend (en cédant la main) la fin de la connexion. | 565 |
+| `libs_copas_copas.dohandshake(skt, sslt)` | Poignée de main SSL asynchrone sur un socket client connecté. Renvoie un nouveau socket SSL qui remplace l'ancien ; lève une erreur en cas d'échec. | 611 |
+| `libs_copas_copas.finished()` | Indique s'il n'y a plus rien à faire (aucun socket en lecture/écriture ni tâche planifiée). | 1166 |
+| `libs_copas_copas.flush()` | Vide le tampon d'écriture d'un client (obsolète). | 651 |
+| `libs_copas_copas.handler(handler, sslparams)` | Enveloppe un handler de façon à envelopper le socket et faire la poignée de main SSL facultative. | 769 |
+| `libs_copas_copas.loop(initializer, timeout)` | Boucle sans fin du répartiteur : écoute et traite les requêtes jusqu'à l'arrêt. Met copas.running à true. | 1175 |
+| `libs_copas_copas.receive(client, pattern, part)` | Lit selon un motif sur un client et cède la main aux timeouts. Pour UDP, le motif est obligatoire et doit être un nombre. | 398 |
+| `libs_copas_copas.receivePartial(client, pattern, part)` | Comme receive, mais se débloque dès que des données arrivent (lecture par morceaux). | 468 |
+| `libs_copas_copas.receivefrom(client, size)` | Reçoit des données d'un client UDP (non disponible pour TCP). | 438 |
+| `libs_copas_copas.removeserver(server, keep_open)` | Retire un serveur du répartiteur ; le ferme sauf si keep_open est vrai. | 882 |
+| `libs_copas_copas.removethread(thread)` | Retire une coroutine du répartiteur (elle est supprimée à sa prochaine reprise). | 912 |
+| `libs_copas_copas.send(client, data, from, to)` | Envoie des données à un client, avec tampon, en cédant la main sur timeout. from et to sont ignorés pour UDP. | 509 |
+| `libs_copas_copas.sendto(client, data, ip, port)` | Envoie un datagramme UDP. | 559 |
+| `libs_copas_copas.setErrorHandler(err, default)` | Définit la fonction appelée quand un handler lève une erreur ; avec default vrai, remplace aussi le gestionnaire par défaut (déduit du code). | 798 |
+| `libs_copas_copas.settimeout(skt, timeout)` | Définit le timeout d'un socket Copas. | 380 |
+| `libs_copas_copas.sleep(sleeptime)` | Suspend la coroutine courante et la réveille après sleeptime secondes. Une valeur négative la suspend jusqu'à un appel explicite à wakeup. | 926 |
+| `libs_copas_copas.step(timeout)` | Un pas de la boucle du répartiteur : traite les sockets prêts et les tâches planifiées. | 1136 |
+| `libs_copas_copas.useSocketTimeoutErrors(bool)` | Choisit de renvoyer les erreurs de timeout d'origine de LuaSocket (vrai) ou toujours « timeout » (faux). | 809 |
+| `libs_copas_copas.wakeup(co)` | Réveille une coroutine endormie par sleep. | 931 |
+| `libs_copas_copas.wrap(skt, sslt)` | Enveloppe un socket LuaSocket en socket asynchrone Copas ; avec sslt, active SSL. | 755 |
+
+### Détail des paramètres
+
+#### `libs_copas_copas.addserver(server, handler, timeout)`
+
+Enregistre un socket serveur TCP et un handler appelé dans une nouvelle coroutine pour chaque connexion acceptée (fonction définie dans le code, non listée par l'extracteur automatique). (assignée dynamiquement)
+
+- `server` (*table*) : Socket serveur LuaSocket
+- `handler` (*function*) : Fonction handler(skt) (voir copas.handler)
+- `timeout` (*number|nil*) : Timeout des opérations (déduit du code)
+
+#### `libs_copas_copas.addthread(handler, ...)`
+
+Ajoute une nouvelle coroutine au répartiteur ; elle démarre au prochain pas de boucle.
+
+- `handler` (*function*) : Fonction exécutée dans la coroutine
+- `...` (*any*) : Arguments passés au handler
+- **renvoie** : thread La coroutine créée
+
+#### `libs_copas_copas.connect(skt, host, port)`
+
+Connecte le socket et attend (en cédant la main) la fin de la connexion.
+
+- `skt` (*table*) : Socket
+- `host` (*string*) : Hôte
+- `port` (*integer*) : Port
+
+#### `libs_copas_copas.dohandshake(skt, sslt)`
+
+Poignée de main SSL asynchrone sur un socket client connecté. Renvoie un nouveau socket SSL qui remplace l'ancien ; lève une erreur en cas d'échec.
+
+- `skt` (*table*) : Socket client LuaSocket
+- `sslt` (*table*) : Paramètres SSL
+- **renvoie** : table Socket SSL
+
+#### `libs_copas_copas.finished()`
+
+Indique s'il n'y a plus rien à faire (aucun socket en lecture/écriture ni tâche planifiée).
+
+- **renvoie** : boolean true s'il n'y a plus rien à traiter
+
+#### `libs_copas_copas.handler(handler, sslparams)`
+
+Enveloppe un handler de façon à envelopper le socket et faire la poignée de main SSL facultative.
+
+- `handler` (*function*) : Handler(skt)
+- `sslparams` (*table|nil*) : Paramètres SSL
+- **renvoie** : function Handler enveloppé
+
+#### `libs_copas_copas.loop(initializer, timeout)`
+
+Boucle sans fin du répartiteur : écoute et traite les requêtes jusqu'à l'arrêt. Met copas.running à true.
+
+- `initializer` (*function|nil*) : Fonction exécutée dans une coroutine au démarrage
+- `timeout` (*number|nil*) : Timeout de chaque pas
+
+#### `libs_copas_copas.receive(client, pattern, part)`
+
+Lit selon un motif sur un client et cède la main aux timeouts. Pour UDP, le motif est obligatoire et doit être un nombre.
+
+- `client` (*table*) : Socket
+- `pattern` (*string|integer|nil*) : Motif de lecture LuaSocket ("*l", "*a", nombre d'octets)
+- `part` (*string|nil*) : Données déjà reçues (reprise)
+
+#### `libs_copas_copas.receivePartial(client, pattern, part)`
+
+Comme receive, mais se débloque dès que des données arrivent (lecture par morceaux).
+
+- `client` (*table*) : Socket
+- `pattern` (*string|integer|nil*) : Motif de lecture
+- `part` (*string|nil*) : Données déjà reçues
+
+#### `libs_copas_copas.receivefrom(client, size)`
+
+Reçoit des données d'un client UDP (non disponible pour TCP).
+
+- `client` (*table*) : Socket UDP
+- `size` (*integer*) : Taille maximale
+
+#### `libs_copas_copas.removeserver(server, keep_open)`
+
+Retire un serveur du répartiteur ; le ferme sauf si keep_open est vrai.
+
+- `server` (*table*) : Socket serveur
+- `keep_open` (*boolean|nil*) : Ne pas fermer le socket
+
+#### `libs_copas_copas.removethread(thread)`
+
+Retire une coroutine du répartiteur (elle est supprimée à sa prochaine reprise).
+
+- `thread` (*thread*) : Coroutine à retirer
+
+#### `libs_copas_copas.send(client, data, from, to)`
+
+Envoie des données à un client, avec tampon, en cédant la main sur timeout. from et to sont ignorés pour UDP.
+
+- `client` (*table*) : Socket
+- `data` (*string*) : Données
+- `from` (*integer|nil*) : Premier octet à envoyer
+- `to` (*integer|nil*) : Dernier octet à envoyer
+
+#### `libs_copas_copas.sendto(client, data, ip, port)`
+
+Envoie un datagramme UDP.
+
+- `client` (*table*) : Socket UDP
+- `data` (*string*) : Données
+- `ip` (*string*) : Adresse
+- `port` (*integer*) : Port
+
+#### `libs_copas_copas.setErrorHandler(err, default)`
+
+Définit la fonction appelée quand un handler lève une erreur ; avec default vrai, remplace aussi le gestionnaire par défaut (déduit du code).
+
+- `err` (*function*) : Gestionnaire d'erreurs
+- `default` (*boolean|nil*) : Changer le gestionnaire par défaut
+
+#### `libs_copas_copas.settimeout(skt, timeout)`
+
+Définit le timeout d'un socket Copas.
+
+- `skt` (*table*) : Socket
+- `timeout` (*number*) : Timeout en secondes
+
+#### `libs_copas_copas.sleep(sleeptime)`
+
+Suspend la coroutine courante et la réveille après sleeptime secondes. Une valeur négative la suspend jusqu'à un appel explicite à wakeup.
+
+- `sleeptime` (*number*) : Durée en secondes (négative : jusqu'à wakeup)
+
+#### `libs_copas_copas.step(timeout)`
+
+Un pas de la boucle du répartiteur : traite les sockets prêts et les tâches planifiées.
+
+- `timeout` (*number|nil*) : Durée max d'attente des sockets, en secondes
+- **renvoie** : boolean|nil false si aucune donnée traitée, true sinon (ou nil + message d'erreur)
+
+#### `libs_copas_copas.useSocketTimeoutErrors(bool)`
+
+Choisit de renvoyer les erreurs de timeout d'origine de LuaSocket (vrai) ou toujours « timeout » (faux).
+
+- `bool` (*boolean*) : Activer les erreurs d'origine
+
+#### `libs_copas_copas.wakeup(co)`
+
+Réveille une coroutine endormie par sleep.
+
+- `co` (*thread*) : Coroutine à réveiller
+
+#### `libs_copas_copas.wrap(skt, sslt)`
+
+Enveloppe un socket LuaSocket en socket asynchrone Copas ; avec sslt, active SSL.
+
+- `skt` (*table*) : Socket LuaSocket
+- `sslt` (*table|nil*) : Paramètres SSL (table vide pour les valeurs par défaut)
+- **renvoie** : table Socket enveloppé
 
 ## Champs
 
 | Champ | Type | Description |
 |---|---|---|
-| `_COPYRIGHT` | string | Meta information is public even if beginning with an "_" |
-| `_DESCRIPTION` | string |  |
-| `_VERSION` | string |  |
-| `autoclose` | boolean | Close the socket associated with the current connection after the handler finishes |
-| `running` | boolean | indicator for the loop running |
+| `_COPYRIGHT` | string | Copyright Kepler Project 2005-2017. |
+| `_DESCRIPTION` | string | Coroutine Oriented Portable Asynchronous Services. |
+| `_VERSION` | string | "Copas 2.0.2". |
+| `autoclose` | boolean | Si vrai (défaut), ferme le socket de la connexion une fois le handler terminé. |
+| `running` | boolean | Indique que la boucle copas.loop tourne (faux au départ). |
 
 ## Classe `_sleeping`
+
+File interne des coroutines endormies (objet interne).
 
 Objet `_sleeping` construit dans le module (par ex. par `new`), avec ces méthodes :
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `_sleeping.insert()` | 100ms | 58 |
-| `_sleeping.remove()` | 100ms | 58 |
+| `_sleeping.insert()` | Insère une coroutine endormie (interne au répartiteur). | 58 |
+| `_sleeping.remove()` | Retire une coroutine endormie (interne au répartiteur). | 58 |
 
 ## Classe `socket`
 
+Fonctions LuaSocket redéfinies par Copas en versions sûres vis-à-vis des coroutines (permet d'utiliser socket.http dans Copas).
+
 | Méthode | Description | Ligne |
 |---|---|---|
-| `socket.newtry(finalizer)` |  | 83 |
-| `socket.protect(func)` |  | 77 |
+| `socket.newtry(finalizer)` | Version de socket.newtry compatible coroutines. | 83 |
+| `socket.protect(func)` | Version de socket.protect compatible coroutines. | 77 |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/copas/copas.lua`.*

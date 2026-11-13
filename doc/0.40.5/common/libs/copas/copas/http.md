@@ -4,32 +4,58 @@
 
 **Accès :** `require("libs/copas/copas/http")`
 
-Full copy of the LuaSocket code, modified to include
- https and http/https redirects, and Copas async enabled.
- HTTP/1.1 client support for the Lua language.
- LuaSocket toolkit.
- Author: Diego Nehab
- Declare module and import dependencies
+Sous-module HTTP de la bibliothèque tierce Copas : copie complète du client HTTP/1.1 de LuaSocket (Diego Nehab) modifiée pour gérer https, les redirections http/https et les sockets Copas asynchrones. Définit copas.http ; copas.http.request(url[, body]) renvoie corps, code, en-têtes, statut. À appeler depuis une coroutine Copas.
+
+## Exemple
+
+```lua
+copas.addthread(function()
+  local body, code = copas.http.request("http://example.org/")
+end)
+```
+
+## Remarques
+
+- Avec une URL en chaîne : GET (ou POST si body est donné, content-type application/x-www-form-urlencoded) ; renvoie body, code, headers, status, ou nil + erreur.
+- Avec une table, la requête avancée accepte url, method, headers, source, sink, create, etc. (comme LuaSocket).
+- Le premier parseRequest définit target (table recevant les morceaux du corps) et sink.
 
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `libs_copas_copas_http.open(reqt)` |  | 121 |
-| `libs_copas_copas_http.parseRequest(u, b)` | parses a shorthand form into the advanced table form.<br> adds field `target` to the table. This will hold the return values. | 380 |
+| `libs_copas_copas_http.open(reqt)` | API bas niveau : crée le socket (reqt:create()), fixe le timeout, se connecte à reqt.host:reqt.port et renvoie un objet de connexion HTTP. | 121 |
+| `libs_copas_copas_http.parseRequest(u, b)` | Convertit la forme abrégée en table de requête avancée avec champ target (résultats) ; si un corps est donné : méthode POST, en-têtes content-length et content-type. | 380 |
+
+### Détail des paramètres
+
+#### `libs_copas_copas_http.open(reqt)`
+
+API bas niveau : crée le socket (reqt:create()), fixe le timeout, se connecte à reqt.host:reqt.port et renvoie un objet de connexion HTTP.
+
+- `reqt` (*table*) : Requête avec host, port, create
+- **renvoie** : table Objet de connexion
+
+#### `libs_copas_copas_http.parseRequest(u, b)`
+
+Convertit la forme abrégée en table de requête avancée avec champ target (résultats) ; si un corps est donné : méthode POST, en-têtes content-length et content-type.
+
+- `u` (*string*) : URL
+- `b` (*string|nil*) : Corps POST
+- **renvoie** : table Table de requête
 
 ## Champs
 
 | Champ | Type | Description |
 |---|---|---|
-| `PORT` | number | default port for document retrieval |
-| `SSLOPTIONS` | string |  |
-| `SSLPORT` | number | Default settings for SSL |
-| `SSLPROTOCOL` | string |  |
-| `SSLVERIFY` | string |  |
-| `TIMEOUT` | number | Program constants<br> connection timeout in seconds |
-| `USERAGENT` | any | user agent field sent in request |
-| `request` | any |  |
+| `PORT` | integer | Port par défaut HTTP, 80. |
+| `SSLOPTIONS` | string | Options SSL par défaut, "all". |
+| `SSLPORT` | integer | Port par défaut HTTPS, 443. |
+| `SSLPROTOCOL` | string | Protocole SSL par défaut, "tlsv1_2". |
+| `SSLVERIFY` | string | Vérification des certificats, "none" par défaut (non vérifiés). |
+| `TIMEOUT` | number | Timeout de connexion, 60 s. |
+| `USERAGENT` | string | Champ User-Agent envoyé, valeur de socket._VERSION. |
+| `request` | function | request(url_ou_table, body) : envoie une requête HTTP/HTTPS (protégée par socket.protect). |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/copas/copas/http.lua`.*

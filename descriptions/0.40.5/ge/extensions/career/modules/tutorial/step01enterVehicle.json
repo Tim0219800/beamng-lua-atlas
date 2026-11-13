@@ -1,0 +1,43 @@
+{
+  "path": "lua/ge/extensions/career/modules/tutorial/step01enterVehicle.lua",
+  "module": "Étape 1 du tutoriel de carrière (« enterVehicle ») : le joueur monte dans le véhicule du tutoriel, apprend les commandes de base (accélérer, freiner, tourner, objectifs validés à 0,75 / 0,75 / 0,5 de la valeur d'entrée), choisit son mode de boîte via une popup d'aides à la conduite, puis l'étape 02moveOff est activée. Fonctionne par phases : waitVehicleSetup, getInCar, waitBasicControlsPopup, controls, shiftMode, waitBeginFirstChallenge. Extension chargée par gameplay_tutorial_runtime (préfixe career_modules_tutorial_step).",
+  "notes": [
+    "Les hooks setup, cleanup, onUpdate, onCareerTutorialLeftBounds et onDebugMenu sont appelés par le runtime du tutoriel ; onIntroPopupCareerClosed et onShiftModeSelectedViaPopup sont émis par les popups / l'UI (GearboxSelect.vue).",
+    "Sorties de zone : la première utilise un reset instantané au départ, les suivantes un reset avec fondu."
+  ],
+  "functions": {
+    "setup": {
+      "desc": "Appelé à l'activation de l'étape : remet les objectifs à zéro, passe en phase waitVehicleSetup, installe le gestionnaire de sortie de zone (retour au départ du parking), active la zone evalZone, le suivi de dégâts, les réglages de récupération du tutoriel et affiche l'app de tâches.",
+      "params": {"stepData": {"type": "any", "desc": "Données de l'étape fournies par le runtime (non utilisées)."}},
+      "internal": true
+    },
+    "onCareerTutorialLeftBounds": {
+      "desc": "Hook émis quand le joueur quitte la zone autorisée : reset de position immédiat une seule fois au démarrage, puis reset standard de l'étape.",
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Appelé chaque frame pendant l'étape. Gère les phases : lance les popups d'introduction, détecte que le joueur est monté (gameplay_walk), puis valide les objectifs throttle/brake/steer et ouvre la popup d'aides à la conduite.",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta simulation (s)."}, "dtRaw": {"type": "number", "desc": "Delta brut (s)."}},
+      "internal": true
+    },
+    "cleanup": {
+      "desc": "Appelé à la fin de l'étape ou du tutoriel : retire le gestionnaire de sortie de zone et le marqueur au-dessus du véhicule.",
+      "internal": true
+    },
+    "onIntroPopupCareerClosed": {
+      "desc": "Hook émis à la fermeture d'une popup d'intro. Selon l'id : v2/approachVehicle affiche l'objectif « monter dans la voiture » et un marqueur ; v2/basicControls active le suivi des entrées et allume le moteur ; v2/beginFirstChallenge active l'étape 02moveOff.",
+      "params": {"id": {"type": "string", "desc": "Id de la popup (ex. \"v2/basicControls\")."}},
+      "internal": true
+    },
+    "onShiftModeSelectedViaPopup": {
+      "desc": "Appelé depuis GearboxSelect.vue quand le joueur confirme le mode de boîte (phase shiftMode) : applique setGearboxMode sur le véhicule puis affiche la popup beginFirstChallenge.",
+      "params": {"data": {"type": "table", "desc": "Table avec le champ mode (mode de boîte choisi)."}},
+      "internal": true
+    },
+    "onDebugMenu": {
+      "desc": "Ajoute au menu de debug un bouton « Skip Step 1 » (met le joueur au volant, allume le moteur, passe à l'étape suivante).",
+      "params": {"im": {"type": "table", "desc": "Table ui_imgui."}},
+      "internal": true
+    }
+  }
+}

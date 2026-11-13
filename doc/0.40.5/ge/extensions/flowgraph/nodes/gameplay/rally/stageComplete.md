@@ -4,11 +4,15 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/stageComplete")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Rally Mode Stage Complete » (catégorie once_instant, tag rally, sans pin). Signale la fin de la spéciale (véhicule arrêté) en déclenchant extensions.hook('onRallyStageComplete').
+
 ## Classe `C`
+
+Classe du nœud.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:workOnce()` |  | 19 |
+| `C:workOnce()` | Émet le hook onRallyStageComplete. | 19 |
 
 ## Hooks émis
 

@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/trackStageTime.lua",
+  "module": "Nœud flowgraph « Rally Track Stage Time » (catégorie repeat, icône timer, tag rally). À chaque frame, émet le hook onRallyDataUpdated avec {activeState = stageActive} pour signaler au système rally que la spéciale est active. Recopie flow en sortie.",
+  "notes": ["Malgré son nom, le nœud ne mesure aucun temps : stageTime = os.clockhp() est calculé mais jamais utilisé."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Vide.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
+        "work": {"desc": "Émet onRallyDataUpdated (stageActive) et recopie le flux.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+      }
+    }
+  }
+}

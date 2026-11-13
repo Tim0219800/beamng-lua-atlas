@@ -1,0 +1,19 @@
+{
+  "path": "lua/common/libs/LuaJIT/zone.lua",
+  "module": "Module jit.zone de LuaJIT (Mike Pall, licence MIT) : pile hiérarchique de « zones » nommées, utilisée par le profileur LuaJIT pour étiqueter les portions de code. Le module renvoie une table appelable : zone(\"nom\") empile une zone, zone() en dépile une et la renvoie. Un moddeur n'en a normalement pas besoin.",
+  "usage": "local zone = require(\"jit.zone\")\nzone(\"AI\")\n  print(zone:get()) --> \"AI\"\nzone()",
+  "notes": [
+    "zone() sans argument dépile ; sur une pile vide, assert échoue avec \"empty zone stack\"."
+  ],
+  "functions": {
+    "flush": {
+      "desc": "Vide la pile de zones (méthode : zone:flush()).",
+      "params": {"t": {"type": "table", "desc": "La table zone (self)"}}
+    },
+    "get": {
+      "desc": "Renvoie la zone courante, c'est-à-dire le sommet de la pile (zone:get()), ou nil si vide.",
+      "params": {"t": {"type": "table", "desc": "La table zone (self)"}},
+      "returns": [{"type": "string|nil", "desc": "Nom de la zone courante"}]
+    }
+  }
+}

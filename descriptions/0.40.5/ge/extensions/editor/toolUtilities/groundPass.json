@@ -1,0 +1,106 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/groundPass.lua",
+  "module": "Le terraformage unique du terrain sur lequel les outils de l'éditeur posent leurs objets. Les réseaux routier et ferré sont creusés ensemble en une seule passe, avec un seul fondu (le rail est prioritaire, PRIO.RAIL). La pente de site de City Builder est posée par-dessus comme seconde passe : levée avant la passe réseau et reposée après. Chaque bouton Build appelle run(), chaque Restore appelle restore().",
+  "usage": "local gp = require('editor/toolUtilities/groundPass')\ngp.run({doi = 30})   -- terraformer les réseaux avec un fondu de 30 m\ngp.restore()         -- remettre le terrain d'origine",
+  "notes": [
+    "Un réseau s'enregistre avec register(id, source) ; source.features(out, p) ajoute ses éléments de terraformage. Hooks facultatifs : lift(), finish(), after(), records(), hasCarve().",
+    "L'enregistrement de creusement (owner.terraBaseline) est lié au bloc de terrain et au niveau ; checkOwner l'abandonne si le bloc a changé.",
+    "pass() refuse de travailler (journal W 'held: the road network is still rebuilding') tant que les sites sont occupés ; run() renvoie alors 0.",
+    "Chaque passe est une transaction d'historique ('Build Ground', 'Restore Ground', 'Grade Sites') et appelle be:reloadCollision() si un terrain existe.",
+    "Valeurs par défaut : doi 40 m, margin 10 m, falloff 2, smooth 5, roughness 0, scale 0.5, abutLen et abutShoulder pris dans roadNetwork/bridges (embankLenM, abutShoulderM)."
+  ],
+  "fields": {
+    "params": {"type": "table", "desc": "Réglages courants : on, roads, rail (booléens) et doi, margin, falloff, smooth, roughness, scale, abutLen, abutShoulder."},
+    "defaults": {"type": "table", "desc": "Valeurs par défaut des réglages numériques."}
+  },
+  "functions": {
+    "register": {
+      "desc": "Enregistre (ou remplace, si l'id existe déjà) la source de terraformage d'un réseau.",
+      "params": {
+        "id": {"type": "string", "desc": "Id du réseau, aussi clé de params (par exemple 'roads', 'rail')."},
+        "s": {"type": "table", "desc": "Source avec features(out, p) et éventuellement lift, finish, after, records, hasCarve."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setSites": {
+      "desc": "Branche la pente de site de City Builder (lift, lay, busy, record).",
+      "params": {"s": {"type": "table|nil", "desc": "Objet de sites."}},
+      "returns": [],
+      "internal": false
+    },
+    "features": {
+      "desc": "Ajoute à out les éléments de terraformage de chaque réseau enregistré, selon les réglages p (ceux partagés par défaut). Un réseau décoché (p[id] == false) est ignoré.",
+      "params": {
+        "out": {"type": "table", "desc": "Liste de sortie."},
+        "p": {"type": "table|nil", "desc": "Réglages ; défaut params."}
+      },
+      "returns": [{"type": "table", "desc": "La liste out."}],
+      "internal": false
+    },
+    "run": {
+      "desc": "Terraforme les réseaux (si Terraform est actif) puis repose la pente des sites, en une transaction 'Build Ground'.",
+      "params": {
+        "p": {"type": "table|nil", "desc": "Réglages qui remplacent les réglages partagés pour cette exécution."},
+        "laySites": {"type": "boolean|nil", "desc": "Pente les sites même s'ils ne l'étaient pas."},
+        "holdSites": {"type": "boolean|nil", "desc": "Laisse la pente levée ; il faudra appeler laySites()."}
+      },
+      "returns": [{"type": "integer", "desc": "Nombre d'éléments de terraformage appliqués (0 si bloqué)."}],
+      "internal": false
+    },
+    "laySites": {
+      "desc": "Repose la pente de site gardée levée par les passes holdSites, sur le terrain de la dernière passe, en une transaction 'Grade Sites'. Sans effet (0) si rien n'est en attente.",
+      "params": {},
+      "returns": [{"type": "integer", "desc": "Résultat de sites.lay(), 0 si rien ou si le réseau est encore en reconstruction."}],
+      "internal": false
+    },
+    "restore": {
+      "desc": "Remet le terrain d'origine sous les réseaux et la pente de site par-dessus (transaction 'Restore Ground').",
+      "params": {},
+      "returns": [{"type": "integer", "desc": "Nombre d'éléments (0 en pratique)."}],
+      "internal": false
+    },
+    "hasCarve": {
+      "desc": "Vrai si un creusement est mémorisé (enregistrement partagé ou chose que les sources auraient à remettre).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "Un creusement existe."}],
+      "internal": false
+    },
+    "naturalGround": {
+      "desc": "Renvoie la fonction height(x, y) du terrain avant tous les creusements (terraform.groundBefore). Reconstruite seulement si les enregistrements ont changé ; sans enregistrement elle lit le terrain vivant.",
+      "params": {},
+      "returns": [{"type": "function", "desc": "height(x, y)."}],
+      "internal": false
+    },
+    "getParams": {
+      "desc": "Copie des réglages, à garder dans le fichier de session de chaque outil.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Copie de params."}],
+      "internal": false
+    },
+    "applyParams": {
+      "desc": "Applique des réglages sauvegardés : seules les clés existantes dont le type correspond sont reprises. Ignore un argument non table.",
+      "params": {"t": {"type": "table", "desc": "Réglages sauvegardés."}},
+      "returns": [],
+      "internal": false
+    },
+    "getRecord": {
+      "desc": "Renvoie l'enregistrement de creusement (garde-le entre rechargements Lua et dans les sessions).",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "owner.terraBaseline."}],
+      "internal": false
+    },
+    "setRecord": {
+      "desc": "Restaure un enregistrement de creusement (doit être une table avec gx table et n > 0, sinon il est effacé). L'id du bloc est remis à nil : checkOwner rattache l'enregistrement par le niveau.",
+      "params": {"bl": {"type": "table|nil", "desc": "Enregistrement."}},
+      "returns": [],
+      "internal": false
+    },
+    "reset": {
+      "desc": "Nouveau niveau : oublie l'enregistrement de creusement, puisque le terrain n'est plus celui où il a été fait.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

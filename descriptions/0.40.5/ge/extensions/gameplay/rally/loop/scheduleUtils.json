@@ -1,0 +1,34 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/loop/scheduleUtils.lua",
+  "module": "Petites fonctions utilitaires de calcul d'horaires pour les boucles de rallye : arrondi à la minute supérieure, conversion de créneaux (slots) minutes vers secondes, calcul du prochain créneau, comparaison de temps avec tolérance. Tous les temps sont en secondes.",
+  "functions": {
+    "roundToNextMinute": {
+      "desc": "Arrondit un temps à la minute supérieure : ceil(t / 60) * 60.",
+      "params": {"timeSecs": {"type": "number", "desc": "Temps en secondes."}},
+      "returns": [{"type": "number", "desc": "Temps arrondi, en secondes."}]
+    },
+    "slotMinutesToSeconds": {
+      "desc": "Convertit une taille de créneau de minutes en secondes (1 minute par défaut si nil).",
+      "params": {"slotSizeMinutes": {"type": "number|nil", "desc": "Taille du créneau en minutes."}},
+      "returns": [{"type": "number", "desc": "Secondes."}]
+    },
+    "calculateNextSlotTime": {
+      "desc": "Ajoute la durée du créneau au temps courant puis, par défaut, arrondit à la minute supérieure.",
+      "params": {
+        "currentTime": {"type": "number", "desc": "Temps courant en secondes."},
+        "slotSizeMinutes": {"type": "number|nil", "desc": "Taille du créneau en minutes (défaut 1)."},
+        "roundToMinute": {"type": "boolean|nil", "desc": "true par défaut ; false pour ne pas arrondir."}
+      },
+      "returns": [{"type": "number", "desc": "Prochain créneau en secondes."}]
+    },
+    "isLaterTime": {
+      "desc": "Teste si newTime est strictement supérieur à currentTime + tolérance.",
+      "params": {
+        "newTime": {"type": "number", "desc": "Temps à tester."},
+        "currentTime": {"type": "number", "desc": "Temps de référence."},
+        "tolerance": {"type": "number|nil", "desc": "Tolérance en secondes (défaut 0)."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si newTime > currentTime + tolerance."}]
+    }
+  }
+}

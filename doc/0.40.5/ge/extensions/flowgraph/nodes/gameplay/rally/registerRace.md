@@ -4,11 +4,15 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/registerRace")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Rally Mode Register Race » (catégorie once_instant, tag rally). Transmet les données de course au mode rally en déclenchant extensions.hook('onRallyRegisterRace', raceData). Entrée : raceData (table).
+
 ## Classe `C`
+
+Classe du nœud.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:workOnce()` |  | 20 |
+| `C:workOnce()` | Émet le hook onRallyRegisterRace avec raceData. | 20 |
 
 ## Hooks émis
 

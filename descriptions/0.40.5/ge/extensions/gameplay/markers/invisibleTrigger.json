@@ -1,0 +1,60 @@
+{
+  "path": "lua/ge/extensions/gameplay/markers/invisibleTrigger.lua",
+  "module": "Déclencheur sphérique invisible : à partir d'un POI invisibleTrigger (pos, radius, onEnter, onInside, onExit), appelle les callbacks Lua quand le véhicule d'un joueur entre dans la sphère, y reste, ou en sort. L'état dedans/dehors est suivi par joueur (multiseat) et conservé par id de cluster. Le module renvoie {create, cluster}. Utile pour des déclencheurs de gameplay sans aucun visuel.",
+  "usage": "-- POI fournissant markerInfo.invisibleTrigger\nmarkerInfo = { invisibleTrigger = {\n  pos = vec3(0,0,0), radius = 10,\n  onEnter = function(interactData) log('I','', 'entre') end,\n  onExit  = function(interactData) log('I','', 'sort') end\n}}",
+  "notes": [
+    "Les callbacks reçoivent interactData : vehPos, isWalking, playerIndex (0 si absent), etc.",
+    "Rien n'est déclenché quand le joueur marche (isWalking) ; l'état dedans/dehors n'est alors pas mis à jour.",
+    "L'état insideByCluster est conservé entre recréations du marqueur (régénération des POI) pour ne pas redéclencher onEnter pour un joueur déjà dedans ; hide() efface cet état du cluster.",
+    "Cluster : un par POI, id 'invisibleTrigger#<poi.id>', visibilityRadius = 0, showOnMinimap = false."
+  ],
+  "functions": {
+    "create": {
+      "desc": "Fabrique un marqueur déclencheur invisible (instance de C).",
+      "params": {"...": {"type": "any", "desc": "Arguments transmis à C:init (non utilisés)."}},
+      "returns": [{"type": "table", "desc": "Instance de marqueur."}],
+      "internal": false
+    },
+    "cluster": {
+      "desc": "Transforme chaque POI invisibleTrigger en un cluster distinct (pas de fusion) et l'ajoute à allClusters.",
+      "params": {
+        "pois": {"type": "table[]", "desc": "POI avec markerInfo.invisibleTrigger {pos, radius, onEnter, onInside, onExit}."},
+        "allClusters": {"type": "table[]", "desc": "Liste de clusters complétée en place."}
+      },
+      "internal": true
+    }
+  },
+  "classes": {
+    "C": {
+      "desc": "Déclencheur sphérique sans visuel.",
+      "functions": {
+        "init": {"desc": "Ne fait rien.", "internal": true},
+        "update": {"desc": "Ne fait rien (le dessin de debug est commenté).", "params": {"data": {"type": "table", "desc": "Ignoré."}}, "internal": true},
+        "interactInPlayMode": {
+          "desc": "Ne fait rien.",
+          "params": {
+            "interactData": {"type": "table", "desc": "Ignoré."},
+            "interactableElements": {"type": "table[]", "desc": "Ignoré."}
+          },
+          "internal": false
+        },
+        "interactWhileMoving": {
+          "desc": "Appelée chaque frame : si le véhicule du joueur est dans la sphère, appelle onEnter (à la première frame dedans) puis onInside ; en sortant, appelle onExit.",
+          "params": {"interactData": {"type": "table", "desc": "Données de frame : vehPos, isWalking, playerIndex."}},
+          "internal": false
+        },
+        "setup": {
+          "desc": "Mémorise cluster, pos, radius et les trois callbacks ; relie l'état dedans/dehors par joueur à celui de l'id du cluster.",
+          "params": {"cluster": {"type": "table", "desc": "Cluster issu de cluster()."}},
+          "internal": true
+        },
+        "createObjects": {"desc": "Ne fait rien.", "internal": true},
+        "setHidden": {"desc": "Ne fait rien.", "params": {"value": {"type": "boolean", "desc": "Ignoré."}}, "internal": false},
+        "show": {"desc": "Ne fait rien.", "internal": false},
+        "hide": {"desc": "Efface l'état dedans/dehors de tous les joueurs pour ce cluster.", "internal": false},
+        "clearObjects": {"desc": "Ne fait rien.", "internal": false},
+        "instantFade": {"desc": "Ne fait rien.", "params": {"visible": {"type": "boolean", "desc": "Ignoré."}}, "internal": false}
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/flowgraph/modules/fileModule.lua",
+  "module": "Module flowgraph (moduleOrder 0) qui lit et écrit de petits fichiers de sauvegarde JSON propres aux projets flowgraph. Les fichiers sont stockés sous 'settings/cloud/flowgraphSaveData' + nom + '.save.json' avec la structure {lastModified, data}. Les fichiers sont chargés à la demande, mis en cache, et réécrits sur disque à la fin du tick (afterTrigger) s'ils ont été modifiés.",
+  "notes": [
+    "Le chemin est construit par simple concaténation savePath .. file .. ext : le nom 'file' doit donc commencer par '/' pour obtenir un chemin correct.",
+    "Si le JSON lu n'a pas de champ data, son contenu entier est enveloppé dans {lastModified = 0, data = <contenu>}.",
+    "Le cache est vidé au démarrage et à l'arrêt du projet."
+  ],
+  "functions": {
+    "init": {"desc": "Appelé à la création du module : appelle clear().", "internal": true},
+    "clear": {"desc": "Vide le cache de fichiers et la liste des fichiers modifiés.", "internal": true},
+    "forceReload": {"desc": "Oublie le fichier mis en cache ; il sera relu au prochain accès.", "params": {"file": {"type": "string", "desc": "nom du fichier (sans préfixe de dossier ni extension)"}}},
+    "getFile": {"desc": "Renvoie la table {lastModified, data} du fichier, en le chargeant depuis le disque (ou en créant une table vide) à la première demande.", "params": {"file": {"type": "string", "desc": "nom du fichier"}}, "returns": [{"type": "table", "desc": "{lastModified = number, data = table}"}]},
+    "write": {"desc": "Écrit une valeur dans data[field], met à jour lastModified (os.time()) et marque le fichier à sauvegarder.", "params": {"file": {"type": "string", "desc": "nom du fichier"}, "field": {"type": "string", "desc": "clé"}, "value": {"type": "any", "desc": "valeur sérialisable en JSON"}}},
+    "read": {"desc": "Lit data[field] du fichier.", "params": {"file": {"type": "string", "desc": "nom du fichier"}, "field": {"type": "string", "desc": "clé"}}, "returns": [{"type": "any", "desc": "valeur ou nil"}]},
+    "afterTrigger": {"desc": "Appelé après le tick du graphe : écrit sur disque (jsonWriteFile) chaque fichier modifié et vide la liste des modifications.", "internal": true},
+    "executionStopped": {"desc": "Appelé à l'arrêt du projet : appelle clear().", "internal": true},
+    "executionStarted": {"desc": "Appelé au démarrage du projet : appelle clear().", "internal": true}
+  }
+}

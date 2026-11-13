@@ -1,0 +1,351 @@
+{
+  "path": "lua/ge/extensions/ui/vehicleSelector/general.lua",
+  "module": "Module central du sélecteur de véhicules (backend « vehicleSelector » de ui_gridSelector). Il construit les données UI (modèles, configs, filtres), gère les options d'affichage persistées (/settings/vehicleSelectorData.json), les filtres, la recherche, les favoris et véhicules récents, puis ouvre le sélecteur dans différents contextes (freeroam, garage, défi, configurateur, pause) en changeant les boutons et la racine du fil d'Ariane. Il pilote aussi le cycle de vie des routes pause/garage (liste racine et page détail d'un véhicule) et envoie les instantanés à l'interface. La plupart des fonctions de filtre et de détail délèguent à filterModule, displayDataModule, ui_vehicleSelector_tiles et ui_vehicleSelector_detailsInteraction.",
+  "usage": "-- ouvrir le sélecteur depuis un script et récupérer le choix\nui_vehicleSelector_general.openVehicleSelectorForChallenge(function(model, config, extra)\n  if model then log('I', '', model .. ' / ' .. tostring(config)) end\nend)",
+  "notes": [
+    "Les instances displayData et filtres sont créées à la demande (setupInstances / ensureInstances) ; la version de format des options d'affichage est 11.",
+    "Les données UI (getUiData) sont reconstruites quand vehicleDataChanged vaut true (mod activé ou désactivé, gestionnaire de mods, changement de langue, clearCache).",
+    "Filtres : propriétés autorisées = Drivetrain, Config Type, Body Style, Transmission, Weight, Top Speed, 0-100 km/h, 0-60 mph, Power, Torque, Weight/Power, Years, Value, Brand, Country, Region, Source, Type, Derby Class, Performance Class, Off-Road Score, Propulsion, Fuel Type, Induction Type, Commercial Class. Les filtres de plage sont Value, Weight, Top Speed, 0-100 km/h, 0-60 mph, Power, Torque, Weight/Power, Off-Road Score, Years ; Region est un filtre de type dictionnaire.",
+    "Les configs 'Powerglow' sont exclues sauf en mode de restriction 'lightRunner' (seulement Powerglow, Car ou Truck). Le mode 'busRoute' ne garde que Body Style = Bus et Commercial Class = Transit Bus.",
+    "Le mode spawnOnly est remis à false en quittant la famille de routes du sélecteur, et à la fermeture (closedFromUI).",
+    "La plupart des fonctions qui acceptent un requestId émettent ensuite un instantané 'vehicleSelectorDisplayDataSnapshot' ; sans requestId (nil) rien n'est émis.",
+    "Bug probable : dans vehiclePassesFilters, le test de plage `not type(propVal) == 'number'` est toujours faux (priorité de `not`), il ne protège donc pas des valeurs non numériques.",
+    "Bug probable : vehiclePassesFilters lit config.infoFilename sans vérifier que config existe (le code prévoit pourtant le cas « pas de config » juste avant) : erreur si showCustomPCFiles est désactivé et config nil.",
+    "M.getDisplayData est défini deux fois (même comportement). Le champ M.p est un faux profileur (start, add, finish vides) ; profilerFinish ne fait rien car M.p.timer n'existe pas.",
+    "Traces de débogage laissées : navigateToVehicle fait des dump(), et le callback de openVehicleSelectorForFreeroamModal dump ses 4 arguments."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "core_vehicles, ui_vehicleSelector_detailsInteraction, ui_vehicleSelector_tiles, core_locales."},
+    "p": {"type": "table", "desc": "Profileur factice (emptyProfiler) avec start, add et finish sans effet."}
+  },
+  "functions": {
+    "setVehicleRestrictionMode": {
+      "desc": "Définit une restriction dure de type de véhicule appliquée en plus des filtres : 'lightRunner', 'busRoute' ou nil (aucune).",
+      "params": {"restrictionMode": {"type": "string|nil", "desc": "'lightRunner', 'busRoute' ou nil."}}
+    },
+    "setSpawnOnly": {
+      "desc": "Active le mode « faire apparaître seulement » ; toute valeur autre que true le désactive.",
+      "params": {"value": {"type": "boolean|nil", "desc": "true pour activer."}}
+    },
+    "isSpawnOnly": {
+      "desc": "Indique si le mode spawn-only est actif.",
+      "returns": [{"type": "boolean", "desc": "État du mode."}]
+    },
+    "isFreeroamVehicleSelectorContext": {
+      "desc": "Vrai si la route UI courante est l'un des écrans du sélecteur de véhicules du freeroam ou de l'assistant freeroam (freeroamLevels.vehicles, freeroamWizard.vehicles et variantes menu./pause.).",
+      "returns": [{"type": "boolean", "desc": "true en contexte freeroam."}]
+    },
+    "getDisplayData": {
+      "desc": "Renvoie les options d'affichage effectives. En contexte freeroam, showRecentMode prend la valeur de showRecentModeFreeroamSelector.",
+      "returns": [{"type": "table", "desc": "Table des options d'affichage (groupMode, sortMode, clusterMode, expandGroups, displaySize, ...)."}]
+    },
+    "getDisplayDataOptions": {
+      "desc": "Renvoie la liste des options d'affichage proposées à l'UI, en masquant showRecentMode ou showRecentModeFreeroamSelector selon le contexte.",
+      "returns": [{"type": "table[]", "desc": "Définitions d'options (key, label, type, options...)."}]
+    },
+    "setDisplayDataOption": {
+      "desc": "Modifie une option d'affichage (persistée si save=true) ; émet un instantané si requestId est fourni.",
+      "params": {
+        "key": {"type": "string", "desc": "Clé de l'option."},
+        "value": {"type": "any", "desc": "Nouvelle valeur."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant de requête UI pour l'instantané de retour."}
+      },
+      "returns": [{"type": "table", "desc": "Options d'affichage après modification."}]
+    },
+    "resetDisplayDataToDefaults": {
+      "desc": "Remet les options d'affichage à leurs valeurs par défaut.",
+      "params": {"requestId": {"type": "any|nil", "desc": "Identifiant pour l'instantané de retour."}},
+      "returns": [{"type": "table", "desc": "Options d'affichage après remise à zéro."}]
+    },
+    "getUiData": {
+      "desc": "Renvoie les données UI du sélecteur (models, configs, filterList, filterByProp, lockedFiltersByProp, activeFilters, displayData, displayInfo), en les recalculant si nécessaire.",
+      "returns": [{"type": "table", "desc": "Données UI."}]
+    },
+    "emptyProfiler": {
+      "desc": "Crée un faux profileur dont start, add et finish ne font rien.",
+      "returns": [{"type": "table", "desc": "Objet {start, add, finish}."}]
+    },
+    "profilerFinish": {
+      "desc": "Termine ou marque une étape du profileur M.p. Sans effet avec le faux profileur par défaut.",
+      "params": {"tag": {"type": "string|nil", "desc": "Étiquette de l'étape ; vide ou 'undefined' = fin."}}
+    },
+    "onModDeactivated": {"desc": "Hook : un mod est désactivé ; force le rechargement des données du sélecteur.", "internal": true},
+    "onModActivated": {"desc": "Hook : un mod est activé ; force le rechargement des données du sélecteur.", "internal": true},
+    "onModManagerReady": {"desc": "Hook : le gestionnaire de mods est prêt ; force le rechargement des données.", "internal": true},
+    "onModManagerStateChanged": {"desc": "Hook : l'état du gestionnaire de mods a changé ; force le rechargement des données.", "internal": true},
+    "clearCache": {"desc": "Force la reconstruction des données UI et des options d'affichage au prochain accès."},
+    "onLanguageChanged": {"desc": "Hook : la langue change ; force le rechargement (libellés traduits).", "internal": true},
+    "onfilechanged": {
+      "desc": "Hook de surveillance de fichiers : oublie le cache de settings/default.pc quand ce fichier change.",
+      "params": {
+        "filename": {"type": "string", "desc": "Fichier modifié."},
+        "type": {"type": "string", "desc": "Type de changement."}
+      },
+      "internal": true
+    },
+    "getDefaultVehicleInfo": {
+      "desc": "Lit et met en cache settings/default.pc (véhicule par défaut hérité).",
+      "returns": [{"type": "table|nil", "desc": "Contenu du fichier, ou nil s'il est absent ou illisible."}]
+    },
+    "getDefaultVehicleTile": {
+      "desc": "Construit la tuile du « Legacy default.pc » pour la grille, à partir du modèle indiqué par settings/default.pc.",
+      "returns": [{"type": "table|nil", "desc": "Tuile, ou nil si fichier ou modèle introuvable."}]
+    },
+    "closedFromUI": {
+      "desc": "À appeler à la fermeture du sélecteur : réinitialise racine du fil d'Ariane, spawn-only, état du détail, filtres verrouillés, boutons, callback de sortie, puis émet le hook onVehicleSelectorClosed."
+    },
+    "getFilters": {
+      "desc": "Initialise les données UI si besoin puis renvoie les filtres (filterList, filterByProp, lockedFiltersByProp).",
+      "params": {"...": {"type": "any", "desc": "Transmis à filterInstance.getFilters."}},
+      "returns": [{"type": "table", "desc": "Données de filtres."}]
+    },
+    "getActiveFilters": {"desc": "Délègue au module de filtres : renvoie les filtres actifs.", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "getSearchText": {"desc": "Renvoie le texte de recherche courant (module de filtres).", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "setSearchText": {
+      "desc": "Définit le texte de recherche ; émet un instantané si requestId est fourni.",
+      "params": {
+        "text": {"type": "string", "desc": "Texte recherché."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant pour l'instantané de retour."}
+      }
+    },
+    "getTiles": {"desc": "Délègue à ui_vehicleSelector_tiles.getTiles.", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "toggleFavourite": {
+      "desc": "Ajoute ou retire un véhicule des favoris (clé 'modèle/config'). Pour settings/default.pc, bascule plutôt l'option includeDefaultConfigInFavourites.",
+      "params": {"itemDetails": {"type": "table", "desc": "Table avec les champs model et config."}},
+      "returns": [{"type": "boolean", "desc": "true si l'élément est maintenant favori."}]
+    },
+    "updateFilters": {"desc": "Délègue à filterInstance.updateFilters.", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "toggleFilter": {
+      "desc": "Active ou désactive une valeur d'un filtre de type ensemble ; émet un instantané si requestId est fourni.",
+      "params": {
+        "filterKey": {"type": "string", "desc": "Nom du filtre."},
+        "value": {"type": "any", "desc": "Valeur à basculer."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant pour l'instantané de retour."}
+      }
+    },
+    "updateRangeFilter": {
+      "desc": "Définit les bornes d'un filtre de plage ; émet un instantané si requestId est fourni.",
+      "params": {
+        "filterKey": {"type": "string", "desc": "Nom du filtre."},
+        "min": {"type": "number", "desc": "Borne basse."},
+        "max": {"type": "number", "desc": "Borne haute."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant pour l'instantané de retour."}
+      }
+    },
+    "resetRangeFilter": {
+      "desc": "Remet un filtre de plage à ses bornes complètes ; émet un instantané si requestId est fourni.",
+      "params": {
+        "filterKey": {"type": "string", "desc": "Nom du filtre."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant pour l'instantané de retour."}
+      }
+    },
+    "resetSetFilter": {
+      "desc": "Remet un filtre de type ensemble à son état par défaut ; émet un instantané si requestId est fourni.",
+      "params": {
+        "filterKey": {"type": "string", "desc": "Nom du filtre."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant pour l'instantané de retour."}
+      }
+    },
+    "clearAllFilters": {"desc": "Efface tous les filtres non verrouillés.", "params": {"...": {"type": "any", "desc": "Transmis à filterInstance.clearAllFilters."}}},
+    "lockFilter": {"desc": "Verrouille un filtre pour que l'utilisateur ne puisse pas le modifier (délègue au module de filtres).", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "unlockFilter": {"desc": "Déverrouille un filtre (délègue au module de filtres).", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "isFilterLocked": {"desc": "Indique si un filtre est verrouillé.", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "lockFilterMode": {"desc": "Verrouille un filtre en mode inclusion (délègue au module de filtres).", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "lockFilterModeExclusive": {"desc": "Verrouille un filtre en mode exclusif avec la liste de valeurs autorisées (délègue au module de filtres).", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "clearLockedFilters": {"desc": "Supprime tous les verrous de filtres.", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "calculateActiveFilters": {"desc": "Recalcule la liste des filtres actifs (délègue au module de filtres).", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "setupValidFilters": {"desc": "Prépare la liste des filtres valides pour un passage de filtrage (délègue au module de filtres).", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "getValidFilters": {"desc": "Renvoie les filtres valides préparés (délègue au module de filtres).", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "createFilters": {
+      "desc": "Construit la liste des filtres UI (types range ou set) à partir d'une liste de configs, selon la liste blanche de propriétés.",
+      "params": {"...": {"type": "table", "desc": "Liste de configs (premier argument), transmise à createVehicleFilters."}},
+      "returns": [
+        {"type": "table[]", "desc": "Données de filtres pour l'UI."},
+        {"type": "table", "desc": "Valeurs trouvées par propriété."}
+      ]
+    },
+    "passesFilters": {"desc": "Indique si un élément passe les filtres et la recherche (délègue au module de filtres).", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "isFavourite": {
+      "desc": "Indique si le couple modèle/config est en favori.",
+      "params": {
+        "model": {"type": "string", "desc": "Clé du modèle."},
+        "config": {"type": "string", "desc": "Clé de la config."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si favori."}]
+    },
+    "isRecentVehicle": {
+      "desc": "Indique si le couple modèle/config figure parmi les véhicules récents.",
+      "params": {
+        "model": {"type": "string", "desc": "Clé du modèle."},
+        "config": {"type": "string", "desc": "Clé de la config."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si récent."}]
+    },
+    "trackRecentVehicle": {
+      "desc": "Enregistre le couple modèle/config comme véhicule récent.",
+      "params": {
+        "model": {"type": "string", "desc": "Clé du modèle."},
+        "config": {"type": "string", "desc": "Clé de la config."}
+      }
+    },
+    "getRecentVehicles": {
+      "desc": "Renvoie la liste des véhicules récents.",
+      "returns": [{"type": "table[]", "desc": "Liste de {model, config}."}]
+    },
+    "goToMod": {"desc": "Délègue à detailsInteraction.goToMod : ouvre la page du mod.", "params": {"...": {"type": "any", "desc": "modId."}}},
+    "getDetails": {"desc": "Délègue à detailsInteraction.getDetails : détails et boutons d'un élément.", "params": {"...": {"type": "any", "desc": "itemDetails."}}},
+    "getManagementDetails": {"desc": "Délègue à detailsInteraction.getManagementDetails.", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "executeButton": {"desc": "Délègue à detailsInteraction.executeButton.", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "executeDoubleClick": {"desc": "Délègue à detailsInteraction.executeDoubleClick.", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "setManagementButtonsEnabled": {"desc": "Délègue à detailsInteraction.setManagementButtonsEnabled.", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "setDetailsButtonForFreeroam": {"desc": "Délègue à detailsInteraction.setDetailsButtonForFreeroam.", "params": {"...": {"type": "any", "desc": "Transmis tels quels."}}},
+    "setCustomDetailsButtons": {"desc": "Délègue à detailsInteraction.setCustomDetailsButtons.", "params": {"...": {"type": "any", "desc": "Liste de boutons personnalisés."}}},
+    "getScreenHeaderTitleAndPath": {
+      "desc": "Calcule le titre d'en-tête et les segments du fil d'Ariane selon le chemin courant, les filtres actifs et la recherche. Les titres sont suffixés « (filtré) » si un filtre ou une recherche est actif, et remplacés par « Spawn Vehicle » en mode spawn-only.",
+      "params": {"path": {"type": "table|nil", "desc": "Chemin {keys = {...}} ; keys[1] vaut allModels, configsForModel ou configsForBrandSubModelOrModel."}},
+      "returns": [{"type": "table", "desc": "{title, isFiltered, pathSegments}."}]
+    },
+    "isOpenedFromGarage": {
+      "desc": "Indique si le sélecteur a été ouvert depuis le garage.",
+      "returns": [{"type": "boolean", "desc": "true depuis le garage."}]
+    },
+    "openVehicleSelectorForFreeroam": {
+      "desc": "Ouvre le sélecteur plein écran du menu (route 'menu.vehiclesnew') avec boutons de gestion et boutons freeroam, puis émet onVehicleSelectorOpen."
+    },
+    "openVehicleSelectorForFreeroamWithMod": {
+      "desc": "Comme openVehicleSelectorForFreeroam, mais filtre la source sur un mod donné.",
+      "params": {"modId": {"type": "string", "desc": "Identifiant du mod (via getModById)."}}
+    },
+    "openVehicleSelectorForGarage": {
+      "desc": "Ouvre le sélecteur depuis le garage (routes 'garage.mycars' ou 'garage.vehicles'). Un bouton « Charger » remplace le véhicule actuel (ou entre dans un véhicule d'inventaire de carrière), enregistre le récent, puis revient au garage. Verrouille la source (Custom, Mod, Career ou BeamNG - Official).",
+      "params": {"showOwnedOnly": {"type": "boolean|nil", "desc": "true pour n'afficher que les véhicules possédés (Custom, Mod, Career)."}}
+    },
+    "openVehicleSelectorForFreeroamModal": {
+      "desc": "Ouvre le sélecteur en mode « modal » : un bouton « Select Vehicle » (et la sortie) renvoient vers 'menu.freeroamselector'. Boutons de gestion désactivés."
+    },
+    "openVehicleSelectorForChallenge": {
+      "desc": "Ouvre le sélecteur pour choisir un véhicule adverse. Sauf options.unrestricted, props et remorques sont exclus par un verrou sur le filtre Type. Le callback reçoit (model, config, additionalData) à la sélection, et aucun argument à la sortie.",
+      "params": {
+        "callback": {"type": "function|nil", "desc": "Fonction appelée avec la sélection ou sans argument si on quitte."},
+        "routeName": {"type": "string|nil", "desc": "Route UI à ouvrir, par défaut 'mission.control.vehicleSelector'."},
+        "options": {"type": "table|nil", "desc": "options.unrestricted = true pour effacer tous les filtres."}
+      }
+    },
+    "openVehicleSelectorForFreeroamConfigurator": {
+      "desc": "Ouvre le sélecteur pour le configurateur freeroam (route 'menu.vehiclesnew'). Le callback reçoit (model, config, additionalData) et le véhicule est enregistré comme récent.",
+      "params": {"callback": {"type": "function", "desc": "Appelée avec la sélection."}}
+    },
+    "openFromPause": {
+      "desc": "Ouvre le sélecteur depuis le menu pause. Refusé (renvoie false) si une session de première conduite active n'autorise pas vehicleManagement.",
+      "params": {
+        "routeName": {"type": "string|nil", "desc": "Route à ouvrir, par défaut 'pause.vehicleSelector'."},
+        "options": {"type": "table|nil", "desc": "options.spawnOnly (booléen) et options.focusSearch (focalise la recherche à l'ouverture)."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si refusé, sinon true."}]
+    },
+    "consumeFocusSearchOnOpen": {
+      "desc": "Renvoie puis remet à false l'indicateur « focaliser la recherche à l'ouverture » posé par openFromPause.",
+      "returns": [{"type": "boolean", "desc": "true si la recherche doit être focalisée."}]
+    },
+    "clearDrilldownSelectorState": {
+      "desc": "Réinitialise la sélection de véhicule en attente ou active et le chemin posé par setCurrentSelectorPath, pour qu'un nouvel instantané ne se reconstruise pas sur un ancien véhicule."
+    },
+    "requestDetails": {
+      "desc": "Calcule les détails d'une tuile (via getDetails) et les envoie à l'UI par 'vehicleSelectorDetails'. Les tuiles de cluster sans showDetails sont ignorées (avertissement loggé).",
+      "params": {
+        "item": {"type": "table", "desc": "Tuile avec showDetails = {model, config}, ou directement {model, config}."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant de requête renvoyé dans le payload."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Payload {backendName, requestId, item, details}, ou nil."}]
+    },
+    "asyncVehicleLoadComplete": {
+      "desc": "Hook appelé par util_asyncBulkLoader quand le chargement asynchrone des véhicules est fini : construit et émet l'instantané en attente (VehicleSelectorDataLoaded), sauf si la route a changé entre-temps.",
+      "internal": true
+    },
+    "navigateToVehicle": {
+      "desc": "Passe de la grille à la page détail d'un véhicule : mémorise la sélection (chemin, titre, modèle, config) et navigue vers la route enfant correspondant à la route racine courante (pause ou garage).",
+      "params": {
+        "tile": {"type": "table", "desc": "Tuile cliquée (config ou cluster)."},
+        "options": {"type": "table|nil", "desc": "Transmis à ui_router.navigate (par ex. {preferredScope = 'auxillary'})."}
+      }
+    },
+    "onVehicleRouteEnter": {
+      "desc": "Hook de route : entrée dans la page détail d'un véhicule. Promeut la sélection en attente en sélection active.",
+      "params": {
+        "context": {"type": "any", "desc": "Contexte de cycle de vie."},
+        "toRoute": {"type": "table", "desc": "Route d'arrivée."},
+        "fromRoute": {"type": "table", "desc": "Route de départ."},
+        "data": {"type": "any", "desc": "Données de route."}
+      },
+      "internal": true
+    },
+    "onVehicleRouteMount": {
+      "desc": "Hook de route : montage de la page détail ; lance le chargement asynchrone puis l'émission de l'instantané du chemin de la sélection active.",
+      "params": {
+        "context": {"type": "any", "desc": "Contexte de cycle de vie."},
+        "toRoute": {"type": "table", "desc": "Route d'arrivée."},
+        "fromRoute": {"type": "table", "desc": "Route de départ."},
+        "data": {"type": "any", "desc": "Données de route."}
+      },
+      "internal": true
+    },
+    "onVehicleRouteLeave": {
+      "desc": "Hook de route : sortie de la page détail ; remet spawn-only à false si la destination est hors de la famille du sélecteur.",
+      "params": {
+        "context": {"type": "any", "desc": "Contexte de cycle de vie."},
+        "toRoute": {"type": "table", "desc": "Route d'arrivée."},
+        "fromRoute": {"type": "table", "desc": "Route de départ."},
+        "data": {"type": "any", "desc": "Données de route."}
+      },
+      "internal": true
+    },
+    "onRootRouteEnter": {
+      "desc": "Hook de route : entrée dans un écran racine du sélecteur (pause, garage) ; efface l'état de détail.",
+      "params": {
+        "context": {"type": "any", "desc": "Contexte de cycle de vie."},
+        "toRoute": {"type": "table", "desc": "Route d'arrivée."},
+        "fromRoute": {"type": "table", "desc": "Route de départ."},
+        "data": {"type": "any", "desc": "Données de route."}
+      },
+      "internal": true
+    },
+    "onRootRouteMount": {
+      "desc": "Hook de route : montage d'un écran racine ; lance le chargement asynchrone puis l'émission de l'instantané pour le chemin de la route (par défaut allModels).",
+      "params": {
+        "context": {"type": "any", "desc": "Contexte de cycle de vie."},
+        "toRoute": {"type": "table", "desc": "Route d'arrivée."},
+        "fromRoute": {"type": "table", "desc": "Route de départ."},
+        "data": {"type": "any", "desc": "Données de route."}
+      },
+      "internal": true
+    },
+    "onRootRouteLeave": {
+      "desc": "Hook de route : sortie d'un écran racine ; remet spawn-only à false hors de la famille, et si ouvert depuis le garage efface verrous et filtres.",
+      "params": {
+        "context": {"type": "any", "desc": "Contexte de cycle de vie."},
+        "toRoute": {"type": "table", "desc": "Route d'arrivée."},
+        "fromRoute": {"type": "table", "desc": "Route de départ."},
+        "data": {"type": "any", "desc": "Données de route."}
+      },
+      "internal": true
+    },
+    "setCurrentSelectorPath": {
+      "desc": "Enregistre un chemin de sélecteur choisi par un assistant, utilisé par emitDisplayDataSnapshot. nil l'efface ; accepte {keys = {...}} ou une liste directe.",
+      "params": {"path": {"type": "table|nil", "desc": "Chemin."}}
+    },
+    "resolveCurrentSelectorPath": {
+      "desc": "Renvoie le chemin courant : chemin posé par setCurrentSelectorPath, sinon celui de la sélection active, sinon {keys = {'allModels'}}.",
+      "returns": [{"type": "table", "desc": "{keys = string[]}."}]
+    },
+    "emitDisplayDataSnapshot": {
+      "desc": "Reconstruit l'instantané du sélecteur pour le chemin courant et l'envoie par 'vehicleSelectorDisplayDataSnapshot'.",
+      "params": {"requestId": {"type": "any|nil", "desc": "Identifiant renvoyé dans le payload."}},
+      "returns": [{"type": "boolean", "desc": "false si la reconstruction a échoué."}]
+    },
+    "resolveSelectedVehicleTitle": {
+      "desc": "Renvoie le titre du véhicule sélectionné (sélection active) pour le titre dynamique de la route, sinon le titre passé en paramètre.",
+      "params": {"paramTitle": {"type": "string|nil", "desc": "Titre de repli."}},
+      "returns": [{"type": "string|nil", "desc": "Titre trouvé."}]
+    }
+  }
+}

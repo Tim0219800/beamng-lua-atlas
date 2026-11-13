@@ -1,0 +1,37 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/math/smoothers/linear.lua",
+  "module": "Noeud flowgraph 'Linear Smoother' (categorie simple). Lissage lineaire d'un signal avec newTemporalSmoothing : 'value' vers l'etat interne a la vitesse upRate (monte) ou downRate (descend), avec le pas de temps 'dt'. 'set' force l'etat. Sortie 'value'. Les descriptions des pins sont 'TODO' dans le code.",
+  "notes": [
+    "Le lisseur n'existe qu'apres _executionStarted.",
+    "init ecrit C.oldSet (classe) au lieu de self.oldSet : partage entre instances.",
+    "Le champ C.todo du code indique 'Requires testing and should have flow pins'.",
+    "dt est nil si le pin n'est pas connecte."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Met C.oldSet=0 (au niveau de la classe).",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Cree le lisseur (newTemporalSmoothing).",
+          "internal": true
+        },
+        "checkSetValue": {
+          "desc": "Si 'set' a change, force l'etat du lisseur a cette valeur.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Sans entree, sort l'etat courant ; sinon choisit le taux (upRate/downRate, defaut 1) et sort smoother:getWithRateUncapped(sample, dt, rate).",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche l'etat du lisseur.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "path": "lua/ge/extensions/editor/util/zoneSelectorUtil.lua",
+  "module": "Élément d'interface de l'éditeur de missions (via editorElementHelper) pour choisir des zones de garage : « Initial Zones » (où le joueur peut apparaître) et « Destination Zones » (où il peut obtenir des destinations). Les noms de zones sont lus dans `<globalInfoFolder>/garages.sites.json` via gameplay_sites_sitesManager.loadSites. Le module renvoie un constructeur : `require('editor/util/zoneSelectorUtil')(element)`.",
+  "notes": [
+    "L'`element` est une table de configuration partagée (champs lus : fieldName, globalInfoFolderFieldName, _id ; champs écrits : initialZones, destinationZones, loadedZones, sitesFile, zonesLoaded, caches).",
+    "Les listes choisies sont écrites dans le conteneur de données ctd sous les clés `<fieldName>_initialZones` et `<fieldName>_destinationZones`.",
+    "Si le dossier est vide, le fichier garages.sites.json absent ou sitesManager indisponible, la liste de zones reste vide et un message jaune s'affiche.",
+    "Le fichier de sites est toujours nommé garages.sites.json ; les zones sont triées alphabétiquement.",
+    "Les ensembles de recherche rapide sont mis en cache et reconstruits seulement quand la taille du tableau change."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Instance liée à un `element` d'éditeur.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur : mémorise l'élément.",
+          "params": {"element": {"type": "table", "desc": "Définition de l'élément UI (fieldName, globalInfoFolderFieldName…)."}},
+          "internal": true
+        },
+        "loadZonesFromSitesFile": {
+          "desc": "Charge les noms de zones depuis `<dossier global>/garages.sites.json` (une seule fois par fichier) dans element.loadedZones.",
+          "params": {"ctd": {"type": "table", "desc": "Données du conteneur contenant le dossier global."}}
+        },
+        "setContainer": {
+          "desc": "Lit initialZones/destinationZones depuis ctd et réinitialise l'état de chargement pour forcer un rechargement.",
+          "params": {"ctd": {"type": "table", "desc": "Données du conteneur."}}
+        },
+        "draw": {
+          "desc": "Dessine l'interface : combos d'ajout, boutons Select All / Remove All, listes avec bouton Remove, résumé. Écrit les listes dans ctd.",
+          "params": {
+            "ctd": {"type": "table", "desc": "Données du conteneur."},
+            "container": {"type": "table", "desc": "Conteneur parent (non utilisé ici)."},
+            "labelFn": {"type": "function", "desc": "Fonction appelée avec l'élément pour dessiner son libellé."}
+          },
+          "returns": [{"type": "boolean", "desc": "true si une liste a été modifiée."}]
+        }
+      }
+    }
+  }
+}

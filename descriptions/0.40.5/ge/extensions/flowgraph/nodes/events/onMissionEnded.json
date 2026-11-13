@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/events/onMissionEnded.lua",
+  "module": "Nœud flowgraph « on Level End » (catégorie logic, événement). Émet une impulsion de flux une fois quand le niveau courant est déchargé (hook onClientEndMission). Pin de sortie : flow.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Vide.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
+        "onClientEndMission": {"desc": "Hook appelé au déchargement du niveau : met flow à vrai et déclenche le nœud.", "internal": true},
+        "work": {"desc": "Vide.", "params": {"args": {"type": "table", "desc": "Arguments du flowgraph"}}, "internal": true}
+      }
+    }
+  }
+}

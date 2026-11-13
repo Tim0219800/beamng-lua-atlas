@@ -1,0 +1,293 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/kitPlacer.lua",
+  "module": "Placeur partagé de pièces de kit (fichiers .dae cuits) pour les outils de construction de l'éditeur (rues, bâtiments, ponts). Une pièce peut être un TSStatic (aperçu transitoire, canSave = false) ou un item Forest (bien moins coûteux : une transformation et un pointeur vers un ForestItemData). Gère la réutilisation des pièces d'une reconstruction à la suivante, le « burn » (rendre les pièces persistantes dans le niveau), l'écriture des datablocks dans art/forest/managedItemData.json et le retrait des pièces vivantes du forest pendant une sauvegarde de niveau.",
+  "usage": "local kp = require('editor/toolUtilities/kitPlacer')\nlocal sink = kp.newSink(folder, 'monOutil', true)\nkp.beginReuse(sink.list)\nkp.placeOriented(sink, 'art/shapes/.../piece.dae', x, y, z, ax, ay, az, ux, uy, uz, 1)\nkp.endReuse(sink.list)\nlocal manifest = kp.commitSink(sink) -- burn",
+  "notes": [
+    "Repère d'une pièce : X local = direction 'along' (ax, ay, az), Z local = 'up' (ux, uy, uz), Y local = up x along. L'échelle est soit un nombre (uniforme) soit une table {x, y, z} par axe.",
+    "Une forme non cuite (fichier absent) est signalée une fois par chemin dans le log (E 'kit piece is not baked') et la pièce n'est pas créée ; l'entrée reste dans la liste avec obj = nil pour que les comptes restent justes.",
+    "Le forest limite les entrées de matrice : newItem divise la matrice jusqu'à ce qu'aucune colonne ne dépasse 1.08 (le forest recharge sinon une matrice > 1.1 comme cassée) et reporte le facteur dans l'échelle de l'item.",
+    "Trois familles de datablocks : 'burned' (préfixe massingKit_, collision conservée), 'live' (liveKit_, collidable = 0) et 'solid' (liveSolid_, collision active). Seuls les massingKit_ sont écrits dans managedItemData.json.",
+    "Les pièces vivantes doivent être retirées du forest avant une sauvegarde (liftLive) puis remises (relayLive, à appeler chaque frame), sinon elles partiraient dans le niveau avec des datablocks 'live' qui ne sont pas persistés.",
+    "Un sink est { folder, ownerId, collidable, list, n } ; avec un champ emitFrame, placeOriented lui passe le repère au lieu de créer un objet (outils qui cuisent leur sortie)."
+  ],
+  "fields": {
+    "MASSING_ITEM_PREFIX": {"type": "string", "desc": "Préfixe 'massingKit_' des ForestItemData des pièces burnées (persistantes)."}
+  },
+  "functions": {
+    "shapeOf": {
+      "desc": "Renvoie le chemin d'une forme de kit si le fichier existe (résultat mis en cache), sinon nil avec un message d'erreur unique dans le log.",
+      "params": {"path": {"type": "string|nil", "desc": "Chemin du .dae cuit."}},
+      "returns": [{"type": "string|nil", "desc": "Le chemin, ou nil s'il est absent ou non cuit."}],
+      "internal": false
+    },
+    "newSink": {
+      "desc": "Construit un « sink » pour un propriétaire. Un ownerId nil produit des pièces sans nom, pour un appelant qui ne les retrouve jamais par nom.",
+      "params": {
+        "folder": {"type": "userdata", "desc": "SimGroup recevant les pièces."},
+        "ownerId": {"type": "string|nil", "desc": "Identifiant du propriétaire, base des noms 'ownerId_N'."},
+        "collidable": {"type": "boolean|nil", "desc": "Les pièces doivent collisionner (appliqué au commit pour les statiques)."},
+        "list": {"type": "table|nil", "desc": "Liste existante à remplir (partagée entre sinks) ; sinon nouvelle."}
+      },
+      "returns": [{"type": "table", "desc": "Sink { folder, ownerId, collidable, list, n }."}],
+      "internal": false
+    },
+    "beginReuse": {
+      "desc": "Met de côté les pièces du dernier passage pour le suivant : une file par forme, rendues dans l'ordre. La liste est vidée mais rien n'est supprimé. Un reconstruction identique retrouve chaque pièce à sa place sans travail.",
+      "params": {"list": {"type": "table|nil", "desc": "Liste du sink (la clé de réutilisation est la liste, pas le sink)."}},
+      "returns": [],
+      "internal": false
+    },
+    "endReuse": {
+      "desc": "Supprime ce que le passage n'a pas redemandé (ce qui reste dans les files) et renvoie combien ont disparu.",
+      "params": {"list": {"type": "table|nil", "desc": "Liste du sink."}},
+      "returns": [{"type": "integer", "desc": "Nombre d'objets supprimés."}],
+      "internal": false
+    },
+    "placeTs": {
+      "desc": "Place une instance (position + quaternion) et ajoute son entrée à la liste du sink, en reprenant une pièce réutilisable de même forme si possible (ne réécrit la transformation que si elle a changé). Forme absente ou pas de dossier : entrée avec obj = nil.",
+      "params": {
+        "sink": {"type": "table", "desc": "Sink."},
+        "shapePath": {"type": "string|nil", "desc": "Chemin du .dae."},
+        "px": {"type": "number", "desc": "Position x."},
+        "py": {"type": "number", "desc": "Position y."},
+        "pz": {"type": "number", "desc": "Position z."},
+        "qx": {"type": "number", "desc": "Quaternion x."},
+        "qy": {"type": "number", "desc": "Quaternion y."},
+        "qz": {"type": "number", "desc": "Quaternion z."},
+        "qw": {"type": "number", "desc": "Quaternion w."},
+        "scl": {"type": "number|table|nil", "desc": "Échelle uniforme ou {x, y, z}."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "placeOriented": {
+      "desc": "Place une pièce de kit selon un repère local (origine, direction along, direction up). Un sink portant emitFrame reçoit le repère au lieu d'un objet de scène et sa valeur de retour est renvoyée.",
+      "params": {
+        "sink": {"type": "table", "desc": "Sink."},
+        "shapePath": {"type": "string", "desc": "Chemin du .dae."},
+        "ox": {"type": "number", "desc": "Origine x."},
+        "oy": {"type": "number", "desc": "Origine y."},
+        "oz": {"type": "number", "desc": "Origine z."},
+        "ax": {"type": "number", "desc": "Direction along x."},
+        "ay": {"type": "number", "desc": "Direction along y."},
+        "az": {"type": "number", "desc": "Direction along z."},
+        "ux": {"type": "number", "desc": "Direction up x."},
+        "uy": {"type": "number", "desc": "Direction up y."},
+        "uz": {"type": "number", "desc": "Direction up z."},
+        "scl": {"type": "number|table|nil", "desc": "Échelle."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat de sink.emitFrame, sinon rien."}],
+      "internal": false
+    },
+    "spawnOriented": {
+      "desc": "Crée une pièce isolée (TSStatic), hors de tout sink, pour un appelant qui gère ses propres emplacements. Remplace tout objet de même nom.",
+      "params": {
+        "folder": {"type": "userdata", "desc": "SimGroup parent."},
+        "shapePath": {"type": "string", "desc": "Chemin du .dae."},
+        "name": {"type": "string|nil", "desc": "Nom d'objet de scène."},
+        "collidable": {"type": "boolean|nil", "desc": "Collision 'Collision Mesh' sinon 'None'."},
+        "ox": {"type": "number", "desc": "Origine x."},
+        "oy": {"type": "number", "desc": "Origine y."},
+        "oz": {"type": "number", "desc": "Origine z."},
+        "ax": {"type": "number", "desc": "Along x."},
+        "ay": {"type": "number", "desc": "Along y."},
+        "az": {"type": "number", "desc": "Along z."},
+        "ux": {"type": "number", "desc": "Up x."},
+        "uy": {"type": "number", "desc": "Up y."},
+        "uz": {"type": "number", "desc": "Up z."},
+        "scl": {"type": "number|table|nil", "desc": "Échelle."}
+      },
+      "returns": [{"type": "userdata|nil", "desc": "TSStatic créé, ou nil."}],
+      "internal": false
+    },
+    "moveOriented": {
+      "desc": "Déplace une pièce déjà dans la scène sur un nouveau repère, bien moins cher que la supprimer et la reconstruire. Pour un item Forest : retire puis replante (plus rapide que updateItem). Pour un TSStatic : setPosRot, l'échelle n'est réécrite que si elle a changé.",
+      "params": {
+        "entry": {"type": "table", "desc": "Entrée { obj } ou { item, data }."},
+        "ox": {"type": "number", "desc": "Origine x."},
+        "oy": {"type": "number", "desc": "Origine y."},
+        "oz": {"type": "number", "desc": "Origine z."},
+        "ax": {"type": "number", "desc": "Along x."},
+        "ay": {"type": "number", "desc": "Along y."},
+        "az": {"type": "number", "desc": "Along z."},
+        "ux": {"type": "number", "desc": "Up x."},
+        "uy": {"type": "number", "desc": "Up y."},
+        "uz": {"type": "number", "desc": "Up z."},
+        "scl": {"type": "number|table|nil", "desc": "Échelle."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si la pièce a été déplacée."}],
+      "internal": false
+    },
+    "setGlow": {
+      "desc": "Colore une pièce lumineuse (instanceColor). Avec night, la confie aussi à la passe jour/nuit de core_environment (nightEmissive), qui met la couleur à noir de jour et la rétablit au crépuscule : un panneau ou une lentille de lampe est du verre sombre le jour. La couleur est écrite aussi ici.",
+      "params": {
+        "obj": {"type": "userdata", "desc": "TSStatic."},
+        "glow": {"type": "number[]", "desc": "Couleur {r, g, b} (défaut 1 par composante)."},
+        "night": {"type": "boolean|nil", "desc": "Enregistrer pour l'émissif nocturne (siteLights.markDirty)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "deleteList": {
+      "desc": "Efface les pièces placées d'une liste : supprime chaque TSStatic, retire chaque item Forest, vide la liste (termine aussi une réutilisation abandonnée).",
+      "params": {"list": {"type": "table|nil", "desc": "Liste d'entrées."}},
+      "returns": [],
+      "internal": false
+    },
+    "safeName": {
+      "desc": "Compose prefix + id avec tout caractère non alphanumérique de l'id remplacé par '_'. Attention : string.gsub renvoie deux valeurs mais l'opérateur .. n'en garde qu'une.",
+      "params": {
+        "prefix": {"type": "string", "desc": "Préfixe."},
+        "id": {"type": "any", "desc": "Identifiant (converti par tostring)."}
+      },
+      "returns": [{"type": "string", "desc": "Nom sûr."}],
+      "internal": false
+    },
+    "commitSink": {
+      "desc": "Burn d'un sink : passe ses TSStatic en persistants (canSave = true), applique la collision 'Collision Mesh' si le sink est collidable, marque l'éditeur modifié et renvoie les noms d'objets comme manifeste. Ne supprime ni ne détache rien (l'appelant détache son pool). Les noms survivent à la sauvegarde.",
+      "params": {"sink": {"type": "table|nil", "desc": "Sink ou { list = ... }."}},
+      "returns": [{"type": "string[]", "desc": "Manifeste des noms d'objets."}],
+      "internal": false
+    },
+    "removeBurned": {
+      "desc": "Supprime par nom toutes les pièces burnées listées dans le manifeste (issu de commitSink), puis marque l'éditeur modifié. Manifeste nil ou vide : sans effet.",
+      "params": {"nameManifest": {"type": "string[]|nil", "desc": "Noms d'objets."}},
+      "returns": [{"type": "integer", "desc": "Nombre d'objets supprimés."}],
+      "internal": false
+    },
+    "itemDataFor": {
+      "desc": "Renvoie le ForestItemData d'une forme de kit, créé au premier usage : celui du niveau ('burned', par défaut) ou une copie d'outil pour les pièces vivantes ('live', collidable = 0, ou 'solid'). Volontairement créé sans passer par editor.createDataBlock pour ne pas être confié au gestionnaire de persistance (writeItemDatas s'en charge). Le nom vient du chemin complet de la forme.",
+      "params": {
+        "shapePath": {"type": "string|nil", "desc": "Chemin du .dae."},
+        "kind": {"type": "string|nil", "desc": "'burned' (défaut), 'live' ou 'solid'."}
+      },
+      "returns": [{"type": "userdata|nil", "desc": "ForestItemData."}],
+      "internal": false
+    },
+    "liveForestData": {
+      "desc": "Renvoie les données du forest du niveau, en créant un Forest s'il n'y en a pas (foliageScatter.ensureForest).",
+      "params": {},
+      "returns": [{"type": "userdata|nil", "desc": "ForestData."}],
+      "internal": false
+    },
+    "plantOriented": {
+      "desc": "Plante une pièce vivante selon un repère local, comme item Forest. Renvoie l'entrée que garde la liste, ou nil s'il n'y a pas de forest ou pas de forme cuite, pour que l'appelant pose un TSStatic à la place.",
+      "params": {
+        "fd": {"type": "userdata", "desc": "ForestData."},
+        "shapePath": {"type": "string", "desc": "Chemin du .dae."},
+        "ox": {"type": "number", "desc": "Origine x."},
+        "oy": {"type": "number", "desc": "Origine y."},
+        "oz": {"type": "number", "desc": "Origine z."},
+        "ax": {"type": "number", "desc": "Along x."},
+        "ay": {"type": "number", "desc": "Along y."},
+        "az": {"type": "number", "desc": "Along z."},
+        "ux": {"type": "number", "desc": "Up x."},
+        "uy": {"type": "number", "desc": "Up y."},
+        "uz": {"type": "number", "desc": "Up z."},
+        "scl": {"type": "number|table|nil", "desc": "Échelle (par axe possible : la matrice du forest la porte)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Entrée { item, data, shape }."}],
+      "internal": false
+    },
+    "poseLive": {
+      "desc": "Pose l'emplacement i d'une liste en pièce vivante Forest : forme à une position, un quaternion et une échelle par axe ; solid pour une pièce qui collisionne comme son TSStatic. Un emplacement dont forme et pose n'ont pas changé est laissé tel quel. Une forme non cuite garde son emplacement sans item.",
+      "params": {
+        "fd": {"type": "userdata", "desc": "ForestData."},
+        "list": {"type": "table", "desc": "Pool d'entrées."},
+        "i": {"type": "integer", "desc": "Indice de l'emplacement."},
+        "shapePath": {"type": "string", "desc": "Chemin du .dae."},
+        "solid": {"type": "boolean", "desc": "Datablock avec collision."},
+        "px": {"type": "number", "desc": "Position x."},
+        "py": {"type": "number", "desc": "Position y."},
+        "pz": {"type": "number", "desc": "Position z."},
+        "qx": {"type": "number", "desc": "Quaternion x."},
+        "qy": {"type": "number", "desc": "Quaternion y."},
+        "qz": {"type": "number", "desc": "Quaternion z."},
+        "qw": {"type": "number", "desc": "Quaternion w."},
+        "sx": {"type": "number", "desc": "Échelle x."},
+        "sy": {"type": "number", "desc": "Échelle y."},
+        "sz": {"type": "number", "desc": "Échelle z."}
+      },
+      "returns": [{"type": "table", "desc": "L'entrée de l'emplacement."}],
+      "internal": false
+    },
+    "isLive": {
+      "desc": "Indique si un emplacement de pool est une pièce vivante Forest plutôt qu'un TSStatic.",
+      "params": {"e": {"type": "table|nil", "desc": "Entrée."}},
+      "returns": [{"type": "boolean", "desc": "true si c'est une pièce Forest suivie."}],
+      "internal": false
+    },
+    "dropLive": {
+      "desc": "Retire l'emplacement k de t du forest et de la table. fd peut être nil (le forest où la pièce se trouve est alors retrouvé).",
+      "params": {
+        "fd": {"type": "userdata|nil", "desc": "ForestData."},
+        "t": {"type": "table", "desc": "Liste."},
+        "k": {"type": "integer", "desc": "Indice."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "trimLive": {
+      "desc": "Retire du forest et de la liste tous les emplacements après le n-ième.",
+      "params": {
+        "fd": {"type": "userdata|nil", "desc": "ForestData."},
+        "list": {"type": "table", "desc": "Liste."},
+        "n": {"type": "integer", "desc": "Nombre d'emplacements à garder."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "burnItem": {
+      "desc": "Remet au niveau une pièce vivante : même pose sur le datablock propre de la forme (celui qui collisionne), retire l'item vivant. Nil pour une entrée qui n'est pas un item Forest.",
+      "params": {
+        "fd": {"type": "userdata", "desc": "ForestData."},
+        "entry": {"type": "table", "desc": "Entrée vivante."}
+      },
+      "returns": [{"type": "userdata|nil", "desc": "Nouvel item burné."}],
+      "internal": false
+    },
+    "burnList": {
+      "desc": "Burn de toutes les entrées vivantes d'un pool : leurs items sont ajoutés à out et le pool est vidé.",
+      "params": {
+        "fd": {"type": "userdata", "desc": "ForestData."},
+        "list": {"type": "table|nil", "desc": "Pool d'entrées."},
+        "out": {"type": "table", "desc": "Liste recevant les items burnés."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "liftLive": {
+      "desc": "Sort du forest toutes les pièces vivantes avant une sauvegarde de niveau (les leurs et celles qu'un outil aurait perdues de vue, identifiées par le préfixe liveKit_/liveSolid_ du datablock). À appeler depuis le hook de sauvegarde de chaque outil : le premier fait le travail, les suivants constatent que c'est déjà fait.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "relayLive": {
+      "desc": "À appeler chaque frame par chaque outil : le premier appel après une sauvegarde remet ce que liftLive avait retiré. Seulement dans une entrée qui tient toujours l'item levé, et seulement dans le forest d'où il est sorti.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "plantStatic": {
+      "desc": "Plante une pièce en item Forest directement depuis la pose d'un TSStatic (échelle par axe cuite dans les colonnes de la matrice), sur le datablock 'burned' de sa forme.",
+      "params": {
+        "fd": {"type": "userdata", "desc": "ForestData."},
+        "obj": {"type": "userdata", "desc": "TSStatic source."}
+      },
+      "returns": [{"type": "userdata|nil", "desc": "Item créé, ou nil."}],
+      "internal": false
+    },
+    "writeItemDatas": {
+      "desc": "Écrit les datablocks du kit dans art/forest/managedItemData.json du niveau, à appeler à la sauvegarde. Les clés massingKit_ sont reconstruites d'après ce qui est posé (ajout des nouvelles formes burnées, retrait de celles que rien n'utilise) ; le reste du fichier, propriété du Forest Editor, est laissé tel quel. Sans cela, un bâtiment burné se recharge avec des pièces pointant vers des datablocks inexistants. Ne touche pas au fichier s'il n'y a rien de ce kit.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "markDirty": {
+      "desc": "Marque l'éditeur modifié pour que la sauvegarde soit proposée. Suffit pour un outil dont le burn est fait de statiques seules (objets de scène sauvegardés avec le niveau) ; un outil qui plante des items Forest doit aussi appeler writeItemDatas.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

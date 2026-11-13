@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/math/vector/merge.lua",
+  "module": "Noeud flowgraph 'Merge' (categorie simple). Regroupe jusqu'a 4 nombres x, y, z, w dans une table {x, y, z, w} (type vec3, color ou quat) sur la sortie 'value'.",
+  "notes": [
+    "Les entrees nil laissent des trous dans la table ; un w manquant donne une table de 3 elements (vec3)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Construit {x, y, z, w} depuis les entrees et l'ecrit sur la sortie.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

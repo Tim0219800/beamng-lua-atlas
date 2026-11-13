@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/util/normalizer.lua",
+  "module": "Petit utilitaire de normalisation de texte pour les notes du rallye : applique successivement une liste de remplacements (motif, remplacement) à une chaîne.",
+  "notes": [
+    "Les motifs `from` sont passés à string.gsub : ce sont des motifs Lua (pas des chaînes littérales), les caractères spéciaux comme `-`, `%` ou `.` doivent être échappés."
+  ],
+  "functions": {
+    "replaceWords": {
+      "desc": "Applique dans l'ordre chaque paire {from, to} de word_map à la note via gsub et renvoie la note transformée. Si note vaut nil, la renvoie telle quelle.",
+      "params": {
+        "word_map": {"type": "table<integer, string[]>", "desc": "Liste de paires {motif, remplacement}."},
+        "note": {"type": "string|nil", "desc": "Texte à normaliser."}
+      },
+      "returns": [{"type": "string|nil", "desc": "Texte après remplacements, ou nil si note était nil."}]
+    }
+  }
+}

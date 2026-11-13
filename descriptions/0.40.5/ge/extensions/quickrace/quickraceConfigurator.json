@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/quickrace/quickraceConfigurator.lua",
+  "module": "Configurateur de l'assistant de course rapide (quickrace) : niveau, piste, véhicule et réglages (marche arrière, départ lancé, nombre de tours, heure du jour, graine). Il construit un descripteur via quickRaceConfiguratorDescriptor (backend quickraceSelector, clé de route quickraceWizard, sans type de course ni restriction de véhicule) et le passe à oneshotRaceCore.createConfigurator. Le module renvoyé expose l'API du configurateur décrite dans oneshotRaceCore.",
+  "notes": [
+    "Pas de sélection par défaut : l'utilisateur choisit niveau, piste et véhicule lui-même.",
+    "Le démarrage passe par scenario_quickRaceLoader.startQuickrace."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "scenario_quickRaceLoader, core_highscores, ui_vehicleSelector_general, ui_quickraceSelector_general."}
+  },
+  "functions": {}
+}

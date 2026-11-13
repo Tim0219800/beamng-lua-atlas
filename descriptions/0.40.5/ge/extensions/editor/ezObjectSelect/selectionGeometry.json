@@ -1,0 +1,71 @@
+{
+  "path": "lua/ge/extensions/editor/ezObjectSelect/selectionGeometry.lua",
+  "module": "Géométrie de la sélection de l'outil Easy Select : validation de boîtes, calcul des 8 coins monde d'un objet (boîte orientée via getObjBox + transform + scale, boîte alignée monde pour les véhicules ou en repli), contexte caméra, signatures de bornes pour détecter qu'un objet a bougé, et création de « proxies » projetés à l'écran (polygone d'enveloppe convexe, aire, centroïde, distances, volume). Ces proxies servent à choisir l'objet sous la souris.",
+  "notes": [
+    "Types de bornes : \"vehicleWorldAabb\" (BeamNGVehicle), \"oriented\", \"worldAabb\". Raisons d'échec de création de proxy : invalidBounds, degenerateBounds, outsideNearPlane, degenerateProjection.",
+    "createCameraContext calcule rangeOrigin : point d'impact d'un rayon de 5000 m devant la caméra ; sinon hauteur du terrain sous la caméra ; sinon impact d'un rayon vers le bas. Les distances d'un proxy (cameraDistance) sont mesurées depuis ce point.",
+    "Les coordonnées écran des polygones sont relatives au viewport (0..width, 0..height), alors que modalOperatorCommon.projectToScreen ajoute viewportX/Y."
+  ],
+  "functions": {
+    "validBox": {
+      "desc": "Teste qu'une boîte a minExtents/maxExtents finis (|v| < 1e10, pas de NaN) et min <= max sur chaque axe.",
+      "params": {"box": {"type": "table|nil", "desc": "Boîte avec minExtents et maxExtents"}},
+      "returns": [{"type": "boolean", "desc": ""}]
+    },
+    "getBoundsSignature": {
+      "desc": "Renvoie une liste de nombres décrivant les bornes courantes d'un objet (type, transform, échelle, boîte). Sert à comparer deux états avec boundsSignaturesEqual. La table result est réutilisée si fournie.",
+      "params": {"obj": {"type": "userdata", "desc": "Objet de la scène"}, "result": {"type": "table|nil", "desc": "Table à remplir (réutilisée)"}},
+      "returns": [{"type": "table|nil", "desc": "signature, ou nil si aucune boîte valide"}]
+    },
+    "boundsSignaturesEqual": {
+      "desc": "Compare deux signatures élément par élément.",
+      "params": {"first": {"type": "table|nil", "desc": ""}, "second": {"type": "table|nil", "desc": ""}},
+      "returns": [{"type": "boolean", "desc": "false si l'une est nil ou de longueur différente"}]
+    },
+    "createCameraContext": {
+      "desc": "Capture la caméra de l'éditeur (core_camera position, quat, FOV) et le viewport imgui principal.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "{pos, rangeOrigin, right, forward, up, halfTan, aspect, width, height, viewportX, viewportY, nearDistance} ou nil si une donnée manque ou si le viewport est vide"}]
+    },
+    "getWorldCorners": {
+      "desc": "Les 8 coins monde de la boîte d'un objet.",
+      "params": {"obj": {"type": "userdata", "desc": "Objet de la scène"}},
+      "returns": [{"type": "table|nil", "desc": "liste de 8 vec3 (ou nil)"}, {"type": "string", "desc": "type de bornes, ou \"invalidBounds\""}]
+    },
+    "getObjectVolume": {
+      "desc": "Volume de la boîte (étendues x échelle absolue pour les objets orientés).",
+      "params": {"obj": {"type": "userdata|nil", "desc": "Objet de la scène"}},
+      "returns": [{"type": "number|nil", "desc": "volume en m3 (unités monde), nil si invalide ou non fini"}]
+    },
+    "createProjectedProxy": {
+      "desc": "Construit le proxy d'un objet pour la caméra : polygone écran de l'enveloppe convexe des coins (découpée au plan proche), aire, centroïde, distances caméra/vue, volume, boîte orientée.",
+      "params": {
+        "obj": {"type": "userdata", "desc": "Objet de la scène"},
+        "camera": {"type": "table", "desc": "Contexte de createCameraContext"},
+        "boundsSignature": {"type": "table|nil", "desc": "Signature déjà calculée (sinon calculée)"}
+      },
+      "returns": [{"type": "table|nil", "desc": "{source, sourceId, boundsType, worldCorners, polygon, area, centroid, cameraDistance, viewDistance, volume, cameraInside, orientedBox, boundsSignature}"}, {"type": "string|nil", "desc": "raison de l'échec si nil"}]
+    },
+    "updateCursorMetrics": {
+      "desc": "Ajoute au proxy cursorDistance (distance en pixels du curseur au polygone, 0 si dedans) et centerBias (distance au centroïde divisée par racine de l'aire).",
+      "params": {"proxy": {"type": "table", "desc": "Proxy"}, "mousePosition": {"type": "table", "desc": "{x, y} relatif au viewport"}},
+      "returns": [{"type": "table", "desc": "le même proxy"}]
+    },
+    "updateRayEntry": {
+      "desc": "Ajoute proxy.rayEntry : distance d'entrée du rayon dans la boîte orientée (math.huge s'il la manque ou sans rayon).",
+      "params": {"proxy": {"type": "table", "desc": "Proxy"}, "rayOrigin": {"type": "vec3|nil", "desc": ""}, "rayDirection": {"type": "vec3|nil", "desc": ""}},
+      "returns": [{"type": "table", "desc": "le même proxy"}]
+    },
+    "createProxy": {
+      "desc": "Raccourci : createProjectedProxy puis updateCursorMetrics puis updateRayEntry.",
+      "params": {
+        "obj": {"type": "userdata", "desc": ""},
+        "camera": {"type": "table", "desc": ""},
+        "mousePosition": {"type": "table", "desc": "{x, y}"},
+        "rayOrigin": {"type": "vec3|nil", "desc": ""},
+        "rayDirection": {"type": "vec3|nil", "desc": ""}
+      },
+      "returns": [{"type": "table|nil", "desc": "proxy"}, {"type": "string|nil", "desc": "raison de l'échec"}]
+    }
+  }
+}

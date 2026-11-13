@@ -1,0 +1,107 @@
+{
+  "path": "lua/ge/extensions/gameplay/tutorial/runtime.lua",
+  "module": "Moteur générique de didacticiel : il enchaîne des « étapes » qui sont chacune une extension Lua distincte (préfixe + identifiant d'étape). Il charge/décharge l'extension de l'étape courante, mémorise la progression (étapes terminées, étape courante) et relaie onUpdate/onPreRender vers l'étape active, vers le suivi de dégâts, les marqueurs et le système de limites de zone. Un moddeur s'en sert en appelant configure() puis start().",
+  "usage": "gameplay_tutorial_runtime.configure({stepOrder = {\"1\", \"2\"}, stepExtensionPrefix = \"career_modules_tutorial_step\"})\ngameplay_tutorial_runtime.start()\n-- depuis une étape terminée :\ngameplay_tutorial_runtime.advanceToNextStep()",
+  "notes": [
+    "L'extension d'une étape est chargée sous le nom stepExtensionPrefix .. stepId ; elle peut exposer setup(), cleanup(), onUpdate() et onPreRender().",
+    "stop() décharge l'étape sans marquer le didacticiel terminé et ne nettoie ni marqueurs, ni limites, ni setup ; endTutorial() fait ce nettoyage complet et passe isCompleted à true.",
+    "Un identifiant d'étape est converti en chaîne par activateStep (tostring) ; completeStep, lui, utilise l'identifiant tel quel comme clé de completedSteps.",
+    "onUpdate met à jour le suivi de dégâts (damageTracker) même quand le didacticiel n'est pas actif."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant celle-ci : gameplay_tutorial_setup, _markers, _damageTracker et _bounds."},
+    "sharedTutorialData": {"type": "table", "desc": "Table vide partagée que les étapes peuvent utiliser pour s'échanger des données."}
+  },
+  "functions": {
+    "configure": {
+      "desc": "Fixe la configuration : ordre des étapes, préfixe des extensions d'étape, préfabs initiaux, chargement des sites et des actions bloquées au démarrage, callbacks onStarted/onEnded. Branche aussi les getters du module bounds et des marqueurs (véhicule du didacticiel).",
+      "params": {"opts": {"type": "table", "desc": "Champs facultatifs : stepOrder (liste d'ids), stepExtensionPrefix, initialPrefabs, loadSitesOnStart, setupBlockedActionsOnStart, onStarted, onEnded."}},
+      "returns": [],
+      "internal": false
+    },
+    "setProgressData": {
+      "desc": "Remplace la progression (étape courante, étapes terminées, drapeau terminé), typiquement après chargement d'une sauvegarde.",
+      "params": {"data": {"type": "table", "desc": "Table avec currentStepId, completedSteps (table id -> true) et isCompleted."}},
+      "returns": [],
+      "internal": false
+    },
+    "getProgressData": {
+      "desc": "Renvoie la table de progression interne (pas une copie).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{currentStepId, completedSteps, isCompleted}"}],
+      "internal": false
+    },
+    "isActive": {
+      "desc": "Indique si le didacticiel est en cours.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true entre start() et endTutorial()/stop()."}],
+      "internal": false
+    },
+    "getCurrentStep": {
+      "desc": "Identifiant de l'étape courante.",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "nil si aucune étape n'est active."}],
+      "internal": false
+    },
+    "getStepOrder": {
+      "desc": "Renvoie la liste ordonnée des identifiants d'étapes configurée.",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Liste des ids."}],
+      "internal": false
+    },
+    "getStepIdByIndex": {
+      "desc": "Identifiant d'étape à une position donnée de l'ordre configuré.",
+      "params": {"index": {"type": "integer", "desc": "Position à partir de 1."}},
+      "returns": [{"type": "string|nil", "desc": "nil hors limites."}],
+      "internal": false
+    },
+    "start": {
+      "desc": "Démarre le didacticiel : active les préfabs initiaux, charge les sites, installe les actions bloquées, puis active l'étape mémorisée (ou la première si elle est invalide). Appelle onStarted en cas de succès.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "false si déjà actif, si stepOrder est vide ou si l'étape n'a pas pu être activée."}],
+      "internal": false
+    },
+    "activateStep": {
+      "desc": "Nettoie et décharge l'étape précédente, charge l'extension de la nouvelle étape, met à jour la progression et appelle son setup({}).",
+      "params": {"stepId": {"type": "string|integer", "desc": "Identifiant d'étape présent dans stepOrder."}},
+      "returns": [{"type": "boolean", "desc": "false si inactif, id invalide ou extension introuvable."}],
+      "internal": false
+    },
+    "completeStep": {
+      "desc": "Marque une étape comme terminée dans completedSteps.",
+      "params": {"stepId": {"type": "string", "desc": "Identifiant de l'étape."}},
+      "returns": [{"type": "boolean", "desc": "false si le didacticiel n'est pas actif."}],
+      "internal": false
+    },
+    "advanceToNextStep": {
+      "desc": "Termine l'étape courante puis active la suivante ; s'il n'y en a plus, appelle endTutorial().",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "false si inactif ou si l'étape courante n'est pas dans stepOrder."}],
+      "internal": false
+    },
+    "endTutorial": {
+      "desc": "Fin normale : cleanup de l'étape, des marqueurs, du suivi de dégâts, des limites et du setup ; passe isCompleted à true, efface la liste de tâches de l'interface (ClearTasklist) et appelle onEnded.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "false si le didacticiel n'était pas actif."}],
+      "internal": false
+    },
+    "stop": {
+      "desc": "Décharge l'étape active sans marquer le didacticiel comme terminé et sans nettoyer les autres modules.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque image par le moteur d'extensions : transmet l'id du véhicule du didacticiel au damageTracker, relaie à l'étape active, met à jour dégâts, marqueurs et limites.",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."}, "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onPreRender": {
+      "desc": "Hook appelé avant le rendu : relaie à l'étape active (dtReal, dtSim seulement) et au module bounds.",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."}, "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

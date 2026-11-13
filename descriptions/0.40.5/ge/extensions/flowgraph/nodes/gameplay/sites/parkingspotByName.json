@@ -1,0 +1,53 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/sites/parkingspotByName.lua",
+  "module": "Nœud flowgraph « Parking Spot by Name ». Cherche une place de parking par nom dans sitesData.parkingSpots.byName. Entrées : flow, sitesData, spotName ; sorties : flow (vrai si trouvée), exists (caché), spot (parkingSpotData).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état interne du nœud.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui).",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du nœud dans l'éditeur flowgraph (ImGui).",
+          "internal": true,
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "constructeur de nœud de l'éditeur (builder:Middle())"
+            },
+            "style": {
+              "type": "table",
+              "desc": "style de dessin du nœud"
+            }
+          }
+        },
+        "init": {
+          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "internal": true,
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "gestionnaire flowgraph"
+            }
+          }
+        },
+        "work": {
+          "desc": "Retrouve la place par nom, publie spot et active flow/exists si elle existe et n'est pas missing.",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "arguments transmis par le moteur (non utilisés)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

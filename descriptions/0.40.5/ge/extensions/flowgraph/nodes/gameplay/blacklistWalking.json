@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/blacklistWalking.lua",
+  "module": "Nœud flowgraph « Blacklist Walking » (dépend de gameplay_walk). Autorise ou interdit l'entrée dans un véhicule depuis le mode marche, via la liste noire de gameplay_walk. Pins d'entrée : flow, allow (retire de la liste), deny (ajoute), vehId, clear (impulsion, vide la liste), fill (tous les véhicules du projet), fillAll (tous les BeamNGVehicle de la scène). Sortie : flow.",
+  "notes": ["Bug : dans fill, le code appelle gameplay_walk.addVehicleToBlacklist(sortedIds) avec la variable globale (nil) au lieu de id ; la liste n'est donc pas remplie correctement.", "fill et fillAll vident d'abord la liste noire."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Vide.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
+        "work": {"desc": "Si flow est actif, exécute allow/deny (si vehId), clear, fill, fillAll. Recopie flow en sortie.", "params": {"args": {"type": "table", "desc": "Arguments du flowgraph"}}}
+      }
+    }
+  }
+}

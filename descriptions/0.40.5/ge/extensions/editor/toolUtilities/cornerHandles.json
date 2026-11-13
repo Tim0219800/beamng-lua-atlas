@@ -1,0 +1,48 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/cornerHandles.lua",
+  "module": "Poignées dans le viewport pour les virages de la géométrie « engineered » des outils de route de l'éditeur : un bouton de rayon (à l'extérieur du virage, ancré à l'apex) et une poignée de déplacement sur la courbe quand le nœud PI est très éloigné de son virage. Gère le survol, le clic, le glisser et l'enregistrement d'une action d'historique annulable via le contexte fourni par l'outil.",
+  "notes": [
+    "Le groupe g doit avoir g.nodes (>= 3 points {x,y,z}), g.corners, et facultativement g.discMap, g.divPoints, g.cornerR, g.engRadiusM.",
+    "Rayon par défaut 40 m, plafond 300 m ; MAJ (shift) divise la sensibilité par 10.",
+    "La poignée de déplacement n'apparaît que si le PI est à plus de 25 m de l'apex.",
+    "Les nœuds ont priorité : si le curseur est sur un nœud, les poignées ne prennent pas la souris."
+  ],
+  "functions": {
+    "update": {
+      "desc": "Dessine les poignées de virage intérieur (bouton de rayon + poignée de déplacement) et gère leur clic/glisser. Renvoie (consumed, hovering) : consumed = elle possède la souris cette frame ; hovering = simple survol (l'appelant doit couper l'ajout de nœud mais continuer sa passe d'événements).",
+      "params": {
+        "g": {"type": "table", "desc": "Groupe/route (nodes, corners, discMap, divPoints…)."},
+        "ctx": {"type": "table", "desc": "{ selGroupIdx, selNodeIdx, setSelNode(i), minRadius(g)->number, deepCopy(g)->snapshot, undo, redo, ensureOverride(g,i)->ov }"}
+      },
+      "returns": [
+        {"type": "boolean", "desc": "consumed"},
+        {"type": "boolean|nil", "desc": "hovering (absent quand rien n'est survolé)."}
+      ]
+    },
+    "apex": {
+      "desc": "Apex du virage intérieur i sur la route réelle : l'échantillon au milieu de l'arc ancré à discMap[i]. Reste près de la route même si le PI est très loin (épingle ~180°). Retombe sur le nœud avant construction.",
+      "params": {
+        "g": {"type": "table", "desc": "Groupe (discMap, divPoints, nodes)."},
+        "i": {"type": "integer", "desc": "Indice du nœud intérieur."}
+      },
+      "returns": [{"type": "table", "desc": "Point {x,y,z} de l'apex (ou le nœud i)."}]
+    },
+    "moveHandle": {
+      "desc": "Poignée de déplacement sur la courbe pour le virage i (comme la poignée de milieu de Civil3D) : n'existe que lorsque le PI est à plus de 25 m de son virage ; sinon le nœud est sur la route et se déplace directement.",
+      "params": {
+        "g": {"type": "table", "desc": "Groupe."},
+        "i": {"type": "integer", "desc": "Indice du nœud intérieur."},
+        "ap": {"type": "table|nil", "desc": "Apex déjà calculé (évite une recherche)."}
+      },
+      "returns": [{"type": "vec3|nil", "desc": "Position de la poignée (apex, z+0.15) ou nil."}]
+    },
+    "isDragging": {
+      "desc": "true tant qu'un glissé de poignée de virage est en cours (l'outil s'en sert pour masquer la route et différer la reconstruction).",
+      "returns": [{"type": "boolean", "desc": ""}]
+    },
+    "draggingGroupIdx": {
+      "desc": "Indice du groupe qui possède le glissé en cours (pour savoir quelle route masquer), ou nil.",
+      "returns": [{"type": "integer|nil", "desc": ""}]
+    }
+  }
+}

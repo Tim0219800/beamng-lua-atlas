@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/editor/rallyEditor/systemPacenotesTab.lua",
+  "module": "Onglet « System Pacenotes » de l'éditeur de rallye : tableau en lecture seule des pacenotes système (usage interne, par ex. compte à rebours) du notebook, avec nom, poids, texte et bouton de lecture audio. Disponible seulement pour les missions de type rallyStage. Le bouton « Refresh System Pacenotes » vide les compositeurs en cache, recharge le module du style de compositeur, sauvegarde le notebook puis relit les pacenotes. Le module renvoie un constructeur de classe C.",
+  "notes": [
+    "Aucune fonction exportée : on obtient une instance avec require(...)(rallyEditor).",
+    "Les pacenotes requis (systemPacenotes.required) sont affichés en premier, les autres triés par nom.",
+    "Couleur du bouton audio : vert si audio perso présent, rouge si audio perso manquant, gris si fichier standard absent."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance de l'onglet (windowDescription = 'System Pacenotes').",
+      "functions": {
+        "init": {"desc": "Constructeur : mémorise rallyEditor, liste vide de pacenotes système.", "params": {"rallyEditor": {"type": "table", "desc": "Éditeur de rallye parent."}}, "internal": true},
+        "clearState": {"desc": "Oublie le notebook et les pacenotes système affichés.", "internal": true},
+        "setPath": {"desc": "Définit le notebook courant (le commentaire du code précise que « path » désigne le notebook) ; active l'affichage seulement si path:getMissionType() == 'rallyStage'.", "params": {"path": {"type": "table|nil", "desc": "Notebook."}}, "internal": true},
+        "selected": {"desc": "Appelé quand l'onglet est sélectionné : charge path:getSystemPacenotesForAudioMode() puis émet onEditorEditModeChanged(nil, nil).", "internal": true},
+        "unselect": {"desc": "Appelé quand l'onglet est quitté : émet onEditorEditModeChanged(nil, nil).", "internal": true},
+        "draw": {"desc": "Dessine l'onglet (message si mission non rallyStage, sinon bouton de rafraîchissement et tableau à 4 colonnes).", "params": {"mouseInfo": {"type": "table", "desc": "Informations souris (non utilisé)."}}, "internal": true}
+      }
+    }
+  }
+}

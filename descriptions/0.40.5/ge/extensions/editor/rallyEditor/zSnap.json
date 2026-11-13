@@ -1,0 +1,29 @@
+{
+  "path": "lua/ge/extensions/editor/rallyEditor/zSnap.lua",
+  "module": "Aide de l'éditeur de rallye pour « coller » la hauteur (z) d'un point au terrain. Trois méthodes : aucune, hauteur du terrain (core_terrain.getTerrainHeight) ou lancer de rayon vertical (editorUtil.vertRaycast). La méthode courante vient de la préférence de l'éditeur de rallye (editor_rallyEditor.getPrefWaypointSnapMethod). Sert aussi à adapter la géométrie d'une spline au terrain.",
+  "usage": "local zSnap = extensions.editor_rallyEditor_zSnap\nlocal p = zSnap.zSnap(vec3(100, 200, 0), zSnap.methods.vertRaycast, 10)",
+  "notes": [
+    "Les fonctions « InPlace » modifient le vec3 passé en argument (pos.z) et le renvoient ; zSnap() travaille sur une copie.",
+    "Une méthode inconnue dans snapInPlace retombe sur defaultMethod (getTerrainHeight).",
+    "snapTerrainHeightInPlace ne change rien si core_terrain.getTerrainHeight est absent ou renvoie nil."
+  ],
+  "fields": {
+    "methods": {"type": "table<string, string>", "desc": "Noms des méthodes : noSnapping, getTerrainHeight, vertRaycast (valeurs = libellés affichables)."},
+    "methodValues": {"type": "string[]", "desc": "Liste ordonnée des libellés de méthodes (pour un menu déroulant)."},
+    "defaultMethod": {"type": "string", "desc": "Méthode par défaut : methods.getTerrainHeight."}
+  },
+  "functions": {
+    "noSnappingInPlace": {"desc": "Ne fait rien, renvoie pos tel quel.", "params": {"pos": {"type": "vec3", "desc": "Position."}}, "returns": [{"type": "vec3", "desc": "pos inchangé."}], "internal": false},
+    "snapTerrainHeightInPlace": {"desc": "Met pos.z à la hauteur du terrain en (x, y) si disponible.", "params": {"pos": {"type": "vec3", "desc": "Position modifiée en place."}}, "returns": [{"type": "vec3", "desc": "pos."}], "internal": false},
+    "snapRaycastInPlace": {"desc": "Ajuste pos.z par un lancer de rayon vertical (editorUtil.vertRaycast).", "params": {"pos": {"type": "vec3", "desc": "Position modifiée en place."}, "rayRaise": {"type": "number|nil", "desc": "Hauteur dont le rayon est relevé avant de tirer (transmis à vertRaycast)."}}, "returns": [{"type": "vec3", "desc": "pos."}], "internal": false},
+    "isValidMethod": {"desc": "Indique si le libellé est une méthode connue.", "params": {"method": {"type": "string", "desc": "Libellé de méthode."}}, "returns": [{"type": "boolean", "desc": "true si valide."}], "internal": false},
+    "snapInPlace": {"desc": "Applique la méthode choisie (ou la méthode par défaut si inconnue) à pos, en place.", "params": {"pos": {"type": "vec3", "desc": "Position modifiée en place."}, "method": {"type": "string", "desc": "Libellé de méthode."}, "rayRaise": {"type": "number|nil", "desc": "Relèvement du rayon (méthode raycast)."}}, "returns": [{"type": "vec3", "desc": "pos."}], "internal": false},
+    "zSnap": {"desc": "Comme snapInPlace mais sur une copie de pos.", "params": {"pos": {"type": "vec3", "desc": "Position source (non modifiée)."}, "method": {"type": "string", "desc": "Libellé de méthode."}, "rayRaise": {"type": "number|nil", "desc": "Relèvement du rayon."}}, "returns": [{"type": "vec3", "desc": "Nouvelle position."}], "internal": false},
+    "getCurrentMethod": {"desc": "Renvoie la méthode choisie dans les préférences de l'éditeur de rallye, ou defaultMethod si absente/invalide.", "returns": [{"type": "string", "desc": "Libellé de méthode."}], "internal": false},
+    "zSnapWithCurrentMethod": {"desc": "zSnap avec la méthode courante, sur une copie.", "params": {"pos": {"type": "vec3", "desc": "Position source."}}, "returns": [{"type": "vec3", "desc": "Nouvelle position."}], "internal": false},
+    "snapInPlaceWithCurrentMethod": {"desc": "snapInPlace avec la méthode courante.", "params": {"pos": {"type": "vec3", "desc": "Position modifiée en place."}, "rayRaise": {"type": "number|nil", "desc": "Relèvement du rayon."}}, "returns": [{"type": "vec3", "desc": "pos."}], "internal": false},
+    "methodForUseRaycast": {"desc": "Convertit un booléen en méthode : vertRaycast si true, sinon getTerrainHeight.", "params": {"useRaycast": {"type": "boolean", "desc": "Utiliser le raycast."}}, "returns": [{"type": "string", "desc": "Libellé de méthode."}], "internal": false},
+    "snapDrivelineInPlace": {"desc": "Colle un point de driveline au terrain avec la méthode déduite de useRaycast.", "params": {"pos": {"type": "vec3", "desc": "Position modifiée en place."}, "useRaycast": {"type": "boolean", "desc": "true = raycast, false = hauteur du terrain."}, "rayRaise": {"type": "number|nil", "desc": "Relèvement du rayon."}}, "returns": [{"type": "vec3", "desc": "pos."}], "internal": false},
+    "conformSplineGeometry": {"desc": "Génère la géométrie d'une spline Catmull-Rom collée au terrain, par raycast (geom.catmullRomRaycast) ou par hauteur du terrain (geom.catmullRomConformToTerrain).", "params": {"spline": {"type": "table", "desc": "Spline source."}, "useRaycast": {"type": "boolean", "desc": "Choix de la méthode."}, "minNumDivisions": {"type": "integer", "desc": "Nombre minimal de subdivisions (transmis à geom)."}, "minSpacing": {"type": "number", "desc": "Espacement minimal (transmis à geom)."}, "rayRaise": {"type": "number|nil", "desc": "Relèvement du rayon."}}, "returns": [{"type": "table", "desc": "Résultat de la fonction geom appelée."}], "internal": false}
+  }
+}

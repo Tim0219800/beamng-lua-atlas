@@ -1,0 +1,45 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/aabbPick.lua",
+  "module": "Utilitaire de sélection par rayon contre des boîtes alignées sur les axes (AABB), sans allocation. Sert aux outils de l'éditeur qui doivent choisir un objet du monde par sa boîte englobante (ex. instances de bâtiments posées). Parcours linéaire des candidats.",
+  "usage": "local id, t = editor_toolUtilities_aabbPick.pickNearest(ox,oy,oz, dx,dy,dz, function(visit)\n  for id, b in pairs(boxes) do visit(id, b.minx,b.miny,b.minz, b.maxx,b.maxy,b.maxz) end\nend)",
+  "notes": [
+    "La direction du rayon n'a pas besoin d'être normalisée ; la distance t est alors exprimée en multiples de cette direction.",
+    "Un rayon démarrant à l'intérieur de la boîte renvoie 0."
+  ],
+  "functions": {
+    "rayAabb": {
+      "desc": "Test rayon/AABB par la méthode des slabs. Renvoie la distance d'entrée t le long du rayon (>= 0) si touché, sinon nil.",
+      "params": {
+        "ox": {"type": "number", "desc": "Origine du rayon, x"},
+        "oy": {"type": "number", "desc": "Origine du rayon, y"},
+        "oz": {"type": "number", "desc": "Origine du rayon, z"},
+        "dx": {"type": "number", "desc": "Direction, x"},
+        "dy": {"type": "number", "desc": "Direction, y"},
+        "dz": {"type": "number", "desc": "Direction, z"},
+        "minx": {"type": "number", "desc": "Coin min de la boîte, x"},
+        "miny": {"type": "number", "desc": "Coin min de la boîte, y"},
+        "minz": {"type": "number", "desc": "Coin min de la boîte, z"},
+        "maxx": {"type": "number", "desc": "Coin max de la boîte, x"},
+        "maxy": {"type": "number", "desc": "Coin max de la boîte, y"},
+        "maxz": {"type": "number", "desc": "Coin max de la boîte, z"}
+      },
+      "returns": [{"type": "number|nil", "desc": "Distance d'entrée, ou nil si le rayon rate la boîte ou si elle est derrière lui."}]
+    },
+    "pickNearest": {
+      "desc": "Renvoie l'id de la boîte la plus proche (par distance d'entrée) que le rayon traverse. Le fournisseur provider(visit) doit appeler visit(id, minx, miny, minz, maxx, maxy, maxz) une fois par boîte candidate.",
+      "params": {
+        "ox": {"type": "number", "desc": "Origine du rayon, x"},
+        "oy": {"type": "number", "desc": "Origine du rayon, y"},
+        "oz": {"type": "number", "desc": "Origine du rayon, z"},
+        "dx": {"type": "number", "desc": "Direction, x"},
+        "dy": {"type": "number", "desc": "Direction, y"},
+        "dz": {"type": "number", "desc": "Direction, z"},
+        "provider": {"type": "function", "desc": "function(visit) qui énumère les boîtes via visit(id, minx, miny, minz, maxx, maxy, maxz)."}
+      },
+      "returns": [
+        {"type": "any|nil", "desc": "Id gagnant, ou nil si aucune boîte touchée."},
+        {"type": "number", "desc": "Distance d'entrée du gagnant (absente si nil)."}
+      ]
+    }
+  }
+}

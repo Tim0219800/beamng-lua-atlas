@@ -4,6 +4,8 @@
 
 **Accès :** `require("client/postFx/maskedScreenBlur")`
 
+Flou d'écran masqué. Crée l'objet « ScreenBlurFX » (type PostEffectMaskedBlur, activé, rendu après OverlayRender, cible à 40 % de l'écran) avec trois sous-effets : flou Y, flou X (shader DOF_Gausian.cs.hlsl) puis SimpleBlendShader qui mélange l'écran net et l'image floue selon le masque #screenBlurMask. Sert par exemple à flouter l'arrière-plan sous des menus. Aucune fonction exportée.
+
 ## Appels vers le moteur (C++)
 
 - `scenetree.` `findObject`

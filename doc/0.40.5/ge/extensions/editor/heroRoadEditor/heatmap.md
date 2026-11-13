@@ -4,19 +4,45 @@
 
 **Accès :** extension `editor_heroRoadEditor_heatmap` : `extensions.load("editor_heroRoadEditor_heatmap")`, puis la globale `editor_heroRoadEditor_heatmap`
 
+Carte de chaleur de conformité (pente et rayon de virage) du Hero Road Editor. compute() note chaque station de la ligne centrale du groupe de 0 (conforme) à 1 (violation totale) selon la classe de route choisie (group.roadClass) et stocke le résultat dans group.heatGrade / group.heatRadius. draw() peint un ruban coloré bleu vers rouge sur la chaussée de la route sélectionnée.
+
+## Remarques
+
+- Classes de route (minRadiusM / maxGradePct) : highway 200 m / 6 %, rural 90 m / 8 %, urban 40 m / 12 %, mountain 15 m / 15 %, rally 8 m / 20 %. Classe par défaut : rural si group.roadClass est inconnu.
+- Score de rayon : 0 au-dessus de 2*minR, rampe linéaire de 2*minR à minR, 1 sous minR. Il est pondéré par la déflexion du nœud le plus proche (0 sous 1 degré, 1 à partir de 5 degrés, lissage entre les deux) pour ignorer les simples coudes de tangente.
+- Score de pente : 0 jusqu'à la limite de la classe, 1 à partir de 2 fois la limite.
+- Courbure et pente sont lissées deux fois sur une demi-fenêtre de 4 m (smoothByDistance). La courbure exacte vient de group.divCurv (mode engineered, clothoïdes) sinon d'une différence finie.
+- compute() ne fait rien si group.divPoints a moins de 3 points (tables vidées) ; draw() exige heatGrade, heatRadius, divWidths et binormals.
+- Le ruban est soulevé de 0.10 m et dessiné dans les deux sens d'enroulement pour être visible de tous les angles.
+
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `editor_heroRoadEditor_heatmap.compute(group)` | Fills group.heatGrade[i] / group.heatRadius[i] (0 = compliant .. 1 = full violation). | 40 |
-| `editor_heroRoadEditor_heatmap.draw(group, metric)` | Draws the filled violation ribbon for the selected road only (matches Master Spline; bounds cost). Two half-panels per<br> segment (outer-left -> crown, crown -> outer-right) so it hugs the cambered/banked deck. Colour per near station via<br> Master Spline's blue->red ramp; both windings so it reads from any angle. `metric` is 'grade' or 'radius'. | 159 |
+| `editor_heroRoadEditor_heatmap.compute(group)` | Remplit group.heatGrade[i] et group.heatRadius[i] (0 conforme à 1 violation totale) pour chaque station de group.divPoints. À appeler quand la géométrie change ou à chaque frame d'affichage. | 40 |
+| `editor_heroRoadEditor_heatmap.draw(group, metric)` | Dessine le ruban de violation plein pour la route sélectionnée : deux demi-panneaux par segment (bord gauche vers couronne, couronne vers bord droit), colorés par util.getHueBasedColour255 (alpha 210) selon la métrique. | 159 |
+
+### Détail des paramètres
+
+#### `editor_heroRoadEditor_heatmap.compute(group)`
+
+Remplit group.heatGrade[i] et group.heatRadius[i] (0 conforme à 1 violation totale) pour chaque station de group.divPoints. À appeler quand la géométrie change ou à chaque frame d'affichage.
+
+- `group` (*table*) : Groupe Hero Road (divPoints, divCurv, divWidths, nodes, discMap, roadClass).
+
+#### `editor_heroRoadEditor_heatmap.draw(group, metric)`
+
+Dessine le ruban de violation plein pour la route sélectionnée : deux demi-panneaux par segment (bord gauche vers couronne, couronne vers bord droit), colorés par util.getHueBasedColour255 (alpha 210) selon la métrique.
+
+- `group` (*table*) : Groupe Hero Road après compute().
+- `metric` (*string*) : 'grade' ou 'radius' ; toute autre valeur est traitée comme 'grade'.
 
 ## Champs
 
 | Champ | Type | Description |
 |---|---|---|
-| `classOrder` | table |  |
-| `classes` | table | Public interface. |
+| `classOrder` | string[] | Ordre d'affichage des classes : highway, rural, urban, mountain, rally. |
+| `classes` | table<string, table> | Classes de route indexées par id ('highway', 'rural', 'urban', 'mountain', 'rally'), chacune avec label, minRadiusM (m), maxGradePct (%) et desc. |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/heroRoadEditor/heatmap.lua`.*

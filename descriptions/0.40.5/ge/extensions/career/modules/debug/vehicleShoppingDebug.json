@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/career/modules/debug/vehicleShoppingDebug.lua",
+  "module": "Onglet de debug carrière « Vehicle Shopping ». Relit les fichiers *.facilities.json du niveau courant pour obtenir les concessionnaires, simule le tirage de véhicules (util/configListGenerator) et affiche, par concessionnaire et par sous-filtre, les configurations qui correspondent (modèle, config, nom) avec probabilité normalisée, nombre d'éligibles et temps de calcul.",
+  "notes": ["Outil de développement ; debugOrder = 0.", "Charge util/configListGenerator et freeroam/facilities au besoin.", "Le champ de recherche filtre par sous-chaîne sur modèle, config et nom."],
+  "fields": {
+    "debugOrder": {"type": "number", "desc": "Ordre de tri (0)."},
+    "debugName": {"type": "string", "desc": "'Vehicle Shopping'."}
+  },
+  "functions": {
+    "drawDebugMenu": {
+      "desc": "Dessine la fenêtre 'Vehicle Shopping - SubFilter Matches' : bouton Refresh (recalcul), compteurs, champ Search et résultats par concessionnaire/sous-filtre.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

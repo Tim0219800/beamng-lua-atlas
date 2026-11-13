@@ -1,0 +1,111 @@
+{
+  "path": "lua/ge/extensions/career/modules/delivery/vehicleOfferManager.lua",
+  "module": "Gère les offres de livraison de véhicules et de remorques en mode carrière (la liste allOffers) : ajout, recherche (par lieu, par installation, non expirées), libellés de catégories de véhicules (junkerVeh, smallVeh, largeVeh, fleetVeh, exoticVeh, remorques vides/chargées petites, moyennes, grandes) avec leur drapeau de déblocage, et apparition (spawn) d'un véhicule d'offre dans le monde via une séquence util_stepHandler. Sert aussi à fabriquer le libellé d'une tâche de véhicule pour l'UI.",
+  "notes": [
+    "Spawn d'une offre : fondu au noir, spawn du véhicule (model/config de offer.vehicle), placement sur la place offer.spawnLocation.psPath, initialisation du kilométrage (partCondition.initConditions), contact coupé (setIgnitionLevel 0), ping puis lecture de l'odomètre de la pièce principale (offer.startingOdometer, -1 si introuvable), création de la tâche via vehicleTasks.addVehicleTask, démarrage du mode livraison, fondu retour.",
+    "offer.spawned = true est posé dès le début de spawnOffer : l'offre disparaît des listes 'unexpired' immédiatement.",
+    "Les filtres getAllOfferUnexpired et getAllOfferAtFacilityUnexpired ne regardent pas la visibilité/déblocage de l'installation (code commenté).",
+    "Le paramètre psPath de getAllOfferAtFacilityUnexpired est ignoré.",
+    "sameLocation(a, b) est asymétrique : seules les clés de a sont comparées (comme dans parcelManager).",
+    "Tous les appels de filtrage déclenchent d'abord triggerAllGenerators() : de nouvelles offres peuvent être générées comme effet de bord.",
+    "La table vehicleTags associe emptyLargeTrailer (singulier, sans 's' final) alors que les autres sont au pluriel : à respecter si on utilise la clé."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : util_stepHandler."}
+  },
+  "functions": {
+    "onCareerActivated": {
+      "desc": "Hook appelé à l'activation de la carrière : mémorise les autres extensions de livraison et util_stepHandler.",
+      "internal": true
+    },
+    "makeTaskLabel": {
+      "desc": "Fabrique le libellé traduit d'une tâche d'offre : vehicleDropOff selon lookupType (réparation, domicile privé, retour après réparation, camion, par défaut « bringTo »), trailerDropOff (« towTo »), ou « dropOffAt » si la tâche a une destination ; sinon « unknown ».",
+      "params": {"task": {"type": "table", "desc": "Tâche d'offre (type, lookupType, destination)."}},
+      "returns": [{"type": "string", "desc": "Libellé traduit."}]
+    },
+    "isVehicleTagUnlocked": {
+      "desc": "Indique si le drapeau de déblocage de la catégorie est actif dans career_modules_unlockFlags. Une catégorie inconnue est considérée débloquée.",
+      "params": {"tag": {"type": "string", "desc": "Catégorie de véhicule (ex. 'smallVeh', 'loadedLargeTrailers')."}},
+      "returns": [
+        {"type": "boolean", "desc": "true si débloquée."},
+        {"type": "table|nil", "desc": "Définition du drapeau (absente pour une catégorie inconnue)."}
+      ]
+    },
+    "getVehicleTagUnlockedSimple": {
+      "desc": "État de déblocage de toutes les catégories de véhicules.",
+      "returns": [{"type": "table<string, boolean>", "desc": "tag -> débloqué."}]
+    },
+    "getVehicleTagLabelSingular": {
+      "desc": "Libellé traduit au singulier de la catégorie (ou « noCategory » si inconnue).",
+      "params": {"tag": {"type": "string", "desc": "Catégorie."}},
+      "returns": [{"type": "string", "desc": "Libellé."}]
+    },
+    "getVehicleTagLabelPlural": {
+      "desc": "Libellé traduit au pluriel de la catégorie (ou « noCategory » si inconnue).",
+      "params": {"tag": {"type": "string", "desc": "Catégorie."}},
+      "returns": [{"type": "string", "desc": "Libellé."}]
+    },
+    "getDefaultVehicleModifiersForUI": {
+      "desc": "Renvoie les deux modificateurs affichés par défaut pour une offre de véhicule : 'route' (suivre le trajet) et 'damage' (dégâts), avec icône, libellé et description traduits.",
+      "returns": [{"type": "table", "desc": "Liste de {type, icon, active, label, description}."}]
+    },
+    "addOffer": {
+      "desc": "Ajoute une offre à la liste globale.",
+      "params": {"offer": {"type": "table", "desc": "Offre (id, origin, offerExpiresAt, vehicle, task, rewards…)."}}
+    },
+    "sameLocationOffer": {
+      "desc": "Compare l'origine d'une offre avec un lieu via sameLocation.",
+      "params": {
+        "offer": {"type": "table", "desc": "Offre."},
+        "otherLoc": {"type": "table", "desc": "Lieu."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si identique."}]
+    },
+    "sameLocation": {
+      "desc": "Teste l'égalité de deux lieux en comparant chaque clé de a avec celle de b.",
+      "params": {
+        "a": {"type": "table", "desc": "Lieu de référence."},
+        "b": {"type": "table", "desc": "Lieu comparé."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si égaux."}]
+    },
+    "getAllOfferCustomFilter": {
+      "desc": "Renvoie les offres pour lesquelles filter(offer, ...) est vrai, après avoir déclenché les générateurs.",
+      "params": {
+        "filter": {"type": "function", "desc": "fonction(offer, ...) -> boolean."},
+        "...": {"type": "any", "desc": "Arguments supplémentaires pour filter."}
+      },
+      "returns": [{"type": "table", "desc": "Liste d'offres."}]
+    },
+    "getAllOfferForLocation": {
+      "desc": "Offres dont l'origine est le lieu donné.",
+      "params": {"loc": {"type": "table", "desc": "Lieu."}},
+      "returns": [{"type": "table", "desc": "Liste d'offres."}]
+    },
+    "getAllOfferUnexpired": {
+      "desc": "Offres non expirées et non encore apparues (spawned faux).",
+      "returns": [{"type": "table", "desc": "Liste d'offres."}]
+    },
+    "getAllOfferAtFacilityUnexpired": {
+      "desc": "Offres non expirées et non apparues dont l'origine est l'installation facId.",
+      "params": {
+        "facId": {"type": "string", "desc": "Identifiant de l'installation."},
+        "psPath": {"type": "string|nil", "desc": "Ignoré."}
+      },
+      "returns": [{"type": "table", "desc": "Liste d'offres."}]
+    },
+    "getOfferById": {
+      "desc": "Cherche une offre par id.",
+      "params": {"id": {"type": "integer", "desc": "Identifiant de l'offre."}},
+      "returns": [{"type": "table|nil", "desc": "Offre ou nil."}]
+    },
+    "spawnOffer": {
+      "desc": "Fait apparaître le véhicule d'une offre (voir notes), l'enregistre comme tâche de véhicule et démarre le mode livraison. Logue une erreur et s'arrête si l'offre est introuvable.",
+      "params": {
+        "offerId": {"type": "integer", "desc": "Identifiant de l'offre."},
+        "fadeToBlack": {"type": "boolean|nil", "desc": "Fondu au noir autour du spawn ; true par défaut."},
+        "callback": {"type": "function|nil", "desc": "Appelé à la fin de la séquence d'étapes."}
+      }
+    }
+  }
+}

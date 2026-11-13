@@ -1,0 +1,31 @@
+{
+  "path": "lua/ge/extensions/editor/ezObjectSelect/subtools/fence/anchors.lua",
+  "module": "Découverte automatique d'une clôture dans l'outil Easy Object Select. À partir d'un TSStatic de départ (dont le mesh figure dans la liste d'assets autorisés), il cherche les TSStatic voisins dont les ancres (milieux des petits côtés de la boîte, via objectBoxAnchors) se correspondent mutuellement à moins de options.distance, construit le graphe de connexion, ordonne les pièces, détecte une boucle et calcule les points de jonction de la spline. draw() trace ces jonctions avec debugDrawer.",
+  "notes": [
+    "Seuls les TSStatic non « global bounds » dont shapeName (normalisé : minuscules, / , sans / initial) est dans assetPaths sont éligibles.",
+    "La correspondance doit être mutuelle : l'ancre la plus proche de A doit avoir A pour ancre la plus proche.",
+    "La découverte est plafonnée à options.maximumPieces (2048 par défaut) ; result.capped vaut alors true.",
+    "Une boucle est détectée quand il y a plus de 2 pièces et que la première et la dernière ont chacune 2 voisins."
+  ],
+  "functions": {
+    "discover": {
+      "desc": "Parcourt en largeur les pièces de clôture connectées au seed. Renvoie nil et un message si l'objet de départ n'est pas une pièce éligible.",
+      "params": {
+        "seedObjectId": {"type": "integer", "desc": "ID de l'objet TSStatic de départ."},
+        "options": {"type": "table|nil", "desc": "assetPaths (string[], mesh autorisés), distance (m, défaut 0.5, min 0.001), maximumPieces (défaut 2048)."}
+      },
+      "returns": [
+        {"type": "table|nil", "desc": "{ids (ordonnés), graph, descriptors, joints (vec3[]), isLoop, capped}."},
+        {"type": "string|nil", "desc": "Message d'erreur si nil."}
+      ],
+      "internal": false
+    },
+    "draw": {
+      "desc": "Dessine avec debugDrawer:drawLine la polyligne des jonctions (et le segment de fermeture si boucle) du résultat de discover.",
+      "params": {
+        "result": {"type": "table|nil", "desc": "Résultat de discover ; ne fait rien si nil."}
+      },
+      "internal": false
+    }
+  }
+}

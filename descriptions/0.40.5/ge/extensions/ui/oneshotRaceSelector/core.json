@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/ui/oneshotRaceSelector/core.lua",
+  "module": "Socle commun des back-ends ui_gridSelector pour les trois sélecteurs « oneshot race » (quickraceSelector, lightRunnerSelector, busRouteSelector). Il fournit la recherche texte, la persistance des options d'affichage, des filtres vides, la construction du titre et du fil d'Ariane, et le dispatch de getDetails selon la forme du chemin (niveaux ou éléments d'un niveau : pistes/routes). Le formatage des tuiles et des détails est laissé à un « descriptor » passé à createBackend.",
+  "usage": "local backend = ui_oneshotRaceSelector_core.createBackend(descriptor)\nlocal tiles = backend.getTiles({keys = {}})",
+  "notes": [
+    "difficultyLabel divise la valeur par 25 (arrondi inférieur) : 0-24 facile, 25-49 moyen, 50-74 difficile, 75-99 très difficile ; au-delà de 99 (clé 4+) renvoie nil.",
+    "Le back-end renvoyé ne gère ni filtres, ni boutons, ni favoris : getFilters renvoie des listes vides, executeButton/executeDoubleClick renvoient nil, toggleFavourite renvoie false.",
+    "Les options d'affichage sont sauvegardées dans /settings/<backendName>Data.json (une seule option : displaySize, défaut medium)."
+  ],
+  "functions": {
+    "difficultyLabel": {
+      "desc": "Convertit une valeur de difficulté numérique (0-99) en libellé traduit (facile/moyen/difficile/très difficile) via _tr. Renvoie nil si la valeur n'est pas numérique ou hors des quatre paliers.",
+      "params": {"value": {"type": "number|string|nil", "desc": "Difficulté ; le palier est floor(value / 25)."}},
+      "returns": [{"type": "string|nil", "desc": "Libellé traduit, ou nil."}],
+      "internal": false
+    },
+    "createBackend": {
+      "desc": "Construit un back-end gridSelector à partir d'un descriptor. Le back-end expose findLevel, findMiddle, getTiles, getFilters, getActiveFilters, getSearchText/setSearchText, getDisplayDataOptions/setDisplayDataOption/resetDisplayDataToDefaults, getScreenHeaderTitleAndPath, getDetails, getManagementDetails, executeButton, executeDoubleClick, toggleFavourite, profilerFinish et closedFromUI. Contrat du descriptor : backendName (string) ; middlePathKey (\"tracks\" ou \"routes\", path.keys[1] du niveau de détail) ; levelListTitleKey et middleListTitleKey (ids de traduction) ; getLevels() ; findLevel(levelName) optionnel (sinon recherche sur level.levelName) ; getMiddleItems(level) ; middleName(middle) ; levelDisplayName(level) et middleDisplayName(middle) (déjà traduits) ; levelToTile(level) ; middleToTile(middle, levelName) ; getLevelDetails(level) ; getMiddleDetails(middle, levelName).",
+      "params": {"descriptor": {"type": "table", "desc": "Table décrivant le mode (voir desc pour le contrat complet)."}},
+      "returns": [{"type": "table", "desc": "Back-end utilisable par ui_gridSelector."}],
+      "internal": false
+    }
+  }
+}

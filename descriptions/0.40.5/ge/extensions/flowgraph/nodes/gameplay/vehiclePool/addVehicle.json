@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/addVehicle.lua",
+  "module": "Nœud flowgraph « Add Vehicle (Pool) » (once_instant). Ajoute un véhicule au pool (pool:insertVeh(vehId)). Nécessite le module core_vehicleActivePooling ; l'objet pool vient du nœud Create Vehicle Pool.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "workOnce": {
+          "desc": "Appelle insertVeh(vehId) si pool et vehId sont définis.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

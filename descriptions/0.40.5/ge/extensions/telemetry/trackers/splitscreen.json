@@ -1,0 +1,25 @@
+{
+  "path": "lua/ge/extensions/telemetry/trackers/splitscreen.lua",
+  "module": "Suiveur de télémétrie de l'écran partagé : sessions d'écran partagé, durée d'usage de chaque configuration et modes de jeu multi-siège joués. splitScreenStarted et splitScreenStopped encadrent une session dans un niveau ; l'activité « splitScreenActive » redémarre quand le nombre de joueurs, la disposition ou le mode change ; « splitScreenGamemode » couvre un mode de jeu multi-siège.",
+  "notes": [
+    "Une demande de démarrage (onSplitScreenStartRequested) est mémorisée 300 s au plus pour documenter l'origine du démarrage (entry, activity, fromMainMenu).",
+    "À la fin d'une manche, seuls le type de résultat (égalité, présence d'un vainqueur) est rapporté, pas les indices de joueurs.",
+    "Raisons de fin de mode de jeu : restarted, switched, stopped, levelEnded, gameExit. Raisons de fin de session : disabled, levelEnded, gameExit.",
+    "onExit et onExtensionUnloaded sont la même fonction (closeAll)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "telemetry_core."}
+  },
+  "functions": {
+    "onSplitScreenChanged": {"desc": "Hook appelé quand la configuration d'écran partagé change : démarre/met à jour la session et l'activité, ou les termine si désactivé.", "params": {"enabled": {"type": "boolean", "desc": "Écran partagé actif."}, "playerCount": {"type": "integer", "desc": "Nombre de joueurs."}, "layout": {"type": "any", "desc": "Disposition."}, "mode": {"type": "any", "desc": "Mode."}}, "returns": [], "internal": true},
+    "onSplitScreenStartRequested": {"desc": "Hook appelé quand le joueur demande le démarrage de l'écran partagé : mémorise l'origine.", "params": {"entry": {"type": "string", "desc": "discover ou multiseatSettings."}, "activity": {"type": "string", "desc": "Identifiant du mode de jeu ou « freeroam »."}}, "returns": [], "internal": true},
+    "onMultiseatGamemodeLaunched": {"desc": "Hook appelé pour chaque manche lancée, y compris un redémarrage depuis l'écran de fin ou le menu pause : termine le mode précédent (restarted ou switched) et démarre l'activité splitScreenGamemode.", "params": {"gamemodeId": {"type": "string", "desc": "Identifiant du mode de jeu."}}, "returns": [], "internal": true},
+    "onMultiseatGamemodeFinished": {"desc": "Hook appelé à l'écran de fin d'une manche : émet splitScreenGamemodeFinished (tied, hasWinner).", "params": {"gamemodeId": {"type": "string", "desc": "Identifiant du mode de jeu."}, "result": {"type": "table|nil", "desc": "Résultat ({tied, winnerPlayer})."}}, "returns": [], "internal": true},
+    "onMultiseatGamemodeStopped": {"desc": "Hook appelé quand le mode de jeu s'arrête : termine l'activité avec la raison « stopped ».", "params": {}, "returns": [], "internal": true},
+    "onExtensionLoaded": {"desc": "Hook appelé au chargement : déchargement manuel et synchronisation avec la configuration courante de render_splitScreen.", "params": {}, "returns": [], "internal": true},
+    "onClientStartMission": {"desc": "Hook appelé au démarrage d'un niveau : resynchronise l'état d'écran partagé.", "params": {}, "returns": [], "internal": true},
+    "onClientEndMission": {"desc": "Hook appelé à la fin du niveau : clôt mode de jeu, activité et session (raison levelEnded).", "params": {}, "returns": [], "internal": true},
+    "onExit": {"desc": "Hook appelé à la fermeture du jeu : clôt tout (raison gameExit).", "params": {}, "returns": [], "internal": true},
+    "onExtensionUnloaded": {"desc": "Hook appelé au déchargement : clôt tout (même fonction que onExit).", "params": {}, "returns": [], "internal": true}
+  }
+}

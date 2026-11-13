@@ -1,0 +1,26 @@
+{
+  "path": "lua/ge/extensions/telemetry/trackers/gameplay/missions.lua",
+  "module": "Suiveur de télémétrie des missions : suit l'entonnoir (quelles missions démarrent, comment elles sont configurées, comment elles finissent). L'activité « missionRunning » porte la durée ; des évènements ponctuels signalent le clic sur Démarrer, l'ouverture des écrans de début/fin, chaque tentative terminée, les redémarrages, reconfigurations et abandons.",
+  "notes": [
+    "Ne jamais mettre de clé « name » dans les données d'activité : elle remplacerait le nom de l'activité et les évènements de début et de fin ne pourraient plus être appariés.",
+    "Les nœuds d'écran de début/fin sont aussi utilisés hors missions (modes écran partagé) : les évènements ne sont comptés que pendant une mission.",
+    "Une mission construite sur le nœud endScreenWhole ne déclenche jamais onEndScreenUIOpened ; les résultats viennent de onMissionAttemptAggregated.",
+    "Issues de fin d'activité : stopped, abandoned, trackerUnloaded."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "telemetry_core."}
+  },
+  "functions": {
+    "onAnyMissionChanged": {"desc": "Hook appelé quand la mission tourne réellement, pour tous les chemins de démarrage (y compris ceux qui chargent d'abord un niveau). Démarre l'activité missionRunning. startedFrom : missionScreen (en niveau), gameplaySelector, discover, withinMission (nouvel essai, mission suivante ou reconfiguration depuis l'écran de fin) ; les départs depuis tutoriels de carrière, flux d'activité, multijoueur ou scénarios donnent « other ».", "params": {"state": {"type": "string", "desc": "État ; seul « started » est pris en compte."}, "mission": {"type": "table", "desc": "Mission (doit avoir _isOngoing)."}, "userSettings": {"type": "table", "desc": "Réglages du joueur pour la mission."}, "startedFrom": {"type": "string|nil", "desc": "Origine du démarrage."}}, "returns": [], "internal": true},
+    "onAnyMissionWillChange": {"desc": "Hook appelé avant tout arrêt de mission, y compris l'arrêt instantané lors d'un changement de niveau, d'un retour au menu ou d'un démarrage de carrière (qui saute onMissionStopped). Termine l'activité avec l'issue « stopped ».", "params": {"state": {"type": "string", "desc": "Seul « stopped » est pris en compte."}, "mission": {"type": "table", "desc": "Mission concernée."}}, "returns": [], "internal": true},
+    "onUIStartButtonClicked": {"desc": "Hook appelé au clic sur le bouton Démarrer : émet missionStartButtonClicked (seulement pendant une mission).", "params": {}, "returns": [], "internal": true},
+    "onEndScreenUIOpened": {"desc": "Hook appelé à l'ouverture de l'écran de fin : émet missionEndScreenOpened (sans résultat).", "params": {}, "returns": [], "internal": true},
+    "onMissionAttemptAggregated": {"desc": "Hook appelé quand une tentative est enregistrée (seul moment où le résultat complet existe en une table) : émet missionAttemptCompleted (issue, numéro, étoiles, temps, pénalité, points, modèle et config du véhicule). Les champs remplis dépendent du type de mission.", "params": {"attempt": {"type": "table", "desc": "Tentative (type, attemptNumber, unlockedStars, data)."}, "mission": {"type": "table", "desc": "Mission."}, "progressKey": {"type": "string", "desc": "Clé de progression."}}, "returns": [], "internal": true},
+    "onStartScreenFinishedBuilding": {"desc": "Hook appelé quand l'écran de départ est construit : émet missionStartScreenOpened une seule fois par mission.", "params": {}, "returns": [], "internal": true},
+    "onRecoveryPromptButtonPressed": {"desc": "Hook appelé au clic d'un bouton du message de récupération : si id vaut restartMission, émet missionRestarted.", "params": {"id": {"type": "string", "desc": "Identifiant du bouton."}}, "returns": [], "internal": true},
+    "onMissionReconfigured": {"desc": "Hook appelé quand les réglages d'une mission changent : émet missionReconfigured avec les seuls réglages modifiés.", "params": {"data": {"type": "table", "desc": "{mission, oldUserSettings, newUserSettings}"}}, "returns": [], "internal": true},
+    "onMissionAbandoned": {"desc": "Hook appelé quand la mission est fermée prématurément : émet missionAbandoned (byPlayer, attemptsCompleted, qui vaut 0 si aucun essai n'a été terminé) et termine l'activité avec l'issue « abandoned ». byPlayer est false quand le jeu ferme lui-même la mission, par exemple après un échec d'apparition de véhicule.", "params": {"mission": {"type": "table", "desc": "Mission."}, "byPlayer": {"type": "boolean", "desc": "true si le joueur a abandonné."}}, "returns": [], "internal": true},
+    "onExtensionLoaded": {"desc": "Hook appelé au chargement : déchargement manuel.", "params": {}, "returns": [], "internal": true},
+    "onExtensionUnloaded": {"desc": "Hook appelé au déchargement (fermeture du jeu, rechargement Lua, suiveur désactivé) : termine l'activité avec l'issue trackerUnloaded.", "params": {}, "returns": [], "internal": true}
+  }
+}

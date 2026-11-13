@@ -1,0 +1,11 @@
+{
+  "path": "lua/ge/extensions/editor/rallyEditor/pacenotes/selectedPacenoteUtility.lua",
+  "module": "Petite fenêtre flottante bleue « Selected Pacenote Utility » de l'éditeur de rallye. Pour le pacenote sélectionné, elle affiche trois blocs : « Actual » (appel de virage, longueur et forme réellement générés par le compositeur), « Adjustment » (risque d'intensité plus/moins, virage plus long/court, longueur ignorée) et « Metadata » (métadonnées de calibration : descripteur ou intensité, direction, longueur, forme). Elle lit le premier virage (slot 4) de la structure du pacenote.",
+  "notes": [
+    "La fenêtre ne s'affiche pas si aucun pacenote n'est sélectionné, s'il est manquant (pn.missing) ou si le chemin caméra est en lecture.",
+    "Affiche « <none> » quand une information est absente."
+  ],
+  "functions": {
+    "draw": {"desc": "Dessine la fenêtre d'utilité du pacenote sélectionné. À appeler chaque frame depuis la fenêtre des pacenotes.", "params": {"pacenotesWindow": {"type": "table", "desc": "Fenêtre des pacenotes ; doit fournir selectedPacenote() et cameraPathIsPlaying()."}}, "internal": false}
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "path": "lua/ge/extensions/ui/router/routeManager.lua",
+  "module": "Gestionnaire des routes du routeur UI. Il construit l'arbre des routes à partir du registre racine (routes.lua), des modules du dossier routes/ (via les `include`), puis y superpose les routes d'exécution (routes Vue synchronisées ou routes enregistrées par des mods). Il résout une route par son nom pointé (ex. « menu.options »), applique l'héritage de la configuration `ui`, calcule la cible de retour (`backTarget`) et réconcilie la route active quand les routes changent. Un moddeur l'utilise surtout via registerModRoutes / unregisterModRoutes.",
+  "usage": "local res = extensions.ui_router_routeManager.registerModRoutes(\"monMod\", {\n  { name = \"monMod\", meta = { uiTypes = {\"vue\"} } }\n})\nif not res.success then dump(res.errors) end\n-- plus tard\nextensions.ui_router_routeManager.unregisterModRoutes(\"monMod\")",
+  "notes": [
+    "Les noms de routes sont pointés : le premier segment désigne le module (fichier de routes/), les suivants les enfants. Un nom à un seul segment est d'abord cherché dans le module « global » (routes plates).",
+    "registerModRoutes/unregisterModRoutes sont transactionnels : si l'analyse échoue, l'état précédent est conservé et `result.success` vaut false avec `result.errors`.",
+    "Pour un même nom de route, la source enregistrée en dernier gagne, sans composition (voir runtimeRouteRegistry).",
+    "Après un changement, la route active est rechargée (`ui_router.reload`) si sa config a changé, ou le routeur bascule sur `fallbackRoute`/« pause » (si une mission est chargée)/« menu » si elle a disparu.",
+    "Les références relatives (resolveRouteName) utilisent '.' et '..' séparés par '/', ex. « ./enfant », « ../frère ».",
+    "addModule (interne) : addRuntimeModule appelle dump() à chaque module synthétisé, ce qui pollue la console.",
+    "routes.lua déclare `include = \"livery\"` mais aucun fichier routes/livery.lua n'existe : l'entrée est ignorée avec un avertissement « Included route module ... not found or cyclic ».",
+    "Bug mineur : si le fichier routes/<module>.lua existe mais que l'extension correspondante ne se charge pas, findModule indexe `mod.Children` sur nil (erreur)."
+  ],
+  "fields": {
+    "RegisteredRoutes": {"type": "table<string, table>", "desc": "Cache des arbres de routes résolus par nom de module. Vidé par invalidateCache et reconstruit par resolveAllRoutes."},
+    "RuntimeRouteModules": {"type": "table<string, table>", "desc": "Modules synthétisés pour les familles de routes qui n'existent qu'à l'exécution (aucun fichier dans routes/)."},
+    "RuntimeRoutes": {"type": "table<string, table>", "desc": "Nom de route -> définition gagnante venant du registre d'exécution ; superposée à l'arbre statique."}
+  },
+  "functions": {
+    "getAllRoutes": {
+      "desc": "Renvoie la liste (sans doublon) de tous les noms de routes connus : arbres enregistrés (sauf modules marqués ExcludeFromDiscovery), routes globales et routes d'exécution effectives.",
+      "returns": [{"type": "string[]", "desc": "Noms de routes pointés."}],
+      "internal": false
+    },
+    "resolveRouteName": {
+      "desc": "Résout une référence éventuellement relative par rapport à une route de base. Les références qui ne commencent pas par '.' sont renvoyées telles quelles.",
+      "params": {
+        "reference": {"type": "string", "desc": "Référence absolue ou relative (« ./x », « ../x »)."},
+        "baseRouteName": {"type": "string|nil", "desc": "Route de base (requise pour une référence relative)."}
+      },
+      "returns": [
+        {"type": "string|nil", "desc": "Nom résolu, ou nil en cas d'échec."},
+        {"type": "string|nil", "desc": "Raison de l'échec : « invalid_relative_route » ou « relative_route_without_base »."}
+      ],
+      "internal": false
+    },
+    "getRoute": {
+      "desc": "Renvoie la configuration complète d'une route (copie) : héritage `ui` appliqué, `name`, `backTarget` calculé (route parente non abstraite, ou fallbackTarget) et `screenId` (par défaut le nom). Renvoie nil si la route n'existe pas.",
+      "params": {"routeKey": {"type": "string", "desc": "Nom pointé de la route."}},
+      "returns": [{"type": "table|nil", "desc": "Config de la route."}],
+      "internal": false
+    },
+    "getRouteNodes": {
+      "desc": "Renvoie la liste des nœuds de la racine jusqu'à la route demandée, chacun avec `key` et `routeName`.",
+      "params": {"routeName": {"type": "string", "desc": "Nom pointé de la route."}},
+      "returns": [{"type": "table[]|nil", "desc": "Nœuds, ou nil si un segment est introuvable."}],
+      "internal": false
+    },
+    "addVueRoutes": {
+      "desc": "Synchronisation Vue (dev/HMR) : enregistre le tableau de routes brut dans la source réservée « __vueSync ». Sans réconciliation de la route active. Les erreurs sont journalisées.",
+      "params": {"routesObject": {"type": "table", "desc": "Tableau de routes Vue brut."}},
+      "internal": false
+    },
+    "removeRuntimeRoutes": {
+      "desc": "Supprime uniquement la source « __vueSync » ; les sources enregistrées par des mods restent. Sans réconciliation.",
+      "internal": false
+    },
+    "getModuleDecorator": {
+      "desc": "Renvoie le `ContextDecorator` du module de la route, ou par défaut { mode = \"dynamic\", source = Config.ContextDecoratorDefaultSource }.",
+      "params": {"routeName": {"type": "string", "desc": "Nom pointé de la route."}},
+      "returns": [{"type": "table", "desc": "Décorateur de contexte."}],
+      "internal": false
+    },
+    "registerModRoutes": {
+      "desc": "Enregistre (ou remplace) les routes d'une source, reconstruit l'état d'exécution puis réconcilie la route active (rechargement ou repli).",
+      "params": {
+        "sourceId": {"type": "string", "desc": "Identifiant non vide de la source (ex. nom du mod)."},
+        "routes": {"type": "table", "desc": "Tableau de routes au format Vue (name, meta, children…)."},
+        "options": {"type": "table|nil", "desc": "`fallbackRoute` : route de repli si la route active disparaît."}
+      },
+      "returns": [{"type": "table", "desc": "{success, sourceId, isNew, names, added, removed, changed, reconciliation} ou {success=false, errors}. reconciliation = {performed, action = none|fallback|reload, routeName, success, reason}."}],
+      "internal": false
+    },
+    "unregisterModRoutes": {
+      "desc": "Retire une source du registre, reconstruit l'état et réconcilie la route active. Retirer une source inconnue réussit avec existed=false.",
+      "params": {
+        "sourceId": {"type": "string", "desc": "Identifiant de la source."},
+        "options": {"type": "table|nil", "desc": "`fallbackRoute`, comme pour registerModRoutes."}
+      },
+      "returns": [{"type": "table", "desc": "Résultat du registre + `reconciliation`."}],
+      "internal": false
+    },
+    "resolveAllRoutes": {
+      "desc": "Vide le cache et reconstruit tous les modules de routes : lit le module global déclaré dans routes.lua (`Global.include`), les modules racines et les modules d'exécution.",
+      "internal": true
+    }
+  }
+}

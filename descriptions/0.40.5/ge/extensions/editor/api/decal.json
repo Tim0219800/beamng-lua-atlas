@@ -1,0 +1,90 @@
+{
+  "path": "lua/ge/extensions/editor/api/decal.lua",
+  "module": "API de l'éditeur pour les decals de terrain/objets (Engine.Render.DecalMgr) : création et suppression de templates (DecalData), ajout/suppression d'instances, recherche et sauvegarde. initialize(editor) crée le PersistenceManager decalPersistMan et ajoute les fonctions sur editor. Les templates sont sauvés dans art/decals/managedDecalData.json du dossier de la mission, les instances dans main.decals.json.",
+  "notes": [
+    "Si le nom de mission est introuvable, getDecalDataFilePath logge une erreur et retombe sur le chemin par défaut relatif.",
+    "getDecalInstance et getDecalInstanceByUid renvoient nil si l'instance n'a pas de champs id/uid valides.",
+    "Dans getDecalInstanceByUid, l'uid est passé à DecalMgr.getDecalInstance (même appel que pour un index) : le moteur gère les deux (déduit du code).",
+    "Les templates supprimés sont mis en file et réellement supprimés du fichier par saveDecals."
+  ],
+  "functions": {
+    "initialize": {
+      "desc": "Crée decalPersistMan s'il n'existe pas et installe les fonctions sur l'objet editor.",
+      "params": {"editorInstance": {"type": "table", "desc": "Objet editor"}},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {
+    "editor": {
+      "desc": "Fonctions ajoutées à l'objet editor par initialize.",
+      "functions": {
+        "getDecalDataFilePath": {"desc": "Chemin du fichier des templates : dossier de la mission + art/decals/managedDecalData.json.", "params": {}, "returns": [{"type": "string", "desc": "Chemin"}]},
+        "createDecalTemplate": {
+          "desc": "Crée un DecalData au nom unique NewTemplate (matériau WarningMaterial), le marque modifié pour le fichier de decals.",
+          "params": {},
+          "returns": [{"type": "integer", "desc": "ID du template"}]
+        },
+        "deleteDecalTemplate": {
+          "desc": "Supprime toutes les instances utilisant ce template, retire le template du set et le met en file pour suppression au prochain saveDecals.",
+          "params": {"template": {"type": "userdata", "desc": "Template DecalData"}},
+          "returns": []
+        },
+        "getDecalTemplates": {"desc": "Renvoie le set de templates (DecalMgr.getSet()).", "params": {}, "returns": [{"type": "userdata", "desc": "SimSet de templates"}]},
+        "hasDirtyDecalTemplates": {"desc": "Indique si des templates ont des modifications non sauvegardées.", "params": {}, "returns": [{"type": "boolean", "desc": "true si modifiés"}]},
+        "addDecalInstance": {
+          "desc": "Ajoute une instance de decal orientée par une normale et une rotation autour de celle-ci.",
+          "params": {
+            "pos": {"type": "vec3", "desc": "Position"},
+            "normal": {"type": "vec3", "desc": "Normale"},
+            "rotAroundNormal": {"type": "number", "desc": "Rotation autour de la normale"},
+            "template": {"type": "userdata", "desc": "Template DecalData"},
+            "decalScale": {"type": "number|nil", "desc": "Échelle, 1 par défaut"},
+            "decalTexIndex": {"type": "integer|nil", "desc": "Index de texture, -1 par défaut"},
+            "flags": {"type": "integer|nil", "desc": "Drapeaux, 0 par défaut"},
+            "initialAlpha": {"type": "number|nil", "desc": "Alpha initial, 1 par défaut"}
+          },
+          "returns": [{"type": "userdata", "desc": "Instance créée"}]
+        },
+        "addDecalInstanceWithTan": {
+          "desc": "Comme addDecalInstance mais orientée par un vecteur tangent.",
+          "params": {
+            "pos": {"type": "vec3", "desc": "Position"},
+            "normal": {"type": "vec3", "desc": "Normale"},
+            "tangent": {"type": "vec3", "desc": "Tangente"},
+            "template": {"type": "userdata", "desc": "Template DecalData"},
+            "decalScale": {"type": "number|nil", "desc": "Échelle, 1 par défaut"},
+            "decalTexIndex": {"type": "integer|nil", "desc": "Index de texture, -1 par défaut"},
+            "flags": {"type": "integer|nil", "desc": "Drapeaux, 0 par défaut"},
+            "initialAlpha": {"type": "number|nil", "desc": "Alpha initial, 1 par défaut"}
+          },
+          "returns": [{"type": "userdata", "desc": "Instance créée"}]
+        },
+        "addDecalInstanceWithTanForceId": {
+          "desc": "Comme addDecalInstanceWithTan mais en imposant l'index de l'instance.",
+          "params": {
+            "pos": {"type": "vec3", "desc": "Position"},
+            "normal": {"type": "vec3", "desc": "Normale"},
+            "tangent": {"type": "vec3", "desc": "Tangente"},
+            "template": {"type": "userdata", "desc": "Template DecalData"},
+            "decalScale": {"type": "number|nil", "desc": "Échelle, 1 par défaut"},
+            "decalTexIndex": {"type": "integer|nil", "desc": "Index de texture, -1 par défaut"},
+            "flags": {"type": "integer|nil", "desc": "Drapeaux, 0 par défaut"},
+            "initialAlpha": {"type": "number|nil", "desc": "Alpha initial, 1 par défaut"},
+            "index": {"type": "integer", "desc": "Index imposé (déduit du code)"}
+          },
+          "returns": [{"type": "userdata", "desc": "Instance créée"}]
+        },
+        "getDecalInstance": {"desc": "Renvoie l'instance d'index donné, ou nil si invalide.", "params": {"index": {"type": "integer", "desc": "Index"}}, "returns": [{"type": "userdata|nil", "desc": "Instance"}]},
+        "getDecalInstanceByUid": {"desc": "Renvoie l'instance d'uid donné, ou nil si invalide.", "params": {"uid": {"type": "integer", "desc": "Uid"}}, "returns": [{"type": "userdata|nil", "desc": "Instance"}]},
+        "getDecalInstanceVecSize": {"desc": "Nombre d'emplacements du tableau d'instances.", "params": {}, "returns": [{"type": "integer", "desc": "Taille"}]},
+        "deleteDecalInstance": {"desc": "Supprime une instance et marque l'éditeur modifié.", "params": {"instance": {"type": "userdata", "desc": "Instance"}}, "returns": []},
+        "getClosestDecal": {"desc": "Renvoie le decal le plus proche d'une position.", "params": {"pos": {"type": "vec3", "desc": "Position"}}, "returns": [{"type": "userdata|nil", "desc": "Instance la plus proche"}]},
+        "notifyDecalModified": {"desc": "Prévient le moteur qu'une instance a changé et marque l'éditeur modifié.", "params": {"instance": {"type": "userdata", "desc": "Instance"}}, "returns": []},
+        "isDecalDirty": {"desc": "Indique si le decal/template a des modifications non sauvegardées.", "params": {"decal": {"type": "userdata", "desc": "Template"}}, "returns": [{"type": "boolean", "desc": "true si modifié"}]},
+        "saveDecal": {"desc": "Sauvegarde un template modifié.", "params": {"template": {"type": "userdata", "desc": "Template"}}, "returns": []},
+        "saveDecals": {"desc": "Purge les templates mis en file pour suppression, sauvegarde les templates modifiés et écrit les instances dans main.decals.json du dossier de la mission.", "params": {}, "returns": []}
+      }
+    }
+  }
+}

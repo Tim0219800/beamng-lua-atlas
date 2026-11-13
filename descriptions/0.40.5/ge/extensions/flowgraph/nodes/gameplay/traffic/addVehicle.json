@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/addVehicle.lua",
+  "module": "Nœud flowgraph « Add Vehicle (Traffic) » (once_instant). Ajoute le véhicule vehId à la table du trafic via self.mgr.modules.traffic:insertTraffic.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "workOnce": {
+          "desc": "Appelle insertTraffic(vehId) si vehId est défini.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/editor/roadRiverGui.lua",
+  "module": "Éléments d'interface partagés par les éditeurs de routes (DecalRoad) et de rivières : palette de couleurs de surbrillance (survol, sélection, nœuds, duplication…), facteur de taille des nœuds, et le bouton de barre d'outils « Add Road/Nodes » qui active le mode création. Utilisé notamment par editor_roadEditor.",
+  "notes": [
+    "editModeToolbar lit M.isRoad (vrai = « Road », sinon « River ») et écrit M.createMode ; ces deux champs ne sont pas définis par ce fichier, ils doivent être posés par l'éditeur appelant.",
+    "Le mode création est actif si le bouton a été activé OU si la touche Alt est enfoncée (editor.keyModifiers.alt)."
+  ],
+  "fields": {
+    "highlightColors": {"type": "table<string, ColorF>", "desc": "Couleurs de surbrillance : hover, lightHover, hoverSelectNotAllowed, lightHoverSelectNotAllowed, selected, darkSelected, duplicated, nearby, cursor, createModeCursor, selectedNode, hoveredNode, node, nodeTransparent."},
+    "nodeSizeFactor": {"type": "number", "desc": "Facteur de taille d'affichage des nœuds (0.012)."}
+  },
+  "functions": {
+    "editModeToolbar": {"desc": "Dessine dans la barre d'outils le bouton icône « Add Road/Nodes » (info-bulle incluse), bascule l'état du bouton au clic et met à jour M.createMode (bouton actif ou Alt enfoncé). Appelée par l'interface de l'éditeur de routes ou de rivières.", "params": {}, "returns": []}
+  }
+}

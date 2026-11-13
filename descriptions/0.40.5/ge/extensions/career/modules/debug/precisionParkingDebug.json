@@ -1,0 +1,29 @@
+{
+  "path": "lua/ge/extensions/career/modules/debug/precisionParkingDebug.lua",
+  "module": "Onglet de debug carrière « Precision Parking ». Un bouton active/désactive le debug ; quand il est actif, le module cherche (toutes les 0,1 s) la place de parking de livraison la plus proche du véhicule joueur (accessPointsByName des deliveryProviders), calcule des données de précision de stationnement et les affiche en ImGui, avec des dessins 3D (sphères, lignes, flèches via debugDrawer).",
+  "notes": ["Outil de développement ; debugOrder = 10.", "En cas d'absence de véhicule joueur, debugData.error est affiché en rouge."],
+  "fields": {
+    "debugOrder": {"type": "number", "desc": "Ordre de tri (10)."},
+    "debugName": {"type": "string", "desc": "'Precision Parking'."}
+  },
+  "functions": {
+    "drawDebugMenu": {
+      "desc": "Dessine le bouton d'activation et, si actif, met à jour puis affiche les données de précision de stationnement.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "drawDebugVisualization": {
+      "desc": "Dessine la visualisation 3D de debug si le mode est actif.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onDebugDisabled": {
+      "desc": "Nettoyage quand le debug est désactivé : coupe le mode et vide debugData.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

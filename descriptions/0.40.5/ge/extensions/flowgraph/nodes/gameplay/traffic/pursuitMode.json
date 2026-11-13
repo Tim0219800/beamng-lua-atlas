@@ -1,0 +1,29 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitMode.lua",
+  "module": "Nœud flowgraph « Set Pursuit Mode » (once_instant). Règle le mode de poursuite pour un véhicule du trafic : mode (0 off, 1 à 3 actif, -1 arrêté), targetId (défaut : véhicule joueur), policeId (défaut : toutes les polices). Ne fait rien si le trafic n'est pas 'on' ; insère la cible dans le trafic si absente.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "drawMiddle": {
+          "desc": "Affiche « Traffic not active! » si le trafic n'est pas actif.",
+          "internal": true,
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "constructeur de nœud de l'éditeur (builder:Middle())"
+            },
+            "style": {
+              "type": "table",
+              "desc": "style de dessin du nœud"
+            }
+          }
+        },
+        "workOnce": {
+          "desc": "Si le trafic est 'on', insère la cible dans le trafic au besoin puis appelle gameplay_police.setPursuitMode(mode, vehId, policeId).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

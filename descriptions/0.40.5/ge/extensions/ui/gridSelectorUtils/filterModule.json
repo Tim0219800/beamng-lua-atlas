@@ -1,0 +1,54 @@
+{
+  "path": "lua/ge/extensions/ui/gridSelectorUtils/filterModule.lua",
+  "module": "Utilitaire des sélecteurs en grille : gère l'état des filtres (filtres à ensemble de valeurs « set » et filtres de plage « range »), le texte de recherche, le verrouillage de filtres et le calcul de la liste des filtres actifs affichée en pastilles. Les backends (véhicules, gameplay, etc.) créent une instance via `create` en lui fournissant la fonction qui construit les filtres à partir de leur liste d'éléments.",
+  "notes": [
+    "Un filtre est décrit dans filterList par { propName, propKey, type = 'set'|'range', options, min, max }. filterByProp[propName] vaut { [option] = bool } pour un set et { min, max } pour une range.",
+    "toggleFilter : si toutes les options sont activées, ne garde que l'option cliquée ; sinon inverse l'option ; si tout devient false, tout est réactivé. Les options verrouillées ne sont pas modifiées.",
+    "Bug : unlockFilter teste `if not lockedFiltersByProp[propName] then lockedFiltersByProp[propName] = nil` (condition inversée) : elle ne déverrouille jamais rien. Seule clearLockedFilters libère les verrous.",
+    "Bug probable : updateFilters teste `type(lockedOptions) == 'table'` alors que lockedFiltersByProp[propName] est toujours une table ; la branche « range » n'est jamais atteinte.",
+    "Les caches sont invalidés par un drapeau interne (filtersDirty) ; passesFilters et getValidFilters recalculent validFilters si nécessaire. passesFilters renvoie toujours true sans customPassesFiltersFunction.",
+    "L'option d'un filtre peut être une table : sa valeur est option.value, sinon option.id, sinon option.name."
+  ],
+  "functions": {
+    "create": {
+      "desc": "Crée une instance de gestion de filtres.",
+      "params": {
+        "createFiltersFunction": {"type": "function|nil", "desc": "(configList) -> filterList, filterByProp, commonFilters ; appelée par initializeFilters."},
+        "commonFilters": {"type": "table[]|nil", "desc": "Liste de paires { propName, option } considérées comme filtres « communs »."},
+        "rangeFilters": {"type": "table|nil", "desc": "Accepté mais non utilisé dans le code."},
+        "dictFilters": {"type": "table|nil", "desc": "Accepté mais non utilisé dans le code."},
+        "backendName": {"type": "string|nil", "desc": "Nom du backend, défaut \"gridSelector\" (non utilisé ensuite)."},
+        "customPassesFiltersFunction": {"type": "function|nil", "desc": "(itemData, validFilters, searchText) -> boolean ; utilisée par passesFilters."}
+      },
+      "returns": [{"type": "table", "desc": "Instance (voir classes.instance)."}]
+    }
+  },
+  "classes": {
+    "instance": {
+      "desc": "Objet renvoyé par create().",
+      "functions": {
+        "initializeFilters": {"desc": "Appelle createFiltersFunction(configList) et remplace filterList, filterByProp et éventuellement commonFilters.", "params": {"configList": {"type": "any", "desc": "Données passées à la fonction de création."}}},
+        "getFilters": {"desc": "Renvoie l'état complet pour l'UI.", "returns": [{"type": "table", "desc": "{ filterList, filterByProp, commonFilters, lockedFiltersByProp, activeFilters, onlyCommonFilters }."}]},
+        "getActiveFilters": {"desc": "Renvoie la liste des filtres actifs (displayText, propName, propValue, isActive, iconType, type).", "returns": [{"type": "table[]", "desc": "Filtres actifs, dans l'ordre de filterList."}]},
+        "updateFilters": {"desc": "Remplace filterByProp par newFilters en conservant les valeurs verrouillées.", "params": {"newFilters": {"type": "table", "desc": "Nouvel état filterByProp."}}},
+        "toggleFilter": {"desc": "Bascule une option d'un filtre set (voir notes). Ignorée si l'option est verrouillée.", "params": {"propName": {"type": "string", "desc": "Propriété filtrée."}, "option": {"type": "string|number", "desc": "Valeur de l'option."}}},
+        "updateRangeFilter": {"desc": "Fixe min et max d'un filtre de plage (ignoré si verrouillé).", "params": {"propName": {"type": "string", "desc": "Propriété."}, "min": {"type": "number", "desc": "Minimum."}, "max": {"type": "number", "desc": "Maximum."}}},
+        "resetRangeFilter": {"desc": "Remet un filtre de plage à ses bornes par défaut.", "params": {"propName": {"type": "string", "desc": "Propriété."}}},
+        "resetSetFilter": {"desc": "Réactive toutes les options d'un filtre set.", "params": {"propName": {"type": "string", "desc": "Propriété."}}},
+        "clearAllFilters": {"desc": "Réinitialise tous les filtres range et set puis vide le texte de recherche."},
+        "lockFilter": {"desc": "Verrouille l'état courant d'un filtre (range : min/max ; set : options données ou toutes).", "params": {"propName": {"type": "string", "desc": "Propriété."}, "options": {"type": "table|nil", "desc": "Liste d'options à verrouiller (set)."}}},
+        "unlockFilter": {"desc": "Destinée à déverrouiller un filtre ; sans effet à cause d'un bug (voir notes).", "params": {"propName": {"type": "string", "desc": "Propriété."}, "options": {"type": "table|nil", "desc": "Non utilisé."}}},
+        "isFilterLocked": {"desc": "Indique si une option (ou n'importe quelle option si option est nil) d'une propriété est verrouillée.", "params": {"propName": {"type": "string", "desc": "Propriété."}, "option": {"type": "any", "desc": "Option précise ou nil."}}, "returns": [{"type": "boolean", "desc": "true si verrouillé."}]},
+        "lockFilterMode": {"desc": "Verrouille un filtre dans un mode : range -> fixe min/max donnés ; set -> toutes les options à false puis celles de `options` (table option -> bool) à la valeur donnée, toutes verrouillées.", "params": {"propName": {"type": "string", "desc": "Propriété."}, "options": {"type": "table", "desc": "{min, max} pour range ou { [option] = bool } pour set."}}},
+        "lockFilterModeExclusive": {"desc": "Filtres set uniquement : toutes les options à false et verrouillées, sauf celles de allowedOptions mises à true et non verrouillées.", "params": {"propName": {"type": "string", "desc": "Propriété."}, "allowedOptions": {"type": "table|nil", "desc": "Liste d'options autorisées."}}},
+        "clearLockedFilters": {"desc": "Supprime tous les verrous."},
+        "calculateActiveFilters": {"desc": "Calcule les filtres différents des valeurs par défaut.", "returns": [{"type": "table[]", "desc": "Filtres actifs."}, {"type": "boolean", "desc": "true s'il existe au moins un filtre actif non commun."}]},
+        "setupValidFilters": {"desc": "Reconstruit la liste interne des filtres effectivement restrictifs (utilisée par passesFilters)."},
+        "getValidFilters": {"desc": "Renvoie la liste des filtres restrictifs (recalculée si nécessaire).", "returns": [{"type": "table[]", "desc": "Filtres valides avec valeurs courantes."}]},
+        "passesFilters": {"desc": "Teste un élément avec customPassesFiltersFunction(itemData, validFilters, searchText) ; true si aucune fonction fournie.", "params": {"itemData": {"type": "any", "desc": "Élément à tester."}}, "returns": [{"type": "boolean", "desc": "true si l'élément passe."}]},
+        "getSearchText": {"desc": "Renvoie le texte de recherche.", "returns": [{"type": "string", "desc": "Texte (\"\" par défaut)."}]},
+        "setSearchText": {"desc": "Définit le texte de recherche (nil devient \"\") et invalide le cache.", "params": {"val": {"type": "string|nil", "desc": "Texte."}}}
+      }
+    }
+  }
+}

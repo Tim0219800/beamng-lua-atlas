@@ -1,0 +1,50 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/onBigmapPoiSelected.lua",
+  "module": "Nœud flowgraph « On Bigmap Poi » (catégorie repeat_instant) : détecte la sélection d'un point d'intérêt sur la grande carte. Sorties : « selected » et « deselected » (impulsions), « poiId » (string), « navigated » et « denavigated » (impulsions), « pos » (vec3 navigué). Alimenté par les hooks onPoiSelectedFromBigmap et onSetBigmapNavFocus.",
+  "notes": [
+    "Les impulsions durent une frame : work() les remet à false puis applique les drapeaux reçus."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "init": {
+          "desc": "Initialise les drapeaux et la position.",
+          "internal": true
+        },
+        "onPoiSelectedFromBigmap": {
+          "desc": "Hook : POI sélectionné (poiId) ou nil si désélectionné.",
+          "params": {
+            "poiId": {
+              "type": "string|nil",
+              "desc": "Identifiant du POI, nil si désélectionné."
+            }
+          },
+          "internal": true
+        },
+        "onSetBigmapNavFocus": {
+          "desc": "Hook : navigation vers pos, ou nil si annulée.",
+          "params": {
+            "pos": {
+              "type": "vec3|nil",
+              "desc": "Position visée, nil si la navigation est annulée."
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Remet les impulsions à false, applique les drapeaux enregistrés par les hooks puis les vide et écrit poiId et pos.",
+          "params": {
+            "args": {
+              "type": "any",
+              "desc": "Argument éventuel (non utilisé)."
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

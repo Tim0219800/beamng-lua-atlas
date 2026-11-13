@@ -4,14 +4,18 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/sequenceByName")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Sequence by Name » (once_instant). Cherche une séquence de feux (groupe de signaux / logique de phases) par nom dans signalsData.sequences. Sorties : exists (caché), sequenceData.
+
 ## Classe `C`
+
+Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:_executionStopped()` |  | 31 |
-| `C:init()` |  | 27 |
-| `C:onNodeReset()` |  | 23 |
-| `C:work(args)` |  | 35 |
+| `C:_executionStopped()` | Appelle onNodeReset(). | 31 |
+| `C:init()` | Appelle onNodeReset(). | 27 |
+| `C:onNodeReset()` | Vide la sortie sequenceData. | 23 |
+| `C:work(args)` | Parcourt signalsData.sequences et publie la séquence de même nom. | 35 |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequenceByName.lua`.*

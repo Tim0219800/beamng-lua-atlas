@@ -1,0 +1,48 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/fadeFromBlack.lua",
+  "module": "Nœud flowgraph « Fade From Black » (catégorie once_f_duration) : fait apparaître l'écran depuis le noir. Entrée « duration » (0.75 s par défaut). Sortie de durée gérée par setDurationState (flow « complete », ancien nom « done »). Utilise ui_fadeScreen.fadeFromBlack, ou termine l'écran de chargement (server.fadeoutLoadingScreen) si le jeu est en chargement.",
+  "notes": [
+    "Dépend de ui_fadeScreen et gameplay_missions_missionManager.",
+    "Si l'écran est déjà non noir ou si le fondu a été arrêté, passe directement à l'état 'finished'.",
+    "L'état 'finished' arrive aussi par le hook onScreenFadeState(3)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Remet l'état 'inactive' et isFadeScreenActive = false.",
+          "internal": true
+        },
+        "init": {
+          "desc": "État de durée 'inactive'.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Remet l'état 'inactive'.",
+          "internal": true
+        },
+        "onScreenFadeState": {
+          "desc": "Hook appelé par ui_fadeScreen avec l'état du fondu ; l'état 3 termine le nœud.",
+          "params": {
+            "state": {
+              "type": "integer",
+              "desc": "État du fondu d'écran (1 = noir atteint, 3 = fondu terminé)."
+            }
+          },
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Modèle de la durée : 0.75 (durée par défaut des fondus de mission).",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Lance le fondu depuis le noir (ou termine le chargement) et met à jour l'état de durée.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

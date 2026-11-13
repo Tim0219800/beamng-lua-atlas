@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/activity/activityResetPrefabs.lua",
+  "module": "Nœud flowgraph « Activity Reset Prefab » (catégorie once_p_duration, tag activity). Remet à leur position d'origine les véhicules contenus dans tous les prefabs chargés par l'activité associée, via gameplay_missions_missionManager.resetActivityPrefabVehicles. Aucun pin personnalisé.",
+  "notes": ["Passe self.mgr.activity sans vérification : sans activité associée, la valeur est nil."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "workOnce": {"desc": "Appelle resetActivityPrefabVehicles pour l'activité du graphe."}
+      }
+    }
+  }
+}

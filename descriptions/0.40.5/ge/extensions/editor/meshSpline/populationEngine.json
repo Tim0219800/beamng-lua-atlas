@@ -1,0 +1,57 @@
+{
+  "path": "lua/ge/extensions/editor/meshSpline/populationEngine.lua",
+  "module": "Petit moteur de géométrie utilisé par l'outil Mesh Spline : il calcule la géométrie dérivée d'une spline (points subdivisés, largeurs, tangentes, normales) à partir de ses nœuds de contrôle (Catmull-Rom, libre, projetée sur le terrain ou par raycast), puis échantillonne des positions le long de cette courbe pour placer des meshes. S'appuie sur editor/toolUtilities/geom et util. Appelé par splineMgr et populate, pas par un moddeur directement.",
+  "notes": [
+    "Les tables de sortie (outPositions, outTangents, outNormals) sont réutilisées et modifiées en place pour éviter les allocations ; elles sont vidées si la spline n'a pas au moins 2 points subdivisés.",
+    "Si spline.isConformToTerrain est vrai, les nœuds sont modifiés en z (hauteur du terrain + rayPostFloat, ou raycast vertical)."
+  ],
+  "functions": {
+    "clearDerivedGeometry": {
+      "desc": "Vide les tables dérivées de la spline : divPoints, divWidths, tangents, binormals, normals et discMap.",
+      "params": {"spline": {"type": "table", "desc": "Spline de l'outil Mesh Spline."}},
+      "returns": [],
+      "internal": false
+    },
+    "updateGeometry": {
+      "desc": "Recalcule la géométrie dérivée de la spline. Avec moins de 2 nœuds, vide la géométrie et renvoie false. Si isConformToTerrain : abaisse les nœuds sur le terrain (terrainOnly) ou par raycast vertical, puis utilise catmullRomConformToTerrain / catmullRomRaycast ; sinon catmullRomFree.",
+      "params": {
+        "spline": {"type": "table", "desc": "Spline avec nodes, widths, nmls, isConformToTerrain, terrainOnly, rayPostFloat."},
+        "minimumDivisions": {"type": "integer", "desc": "Nombre minimal de subdivisions par segment (transmis à geom)."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si la spline a au moins 2 points subdivisés après calcul."}],
+      "internal": false
+    },
+    "sample": {
+      "desc": "Échantillonne la spline à intervalle régulier. Avec useEvenFit, spacing est une cible : un élément est verrouillé aux deux extrémités et l'intérieur est espacé le plus uniformément possible (geom.sampleSplineEvenFit, tient compte de isLoop). Sinon marche à période fixe (geom.sampleSpline).",
+      "params": {
+        "spline": {"type": "table", "desc": "Spline avec divPoints, tangents, normals, isLoop."},
+        "spacing": {"type": "number", "desc": "Période en mètres entre deux positions."},
+        "outPositions": {"type": "table", "desc": "Table remplie avec les positions."},
+        "outTangents": {"type": "table", "desc": "Table remplie avec les tangentes."},
+        "outNormals": {"type": "table", "desc": "Table remplie avec les normales."},
+        "useEvenFit": {"type": "boolean|nil", "desc": "Active l'échantillonnage extrémités verrouillées."}
+      },
+      "returns": [
+        {"type": "table", "desc": "outPositions."},
+        {"type": "table", "desc": "outTangents."},
+        {"type": "table", "desc": "outNormals."}
+      ],
+      "internal": false
+    },
+    "intervalFrame": {
+      "desc": "Calcule le repère local (position, tangente, vecteur haut) de l'intervalle entre les échantillons index et index+1 (geom.ribbonIntervalFrame).",
+      "params": {
+        "positions": {"type": "table", "desc": "Positions échantillonnées."},
+        "tangents": {"type": "table", "desc": "Tangentes échantillonnées."},
+        "normals": {"type": "table", "desc": "Normales échantillonnées."},
+        "index": {"type": "integer", "desc": "Indice de départ de l'intervalle (base 1)."},
+        "outPosition": {"type": "vec3", "desc": "Reçoit la position (déduit du code)."},
+        "outTangent": {"type": "vec3", "desc": "Reçoit la tangente (déduit du code)."},
+        "outUp": {"type": "vec3", "desc": "Reçoit le vecteur haut (déduit du code)."},
+        "previousAcross": {"type": "vec3|nil", "desc": "Vecteur transversal de l'intervalle précédent, pour la continuité (déduit du code)."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si positions[index] ou positions[index+1] n'existe pas, sinon true."}],
+      "internal": false
+    }
+  }
+}

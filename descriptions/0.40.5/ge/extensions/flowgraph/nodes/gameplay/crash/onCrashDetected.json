@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/crash/onCrashDetected.lua",
+  "module": "Nœud flowgraph « On Crash Detected » (catégorie repeat_instant). Émet un flux quand un véhicule suivi commence ou finit un crash (hooks onVehicleCrashStarted/onVehicleCrashEnded de gameplay_util_crashDetection). Sorties : startCrash, endCrash (impulsions) et vehId. Les crashs simultanés sont mis en file et sortis un par frame.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Appelle reset.", "internal": true},
+        "_executionStopped": {"desc": "Appelle reset.", "internal": true},
+        "reset": {"desc": "Vide les files crashStartQueue et crashEndQueue.", "internal": true},
+        "work": {"desc": "Dépile un crash début et un crash fin par frame et renseigne startCrash, endCrash, vehId."},
+        "onVehicleCrashStarted": {"desc": "Hook : ajoute vehId à la file de débuts de crash.", "params": {"crashStartData": {"type": "table", "desc": "Contient vehId"}}, "internal": true},
+        "onVehicleCrashEnded": {"desc": "Hook : ajoute vehId à la file de fins de crash.", "params": {"crashEndData": {"type": "table", "desc": "Contient vehId"}}, "internal": true}
+      }
+    }
+  },
+  "notes": ["Si début et fin sortent la même frame, vehId est écrasé par celui de la fin."]
+}

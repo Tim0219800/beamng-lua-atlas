@@ -1,0 +1,81 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.lua",
+  "module": "Nœud flowgraph « Generate Vehicle Group » (catégorie provider, dépend de gameplay_traffic_trafficUtils). Génère les données d'un groupe de véhicules (sortie group, vehicleGroupData) pour le nœud Spawn Vehicle Group. Deux modes : « Parameters » (standard, simpleTraffic, simpleParked, fromSettings, fromWorld, avec filtres cars/trucks/large trucks et options joueur/trafic) et « Custom » (pins model_i / config_i). Si le groupe est vide, repli sur {model='pickup'}.",
+  "notes": [
+    "Le mode « file » n'est plus géré : utiliser File Vehicle Group (avertissement dans les logs).",
+    "onStateStarted met self.done à false (hook d'état)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Remet self.done à false.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure les réglages propres au nœud à partir des données sauvegardées.",
+          "internal": true,
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "données sauvegardées du nœud"
+            }
+          }
+        },
+        "_onSerialize": {
+          "desc": "Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe.",
+          "internal": true,
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "table de sérialisation à remplir"
+            }
+          }
+        },
+        "buildGroup": {
+          "desc": "Construit un groupe de type 'custom' à partir des pins model_i / config_i.",
+          "internal": false
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui).",
+          "internal": true
+        },
+        "generateGroup": {
+          "desc": "Construit un groupe de type 'generator' à partir des paramètres choisis (20 véhicules via core_multiSpawn.createGroup ou copie depuis réglages/monde).",
+          "internal": false
+        },
+        "init": {
+          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "internal": true
+        },
+        "onStateStarted": {
+          "desc": "Remet self.done à false.",
+          "internal": false
+        },
+        "resetParams": {
+          "desc": "Remet les paramètres du mode Parameters à leurs valeurs par défaut.",
+          "internal": false
+        },
+        "updatePins": {
+          "desc": "Ajoute ou retire les paires de pins model_i / config_i (mode Custom).",
+          "internal": true,
+          "params": {
+            "old": {
+              "type": "integer",
+              "desc": "ancien nombre de pins"
+            },
+            "new": {
+              "type": "integer",
+              "desc": "nouveau nombre de pins"
+            }
+          }
+        },
+        "work": {
+          "desc": "Une seule fois par exécution : génère le groupe (generateGroup ou buildGroup) et le publie sur group.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

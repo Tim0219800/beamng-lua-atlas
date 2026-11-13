@@ -1,0 +1,50 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/cutCapture.lua",
+  "module": "Enregistre les 'coupures' (cuts) pendant la reconnaissance (recce) d'un rallye : à chaque capture, la position, l'orientation et l'angle de volant du véhicule sont ajoutés en ligne JSON dans le fichier cuts.json du dossier recce de la mission. Gère aussi le fichier transcripts.json associé. Le module renvoie un constructeur : require(...)(vehicle, missionDir).",
+  "notes": [
+    "Le fichier cuts.json contient un objet JSON par ligne (JSON Lines), ouvert en ajout.",
+    "La position est celle du véhicule (le code indique qu'elle est centrée au-dessus du haut du pare-brise).",
+    "La valeur 'steering' est lue depuis le cache de core_vehicleBridge ; elle reste nil tant qu'aucune valeur n'a été reçue.",
+    "Les fichiers sont ouverts sans vérification d'erreur : si io.open échoue, self.f est nil et l'appel plante."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet de capture renvoyé par le constructeur du module. Attributs : vehicle, fname, fname_transcripts, cut_id.",
+      "functions": {
+        "init": {
+          "desc": "Initialise : mémorise le véhicule, s'abonne aux changements de la valeur 'steering' (core_vehicleBridge) et calcule les chemins cuts.json et transcripts.json. L'identifiant de coupure repart à 1.",
+          "params": {
+            "vehicle": {"type": "table", "desc": "Objet véhicule (getId, getPosition, getDirectionVector...)."},
+            "missionDir": {"type": "string", "desc": "Dossier de la mission, passé à rallyUtil.missionReccePath."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "truncateCapturesFile": {
+          "desc": "Vide le fichier cuts.json (ouverture en écriture).",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "truncateTranscriptsFile": {
+          "desc": "Vide le fichier transcripts.json.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "writeCut": {
+          "desc": "Ajoute une capture encodée en JSON, suivie d'un saut de ligne, à cuts.json.",
+          "params": {"cutCapture": {"type": "table", "desc": "Table sérialisable (id, ts, pos, quat, steering)."}},
+          "returns": [],
+          "internal": false
+        },
+        "capture": {
+          "desc": "Capture l'état courant du véhicule (id incrémental, horodatage rallyUtil.getTime(), pos {x,y,z}, quat {x,y,z,w} calculé depuis les vecteurs direction/haut, steering) et l'écrit via writeCut.",
+          "params": {},
+          "returns": [{"type": "integer", "desc": "Identifiant de la coupure créée."}],
+          "internal": false
+        }
+      }
+    }
+  }
+}

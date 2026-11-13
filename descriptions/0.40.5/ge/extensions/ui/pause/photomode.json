@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/ui/pause/photomode.lua",
+  "module": "Façade du mode photo intégré au menu pause. Elle ne contient pas de logique : elle charge les huit modules ui_photomode_* (session, camera, scene, effects, advancedRender, capture, preview, presets) et leur redirige environ soixante fonctions via une table FORWARDED_FUNCTIONS. Elle relaie aussi les hooks moteur (métadonnées de capture, pré-rendu, update, fin de capture) vers les bons sous-modules.",
+  "usage": "ui_pause_photomode.requestScreenshot(...)  -- appelle ui_photomode_capture.requestScreenshot",
+  "notes": [
+    "Les fonctions redirigées sont générées dynamiquement au chargement (M[nom] = function(...) return _G[cible][nom](...) end) ; elles ne figurent donc pas dans la liste statique du .md. Exemples : getCameraState, setCameraFov, setEffectsState, requestScreenshot, listPresets, applyPreset, beginPhotomodeSession, endPhotomodeSession, getRoutePayload. Leur signature est celle de la fonction cible.",
+    "Le sous-module cible de chaque fonction : session (états de session/panneau/debug, routes), camera (caméra, bookmarks caméra, FOV, vitesse, roll, exposition), scene (scène, bookmarks d'environnement), effects, advancedRender, capture (captures, résolution), preview (aperçu, partage), presets (préréglages)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Liste des extensions ui_photomode_* chargées avant ce module."}
+  },
+  "functions": {
+    "onCollectScreenshotMetadata": {"desc": "Hook appelé lors de la collecte des métadonnées d'une capture ; délègue à ui_photomode_preview.collectScreenshotMetadata.", "params": {"...": {"type": "any", "desc": "Arguments transmis tels quels."}}, "returns": [{"type": "any", "desc": "Valeur renvoyée par le sous-module."}], "internal": true},
+    "onExtensionLoaded": {"desc": "Hook de chargement ; délègue à ui_photomode_session.handleExtensionLoaded.", "params": {"...": {"type": "any", "desc": "Arguments transmis."}}, "returns": [], "internal": true},
+    "onExtensionUnloaded": {"desc": "Hook de déchargement ; délègue à ui_photomode_session.handleExtensionUnloaded.", "params": {"...": {"type": "any", "desc": "Arguments transmis."}}, "returns": [], "internal": true},
+    "onPreRender": {"desc": "Hook appelé avant le rendu ; délègue à ui_photomode_capture.handlePreRender.", "params": {"...": {"type": "any", "desc": "Arguments transmis."}}, "returns": [], "internal": true},
+    "onScreenshotAllDone": {"desc": "Hook appelé quand toutes les captures demandées sont terminées ; délègue à ui_photomode_capture.onScreenshotAllDone.", "params": {"...": {"type": "any", "desc": "Arguments transmis."}}, "returns": [], "internal": true},
+    "onUpdate": {"desc": "Hook appelé à chaque frame ; délègue à ui_photomode_preview.handleUpdate.", "params": {"...": {"type": "any", "desc": "Arguments transmis."}}, "returns": [], "internal": true}
+  }
+}

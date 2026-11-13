@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/debug/miniGraph.lua",
+  "module": "Nœud flowgraph « Mini Graph » (catégorie repeat_instant, tags util/draw/table/data). Petit graphe (200x60) dans le nœud qui trace une seule valeur number au fil des frames (100 derniers points). Paramètres dans data : scaleMin/scaleMax (0..1 par défaut), autoScale (vrai : l'échelle s'étend avec les valeurs) et stop (vrai : arrête l'enregistrement). Entrée : value (number).",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise les données et paramètres.", "internal": true},
+        "work": {"desc": "Ajoute la valeur (0 si nil) à la série, met à jour l'échelle et retire le plus ancien point au-delà de la taille max, sauf si data.stop."},
+        "drawMiddle": {"desc": "Éditeur : dessine la courbe (PlotMultiLines).", "params": {"builder": {"type": "table", "desc": "constructeur de nœud"}, "style": {"type": "table", "desc": "style"}}, "internal": true}
+      }
+    }
+  }
+}

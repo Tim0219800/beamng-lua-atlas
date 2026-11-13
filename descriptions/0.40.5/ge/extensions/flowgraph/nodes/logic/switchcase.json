@@ -1,0 +1,56 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/logic/switchcase.lua",
+  "module": "Noeud flowgraph 'Switch Case' (categorie logic). Compare la valeur d'entree 'value' avec N valeurs value_i (egalite stricte) et met a true la sortie match_i correspondante ; 'none' vaut true si aucune ne correspond. Le flux de sortie est toujours true.",
+  "notes": [
+    "La sortie flow est toujours true, meme si le flux d'entree est inactif : le pin d'entree 'flow' n'est pas lu."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "count=1.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine le milieu du noeud (vide).",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Panneau : nombre de cas (Count).",
+          "internal": true
+        },
+        "updatePins": {
+          "desc": "Cree ou supprime les pins value_i et match_i et les liens associes.",
+          "internal": true,
+          "params": {
+            "old": {
+              "type": "integer",
+              "desc": "ancien nombre"
+            },
+            "new": {
+              "type": "integer",
+              "desc": "nouveau nombre"
+            }
+          }
+        },
+        "work": {
+          "desc": "flow=true ; pour chaque i, match_i = (value_i == value) ; none = aucun correspondant.",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde count.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Relit count (1 par defaut) et recree les pins.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

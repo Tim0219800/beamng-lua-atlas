@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/editor/flowgraph/execution.lua",
+  "module": "Fenêtre « Task Manager » (fg_execution) de l'éditeur Flowgraph : liste tous les projets flowgraph chargés (core_flowgraphManager.getAllManagers) avec leur état (en marche/arrêté, caché, transitoire) et permet de les démarrer ou arrêter tous d'un coup. Au démarrage global, applique les variables de mission du Mission Editor via missionVariableHelper avant setRunning(true). Les projets cachés/transitoires ne sont visibles qu'avec la préférence flowgraph.debug.editorDebug.",
+  "notes": [
+    "Peut s'afficher seule (drawAlone, titre avec suffixe ##alone) ou dans l'éditeur (draw).",
+    "Le bouton de redémarrage global est commenté dans le code."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe de la fenêtre Task Manager (windowName = 'fg_execution').",
+      "functions": {
+        "init": {"desc": "Récupère core_flowgraphManager et enregistre la fenêtre.", "params": {}, "internal": true},
+        "drawManager": {"desc": "Dessine la ligne d'un projet : icône d'état, visibilité, transitoire, nom et boutons.", "params": {"mgr": {"type": "table", "desc": "Manager flowgraph."}}, "internal": false},
+        "ExecutionView": {"desc": "Dessine le contenu : en-tête Projects, boutons Start All / Stop All, puis chaque projet.", "params": {}, "internal": false},
+        "drawAlone": {"desc": "Affiche la fenêtre hors du contexte d'un projet (self.mgr = nil).", "params": {}, "internal": false},
+        "draw": {"desc": "Dessine la fenêtre si elle est visible.", "params": {}, "internal": false}
+      }
+    }
+  }
+}

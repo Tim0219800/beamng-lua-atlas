@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/returnToVehicle.lua",
+  "module": "Noeud flowgraph 'Return camera to vehicle' (categorie once_instant). Ramene la camera au vehicule actif depuis un autre mode (camera libre, etc.) avec commands.setGameCamera(). Aucun pin.",
+  "notes": [
+    "Dans la branche d'avertissement, 'logTag' n'est pas defini dans le fichier (variable globale nil), le tag de log est donc nil."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "workOnce": {
+          "desc": "Si un vehicule joueur existe, appelle commands.setGameCamera() ; sinon journalise un avertissement.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

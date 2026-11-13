@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyDebugNode.lua",
+  "module": "Nœud flowgraph « Rally Debug Draw » (catégorie repeat_instant, tag rally). Dessine à chaque frame des infos de debug pour un véhicule : sa boîte englobante (RallyUtil.drawVehBB), une sphère de 0,1 m magenta à l'avant-bas, une jaune à la position du véhicule et une verte à la position pos reçue. Entrées : vehId, pos (vec3), rot (quat, non utilisée).",
+  "notes": ["La pin pos doit être renseignée quand vehId l'est, sinon vec3(nil) peut échouer."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Dessine via debugDrawer les repères du véhicule et de la position cible.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+      }
+    }
+  }
+}

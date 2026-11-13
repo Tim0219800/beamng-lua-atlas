@@ -1,0 +1,65 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/customButtonTEST.lua",
+  "module": "Nœud flowgraph « Custom Button TEST » (catégorie once_instant, description « TEST ») : nœud d'essai qui affiche un bouton « Click me! » via le hook UI 'CustomFGButtons'. Sortie « btn_1 » (flux) mise à true quand le bouton est cliqué. Ne pas utiliser en production.",
+  "notes": [
+    "Nœud de test : openDialogue/closeDialogue référencent self.open mais workOnce n'ouvre pas via openDialogue ; self.open reste false, donc le dialogue n'est pas fermé à l'arrêt.",
+    "Dépend de core_input_bindings."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "open = false.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Ferme le dialogue s'il est ouvert.",
+          "internal": true
+        },
+        "buttonPushed": {
+          "desc": "Met à true le pin de sortie correspondant au bouton cliqué, les autres à false.",
+          "params": {
+            "action": {
+              "type": "string",
+              "desc": "Nom du bouton ou du pin de sortie activé."
+            }
+          },
+          "internal": false
+        },
+        "closeDialogue": {
+          "desc": "Envoie une liste vide à 'CustomFGButtons' (cache les boutons).",
+          "internal": false
+        },
+        "getCmd": {
+          "desc": "Construit la commande Lua rappelant buttonPushed(action) sur ce nœud.",
+          "params": {
+            "action": {
+              "type": "string",
+              "desc": "Nom du bouton ou du pin de sortie activé."
+            }
+          },
+          "internal": false
+        },
+        "init": {
+          "desc": "open = false.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Ferme le dialogue s'il est ouvert.",
+          "internal": true
+        },
+        "openDialogue": {
+          "desc": "Envoie le bouton « Click me! » à l'UI et met done = true.",
+          "internal": false
+        },
+        "workOnce": {
+          "desc": "Envoie le bouton « Click me! » à l'UI (guihooks 'CustomFGButtons').",
+          "internal": true
+        }
+      }
+    }
+  }
+}

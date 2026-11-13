@@ -4,5 +4,7 @@
 
 **Accès :** `require("servertests")`
 
+Mini script de la console : il recharge lua/console/unittests via rerequire. Les autres lignes (benchphysics, sp, ul) sont commentées. Aucune fonction ni champ.
+
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/console/servertests.lua`.*

@@ -1,0 +1,125 @@
+{
+  "path": "lua/ge/extensions/career/modules/playerDriving.lua",
+  "module": "Gère la conduite du joueur en carrière : mise en place du trafic et des véhicules garés, suivi de l'état du joueur (stationné, trafic, poursuite de police), amendes d'arrestation, phases du tutoriel (trafic masqué puis restauré), téléportation au garage (avec remorque), récupération du véhicule favori et affichage d'une position par caméra. Utilise gameplay_traffic, gameplay_parking et gameplay_police.",
+  "usage": "local d = career_modules_playerDriving.getPlayerData()\nif career_modules_playerDriving.playerPursuitActive() then ... end",
+  "notes": [
+    "playerData : {maxTrafficAmount, maxParkingAmount, defaultTrafficAmount = 1, isParked, traffic, parking}.",
+    "debugMode vaut `not shipping_build` (booléen) : en mode debug, les quantités de trafic et de véhicules garés ne sont pas bornées ; sinon elles sont bornées entre 2 et 50. Si le réglage trafficRestrictForCareer est actif (hors build shipping), les deux quantités valent 1.",
+    "Amende d'arrestation de police : data.mode * data.uniqueOffensesCount * 100 (marqué WIP dans le code), payée sans canBeNegative : si le joueur ne peut pas payer, pay échoue sans rien débiter.",
+    "Après le tutoriel ou une fin de mission, la probabilité d'apparition des véhicules de police est fixée à 0.15 ; pendant le tutoriel elle est 0.",
+    "teleportTrailerJob calcule trailerBB avec vehicle:getSpawnWorldOOBB() au lieu de celui de la remorque (probable bug : la remorque est placée selon la taille du véhicule tracteur).",
+    "onUpdate est un squelette (« career police logic ») sans effet.",
+    "Les mises à jour du joueur (setPlayerData) ne sont pas faites pendant le tutoriel ni pendant une mission au premier plan."
+  ],
+  "fields": {
+    "debugMode": {"type": "boolean", "desc": "not shipping_build : true hors build de distribution."},
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : career_career."}
+  },
+  "functions": {
+    "getPlayerData": {
+      "desc": "Renvoie la table d'état du joueur (trafic, stationnement, quantités maximales).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "playerData (référence directe)."}],
+      "internal": false
+    },
+    "playerPursuitActive": {
+      "desc": "Indique si le joueur est poursuivi par la police (pursuit.mode différent de 0).",
+      "params": {},
+      "returns": [{"type": "boolean|nil", "desc": "true si poursuite en cours, faux ou nil sinon."}],
+      "internal": false
+    },
+    "resetPlayerState": {
+      "desc": "Recalcule les données du joueur pour le véhicule actuel, règle les variables du trafic, de la police (rayon d'arrestation 15, temps d'évasion 30) et du stationnement (précision 0.2), et remet à zéro le suivi de trafic du joueur.",
+      "params": {},
+      "internal": false
+    },
+    "setTrafficForTutorial": {
+      "desc": "Phase tutoriel : disperse les voitures garées et le trafic, masque les garées (quantité 0), règle le trafic actif sur maxTrafficAmount et met la police à 0.",
+      "params": {},
+      "internal": false
+    },
+    "setTrafficAfterTutorial": {
+      "desc": "Fin de phase tutoriel : disperse trafic et voitures garées, réinitialise l'état du joueur et met la probabilité de police à 0.15.",
+      "params": {},
+      "internal": false
+    },
+    "restoreTrafficAfterTutorialPhase": {
+      "desc": "Réactive le trafic si coupé, restaure les quantités actives mémorisées (ou celles des réglages si nulles) puis appelle setTrafficAfterTutorial.",
+      "params": {},
+      "internal": false
+    },
+    "retrieveFavoriteVehicle": {
+      "desc": "Amène le véhicule favori de l'inventaire à la position du joueur : le téléporte s'il existe, sinon le fait apparaître s'il est accessible et n'a pas besoin de réparation.",
+      "params": {},
+      "internal": false
+    },
+    "teleportToGarage": {
+      "desc": "Téléporte le véhicule au garage, annule la navigation de mission, coupe le contact, gère une éventuelle remorque (téléportation différée, puis suppression après mise à jour des conditions de pièces) et vérifie le carburant minimal.",
+      "params": {
+        "garageId": {"type": "string", "desc": "Identifiant du garage."},
+        "veh": {"type": "userdata", "desc": "Objet véhicule."},
+        "resetVeh": {"type": "boolean|nil", "desc": "Si vrai, réinitialise le véhicule à la téléportation."}
+      },
+      "internal": false
+    },
+    "showPosition": {
+      "desc": "Oriente le joueur (mode marche) vers pos ; si un obstacle statique bloque la vue, joue un court trajet de caméra (5,5 s) qui montre la position puis revient à la caméra véhicule.",
+      "params": {"pos": {"type": "vec3", "desc": "Position à montrer."}},
+      "internal": false
+    },
+    "onVehicleParkingStatus": {
+      "desc": "Hook de stationnement : met playerData.isParked à true (événement valid) ou false (exit) pour le véhicule joueur, hors mission et tutoriel.",
+      "params": {
+        "vehId": {"type": "integer", "desc": "Id du véhicule."},
+        "data": {"type": "table", "desc": "Données d'événement (event)."}
+      },
+      "internal": true
+    },
+    "onTrafficStarted": {
+      "desc": "Hook : à l'activation du trafic, mémorise les quantités maximales et réinitialise l'état du joueur (hors tutoriel et mission).",
+      "params": {},
+      "internal": true
+    },
+    "onTrafficStopped": {
+      "desc": "Hook : vide les données de trafic du joueur.",
+      "params": {},
+      "internal": true
+    },
+    "onPursuitAction": {
+      "desc": "Hook de poursuite : désactive le suivi de stationnement au début, le réactive à reset/evade, et inflige une amende à l'arrestation (message UI).",
+      "params": {
+        "vehId": {"type": "integer", "desc": "Id du véhicule."},
+        "action": {"type": "string", "desc": "start, reset, evade ou arrest."},
+        "data": {"type": "table", "desc": "Données de poursuite (mode, uniqueOffensesCount)."}
+      },
+      "internal": true
+    },
+    "onTrafficOrParkingReady": {
+      "desc": "Hook : quand le trafic et les voitures garées sont prêts, ferme l'écran de chargement careerVehicles et désactive les déclencheurs spéciaux ; pendant le tutoriel, les masque et mémorise leurs quantités.",
+      "params": {},
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook : met à jour les données du joueur pour le nouveau véhicule (hors tutoriel et mission).",
+      "params": {
+        "oldId": {"type": "integer", "desc": "Ancien véhicule."},
+        "newId": {"type": "integer", "desc": "Nouveau véhicule."}
+      },
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook de frame : vide en pratique (« career police logic » non implémentée).",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Temps simulé (s)."},
+        "dtRaw": {"type": "number", "desc": "Temps brut (s)."}
+      },
+      "internal": true
+    },
+    "onCareerActive": {
+      "desc": "Hook : lance setupTraffic si la carrière est active et le trafic jamais préparé ; active les déclencheurs spéciaux pendant le chargement pour précalculer l'éclairage des garages.",
+      "params": {"active": {"type": "boolean", "desc": "État d'activation."}},
+      "internal": true
+    }
+  }
+}

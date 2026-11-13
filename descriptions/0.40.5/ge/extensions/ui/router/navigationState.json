@@ -1,0 +1,171 @@
+{
+  "path": "lua/ge/extensions/ui/router/navigationState.lua",
+  "module": "Mémoire d'état du routeur d'interface : entrée précédente, entrée courante et entrée en attente (pending), état du décorateur de fil d'Ariane, et dernière portée active par route. Il fournit les accesseurs, la promotion d'une entrée en attente en entrée courante, la sérialisation (pour survivre au rechargement des extensions Lua) et la réinitialisation. Aucune logique de navigation : c'est le routeur qui décide.",
+  "notes": [
+    "promotePendingEntry décale : previous = current, current = pending, pending = nil. clearPendingEntry abandonne l'entrée en attente (timeout, rejet, annulation, préemption).",
+    "Les fonctions « Compatibility shims » (getCurrentResolved, getCurrentRouteNode, getPendingRouteNode, getBreadcrumbs, setPendingState, promotePendingStates, setRequest) conservent les formes de retour de l'ancienne API ; setRequest ne fait rien. Attention : getCurrentResolved renvoie l'entrée complète (currentEntry) et non sa partie resolved.",
+    "Le décorateur : {value, moduleName, visible} ; visible vaut au départ Config.ShowContextDecoratorInBreadcrumbs.",
+    "serialize/deserialize utilisent ResolvedRoute.toStorable/fromStorable (routeNode et fonctions non conservés). lastActiveScopeByRoute n'est pas sérialisé."
+  ],
+  "functions": {
+    "setLastActiveScope": {
+      "desc": "Mémorise la dernière portée active d'une route.",
+      "params": {
+        "routeName": {"type": "string", "desc": "Nom de route."},
+        "scopeId": {"type": "string", "desc": "Identifiant de portée."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getLastActiveScope": {
+      "desc": "Renvoie la dernière portée active mémorisée pour la route.",
+      "params": {"routeName": {"type": "string", "desc": "Nom de route."}},
+      "returns": [{"type": "string|nil", "desc": "Identifiant de portée."}],
+      "internal": false
+    },
+    "clearLastActiveScope": {
+      "desc": "Oublie la dernière portée active d'une route (ignoré si routeName est nil).",
+      "params": {"routeName": {"type": "string|nil", "desc": "Nom de route."}},
+      "returns": [],
+      "internal": false
+    },
+    "setPendingEntry": {
+      "desc": "Définit l'entrée de navigation en attente de validation par le framework.",
+      "params": {"entry": {"type": "table", "desc": "Entrée de navigation."}},
+      "returns": [],
+      "internal": false
+    },
+    "clearPendingEntry": {
+      "desc": "Supprime l'entrée en attente non validée.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "promotePendingEntry": {
+      "desc": "Promeut l'entrée en attente en entrée courante (l'ancienne courante devient précédente).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "getCurrentEntry": {
+      "desc": "Renvoie l'entrée de navigation courante (validée).",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Entrée {request, resolved, origin, toRoute, fromRoute, routeNode}."}],
+      "internal": false
+    },
+    "getPendingEntry": {
+      "desc": "Renvoie l'entrée en attente.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Entrée en attente."}],
+      "internal": false
+    },
+    "getPreviousEntry": {
+      "desc": "Renvoie l'entrée précédente.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Entrée précédente."}],
+      "internal": false
+    },
+    "getCurrentResolved": {
+      "desc": "Raccourci de compatibilité : renvoie l'entrée courante complète (voir notes).",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Entrée courante."}],
+      "internal": false
+    },
+    "getCurrentRouteNode": {
+      "desc": "Renvoie la configuration de route (routeNode, avec ses hooks) de l'entrée courante.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Nœud de route."}],
+      "internal": false
+    },
+    "getPendingRouteNode": {
+      "desc": "Renvoie le routeNode de l'entrée en attente.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Nœud de route."}],
+      "internal": false
+    },
+    "getBreadcrumbs": {
+      "desc": "Renvoie le fil d'Ariane de l'entrée courante ({} si aucun).",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Miettes de pain."}],
+      "internal": false
+    },
+    "setPendingState": {
+      "desc": "Raccourci de compatibilité : construit l'entrée en attente à partir d'un routeNode et de {request, resolved, origin}.",
+      "params": {
+        "routeNode": {"type": "table", "desc": "Nœud de route."},
+        "data": {"type": "table", "desc": "{request, resolved, origin}."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "promotePendingStates": {
+      "desc": "Raccourci de compatibilité : appelle promotePendingEntry.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setRequest": {
+      "desc": "Raccourci de compatibilité : ne fait rien.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setDecorator": {
+      "desc": "Définit la valeur du décorateur et son module.",
+      "params": {
+        "value": {"type": "any", "desc": "Valeur du décorateur."},
+        "moduleName": {"type": "string", "desc": "Module propriétaire (premier segment du nom de route)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getDecorator": {
+      "desc": "Renvoie la valeur du décorateur.",
+      "params": {},
+      "returns": [{"type": "any", "desc": "Décorateur ou nil."}],
+      "internal": false
+    },
+    "getDecoratorModule": {
+      "desc": "Renvoie le module propriétaire du décorateur.",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "Nom du module."}],
+      "internal": false
+    },
+    "setDecoratorVisible": {
+      "desc": "Affiche ou masque le décorateur.",
+      "params": {"visible": {"type": "boolean", "desc": "Visibilité."}},
+      "returns": [],
+      "internal": false
+    },
+    "isDecoratorVisible": {
+      "desc": "Indique si le décorateur est visible.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "Visibilité."}],
+      "internal": false
+    },
+    "clearDecorator": {
+      "desc": "Réinitialise le décorateur (valeur et module à nil, visibilité par défaut de la config).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "serialize": {
+      "desc": "Sérialise les entrées précédente/courante/en attente (formes stockables) et le décorateur.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{previousEntry, currentEntry, pendingEntry, decorator={value, moduleName, visible}}."}],
+      "internal": true
+    },
+    "deserialize": {
+      "desc": "Restaure l'état depuis les données de serialize (sans effet si data est nil). Sans champ decorator, le décorateur est réinitialisé.",
+      "params": {"data": {"type": "table|nil", "desc": "Données produites par serialize."}},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet à zéro les trois entrées, les dernières portées actives et le décorateur.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

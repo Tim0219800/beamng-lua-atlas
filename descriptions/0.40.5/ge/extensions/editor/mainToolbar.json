@@ -1,0 +1,28 @@
+{
+  "path": "lua/ge/extensions/editor/mainToolbar.lua",
+  "module": "Barre d'outils principale (fenêtre « Main Toolbar ») du World Editor. Elle contient les boutons généraux (nouveau/ouvrir/sauvegarder niveau…), les boutons de gizmo d'axe (grille, snap de rotation et d'échelle), la caméra, l'heure du jour et l'exposition, ainsi que la liste des modes d'édition regroupables en « sets » enregistrés dans un fichier. Les autres extensions peuvent y ajouter des boutons via les hooks émis.",
+  "notes": [
+    "Hooks émis : onEditorGuiGeneralToolbar (boutons généraux), onEditorGuiEditModesToolbar et onEditorGuiEditModeToolbar (modes d'édition).",
+    "Ne dessine rien en mode headless ni tant que editor.menuHeight n'est pas défini (menu principal pas encore dessiné).",
+    "À la désactivation de l'éditeur, restaure l'auto-exposition et l'EV manuel de PostEffectLocalExposureObject modifiés depuis la barre.",
+    "Préférence ui.general.enableVehicleControls : active/désactive les action maps VehicleCommonActionMap et VehicleSpecificActionMap."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "{'core_environment'}."}
+  },
+  "functions": {
+    "onEditorGuiToolBar": {"desc": "Dessine la fenêtre de la barre d'outils à chaque frame et émet les hooks de barre d'outils.", "params": {}, "internal": true},
+    "onEditorInitialized": {"desc": "Enregistre et affiche la fenêtre « mainToolbar » et charge les sets de modes d'édition depuis le fichier.", "params": {}, "internal": true},
+    "onEditorPreferenceValueChanged": {
+      "desc": "Si ui.general.enableVehicleControls change, active/désactive les action maps véhicule.",
+      "params": {
+        "path": {"type": "string", "desc": "Chemin de la préférence."},
+        "value": {"type": "any", "desc": "Nouvelle valeur."}
+      },
+      "internal": true
+    },
+    "onEditorSaveState": {"desc": "Appelé à la sauvegarde de l'état de l'éditeur. Corps vide.", "params": {"state": {"type": "table", "desc": "État de l'éditeur."}}, "internal": true},
+    "onEditorLoadState": {"desc": "Appelé au chargement de l'état de l'éditeur. Corps vide.", "params": {"state": {"type": "table", "desc": "État de l'éditeur."}}, "internal": true},
+    "onEditorDeactivated": {"desc": "Appelé à la désactivation de l'éditeur : restaure l'exposition initiale si elle avait été modifiée.", "params": {}, "internal": true}
+  }
+}

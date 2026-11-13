@@ -1,0 +1,15 @@
+{
+  "path": "lua/common/libs/resty/template/microbenchmark.lua",
+  "module": "Bibliothèque tierce lua-resty-template : micro-benchmark du moteur (temps d'analyse, de compilation et d'exécution d'un petit gabarit en boucle). Outil de développement de la bibliothèque, sans usage pour un moddeur.",
+  "notes": [
+    "Bug : la dernière boucle de `run` référence les tables `views` et `contexts` qui ne sont déclarées nulle part dans le fichier (variables globales nil) ; l'appel plante à la mesure « Execution Time ».",
+    "Affiche via print (ou ngx.say) ; vide `template.cache` pendant la mesure de compilation."
+  ],
+  "functions": {
+    "run": {
+      "desc": "Exécute le benchmark : mesure `parse`, `compile` et l'exécution de gabarits sur `iterations` boucles et affiche les temps (os.clock).",
+      "params": {"iterations": {"type": "integer|nil", "desc": "Nombre d'itérations (défaut 1000)."}},
+      "returns": []
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/veAeroDebug.lua",
+  "module": "Fenêtre 'Vehicle Aero Debug' du Vehicle Editor live. Active l'extension véhicule `aeroDebug` (extensions.aeroDebug.enable()), lit getAeroData() et affiche la force et le moment aérodynamiques totaux (repère monde et repère véhicule), puis la déportance (downforce) des essieux avant/arrière. Permet d'associer les 4 roues (FL, FR, RL, RR) via des combos ; un remplissage automatique est tenté si les noms de roues sont FL/FR/RL/RR. Dépend de editor_veMain.",
+  "notes": [
+    "Unités : forces en N, moments en N·m, pourcentages de déportance entre essieux.",
+    "aeroDebug est désactivé côté véhicule au changement de véhicule (ancien véhicule) et à la désactivation de l'éditeur.",
+    "Les valeurs de roues sont envoyées au véhicule via aeroDebug.setWheelNames(FL, FR, RL, RR) construit par concaténation de chaînes ; des noms contenant un guillemet casseraient la commande."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "{'editor_veMain'}."},
+    "menuEntry": {"type": "string", "desc": "'Aero Debug'."}
+  },
+  "functions": {
+    "onUpdate": {"desc": "Appelé chaque frame : active/interroge aeroDebug sur le véhicule et dessine les tableaux de forces et la configuration des essieux.", "params": {"dt": {"type": "number", "desc": "Delta temps."}}, "internal": true},
+    "open": {"desc": "Ouvre la fenêtre.", "internal": false},
+    "onVehicleSwitched": {
+      "desc": "Désactive aeroDebug sur l'ancien véhicule et remet à zéro les données aéro et l'initialisation des combos.",
+      "params": {
+        "oldVehicle": {"type": "integer", "desc": "ID de l'ancien véhicule."},
+        "newVehicle": {"type": "integer", "desc": "ID du nouveau véhicule."},
+        "player": {"type": "integer", "desc": "Index du joueur."}
+      },
+      "internal": true
+    },
+    "onEditorDeactivated": {"desc": "Appelé à la sortie de l'éditeur : désactive aeroDebug sur le véhicule courant.", "internal": true},
+    "onEditorActivated": {"desc": "Appelé à l'entrée dans l'éditeur (ne fait rien).", "internal": true},
+    "onSerialize": {"desc": "Renvoie {windowOpen}.", "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}], "internal": true},
+    "onDeserialized": {"desc": "Restaure l'état d'ouverture.", "params": {"data": {"type": "table", "desc": "Table de onSerialize."}}, "internal": true}
+  }
+}

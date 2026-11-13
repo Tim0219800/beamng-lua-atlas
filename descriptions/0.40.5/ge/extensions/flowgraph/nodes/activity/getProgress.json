@@ -1,0 +1,21 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/activity/getProgress.lua",
+  "module": "Nœud flowgraph « Get Progress » (catégorie once_p_duration, tag activity). Lit la progression agrégée de la mission pour la clé de progression courante (saveData.progress[clé].aggregate) et la met en pins : « aggregate » (table), « aggText » (texte simple), « aggHtml » (liste HTML), et pins cachés bestType, passed, completed, attemptCount, mostRecentDate. Des pins de sortie personnalisés reçoivent le champ de l'agrégat du même nom.",
+  "notes": [
+    "Sans activité associée, ne fait rien.",
+    "Le pin « aggregate » n'est jamais renseigné par le code (pas de clé aggregate dans l'agrégat lui-même) ; utiliser aggText/aggHtml ou les pins nommés.",
+    "Les nombres sont formatés avec %0.2d (entier sur 2 chiffres minimum).",
+    "La description du pin mostRecentDate dit « Completed » (copier-coller)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Active savePins.", "internal": true},
+        "workOnce": {"desc": "Construit aggText et aggHtml (clés triées) et copie chaque valeur de l'agrégat vers le pin de sortie du même nom."}
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/routeAfterRoadSection.lua",
+  "module": "Nœud flowgraph « Rally Route After Road Section » (catégorie once_instant, tag rally). Aiguille le flux après une section de route selon la mission courante du planning de la boucle rally : toServiceIn si rm:getCurrentMissionId() vaut 'serviceIn', sinon toSpecialStage. Si aucune mission courante n'existe, un avertissement est loggé et aucune sortie n'est activée.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "workOnce": {"desc": "Active toServiceIn ou toSpecialStage selon l'id de la mission courante.", "internal": true}
+      }
+    }
+  }
+}

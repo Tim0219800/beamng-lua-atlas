@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/aiCompetitorsLeaderboard.lua",
+  "module": "Nœud flowgraph « Rally AI Competitors Leaderboard » (catégorie once_instant, tag rally). Simule les temps de spéciale de concurrents IA à partir de la config aiCompetitors (module gameplay/rally/aiCompetitors) et produit un classement pour l'écran de fin dans la pin leaderboard ({rows, playerRowIndex} ; multiStage et stageCount si plusieurs spéciales). Entrées : playerTime, silverTime (repli ancien), playerTimes et silverTimes (tables, un temps par spéciale, de même longueur), stageLabels (libellés), playerTotalTimeSec (total officiel de la boucle rally, utilisé pour classer le joueur). Exécuté une seule fois (workOnce).",
+  "notes": ["En mode multi-spéciales, si les libellés ne sont ni fournis ni récupérables via gameplay_rallyLoop.getManager():getStageLabels(), une erreur est loggée et le classement est vide ({rows = {}}).", "En mode simple, le temps de référence vient d'aiCompetitors.getReferenceTime(missionTypeData), sinon de la pin silverTime."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "workOnce": {"desc": "Calcule le classement via aiCompetitors.computeLeaderboard et l'écrit dans la pin leaderboard.", "internal": true}
+      }
+    }
+  }
+}

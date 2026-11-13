@@ -1,0 +1,42 @@
+{
+  "path": "lua/ge/extensions/ui/vehicleRadarApp.lua",
+  "module": "Partie Lua de l'application d'interface « vehicle radar » (radar de proximité des véhicules). À chaque frame GUI, elle sélectionne les véhicules visibles proches du véhicule joueur, calcule pour chacun centre, taille, orientation, type (vehicle, traffic, parked, trailer), couleur de peinture, points d'attelage (fifthwheel) et distance minimale entre boîtes englobantes orientées (OOBB), puis envoie le tout dans le flux 'vehicleRadar'. Elle charge et sauvegarde les réglages de l'application.",
+  "notes": [
+    "Les réglages sont stockés dans settings/ui_apps/appsSettings/vehicleRadarSettings.json. Clés par défaut : rangeMeters=13, rangeSeconds=0.8, foreAftOffsetPct=0, rangeType='distance', minimalLook=false, coloredCars=true.",
+    "Avec rangeType='time', la portée vaut la vitesse du joueur (m/s) multipliée par rangeSeconds, bornée entre 5 et 30 m.",
+    "Les véhicules sont filtrés en deux étapes (rapide par position, précise par OOBB) ; la distance OOBB n'est calculée que si l'écart entre les boîtes est d'au plus 2,5 m environ.",
+    "Les tailles envoyées (sizeX/Y/Z) sont les dimensions complètes (2 × demi-étendues) ; rotX est l'angle atan2 de l'axe 0 de la boîte, en radians.",
+    "Les couleurs sont corrigées en gamma (puissance 1/2,2) et envoyées en entiers 0 à 255.",
+    "Les caches (attelages, objets, peintures, nom jbeam) sont vidés à chaque changement ou apparition de véhicule."
+  ],
+  "functions": {
+    "updateSetting": {
+      "desc": "Modifie un réglage existant et sauvegarde le fichier de réglages. Ne fait rien si la clé n'existe pas ou si la valeur est inchangée.",
+      "params": {
+        "key": {"type": "string", "desc": "Nom du réglage (rangeMeters, rangeSeconds, foreAftOffsetPct, rangeType, minimalLook, coloredCars)."},
+        "value": {"type": "any", "desc": "Nouvelle valeur."}
+      }
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement : lit le fichier de réglages et envoie les réglages à l'UI par 'VehicleRadarSettingsLoaded'.",
+      "internal": true
+    },
+    "onGuiUpdate": {
+      "desc": "Hook appelé à chaque frame GUI : construit {playerVehicleId, playerVehicleSpeed, objects} et l'envoie via guihooks.queueStream('vehicleRadar', data). Les objets sont indexés par id de véhicule.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Durée réelle de la frame (s)."},
+        "dtSim": {"type": "number", "desc": "Durée simulée de la frame (s)."},
+        "dtRaw": {"type": "number", "desc": "Durée brute de la frame (s)."}
+      },
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook appelé au changement de véhicule contrôlé : vide les caches.",
+      "internal": true
+    },
+    "onVehicleSpawned": {
+      "desc": "Hook appelé à l'apparition d'un véhicule : vide les caches.",
+      "internal": true
+    }
+  }
+}

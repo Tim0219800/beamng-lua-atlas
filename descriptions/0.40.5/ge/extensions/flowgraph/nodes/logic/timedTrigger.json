@@ -1,0 +1,49 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/logic/timedTrigger.lua",
+  "module": "Noeud flowgraph 'Timed Trigger' (categorie logic, behaviour once+duration). Il faut maintenir du flux sur 'charge' pendant data.duration secondes (3 par defaut) pour declencher ; si 'charge' est coupe plus de data.resetTimer secondes (1 par defaut), la charge est remise a zero. Sorties : flow (tant que charge complete) et impulsion 'complete' une seule fois.",
+  "notes": [
+    "Seule data.duration est sauvegardee ; resetTimer retombe sur 1 au chargement (valeur d'init).",
+    "Le pin d'entree 'flow' n'est pas lu dans work."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Initialise resetTimer=1, duration=3 et l'etat interne.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Remet tous les compteurs a zero.",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde data.duration.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Relit data.duration.",
+          "internal": true
+        },
+        "updateCharge": {
+          "desc": "Incremente timer (dtSim) quand charge est actif, declenche completeTrigger a la duree ; sinon incremente reset et remet le timer a zero apres resetTimer.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Deux barres de progression (charge et reset) avec temps restant.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Appelle updateCharge, flow = (timer >= duration), complete = impulsion une seule fois (completeReady).",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "any",
+              "desc": "non utilise"
+            }
+          }
+        }
+      }
+    }
+  }
+}

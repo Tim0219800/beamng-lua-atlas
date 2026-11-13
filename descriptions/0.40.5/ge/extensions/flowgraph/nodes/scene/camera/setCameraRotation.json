@@ -1,0 +1,64 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.lua",
+  "module": "Noeud flowgraph « Set Camera Rotation » (repeat_instant). Applique une rotation (quaternion) a la camera libre, saisie dans le noeud (mode 'custom') ou fournie par un pin quat 'rot' (mode 'from Pin'). La position courante de la camera est conservee. Le pin de sortie value (quat) renvoie la rotation appliquee.",
+  "notes": [
+    "La rotation par defaut quat(0,0,0,0) n'est pas un quaternion valide (non normalise) : elle n'est normalisee que si l'utilisateur edite les champs."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Initialise la rotation a quat(0,0,0,0), le mode a 'custom' et la liste des modes.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Panneau de proprietes de l'editeur : choix du mode, champs x/y/z/w (normalises), boutons « Set from camera » et « Preview ». Cree/supprime le pin 'rot'.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Passe en camera libre si besoin, lit le pin 'rot' en mode 'from Pin', applique la rotation (SetCamera) et ecrit le pin value.",
+          "internal": false
+        },
+        "drawMiddle": {
+          "desc": "Zone centrale du noeud (rien d'affiche).",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        },
+        "SetCamera": {
+          "desc": "Appelle core_camera.setPosRot(0, ...) avec la position courante de la camera et la rotation du noeud.",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde la rotation (res.rot) et le mode.",
+          "params": {
+            "res": {
+              "type": "any",
+              "desc": "table de sauvegarde"
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure rotation et mode ; recree le pin 'rot' si besoin.",
+          "params": {
+            "nodeData": {
+              "type": "any",
+              "desc": "donnees sauvegardees"
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

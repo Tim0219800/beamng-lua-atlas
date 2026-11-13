@@ -1,0 +1,34 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/veView.lua",
+  "module": "Vues de scène multiples de l'éditeur de véhicule en mode Live. Chaque « Scene View N » est une fenêtre ImGui qui affiche une caméra de rendu séparée (ImguiRenderViewControl) centrée sur le véhicule du joueur, avec les modes 3d, left, right, front, back, top, bottom (les vues orthographiques dessinent une grille au debugDrawer). Les réglages (mode, near/far clip, fov, ortho, décalage) sont sauvegardés dans la préférence de l'éditeur vehicleEditor.veView.sceneViews. Un clic droit ouvre un menu de contrôle (mode, Ortho, Render Main, Attach to Object, Show Icons, clips, FOV, ajout/suppression de vue).",
+  "notes": [
+    "Zoom à la molette : en mode ortho, modifie le fov (borné 0,1 à 170) ; sinon déplace la caméra le long de l'axe z de la vue. Glisser avec le bouton gauche déplace le dragOffset.",
+    "Passer en Ortho règle nearClip 0,6, farClip 100, fov 150 et masque les icônes d'éditeur ; repasser en perspective remet 0,01 / 2000 / 70 et affiche les icônes.",
+    "Bug : dans createViewFromData, attachToObject = im.BoolPtr(data.attachToObject or true) vaut toujours true, car « false or true » donne true ; la valeur sauvegardée à false n'est jamais restaurée. Même chose pour la valeur donnée dans les autres champs avec « or » seulement quand la valeur est false (editorIconsVisible et ortho utilisent « or false », donc ces deux-là sont corrects).",
+    "Le code des vues est qualifié « buggy and rushed » dans un commentaire du fichier.",
+    "Le menu 'Render Main' appelle setRenderWorldMain(bool) pour activer ou non le rendu de la vue principale.",
+    "createNewSceneView est exporté en commentaire seulement (M.createNewSceneView est commenté) ; seule addSceneView est publique. Le flag createNewViewNextFrame n'est jamais mis à true dans le fichier."
+  ],
+  "functions": {
+    "addSceneView": {
+      "desc": "Ajoute une vue de scène : réutilise la première vue supprimée ou masquée, sinon prend l'identifiant suivant, puis crée/enregistre la fenêtre « Scene View N » (400x600, outil vehicleEditor) et l'affiche. Appelée par le menu View > Add View de veToolbar en mode Live.",
+      "returns": []
+    },
+    "onEditorGui": {
+      "desc": "Hook de l'éditeur appelé à chaque frame : pour chaque vue enregistrée, ouvre la fenêtre, crée le contrôle de rendu et dessine son contenu (caméra, grille, menu clic droit) ; détruit le contrôle quand la fenêtre est fermée.",
+      "internal": true
+    },
+    "onEditorHeadlessChange": {
+      "desc": "Hook de l'éditeur appelé quand un outil passe en mode headless ou en sort. Pour l'outil 'vehicleEditor' : recharge les vues sauvegardées (enabled = true) ou les décharge et détruit les contrôles de rendu (enabled = false).",
+      "params": {
+        "enabled": {"type": "boolean", "desc": "true à l'activation de l'outil"},
+        "toolName": {"type": "string", "desc": "nom de l'outil, seul 'vehicleEditor' est traité"}
+      },
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook de l'éditeur appelé à l'initialisation : charge les vues sauvegardées dans les préférences (une seule fois).",
+      "internal": true
+    }
+  }
+}

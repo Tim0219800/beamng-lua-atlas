@@ -4,11 +4,15 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/getVehicle")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Get Vehicle Id From Table » (repeat_instant). Lit l'élément d'indice `index` d'un tableau d'ids de véhicules (vehicleIds) et le sort sur vehId s'il s'agit d'un nombre, sinon nil.
+
 ## Classe `C`
+
+Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:work()` |  | 23 |
+| `C:work()` | Écrit vehicleIds[index] sur vehId si c'est un nombre ; sinon nil. | 23 |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/getVehicle.lua`.*

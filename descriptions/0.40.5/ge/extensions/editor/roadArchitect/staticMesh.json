@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/editor/roadArchitect/staticMesh.lua",
+  "module": "Place des objets TSStatic (fichiers .dae) le long des routes du Road Architect, à partir des couches (layers) du profil latéral. Deux types de couches sont gérés : le type 4 (même maillage répété sur toute la longueur de la route) et le type 5 (une seule unité de maillage). Appelé par roads.finalise ; les objets sont retirés par tryRemove lors du unfinalise ou de la suppression de la route.",
+  "notes": [
+    "Les objets sont créés avec decalType = 'None', canSave = true et ajoutés au dossier de scène de la route.",
+    "Le nom de chaque objet unique de type 5 est '<matDisplay> <indice de route>- single -<indice de couche>'.",
+    "Le champ layer.mat contient le chemin du fichier de forme (shapeName)."
+  ],
+  "functions": {
+    "createStaticMeshes": {"desc": "Parcourt les couches du profil de la route et crée les objets statiques correspondants (type 4 : répétition le long de la route ; type 5 : unité unique).", "params": {"r": {"type": "table", "desc": "Route avec profile.layers."}, "roadIdx": {"type": "integer", "desc": "Indice de la route (sert au nommage)."}, "folder": {"type": "userdata", "desc": "SimGroup de scène."}}, "returns": []},
+    "tryRemove": {"desc": "Supprime de la scène tous les maillages statiques (répétés et uniques) créés pour la route, et oublie leurs entrées.", "params": {"roadName": {"type": "string", "desc": "Nom de la route (le commentaire du code parle d'indice, mais la clé est le nom)."}}, "returns": []}
+  }
+}

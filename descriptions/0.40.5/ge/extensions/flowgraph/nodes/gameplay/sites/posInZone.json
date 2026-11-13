@@ -1,0 +1,39 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/sites/posInZone.lua",
+  "module": "Nœud flowgraph « Position in Zone » (catégorie repeat_instant). Teste en 2D (zone:containsPoint2D) si une position est dans une zone Sites. Sorties : inside, outside, et impulsions enter/exit lors du changement entre deux frames.",
+  "notes": [
+    "Affiche dump(\"No zone data!\") à chaque frame si la zone ou la position manque.",
+    "enter et exit ne sont écrites qu'à partir de la 2e frame (self._lastInside non nil)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état interne du nœud.",
+          "internal": true
+        },
+        "init": {
+          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "internal": true,
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "gestionnaire flowgraph"
+            }
+          }
+        },
+        "work": {
+          "desc": "Calcule inside/outside et détecte l'entrée ou la sortie en comparant à l'état de la frame précédente.",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "arguments transmis par le moteur (non utilisés)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

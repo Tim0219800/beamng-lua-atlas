@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/drift/driftDonut.lua",
+  "module": "Nœud flowgraph « Drift Donut Detected » (catégorie repeat_instant, drift). Détecte les zones de donut : émet une impulsion donutDrift et le score donutScore quand le callback donut du module drift du flowgraph est actif (ttl > 0).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Lit mgr.modules.drift:getCallBacks().donut et renseigne donutDrift et donutScore."}
+      }
+    }
+  }
+}

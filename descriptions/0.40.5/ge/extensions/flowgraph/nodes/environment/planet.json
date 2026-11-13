@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/environment/planet.lua",
+  "module": "Nœud flowgraph « Planet » (catégorie once_p_duration, couleur/icône vehicle). Donne à un véhicule une gravité planétaire (obj:setPlanets avec position, rayon et masse) et génère en plus une vraie planète solide : six faces de maillage procédural (ProceduralMesh) déformées en sphère à partir d'une carte de hauteur PNG en croix de cube (défaut « cubemap_small.png »), placées à la position donnée, avec un matériau « procheightmapMat » créé à la volée. Entrées : vehId (sinon joueur), position (vec3), heightmap (chemin PNG), surfaceHeight (échelle du relief, 1 par défaut), radius (≥ 1), mass. À l'arrêt ou au reset, retire les planètes du véhicule et supprime les objets créés. Le jeu note qu'il manque de documentation sur les paramètres.",
+  "notes": [
+    "C.todo du jeu : « Needs further documentation on what each parameter does and how it should be used. »",
+    "workOnce ne fait rien si position, radius ou mass est nil ou si |radius| < 1 ; ne teste pas que le véhicule existe (veh nil plante).",
+    "La fonction locale `test` (fin du fichier) référence M qui n'existe pas dans ce fichier et n'est jamais appelée.",
+    "warpSphere (non utilisée par workOnce) est une ancienne version ; workOnce utilise warpSphereCubic.",
+    "Ancien pin renommé : vehID -> vehId. Constante C.gConst = 6.6742e-11.",
+    "En éditeur, data.showDebug (true) dessine la sphère, la masse, la force et la distance dans drawMiddle."
+  ],
+  "fields": {
+    "gConst": {"type": "number", "desc": "Constante gravitationnelle universelle, 6.6742e-11."}
+  },
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud, avec les fonctions de génération de planète.",
+      "functions": {
+        "init": {"desc": "Active showDebug.", "internal": true},
+        "_executionStopped": {"desc": "Appelle onNodeReset.", "internal": true},
+        "onNodeReset": {"desc": "Supprime les planètes du véhicule (obj:setPlanets({})) et supprime les objets ProceduralMesh créés.", "internal": true},
+        "workOnce": {"desc": "Applique la gravité planétaire au véhicule, crée le matériau, charge la carte de hauteur, génère les six faces de la planète et recharge les collisions (be:reloadCollision)."},
+        "drawMiddle": {"desc": "Éditeur : dessin de debug et gravité de surface (G*masse/rayon²).", "params": {"builder": {"type": "table", "desc": "constructeur de nœud"}, "style": {"type": "table", "desc": "style"}}, "internal": true},
+        "createheightmapMesh": {"desc": "Construit les données de maillage (sommets, UV, normales lissées, faces, matériau) à partir d'une grille de points avec bordure.", "params": {"heightmap": {"type": "table", "desc": "grille 2D de points {x,y,z,origX,origY}"}, "uvScale": {"type": "number|nil", "desc": "échelle des UV (1 par défaut)"}, "material": {"type": "string|nil", "desc": "nom du matériau"}}, "returns": [{"type": "table", "desc": "maillage {verts, uvs, normals, faces, material}"}], "internal": true},
+        "warpSphere": {"desc": "Déforme une grille plane en calotte sphérique (méthode angulaire, non utilisée par workOnce).", "params": {"sphereRadius": {"type": "number", "desc": "rayon"}, "heightmap": {"type": "table", "desc": "grille de points"}, "surfaceHeight": {"type": "number", "desc": "non utilisé"}}, "returns": [{"type": "table", "desc": "grille déformée"}], "internal": true},
+        "warpSphereCubic": {"desc": "Projette une face de cube sur une sphère de rayon donné, avec relief = z * surfaceHeight.", "params": {"sphereRadius": {"type": "number", "desc": "rayon"}, "heightmap": {"type": "table", "desc": "face de cube avec bordure"}, "cLength": {"type": "number", "desc": "recalculée dans la fonction"}, "surfaceHeight": {"type": "number", "desc": "échelle du relief"}}, "returns": [{"type": "table", "desc": "points projetés avec r"}], "internal": true},
+        "normalFromPoints": {"desc": "Normale (z positif) du triangle p1, p3, p2.", "params": {"p1": {"type": "table", "desc": "point central"}, "p3": {"type": "table", "desc": "second voisin"}, "p2": {"type": "table", "desc": "premier voisin"}}, "returns": [{"type": "vec3", "desc": "normale normalisée"}], "internal": true},
+        "placeObject": {"desc": "Crée un ProceduralMesh non sauvegardé dans MissionGroup avec le maillage, position et rotation donnés.", "params": {"name": {"type": "string|nil", "desc": "nom de l'objet"}, "mesh": {"type": "table", "desc": "maillage"}, "pos": {"type": "vec3|nil", "desc": "position"}, "rot": {"type": "quat|nil", "desc": "rotation"}}, "returns": [{"type": "userdata", "desc": "objet ProceduralMesh"}], "internal": true},
+        "heightmapFromPNG": {"desc": "Charge un PNG (GBitmap) et renvoie une grille vec3(x, y, z) où z = luminosité moyenne 0-1 (signe inversé par défaut).", "params": {"path": {"type": "string", "desc": "chemin du PNG"}, "scale": {"type": "any", "desc": "non utilisé"}, "invertColors": {"type": "boolean|nil", "desc": "si vrai, z positif au lieu de négatif"}}, "returns": [{"type": "table", "desc": "grille de hauteurs"}], "internal": true},
+        "getSquare": {"desc": "Extrait de la carte en croix la face de cube demandée (f, r, b, l, u, d), avec une bordure d'un point recopiée depuis les faces voisines (table blLookup), et met les coordonnées x/y à l'échelle des dimensions.", "params": {"grid": {"type": "table", "desc": "grille de hauteurs en croix de cube"}, "size": {"type": "integer", "desc": "taille d'une face"}, "identifier": {"type": "string", "desc": "face : f, r, b, l, u ou d"}, "dimensions": {"type": "number", "desc": "longueur de côté voulue"}}, "returns": [{"type": "table", "desc": "face (size+2)² avec bordure"}], "internal": true}
+      }
+    }
+  }
+}

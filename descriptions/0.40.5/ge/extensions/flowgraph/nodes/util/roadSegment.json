@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/roadSegment.lua",
+  "module": "Nœud « Road Properties » (repeat_instant). Donne les propriétés d'un segment de route du navgraph défini par deux nœuds. Entrées : n1, n2 (noms de nœuds), xnorm (caché, 0,5 par défaut). Sorties : roadDir (direction normalisée, tient compte du sens unique), length, width, drivability (0 à 1), speedLimit (m/s), lanesIncoming, lanesOutgoing, lanesTotal, isOneWay, isPrivate.",
+  "notes": [
+    "Bug : si aucun lien n'existe entre n1 et n2 (link == nil), le code lit quand même link.inNode et lève une erreur.",
+    "Le nombre de voies est compté sur la chaîne link.lanes (caractères « - » entrants, « + » sortants)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Réinitialise le cache des deux noms.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Réinitialise le cache des deux noms.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Si les deux nœuds existent dans map.getMap().nodes, recalcule (quand la paire change) longueur, drivabilité, limite de vitesse, sens unique, route privée, nombre de voies (comptage des « - » et « + » de link.lanes, « -+ » par défaut) et direction ; recalcule toujours la largeur (2 × rayon interpolé selon xnorm).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

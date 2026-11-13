@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/ui/router/routes/lightrunnerWizard.lua",
+  "module": "Assistant Vue de configuration du mode LightRunner (portage de l'ancien module Angular lightrunner). Même structure que quickraceWizard, backend oneshotRaceCore.lua, configurateur lightrunner_lightrunnerConfigurator. Enfants : level (> middle, titre « ui.quickrace.quickraceTracks »), vehicle.",
+  "notes": [
+    "Module de configuration de routes : il n'exporte aucune fonction. routeManager le lit (via l'extension ui_router_routes_<nom>) quand routes.lua l'inclut par `{ include = \"<nom>\" }`.",
+    "Les clés de `Children` forment les segments du nom pointé : « <module>.<enfant> ». `children` (minuscule) dans un nœud désigne ses sous-routes ; `include` y monte un autre module.",
+    "`ui` est hérité par les routes enfants (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause) : un enfant ne le redéfinit que pour ce qui change.",
+    "Le titre de level réutilise la clé « ui.busRoute.levelSelect » pour éviter une nouvelle entrée de localisation (commentaire du code)."
+  ],
+  "fields": {
+    "Root": {
+      "type": "table",
+      "desc": "{screenId = \"lightrunnerWizard\", title = \"ui.playmodes.lightRunner\", onEnter = \"lightrunner_lightrunnerConfigurator.onWizardRouteEnter\", Vue uniquement, barres masquées}"
+    },
+    "Children": {
+      "type": "table<string, table>",
+      "desc": "level (onWizardLevelRouteEnter ; sous-route mineure middle -> onWizardMiddleRouteEnter), vehicle (onWizardVehicleRouteEnter) ; scopeTree de sélecteur en grille."
+    },
+    "ModuleName": {
+      "type": "string",
+      "desc": "Nom du module de routes (premier segment du nom pointé)."
+    }
+  }
+}

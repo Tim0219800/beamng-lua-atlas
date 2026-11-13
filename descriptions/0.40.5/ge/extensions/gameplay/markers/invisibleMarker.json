@@ -1,0 +1,32 @@
+{
+  "path": "lua/ge/extensions/gameplay/markers/invisibleMarker.lua",
+  "module": "Marqueur « nul » : implémente toute l'interface d'un marqueur de mode jeu (init, setup, update, show, hide, clearObjects, interactInPlayMode...) avec des méthodes vides, sauf setup qui mémorise le cluster. Sert de marqueur par défaut pour des POI qui n'ont aucune représentation visible ni interaction. Le module renvoie directement un constructeur : require(...)(options) renvoie l'instance.",
+  "notes": [
+    "Ce module ne fournit pas de fonction cluster : il ne regroupe aucun POI.",
+    "Toutes les méthodes sont des coquilles vides, hormis setup (self.cluster = cluster)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Marqueur sans effet, instance renvoyée par le constructeur du module.",
+      "functions": {
+        "init": {"desc": "Ne fait rien.", "internal": true},
+        "update": {"desc": "Ne fait rien (appelée chaque frame par le gestionnaire de marqueurs).", "params": {"data": {"type": "table", "desc": "Données de frame (ignorées)."}}, "internal": true},
+        "setup": {"desc": "Mémorise le cluster dans self.cluster.", "params": {"cluster": {"type": "table", "desc": "Cluster associé."}}, "internal": true},
+        "createObjects": {"desc": "Ne fait rien.", "internal": true},
+        "setHidden": {"desc": "Ne fait rien.", "params": {"value": {"type": "boolean", "desc": "Ignoré."}}, "internal": false},
+        "hide": {"desc": "Ne fait rien.", "internal": false},
+        "show": {"desc": "Ne fait rien.", "internal": false},
+        "clearObjects": {"desc": "Ne fait rien.", "internal": false},
+        "instantFade": {"desc": "Ne fait rien.", "params": {"visible": {"type": "boolean", "desc": "Ignoré."}}, "internal": false},
+        "interactInPlayMode": {
+          "desc": "Ne fait rien : n'ajoute aucun élément interactif.",
+          "params": {
+            "interactData": {"type": "table", "desc": "Ignoré."},
+            "interactableElements": {"type": "table[]", "desc": "Ignoré."}
+          },
+          "internal": false
+        }
+      }
+    }
+  }
+}

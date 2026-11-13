@@ -1,0 +1,74 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/edgeHandles.lua",
+  "module": "Utilitaire d'outils d'éditeur pour des poignées « portes » (gates) déplaçables le long du contour d'un polygone (ring : liste de points {x,y}). Une porte est { edge, t, id } : indice d'arête et position t (0..1) sur cette arête. Fournit l'accrochage au contour, les portes par défaut (extrémités du grand axe), la géométrie d'une poignée flottante hors du bord et son dessin via debugDraw.",
+  "notes": [
+    "Le ring est fermé implicitement : l'arête i va du point i au point (i % n) + 1.",
+    "Le centre utilisé (centroid) est la moyenne simple des sommets, pas pondérée par l'aire.",
+    "gateWorldDir renvoie 4 valeurs (wx, wy, nx, ny), la normale pointant à l'opposé du centre du ring."
+  ],
+  "functions": {
+    "tagGates": {
+      "desc": "Donne un id unique (Engine.generateUUID) à chaque porte qui n'en a pas, puis renvoie la liste. Une porte n'est sinon repérée que par sa position dans la liste, qui change quand une porte précédente est retirée.",
+      "params": {"gates": {"type": "table|nil", "desc": "Liste de portes { edge, t, id? }"}},
+      "returns": [{"type": "table|nil", "desc": "La même liste, portes nommées."}]
+    },
+    "nearestGate": {
+      "desc": "Accroche un point du monde (px,py) à la porte la plus proche sur le contour.",
+      "params": {
+        "ring": {"type": "table", "desc": "Liste de points {x=,y=}"},
+        "px": {"type": "number", "desc": "x monde"},
+        "py": {"type": "number", "desc": "y monde"}
+      },
+      "returns": [{"type": "table", "desc": "{ edge = indice d'arête, t = position 0..1 }"}]
+    },
+    "gateWorldDir": {
+      "desc": "Position monde d'une porte et normale unitaire sortante de son arête (à l'opposé du centre du ring).",
+      "params": {
+        "ring": {"type": "table", "desc": "Liste de points {x,y}"},
+        "gate": {"type": "table", "desc": "{ edge, t }"}
+      },
+      "returns": [
+        {"type": "number", "desc": "wx"},
+        {"type": "number", "desc": "wy"},
+        {"type": "number", "desc": "nx (normale sortante)"},
+        {"type": "number", "desc": "ny (normale sortante)"}
+      ]
+    },
+    "defaultGates": {
+      "desc": "Deux portes par défaut aux extrémités opposées du grand axe du ring (entrée, sortie).",
+      "params": {"ring": {"type": "table", "desc": "Liste de points {x,y}"}},
+      "returns": [
+        {"type": "table", "desc": "Porte d'entrée { edge, t }"},
+        {"type": "table", "desc": "Porte de sortie { edge, t }"}
+      ]
+    },
+    "handleGeom": {
+      "desc": "Géométrie de la poignée saisissable d'une porte : la barre flotte à outDist mètres hors du bord et s'étend de halfWidth mètres de chaque côté.",
+      "params": {
+        "ring": {"type": "table", "desc": "Liste de points {x,y}"},
+        "gate": {"type": "table|nil", "desc": "{ edge, t }"},
+        "outDist": {"type": "number", "desc": "Distance de la barre au bord (m)"},
+        "halfWidth": {"type": "number", "desc": "Demi-largeur de la barre (m)"},
+        "liftFn": {"type": "function|nil", "desc": "function(x,y) -> vec3 qui pose un point sur le terrain ; plan z=0 par défaut."}
+      },
+      "returns": [
+        {"type": "vec3|nil", "desc": "Point sur le bord"},
+        {"type": "vec3", "desc": "Centre de la barre (bouton de saisie)"},
+        {"type": "vec3", "desc": "Extrémité 1 de la barre"},
+        {"type": "vec3", "desc": "Extrémité 2 de la barre"}
+      ]
+    },
+    "drawHandle": {
+      "desc": "Dessine la poignée (points de handleGeom) : tige du bord à la barre, barre avec points d'extrémité, bouton central qui pulse au survol.",
+      "params": {
+        "gp": {"type": "vec3", "desc": "Point sur le bord"},
+        "cp": {"type": "vec3", "desc": "Centre de la barre"},
+        "e1": {"type": "vec3", "desc": "Extrémité 1"},
+        "e2": {"type": "vec3", "desc": "Extrémité 2"},
+        "base": {"type": "integer", "desc": "Couleur de base (packée)"},
+        "glow": {"type": "integer", "desc": "Couleur de halo (packée)"},
+        "hovered": {"type": "boolean", "desc": "true si survolée"}
+      }
+    }
+  }
+}

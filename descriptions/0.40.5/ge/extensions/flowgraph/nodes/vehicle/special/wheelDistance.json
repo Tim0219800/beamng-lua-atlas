@@ -1,0 +1,51 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/special/wheelDistance.lua",
+  "module": "Nœud « Wheel Distance » (catégorie `repeat_p_duration`). Donne la distance, projetée sur la direction du véhicule, entre un point `position` (vec3) et le milieu des deux roues les plus proches (par défaut seulement les roues avant, `data.onlyUseFrontWheels = true`). Pins d'entrée : `vehId`, `position`. Sortie : `distance` (number, signe : positif quand le point est devant les roues). `data.debug` active le tracé.",
+  "notes": [
+    "Laisse des `print` de debug : `print(tostring(distanceFromStart))` à chaque frame et `print(\"ERROR1\")` si le véhicule ou la position manque.",
+    "Le tableau `wheels` est partagé : `wheelNodePos` est un vec3 unique réutilisé pour chaque roue, donc toutes les entrées pointent vers la même valeur (dernière roue) — la moyenne des deux roues les plus proches est faussée."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "calculateDistanceFromStart": {
+          "desc": "Calcule la distance signée entre `target` et les roues les plus proches du véhicule `vehicle`.",
+          "internal": false,
+          "params": {
+            "vehicle": {
+              "type": "userdata",
+              "desc": "Objet véhicule."
+            },
+            "target": {
+              "type": "vec3",
+              "desc": "Point cible."
+            }
+          }
+        },
+        "drawMiddle": {
+          "desc": "Affichage central vide.",
+          "internal": true,
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "Constructeur de nœud de l'éditeur (builder:Middle())."
+            },
+            "style": {
+              "type": "any",
+              "desc": "Style ImGui de l'éditeur."
+            }
+          }
+        },
+        "init": {
+          "desc": "Constructeur ; `data.debug = false`, `data.onlyUseFrontWheels = true`.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Lit le véhicule et la position puis écrit `distance`.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

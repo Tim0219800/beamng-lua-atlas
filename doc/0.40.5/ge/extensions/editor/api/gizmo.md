@@ -4,47 +4,79 @@
 
 **Accès :** extension `editor_api_gizmo` : `extensions.load("editor_api_gizmo")`, puis la globale `editor_api_gizmo`
 
+API de l'éditeur pour le gizmo d'axes 3D (déplacer / tourner / mettre à l'échelle) et pour les icônes d'objets dans la vue monde. Il enveloppe `worldEditorCppApi` : choix du mode et de l'alignement, verrous par axe, magnétisme (snap) de translation/rotation/échelle, détection du survol/glisser à la souris, et calcul des transformations d'objets pendant un déplacement avec accrochage au terrain (raycast ou core_terrain). `initialize` installe tout sur l'objet `editor` et définit les constantes `editor.AxisGizmoMode_*` et `editor.AxisGizmoAlignment_*`.
+
+## Exemple
+
+```lua
+editor.setAxisGizmoMode(editor.AxisGizmoMode_Translate)
+editor.setAxisGizmoTransform(myMatrix)
+-- chaque frame :
+editor.updateAxisGizmo(onStart, onEnd, onDragging)
+editor.drawAxisGizmo()
+```
+
+## Remarques
+
+- Constantes définies : editor.AxisX/Y/Z/W = 0/1/2/3 ; AxisGizmoMode_Translate/Rotate/Scale = 1/2/3 ; AxisGizmoAlignment_World = 0, _Local = 1 ; editor.objectIconHitId = 0 au départ.
+- `updateAxisGizmo` et `drawAxisGizmo` doivent être appelés ensemble à chaque frame. Pendant un glisser, la simulation est mise en pause (simTimeAuthority.pause) puis restaurée à la fin ou à l'annulation.
+- onEndGizmoDragFunc n'est appelée que si le gizmo a réellement été glissé (objectSelectionManipulated).
+- Les verrous setAxisGizmo*Lock(x, y, z) : true = l'axe est autorisé (le commentaire dit « allow »).
+- Accrochage au terrain (beginGizmoTranslate/getTransformsGizmoTranslate) piloté par les préférences snapping.terrain.* : enabled, useRayCast, indObjects, relRotation, keepHeight, snapToCenter, snapToBB.
+- Dans getTransformsGizmoTranslate, la hauteur de chaque objet utilise core_terrain.getTerrainHeight même en mode raycast (appelée avant de tester le raycast) : sans terrain, ces appels peuvent renvoyer nil (déduit du code, une valeur 0 de repli est utilisée avec `or`).
+- Le commentaire de code signale que getTransformsGizmoTranslate n'a pas d'équivalent pour la rotation (TODO).
+
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `editor_api_gizmo.initialize(editorInstance)` |  | 533 |
+| `editor_api_gizmo.initialize(editorInstance)` | Mémorise l'éditeur, définit les constantes d'axe/mode/alignement et installe toutes les fonctions gizmo/icônes sur `editor`. *(interne)* | 533 |
+
+### Détail des paramètres
+
+#### `editor_api_gizmo.initialize(editorInstance)`
+
+Mémorise l'éditeur, définit les constantes d'axe/mode/alignement et installe toutes les fonctions gizmo/icônes sur `editor`.
+
+- `editorInstance` (*table*) : objet `editor`
 
 ## Classe `editor`
+
+Fonctions ajoutées à `editor` par initialize.
 
 Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `editor.beginGizmoTranslate(objectTransforms, objectBBs, objectHeights, objects)` | Call this once when starting to drag the gizmo | 96 |
-| `editor.cancelAxisGizmoInteraction()` |  | 349 |
-| `editor.drawAxisGizmo()` | Draw the axis gizmo with its current transform and mode. | 364 |
-| `editor.drawObjectIcons()` |  | 14 |
-| `editor.getAxisGizmoAlignment()` | Return the axis gizmo alignment.<br> @see setAxisGizmoAlignment | 423 |
-| `editor.getAxisGizmoMode()` | Return the axis gizmo mode.<br> @see setAxisGizmoMode | 417 |
-| `editor.getAxisGizmoScale()` | Return the axis gizmo current scale as a Point3F object. | 54 |
-| `editor.getAxisGizmoSelectedElement()` | Return the axis gizmo selected element (axis or plane). | 433 |
-| `editor.getAxisGizmoTransform()` | Return the axis gizmo current matrix transform as a MatrixF object. | 49 |
-| `editor.getTransformsGizmoTranslate(objects, objectHeights)` | Returns the new transforms every frame when dragging the gizmo after "beginGizmoTranslate" was called once<br> TODO Why do we not have that function for rotation as well? | 170 |
-| `editor.isAxisGizmoHovered()` | Return true if the axis gizmo has any hovered elements (axes). | 428 |
-| `editor.modifyFadeIconsDistance(deltaValue)` | Modify the distance of the object icons fading by a delta value | 499 |
-| `editor.setAxisGizmoAlignment(alignment)` | Set the current axis gizmo alignment. Usually called when the edit mode is activated.<br> @param alignment the alignment of the axis gizmo to be set:<br>  *editor.AxisGizmoAlignment_World* the gizmo is aligned with the world axes<br>  *editor.AxisGizmoAlignment_Local* the gizmo is aligned with the local axes of the gizmo transform | 385 |
-| `editor.setAxisGizmoMode(mode)` | Set the current axis gizmo mode. Usually called when the edit mode is activated.<br> @param mode the mode of the axis gizmo to be set:<br>  *editor.AxisGizmoMode_Translate*<br>  *editor.AxisGizmoMode_Rotate*<br>  *editor.AxisGizmoMode_Scale* | 376 |
-| `editor.setAxisGizmoRotateLock(x, y, z)` | Set the lock on rotation on certain axes<br> @param x true to allow rotation on X axis<br> @param y true to allow rotation on Y axis<br> @param z true to allow rotation on Z axis | 403 |
-| `editor.setAxisGizmoRotateSnap(enabled, rotationSnap)` | Set the axis gizmo rotation snapping parameters.<br> @param enabled true to enable snapping<br> @param gridSize a float specifying the angle step for snapping | 447 |
-| `editor.setAxisGizmoScaleLock(x, y, z)` | Set the lock on scaling on certain axes<br> @param x true to allow scaling on X axis<br> @param y true to allow scaling on Y axis<br> @param z true to allow scaling on Z axis | 411 |
-| `editor.setAxisGizmoScaleSnap(enabled, scaleSnap)` | Set the axis gizmo scale snapping parameters.<br> @param enabled true to enable snapping<br> @param gridSize a float specifying the scale step for snapping | 454 |
-| `editor.setAxisGizmoTransform(matrix, scale)` | Set the axis gizmo's transform, used for custom editing of object parts or other visual handles.<br> @param matrix (MatrixF) the world transform matrix of the gizmo<br> @param scale (Point3F) of the gizmo, so to avoid non uniform scale decomposition problems | 44 |
-| `editor.setAxisGizmoTranslateLock(x, y, z)` | Set the lock on translation on certain axes<br> @param x true to allow translation on X axis<br> @param y true to allow translation on Y axis<br> @param z true to allow translation on Z axis | 395 |
-| `editor.setAxisGizmoTranslateSnap(enabled, gridSize)` | Set the axis gizmo translation snapping parameters.<br> @param enabled true to enable snapping<br> @param gridSize a float specifying the grid cell size for snapping | 440 |
-| `editor.toggleAxisGizmoAlignment()` | Switches between local and world gizmo axes alignment | 459 |
-| `editor.toggleDrawGizmoPlane()` | Toggle draw gizmo plane | 468 |
-| `editor.toggleDrawObjectIcons()` | Toggle draw object icons in the world scene view | 482 |
-| `editor.toggleDrawObjectText()` | Toggle draw object name text in the world scene view | 488 |
-| `editor.toggleSelectionHighlight()` | Toggle selection highlight on the selected meshes | 494 |
-| `editor.toggleSnapping(value)` | Toggle enable snapping for rotate and translate | 513 |
-| `editor.updateAxisGizmo(onStartGizmoDragFunc, onEndGizmoDragFunc, onGizmoDraggingFunc)` | Updates the axis gizmo internals, checking mouse manipulation events and so on.<br> Only call this together with "editor.drawAxisGizmo"<br> @param onStartGizmoDragFunc this function is called when the gizmo axes/handles are starting to being dragged (no args)<br> @param onEndGizmoDragFunc this function is called when the gizmo axes/handles ended being dragged (no args)<br> @param onGizmoDraggingFunc this function is called when the gizmo axes/handles are currently being dragged (no args) | 289 |
-| `editor.updateObjectIcons()` |  | 24 |
+| `editor.beginGizmoTranslate(objectTransforms, objectBBs, objectHeights, objects)` | À appeler une fois au début du glissement : mémorise les transformations de départ et, si l'accrochage au terrain est activé, les décalages au sol, normales et boîtes englobantes (collision des objets désactivée temporairement pour le raycast). | 96 |
+| `editor.cancelAxisGizmoInteraction()` | Annule une interaction en cours : relâche virtuellement la souris, restaure la pause de la simulation et désélectionne l'élément du gizmo. | 349 |
+| `editor.drawAxisGizmo()` | Dessine le gizmo avec sa transformation et son mode actuels (si la caméra de l'éditeur existe). | 364 |
+| `editor.drawObjectIcons()` | Dessine les icônes des objets les plus proches si la caméra existe et que editor.hideObjectIcons n'est pas vrai. | 14 |
+| `editor.getAxisGizmoAlignment()` | Renvoie l'alignement actuel du gizmo. | 423 |
+| `editor.getAxisGizmoMode()` | Renvoie le mode actuel du gizmo. | 417 |
+| `editor.getAxisGizmoScale()` | Renvoie l'échelle actuelle du gizmo. | 54 |
+| `editor.getAxisGizmoSelectedElement()` | Renvoie l'élément du gizmo sélectionné (axe ou plan). | 433 |
+| `editor.getAxisGizmoTransform()` | Renvoie la transformation actuelle du gizmo. | 49 |
+| `editor.getTransformsGizmoTranslate(objects, objectHeights)` | À appeler à chaque frame du glissement après beginGizmoTranslate : renvoie les nouvelles transformations des objets (translation du gizmo, avec accrochage terrain et rotation relative selon les préférences). Renvoie {} si beginGizmoTranslate n'a pas été appelé. | 170 |
+| `editor.isAxisGizmoHovered()` | Indique si un élément (axe ou plan) du gizmo est survolé/sélectionné. | 428 |
+| `editor.modifyFadeIconsDistance(deltaValue)` | Ajuste la distance de fondu des icônes d'objets (préférence gizmos.objectIcons.fadeIconsDistance += delta x fadeIconsDistanceModifySpeed, bornée à 1..50000) et affiche une notification. | 499 |
+| `editor.setAxisGizmoAlignment(alignment)` | Choisit l'alignement du gizmo et émet onEditorAxisGizmoAligmentChanged. | 385 |
+| `editor.setAxisGizmoMode(mode)` | Choisit le mode du gizmo et émet onEditorAxisGizmoModeChanged(mode). | 376 |
+| `editor.setAxisGizmoRotateLock(x, y, z)` | Autorise ou non la rotation par axe. | 403 |
+| `editor.setAxisGizmoRotateSnap(enabled, rotationSnap)` | Règle le magnétisme de rotation. | 447 |
+| `editor.setAxisGizmoScaleLock(x, y, z)` | Autorise ou non la mise à l'échelle par axe. | 411 |
+| `editor.setAxisGizmoScaleSnap(enabled, scaleSnap)` | Règle le magnétisme d'échelle. | 454 |
+| `editor.setAxisGizmoTransform(matrix, scale)` | Place le gizmo dans le monde (pour éditer des parties d'objet ou des poignées personnalisées). | 44 |
+| `editor.setAxisGizmoTranslateLock(x, y, z)` | Autorise ou non la translation par axe. | 395 |
+| `editor.setAxisGizmoTranslateSnap(enabled, gridSize)` | Règle le magnétisme de translation. | 440 |
+| `editor.toggleAxisGizmoAlignment()` | Bascule entre alignement monde et local. | 459 |
+| `editor.toggleDrawGizmoPlane()` | Inverse la préférence gizmos.general.drawGizmoPlane et active/désactive plan, hachures et grille de déplacement du gizmo. | 468 |
+| `editor.toggleDrawObjectIcons()` | Inverse la préférence gizmos.general.drawObjectIcons et l'applique au C++. | 482 |
+| `editor.toggleDrawObjectText()` | Inverse la préférence gizmos.general.drawObjectText (affichage des noms d'objets) et l'applique au C++. | 488 |
+| `editor.toggleSelectionHighlight()` | Inverse la préférence gizmos.general.highlightSelectedMeshes. | 494 |
+| `editor.toggleSnapping(value)` | Active/désactive le magnétisme de rotation et de translation selon les préférences snapping.general.* (rotateSnapSize, gridSize), sauf si la préférence rotateSnapEnabled / snapToGrid correspondante est déjà vraie. | 513 |
+| `editor.updateAxisGizmo(onStartGizmoDragFunc, onEndGizmoDragFunc, onGizmoDraggingFunc)` | Traite les événements souris du gizmo (début, glissement, fin, survol), relaie les modificateurs clavier au C++ et émet onEditorAxisGizmoAligmentChanged si l'alignement a changé côté C++. À appeler avec drawAxisGizmo. | 289 |
+| `editor.updateObjectIcons()` | Met à jour editor.objectIconHitId (icône d'objet sous la souris, 0 si icônes masquées ou préférence gizmos.general.drawObjectIcons == false) et editor.objectIconHoverId (seulement si aucun bouton souris n'est enfoncé et que l'UI ne capture pas la souris). À appeler à chaque frame. | 24 |
 
 ## Hooks émis
 

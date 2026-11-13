@@ -1,0 +1,213 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/mission/ARunForLife.lua",
+  "module": "Noeud flowgraph 'ARunForLife' (categorie repeat_instant) : logique complete d'un petit mini-jeu de survie (\"Plays my little scenario\"). La camera avance a vitesse croissante le long de l'axe -Y ; des props (rampe metal_ramp, gate, ball, cannon, caravan, woodcrate/woodplanks/haybale) sont actives/desactivees depuis un pool de vehicules (pin 'pool') sur 5 voies, des conteneurs sont teleportes pour boucler le decor, et des bonus (pieces, reparation) apparaissent. Le score augmente avec la distance et les actions (saut de rampe, gate, poussee de balle) ; le joueur perd s'il reste trop longtemps (5 s) hors de la zone de la camera. Beaucoup de pins de reglage en entree, sorties : score, vitesse camera, positions des triggers, medaille, signaux lost/repaired/coinEarnt/repairSpawned. Tout l'etat est dans des variables locales du module (non par instance).",
+  "notes": [
+    "Etat global au module (score, coins, props, camPos...) : deux instances du noeud se partageraient l'etat.",
+    "Les pins de sortie 'repairBuffCost' et 'gatePoints'/'jumpPoints' portent le meme nom que des entrees (entree et sortie distinctes).",
+    "checkBuffAvailabilty depend de coins < repairBuffCost pour la piece.",
+    "Le nom 'pipckupSpeed' (faute de frappe) est utilise dans moveCamera pour la vitesse de rattrapage de la camera."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "linkProps": {
+          "desc": "Recupere les vehicules du pool (propPool:getVehs()), enregistre dans propsInfo les decalques/rotations corrigees par jbeam, memorise les references balle/canon/caravane et le vehicule joueur (pin plId).",
+          "internal": true
+        },
+        "linkContainers": {
+          "desc": "Rassemble les ids des pins cont1id..cont20id existants dans containers et calcule contTpDist (distance de teleportation = nombre de conteneurs / 2 * 13.25).",
+          "internal": true
+        },
+        "moveCamera": {
+          "desc": "Fait avancer la camera (core_camera.setPosRot) : acceleration initiale puis lente, ralentissement/rattrapage quand slowdownCar est actif ; ecrit camSpeed.",
+          "internal": true
+        },
+        "tpContainers": {
+          "desc": "Teleporte vers l'avant les conteneurs passes derriere la camera (alternance voie droite/gauche).",
+          "internal": true
+        },
+        "doScore": {
+          "desc": "Augmente le score selon la position du joueur par rapport a la camera, la vitesse de la camera et dtSim ; ecrit score.",
+          "internal": true
+        },
+        "checkLose": {
+          "desc": "Si le joueur est hors de la zone camera, compte jusqu'a 5 s (timeLeftToLose) puis emet 'lost' ; sinon remet le decompte a -1.",
+          "internal": true
+        },
+        "pushBall": {
+          "desc": "Si la balle est active et a bouge de plus de 3 m, ajoute des points proportionnels a la distance parcourue (ballPoint par metre) au score et aux points bonus ; ecrit ballPoints.",
+          "internal": true
+        },
+        "checkBuffAvailabilty": {
+          "desc": "Met a jour repairAvailable et coinAvailable (la piece n'est disponible que tant que coins < repairBuffCost).",
+          "internal": true
+        },
+        "doBuffsTime": {
+          "desc": "Fait avancer les minuteries des bonus qui utilisent le temps (piece) jusqu'a ce qu'ils deviennent disponibles.",
+          "internal": true
+        },
+        "checkCoinForRepair": {
+          "desc": "Quand assez de pieces sont collectees, les depense, rend le bonus de reparation disponible et emet repairSpawned.",
+          "internal": true
+        },
+        "deactivateBuff": {
+          "desc": "Desactive un bonus (hors ecran, position {-1,0,0}) et met a jour la position du trigger correspondant.",
+          "internal": true,
+          "params": {
+            "buff": {
+              "type": "table",
+              "desc": "bonus a desactiver"
+            }
+          }
+        },
+        "getBuffNextTime": {
+          "desc": "Renvoie un delai aleatoire autour de baseTime (+/- 25 %).",
+          "internal": true,
+          "params": {
+            "baseTime": {
+              "type": "number",
+              "desc": "temps de base en secondes"
+            }
+          },
+          "returns": [
+            {
+              "type": "number",
+              "desc": "delai aleatoire"
+            }
+          ]
+        },
+        "activateBuff": {
+          "desc": "Active un bonus a une position, met a jour la position du trigger sur la sortie correspondante.",
+          "internal": true,
+          "params": {
+            "buff": {
+              "type": "table",
+              "desc": "bonus"
+            },
+            "pos": {
+              "type": "vec3",
+              "desc": "position"
+            }
+          }
+        },
+        "deactivateProp": {
+          "desc": "Reaffiche le decalque d'aide d'un prop desactive.",
+          "internal": true,
+          "params": {
+            "propName": {
+              "type": "string",
+              "desc": "nom jbeam du prop"
+            }
+          }
+        },
+        "deactivatePropsAndBuffs": {
+          "desc": "Desactive les props et bonus passes trop loin derriere la camera (propDespawn = 40 m) et les remet dans la liste des props inactifs.",
+          "internal": true
+        },
+        "getBuffByName": {
+          "desc": "Renvoie le bonus de ce nom ('repair' ou 'coin').",
+          "internal": true,
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "nom du bonus"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "bonus"
+            }
+          ]
+        },
+        "getPropByName": {
+          "desc": "Renvoie les infos de prop (propsInfo) pour un nom jbeam.",
+          "internal": true,
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "nom jbeam"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "infos du prop"
+            }
+          ]
+        },
+        "activatePropsAndBuffs": {
+          "desc": "Fait apparaitre periodiquement des lignes de props (nombre aleatoire entre minPropLine et maxPropLine, sans doublon de voie) et place les bonus disponibles.",
+          "internal": true
+        },
+        "moveTriggers": {
+          "desc": "Met a jour les sorties gatePos, rampPos, cannonPos depuis la position des props actifs.",
+          "internal": true
+        },
+        "updateValues": {
+          "desc": "Chaque frame : remet des sorties a leurs valeurs par defaut, lit position/rotation de la camera et du joueur, met a jour jumpPoints, gatePoints, totalBonusScore, coins.",
+          "internal": true
+        },
+        "setReferences": {
+          "desc": "Recupere le pool, lie conteneurs et props, remplit les listes de props actifs/inactifs.",
+          "internal": true
+        },
+        "increaseDecalPool": {
+          "desc": "Agrandit le pool de decalques.",
+          "internal": true,
+          "params": {
+            "amount": {
+              "type": "integer",
+              "desc": "nombre a ajouter"
+            }
+          }
+        },
+        "createDecalPool": {
+          "desc": "Cree le pool de decalques (fleches d'aide).",
+          "internal": true
+        },
+        "drawDecals": {
+          "desc": "Dessine les decalques (fleches) sur les props qui ont decal.draw actif.",
+          "internal": true
+        },
+        "slowDownCar": {
+          "desc": "Pendant la reparation, attend que le vehicule soit presque arrete (< 0,1 m/s) puis le degele, emet 'repaired'.",
+          "internal": true
+        },
+        "repairBuff": {
+          "desc": "Gele le vehicule joueur (setFreeze), desactive le bonus de reparation et lance le ralentissement.",
+          "internal": true
+        },
+        "coinBuff": {
+          "desc": "Ajoute une piece, desactive le bonus piece et emet coinEarnt (si la reparation n'est pas encore achetable).",
+          "internal": true
+        },
+        "checkTriggers": {
+          "desc": "Gere les impulsions d'entree : cannon (tir via custom_input.fire), jumpRamp, crashGate (points), repairTrigger, coinTrigger.",
+          "internal": true
+        },
+        "calcMedal": {
+          "desc": "Determine la medaille (Gold, Silver, Bronze, Wood) et le score suivant selon les pins gold/silver/bronze.",
+          "internal": true
+        },
+        "resetValues": {
+          "desc": "Remet tout l'etat du jeu a zero et recree la table des bonus (repair, coin).",
+          "internal": true
+        },
+        "setParameters": {
+          "desc": "Copie les pins de reglage non nil vers les variables locales du module.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Boucle de jeu : reset eventuel, initialisation unique (parametres, references, pool de decalques), puis enchaine updateValues, tpContainers, moveCamera, doScore, checkLose, checkTriggers, gestion des props/bonus, pushBall, moveTriggers, drawDecals, calcMedal, checkCoinForRepair, slowDownCar ; ecrit drawCannon.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

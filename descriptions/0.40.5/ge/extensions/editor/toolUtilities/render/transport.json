@@ -1,0 +1,121 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/render/transport.lua",
+  "module": "Rendu propre aux réseaux de transport et à l'éditeur de routes : centres de jonction, extrémités liées, fil de fer du ruban de route, candidats de boucle ou de jonction, rubans prismes gauche/droite et fantômes (copies faibles sans test de profondeur pour retrouver ce qui est enterré dans le terrain). Séparé de render.lua car seuls roadNetwork et heroRoadEditor l'utilisent. Module composite qui dessine via render/spheres, lines, tris et markup.",
+  "notes": [
+    "Distances de filtrage : 800 m pour les rubans non sélectionnés et jonctions, 400 m pour leurs fantômes (les fantômes coûtent un appel par ligne).",
+    "Le fil de fer d'une spline est calculé une fois et dessiné par lot ; si la spline expose meshEdgeL/meshEdgeR (Hero Road, vrais bords du tablier avec dévers, bombé, accotements), ce sont ceux-ci qui sont tracés, sinon le ruban de référence plat.",
+    "Un barreau est tracé tous les 12 points (ribbonRungSpacing) ; la binormale est espacée de 2 points (masterWireBinormalSpacing).",
+    "drawJunctionGhosts met en cache les points des bords de jonction (table à clés faibles) tant que rev ne change pas."
+  ],
+  "functions": {
+    "drawTransportJunctions": {
+      "desc": "Dessine les centres de jonction du réseau (sphères vertes) avec élévation, comme les nœuds de route ; la jonction sélectionnée est mise en évidence.",
+      "params": {
+        "junctions": {"type": "table|nil", "desc": "Liste de jonctions (pos, etc.)."},
+        "selectedIdx": {"type": "integer|nil", "desc": "Indice de la jonction sélectionnée (défaut 0)."},
+        "elevScale": {"type": "number|nil", "desc": "Échelle de couleur d'élévation (défaut 100)."},
+        "isGizmoActive": {"type": "boolean", "desc": "Gizmo actif (déduit du nom)."}
+      },
+      "returns": []
+    },
+    "drawLinkedTips": {
+      "desc": "Dessine en rouge verrouillé les extrémités de route liées à une jonction (par-dessus les sphères de nœuds normales) : premier nœud si jctIdStart, dernier si jctIdFinish.",
+      "params": {"groups": {"type": "table", "desc": "Groupes/routes avec nodes, jctIdStart, jctIdFinish."}},
+      "returns": []
+    },
+    "drawNodeGhosts": {
+      "desc": "Copies faibles sans test de profondeur des nœuds d'une spline (sauf ceux de l'ensemble hidden) pour que les poignées enterrées restent repérables. Ignore les splines désactivées ou isLink.",
+      "params": {
+        "spline": {"type": "table", "desc": "Spline avec nodes."},
+        "hidden": {"type": "table<integer, boolean>|nil", "desc": "Ensemble d'indices de nœuds à ne pas dessiner."}
+      },
+      "returns": []
+    },
+    "drawJunctionGhosts": {
+      "desc": "Fantômes du centre et des bords extérieurs (contour d'asphalte entre les bras) de chaque jonction à moins de 400 m. Les points de bord relevés viennent du cache tant que rev est inchangé.",
+      "params": {
+        "junctions": {"type": "table|nil", "desc": "Liste de jonctions (pos, connectorEdges)."},
+        "rev": {"type": "any", "desc": "Révision de construction de l'appelant, pour invalider le cache."}
+      },
+      "returns": []
+    },
+    "drawJunctionFilletHandle": {
+      "desc": "Poignée de « flare room » de la jonction sélectionnée : sphère de barre (cyan) sur le plus large îlot, ligne fine vers le nœud central et étiquette de valeur toujours affichée. Glisser vers l'intérieur ou l'extérieur règle l'évasement. Fantôme pour rester trouvable quand elle est enterrée.",
+      "params": {
+        "base": {"type": "vec3", "desc": "Position du nœud central."},
+        "handle": {"type": "vec3", "desc": "Position de la poignée."},
+        "value": {"type": "number", "desc": "Valeur affichée."},
+        "highlight": {"type": "boolean", "desc": "true si survolée ou en cours de glissement (déduit du nom)."}
+      },
+      "returns": []
+    },
+    "drawLanePortal": {
+      "desc": "Portail d'une voie ouverte en bout de route : tuile de a à b en travers de la voie, sur la longueur len selon dir ; verte si le trafic sort de la route par là, rouge s'il y entre. lit (survolé ou balayé) l'affiche plus vif et cerné.",
+      "params": {
+        "a": {"type": "vec3", "desc": "Bord de la voie."},
+        "b": {"type": "vec3", "desc": "Autre bord de la voie."},
+        "dir": {"type": "vec3", "desc": "Direction d'extension."},
+        "len": {"type": "number", "desc": "Longueur de la tuile."},
+        "leaves": {"type": "boolean", "desc": "true si le trafic quitte la route ici."},
+        "lit": {"type": "boolean", "desc": "Mise en évidence."}
+      },
+      "returns": []
+    },
+    "drawLanePick": {
+      "desc": "Bande de voies de a à b en travers d'un bout de route, sur len selon dir : les voies qu'une extrémité glissée rejoindrait (rouge) ou la route qu'un balayage de voies créerait (bleu et bord blanc si ok, rouge sinon).",
+      "params": {
+        "a": {"type": "vec3", "desc": "Bord de la bande."},
+        "b": {"type": "vec3", "desc": "Autre bord."},
+        "dir": {"type": "vec3", "desc": "Direction d'extension."},
+        "len": {"type": "number", "desc": "Longueur."},
+        "ok": {"type": "boolean", "desc": "true si l'opération est possible."}
+      },
+      "returns": []
+    },
+    "renderCandidateLoop": {
+      "desc": "Indique visuellement qu'une boucle est possible entre début et fin de la même spline : surbrillance des deux nœuds, ligne spéciale et invite « maintenir CTRL + relâcher ».",
+      "params": {"node1": {"type": "vec3", "desc": "Premier nœud."}, "node2": {"type": "vec3", "desc": "Second nœud."}},
+      "returns": []
+    },
+    "renderCandidateJoin": {
+      "desc": "Indique visuellement qu'une jonction de deux splines distinctes est possible. Si refusal est donné, affiche à la place des extrémités rouges, une ligne fixe et la raison du refus.",
+      "params": {
+        "node1": {"type": "vec3", "desc": "Premier nœud."},
+        "node2": {"type": "vec3", "desc": "Second nœud."},
+        "refusal": {"type": "string|nil", "desc": "Raison du refus par l'outil."}
+      },
+      "returns": []
+    },
+    "renderRibbon": {
+      "desc": "Dessine les rubans donnés. Un ruban est une spline posée en paires gauche/droite dont les segments sont des boîtes à 8 points adjacentes ; il peut avoir des surfaces actives (haut ou bas) et des segments les plus proches (utilisé par exemple pour le placement d'émetteurs audio dynamiques). Utilise la position souris sur la carte.",
+      "params": {
+        "ribbons": {"type": "table", "desc": "Liste de rubans."},
+        "selectedRibbonIdx": {"type": "integer", "desc": "Indice du ruban sélectionné."},
+        "selectedNodeIdx": {"type": "integer|nil", "desc": "Indice du nœud sélectionné."},
+        "placedLeftNode": {"type": "vec3|nil", "desc": "Nœud gauche déjà posé par l'utilisateur."},
+        "hoveredRibbonIdx": {"type": "integer|nil", "desc": "Indice du ruban survolé."},
+        "bestCursorSeg": {"type": "integer|nil", "desc": "Indice du segment le plus proche du curseur."},
+        "isDragging": {"type": "boolean", "desc": "Un nœud est en cours de glissement."}
+      },
+      "returns": []
+    },
+    "renderRibbonWireFrame": {
+      "desc": "Dessine le fil de fer des splines de ruban. Avec ghosted, trace aussi les rubans sans test de profondeur et faiblement, pour que les tronçons enterrés se voient : le ruban sélectionné en entier, les autres par leurs bords seulement.",
+      "params": {
+        "splines": {"type": "table", "desc": "Liste de splines."},
+        "selSplineIdx": {"type": "integer", "desc": "Indice de la spline sélectionnée."},
+        "binormalSpacing": {"type": "integer", "desc": "Espacement des binormales."},
+        "ghosted": {"type": "boolean", "desc": "Ajouter les tracés fantômes."}
+      },
+      "returns": []
+    },
+    "ribbonExtentsAt": {
+      "desc": "Extensions gauche et droite d'un ruban de référence plat à la division j, en mètres de part et d'autre de divPoints[j] selon sa binormale. Utilise leftExtM/rightExtM si présents, sinon la demi-largeur symétrique, plus la demi-médiane (affinée) d'une chaussée séparée, l'élargissement dans les virages (curveWiden*ByDiv) et l'accotement stabilisé (hardShoulder*ByDiv).",
+      "params": {
+        "spline": {"type": "table", "desc": "Spline avec divWidths et les tableaux optionnels medianHalfByDiv, hardShoulderLeftByDiv, hardShoulderRightByDiv, curveWidenLeftByDiv, curveWidenRightByDiv, leftExtM, rightExtM."},
+        "j": {"type": "integer", "desc": "Indice de division."}
+      },
+      "returns": [{"type": "number", "desc": "Extension gauche en mètres."}, {"type": "number", "desc": "Extension droite en mètres."}]
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "path": "lua/ge/extensions/gameplay/markers/crawlMarker.lua",
+  "module": "Marqueur de zone de crawling (rock crawling) en mode jeu : une icône flottante au-dessus d'une zone sphérique. Le véhicule du joueur qui entre dans la sphère (centre de sa boîte englobante à moins de radius, 2 m par défaut) fait monter l'icône et la rend interactive (liste d'activités à accepter). Le module renvoie {create, cluster} : cluster regroupe les POI crawlMarker, create fabrique l'objet marqueur (classe C).",
+  "notes": [
+    "cluster regroupe les POI ayant la même pos et la même iconPos (clé = tostring(pos)..tostring(iconPos)) ; l'icône par défaut est mission_rockcrawling01_triangle.",
+    "Les POI doivent fournir markerInfo.crawlMarker avec pos, radius, iconPos et icon (facultative) ; cluster.elemData reprend poi.data de chaque POI.",
+    "L'icône n'est visible que si la caméra est à moins de 35 m et qu'un rayon statique (castRayStatic) ne rencontre pas d'obstacle ; elle est masquée quand la grande carte est active.",
+    "isInAreaChanged vaut \"in\" ou \"out\" pendant une frame lors d'une entrée/sortie de zone, sinon nil.",
+    "update ne fait rien si le joueur n'a pas de véhicule (data.veh nil) ; la marche n'est pas exigée.",
+    "drawAxisBox dessine une boîte de debug (debugDrawer) mais n'est appelée nulle part dans ce fichier."
+  ],
+  "functions": {
+    "create": {
+      "desc": "Fabrique un objet marqueur de crawling (instance de C) et appelle init.",
+      "params": {"...": {"type": "any", "desc": "Arguments transmis à C:init (non utilisés)."}},
+      "returns": [{"type": "table", "desc": "Instance de marqueur."}],
+      "internal": false
+    },
+    "cluster": {
+      "desc": "Regroupe les POI crawlMarker identiques (même pos et iconPos) en clusters et les ajoute à allClusters.",
+      "params": {
+        "pois": {"type": "table[]", "desc": "POI avec markerInfo.crawlMarker."},
+        "allClusters": {"type": "table[]", "desc": "Liste de clusters complétée en place."}
+      },
+      "internal": true
+    }
+  },
+  "classes": {
+    "C": {
+      "desc": "Marqueur de zone de crawling avec icône animée.",
+      "functions": {
+        "init": {"desc": "Initialise visible = true.", "internal": true},
+        "setup": {
+          "desc": "Lit pos, rot, scl du cluster et crée l'icône (id <cluster.id>-gsIcon) avec ses lisseurs ; décalage d'icône 0.5 m, levée 1.0 m.",
+          "params": {"cluster": {"type": "table", "desc": "Cluster issu de cluster()."}},
+          "internal": true
+        },
+        "update": {
+          "desc": "Chaque frame : teste l'entrée dans la sphère, anime la hauteur et l'opacité de l'icône, dessine un trait quand l'icône est levée, met à jour isInAreaChanged, anyOverlap.",
+          "params": {"data": {"type": "table", "desc": "Données de frame : veh, bbCenter, camPos, dt, bigMapActive."}},
+          "internal": true
+        },
+        "createObjects": {"desc": "Nettoie les objets existants (n'en crée pas de nouveaux).", "internal": true},
+        "hide": {"desc": "Passe invisible et met l'opacité de l'icône à 0.", "internal": false},
+        "show": {"desc": "Repasse visible.", "internal": false},
+        "clearObjects": {"desc": "Retire l'icône de l'icon renderer et efface triggerArea.", "internal": false},
+        "interactInPlayMode": {
+          "desc": "Si canInteract et que le joueur est dans la zone, ajoute les données (elemData) du cluster à la liste des éléments interactifs.",
+          "params": {
+            "interactData": {"type": "table", "desc": "Données de frame avec canInteract."},
+            "interactableElements": {"type": "table[]", "desc": "Liste complétée en place."}
+          },
+          "internal": false
+        },
+        "instantFade": {"desc": "Ne fait rien.", "params": {"visible": {"type": "boolean", "desc": "Ignoré."}}, "internal": false},
+        "drawAxisBox": {
+          "desc": "Dessine une boîte alignée (arêtes et faces semi-transparentes) par debugDrawer ; utilitaire de debug.",
+          "params": {
+            "corner": {"type": "vec3", "desc": "Coin de départ."},
+            "x": {"type": "vec3", "desc": "Vecteur de l'arête X."},
+            "y": {"type": "vec3", "desc": "Vecteur de l'arête Y."},
+            "z": {"type": "vec3", "desc": "Vecteur de l'arête Z."},
+            "clr": {"type": "ColorI|nil", "desc": "Couleur des faces (défaut 128,64,64,32)."}
+          },
+          "internal": false
+        },
+        "drawOnMinimap": {
+          "desc": "Dessine un cercle à la position de l'icône sur la minimap (ui_apps_minimap_utils.simpleCircle).",
+          "params": {"td": {"type": "table", "desc": "Données de dessin de la minimap (non utilisées)."}},
+          "internal": false
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "path": "lua/ge/extensions/gameplay/achievement.lua",
+  "module": "Extension GE qui relie les statistiques de jeu (gameplay_statistic) aux succès et statistiques du fournisseur en ligne (OnlineServiceProvider : Steam, EOS…). Au démarrage elle lit lua/ge/extensions/gameplay/achievements.json, construit la liste des succès en attente et des statistiques à publier, puis s'abonne aux métriques correspondantes. Quand une métrique atteint le seuil unlockAt, le succès est débloqué. Elle gère aussi trois succès « manuels » (VEHICLE_EXPLORER, LEVEL_EXPLORER, VEHICLE_FAVOURITE). Un moddeur s'en sert surtout via unlockAchievement.",
+  "usage": "gameplay_achievement.unlockAchievement(\"VEHICLE_EXPLORER\")",
+  "notes": [
+    "Rien ne se passe si OnlineServiceProvider.isWorking est faux ou si aucune plateforme n'est mappée (startup retourne false, achievements inactifs).",
+    "startup() n'est exécuté qu'une fois (drapeau started) ; il est appelé depuis onFirstUpdate, onOnlineServiceProviderReady et onClientStartMission.",
+    "Les mises à jour de statistiques sont limitées : envoi si plus de 20 s depuis le dernier envoi ou si la variation atteint submitMinDelta.",
+    "Seuils manuels : 15 véhicules avec odomètre >= 10000 (VEHICLE_EXPLORER), 5 niveaux avec temps >= 300 (LEVEL_EXPLORER), un odomètre >= 1000000 (VEHICLE_FAVOURITE). Unités des métriques déduites du code.",
+    "Incohérence : dans maybeSubmitStat, watcher.valueLastSent reçoit timer:stop() (un temps) alors qu'il est aussi comparé à v (une valeur de stat) ; le test math.abs(v - valueLastSent) mélange donc temps et valeur. Dans statCallback, newvalue.career est lu avant de tester newvalue (erreur si nil).",
+    "flushPendingOnlineStats (envoi des valeurs en file) n'est appelé qu'au déchargement de l'extension."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : {\"gameplay_statistic\"}."}
+  },
+  "functions": {
+    "statCallback": {
+      "desc": "Callback enregistré auprès de gameplay_statistic pour chaque métrique suivie. Publie les statistiques en ligne correspondantes, pousse la progression des succès et débloque ceux dont la valeur atteint unlockAt (puis les retire de la liste en attente). Désabonne la métrique si plus personne ne l'utilise.",
+      "params": {
+        "key": {"type": "string", "desc": "Nom de la métrique modifiée."},
+        "oldvalue": {"type": "table|nil", "desc": "Ancienne entrée de la métrique (non utilisée)."},
+        "newvalue": {"type": "table", "desc": "Nouvelle entrée : champs value (number) et career (boolean)."}
+      },
+      "internal": true
+    },
+    "unlockAchievement": {
+      "desc": "Débloque un succès par son identifiant via OnlineServiceProvider.unlockAchievement. Ne le fait qu'une fois par session pour un même identifiant.",
+      "params": {"achievementId": {"type": "string", "desc": "Identifiant du succès côté plateforme."}},
+      "internal": false
+    },
+    "onFirstUpdate": {
+      "desc": "Hook appelé à la première mise à jour du jeu : lance startup() si le fournisseur en ligne fonctionne, sinon journalise un avertissement.",
+      "internal": true
+    },
+    "onOnlineServiceProviderReady": {
+      "desc": "Hook appelé quand le fournisseur de service en ligne devient prêt ; lance startup().",
+      "internal": true
+    },
+    "onClientStartMission": {
+      "desc": "Hook appelé au démarrage d'un niveau ; relance startup() (sans effet si déjà démarré).",
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook appelé au déchargement de l'extension ; envoie les statistiques et progressions encore en file d'attente.",
+      "internal": true
+    }
+  }
+}

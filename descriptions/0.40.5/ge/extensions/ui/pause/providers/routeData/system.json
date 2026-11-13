@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/ui/pause/providers/routeData/system.lua",
+  "module": "Fournisseur de données du menu pause pour la page Système. Il construit le rail de boutons en trois groupes : topSystemButtons (Options, Mods, HUD, Statistiques), firstDriveButtons (redémarrer, réinitialiser la progression, passer en freeroam, seulement pendant l'expérience First Drive) et exitSystemButtons (déconnexion multijoueur, quitter vers le menu principal, quitter le jeu avec confirmation).",
+  "notes": [
+    "Le bouton HUD est omis en écran partagé (render_splitScreen.getCurrentConfiguration()).",
+    "Mods et HUD sont désactivés pendant le tutoriel First Drive (context.isFirstDriveActive).",
+    "pushRoute locale considère tout retour différent de false comme un succès, contrairement à d'autres modules qui lisent result.result."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{\"ui_pause_actions\"}"}
+  },
+  "functions": {
+    "getSystemData": {
+      "desc": "Renvoie {heading = ui.pause.system, sidePanelContents = nil, rail = groupes de boutons}. Chaque bouton est enregistré via ui_pause_actions.registerButton (donc exécutable ensuite avec executeAction).",
+      "params": {"context": {"type": "table", "desc": "Contexte pause (champs lus : mode, isMultiplayerActive, isFirstDriveActive, isFirstDriveGuided)."}},
+      "returns": [{"type": "table", "desc": "Données de la page système."}],
+      "internal": false
+    }
+  }
+}

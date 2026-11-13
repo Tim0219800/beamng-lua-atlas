@@ -4,11 +4,15 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/ui/clearMessage")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Clear Messages » (catégorie once_instant, auteur BeamNG) : efface tous les messages affichés dans l'UI. Aucun pin. Déclenche le hook UI 'ClearAllMessages' (guihooks.trigger).
+
 ## Classe `C`
+
+Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:workOnce()` |  | 19 |
+| `C:workOnce()` | Appelle guihooks.trigger('ClearAllMessages'). | 19 |
 
 **Évènements UI (guihooks.trigger) :** `ClearAllMessages`
 

@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/ui/router/routes/mods.lua",
+  "module": "Routes du gestionnaire de mods (interface Angular héritée) : local, downloaded, scheduled, repository, automation, automationDetails, details, tous avec un screenId « menu.mods.* ». Module abstrait inclus par menu.lua et pause.lua (pause y ajoute les hooks de pause).",
+  "notes": [
+    "Module de configuration de routes : il n'exporte aucune fonction. routeManager le lit (via l'extension ui_router_routes_<nom>) quand routes.lua l'inclut par `{ include = \"<nom>\" }`.",
+    "Les clés de `Children` forment les segments du nom pointé : « <module>.<enfant> ». `children` (minuscule) dans un nœud désigne ses sous-routes ; `include` y monte un autre module.",
+    "`ui` est hérité par les routes enfants (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause) : un enfant ne le redéfinit que pour ce qui change.",
+    "Le commentaire du code explique que forcer uiTypes = angular évite que le routeur attende un accusé de montage Vue qui ne vient jamais (sinon la transition expire et efface les données de retour)."
+  ],
+  "fields": {
+    "Root": {
+      "type": "table",
+      "desc": "{screenId = \"menu.mods\", abstract = true, ui = Angular uniquement}"
+    },
+    "Children": {
+      "type": "table<string, table>",
+      "desc": "local, downloaded, scheduled, repository, automation, automationDetails, details."
+    },
+    "ModuleName": {
+      "type": "string",
+      "desc": "Nom du module de routes (premier segment du nom pointé)."
+    }
+  }
+}

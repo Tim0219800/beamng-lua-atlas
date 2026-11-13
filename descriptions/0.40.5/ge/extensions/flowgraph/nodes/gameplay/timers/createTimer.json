@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/timers/createTimer.lua",
+  "module": "Nœud flowgraph « Create Timer » (catégorie once_instant). Crée un timer via le module timer du flowgraph. Entrées : duration (défaut 5 s), ref (caché ; dtSim temps de simulation, dtReal temps réel, dtRaw temps brut). Sortie : timerId, à passer à Get Timer / Set Timer Property.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état interne du nœud.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Définit les valeurs prédéfinies du pin ref (dtSim, dtReal, dtRaw).",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Appelle self.mgr.modules.timer:addTimer({duration, mode=ref}) et publie l'id sur timerId.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

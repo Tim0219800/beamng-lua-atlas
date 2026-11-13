@@ -1,0 +1,40 @@
+{
+  "path": "lua/ge/extensions/ui/audio.lua",
+  "module": "Joue les sons d'interface (canal audio « AudioGui ») à partir du fichier ui/soundClasses.json. Chaque classe de son contient des évènements ; un évènement simple joue un sfx une fois, un évènement « source » crée et réutilise une source audio gérée (play, setParameters, stopBeforePlay, recreateBeforePlay). Sert aussi aux sons de l'appui long (bng_hold_activate : start, complete, cancel).",
+  "usage": "ui_audio.playEventSound('bng_hold_activate', 'start', 'monBouton')",
+  "notes": [
+    "Les classes de sons sont chargées dans M.ui_sound_classes au premier onFirstUpdate (jsonReadFile('ui/soundClasses.json')).",
+    "Un évènement est « géré » (source persistante) s'il a type == 'source' ou un des champs sourceKey, action, parameters, stopBeforePlay, recreateBeforePlay. Sinon, avec seulement sfx, il est joué par Engine.Audio.playOnce('AudioGui', sfx).",
+    "Les sources gérées sont mises en cache par clé sourceKey (ou sfx) suffixée de ':instanceId' ; une source dont l'objet n'existe plus dans scenetree est recréée.",
+    "Les actions gérées reconnues sont 'play' (défaut) et 'setParameters' ; toute autre valeur ne fait rien (la source est tout de même créée)."
+  ],
+  "fields": {
+    "ui_sound_classes": {"type": "table<string, table>", "desc": "Contenu de ui/soundClasses.json (classe -> évènement -> définition). Renseigné par onFirstUpdate ; nil avant."}
+  },
+  "functions": {
+    "onFirstUpdate": {
+      "desc": "Hook appelé par le moteur au premier update : lit ui/soundClasses.json dans M.ui_sound_classes ({} si absent).",
+      "internal": true
+    },
+    "playEventSound": {
+      "desc": "Joue l'évènement eventName de la classe className. Ne fait rien si la classe ou l'évènement n'existe pas. Évènement simple : joue le sfx une fois sur AudioGui ; évènement source : crée/réutilise la source, applique les paramètres puis la lance (play(-1)).",
+      "params": {
+        "className": {"type": "string", "desc": "Nom de la classe de sons dans soundClasses.json."},
+        "eventName": {"type": "string", "desc": "Nom de l'évènement dans la classe."},
+        "instanceId": {"type": "any", "desc": "Identifiant d'instance optionnel pour avoir une source distincte par composant UI (déduit du code : concaténé à la clé de cache)."}
+      }
+    },
+    "startHoldActivateSound": {
+      "desc": "Joue l'évènement « start » de la classe bng_hold_activate (début d'un appui long).",
+      "params": {"instanceId": {"type": "any", "desc": "Identifiant d'instance de la source gérée."}}
+    },
+    "completeHoldActivateSound": {
+      "desc": "Joue l'évènement « complete » de la classe bng_hold_activate (appui long abouti).",
+      "params": {"instanceId": {"type": "any", "desc": "Identifiant d'instance de la source gérée."}}
+    },
+    "cancelHoldActivateSound": {
+      "desc": "Joue l'évènement « cancel » de la classe bng_hold_activate (appui long relâché trop tôt).",
+      "params": {"instanceId": {"type": "any", "desc": "Identifiant d'instance de la source gérée."}}
+    }
+  }
+}

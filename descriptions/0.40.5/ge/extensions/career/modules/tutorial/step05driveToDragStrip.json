@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/career/modules/tutorial/step05driveToDragStrip.lua",
+  "module": "Étape 5 du tutoriel de carrière (« driveToDragStrip ») : le joueur conduit jusqu'au drag strip, avec guidage au sol et marqueur, puis gare le véhicule sur la place beforeDragStrip (immobile 1 s). Phases : waitPopup, driveToStrip, parkInStaging (déclenchée à moins de 25 m de la place). Ensuite l'étape 06dragStripBasics est activée. Active les zones drivingToDragBounds et parkingBounds.",
+  "notes": [
+    "Au départ, le véhicule est téléporté sur la place simpleTimeTrialFinish (fin de l'étape 4) et le trafic est restauré (career_modules_playerDriving.restoreTrafficAfterTutorialPhase).",
+    "Le drapeau d'attention de l'objectif « conduire jusqu'au strip » est retiré après 5 m parcourus.",
+    "Les préfabriqués sont changés 0,5 s après le début de l'étape."
+  ],
+  "functions": {
+    "setup": {
+      "desc": "Appelé à l'activation : restaure le trafic, active les zones, installe le reset de sortie de zone (retour à simpleTimeTrialFinish), prépare le véhicule (allumage, dégel, joueur au volant), trace le guidage, crée le marqueur, affiche la popup v2/driveToDragStrip et bascule les préfabriqués.",
+      "params": {"stepData": {"type": "any", "desc": "Données de l'étape (non utilisées)."}},
+      "internal": true
+    },
+    "onIntroPopupCareerClosed": {
+      "desc": "Hook de fermeture de popup : à la fermeture de v2/driveToDragStrip, passe en phase driveToStrip et affiche l'objectif.",
+      "params": {"id": {"type": "string", "desc": "Id de la popup."}},
+      "internal": true
+    },
+    "onCareerTutorialLeftBounds": {"desc": "Hook de sortie de zone : lance le reset de sortie de zone de l'étape.", "internal": true},
+    "onUpdate": {
+      "desc": "Appelé chaque frame : suit la distance parcourue et la distance à la place, passe en phase de parking et valide l'objectif de parking avant d'activer 06dragStripBasics (après 1 s).",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta simulation (s)."}, "dtRaw": {"type": "number", "desc": "Delta brut (s)."}},
+      "internal": true
+    },
+    "cleanup": {"desc": "Retire le reset de zone, le guidage, la liste de tâches et les visuels de la place de parking.", "internal": true},
+    "onDebugMenu": {
+      "desc": "Affiche la phase et un bouton « Skip Step 5 » (téléporte le véhicule sur beforeDragStrip puis active l'étape 6).",
+      "params": {"im": {"type": "table", "desc": "Table ui_imgui."}},
+      "internal": true
+    }
+  }
+}

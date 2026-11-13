@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/staticEditor/veJBeamVariablesChecker.lua",
+  "module": "Application « JBeam Variables Checker » du Static Editor. Le bouton « Start Analysis » parcourt tous les dossiers de véhicules, lit leurs fichiers .pc (configurations) et .jbeam, et vérifie que les valeurs des variables (par défaut dans le JBeam et valeurs imposées par les .pc) respectent les bornes min/max de la variable. Les valeurs hors limites sont signalées dans la console avec un avertissement (log W) indiquant où la variable et la valeur sont définies.",
+  "usage": "extensions.load('editor_vehicleEditor_staticEditor_veJBeamVariablesChecker')\neditor_vehicleEditor_staticEditor_veJBeamVariablesChecker.open()",
+  "notes": [
+    "Les résultats ne vont que dans la console ; l'interface affiche seulement « Results get printed to the console. ». L'analyse affiche « Done! » à la fin.",
+    "Les .pc sont convertis avec extensions.core_vehicle_partmgmt.buildConfigFromString(vehDir, pcFilePath), puis vehConfig.vars (variable vers valeur) est regroupé par variable.",
+    "Le tableau des variables d'une partie est normalisé avec jbeam/tableSchema (process(partData, false, true)) avant la lecture de partData.variables.",
+    "Les bornes sont réordonnées avec min/max et la valeur est clampée sur la copie vv (la valeur hors limite n'est que signalée, pas corrigée sur disque).",
+    "Si un .jbeam n'est pas du JSON valide, parseFile renvoie nil et analyzeJBeamFile(nil) provoquerait une erreur (pairs(nil)) : aucun garde-fou dans le code.",
+    "Le code contient un label ::continue:: inutilisé avant im.End()."
+  ],
+  "fields": {
+    "menuEntry": {"type": "string", "desc": "Texte de l'entrée du menu Apps : « JBeam Variables Checker »."}
+  },
+  "functions": {
+    "open": {"desc": "Ouvre la fenêtre de l'application (windowOpen[0] = true)."},
+    "onUpdate": {
+      "desc": "Hook d'extension appelé à chaque frame : dessine la fenêtre avec le bouton « Start Analysis » quand elle est ouverte.",
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook appelé avant un rechargement Lua : sauvegarde l'état de la fenêtre.",
+      "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook appelé après un rechargement Lua : restaure l'état de la fenêtre.",
+      "params": {"data": {"type": "table", "desc": "table produite par onSerialize"}},
+      "internal": true
+    }
+  }
+}

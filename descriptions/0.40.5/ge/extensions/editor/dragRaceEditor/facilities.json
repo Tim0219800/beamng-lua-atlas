@@ -1,0 +1,29 @@
+{
+  "path": "lua/ge/extensions/editor/dragRaceEditor/facilities.lua",
+  "module": "Gère les facilities (installations de drag) dans l'éditeur de drag race : liste chargée via gameplay_drag_saveSystem, sélection, création, suppression, sauvegarde en <id>.facility.json dans le dossier dragstrips du niveau (avec renommage du fichier si l'id change), et panneaux ImGui (liste, détails, ajout/retrait de strips). Une facility regroupe des chemins de fichiers strip (stripIds).",
+  "notes": ["Chaque facility a des champs d'édition internes : _filePath (chemin du fichier) et _dirty (modifiée non sauvée).", "selectFacility désélectionne strip et réglages et écrit dans les réglages courants facilityId = \"/levels/<niveau>/dragstrips/<id>.facility.json\" (ou l'id seul sans niveau).", "Dans la liste, facility.stripIds est supposé non nil ; le détail le crée s'il manque.", "drawFacilitiesPreview écrit seulement le nom de la facility à l'origine (0,0,0)."],
+  "functions": {
+    "loadAllFacilities": {"desc": "Charge toutes les facilities avec dragSaveSystem.getAllFacilities(), remet _dirty à false et complète _filePath depuis le dossier drag du niveau.", "params": {}},
+    "getAllFacilities": {"desc": "Renvoie la liste des facilities.", "params": {}, "returns": [{"type": "table", "desc": "tableau de facilities"}]},
+    "hasSavedFacilities": {"desc": "Indique si au moins une facility a un fichier et n'est pas modifiée.", "params": {}, "returns": [{"type": "boolean", "desc": "résultat"}]},
+    "getSelectedFacilityIndex": {"desc": "Index (base 1) de la facility sélectionnée, -1 si aucune.", "params": {}, "returns": [{"type": "integer", "desc": "index"}]},
+    "setSelectedFacilityIndex": {"desc": "Fixe l'index sélectionné sans effets de bord.", "params": {"index": {"type": "integer", "desc": "index base 1"}}},
+    "getSelectedFacility": {"desc": "Renvoie la facility sélectionnée.", "params": {}, "returns": [{"type": "table|nil", "desc": "facility ou nil"}]},
+    "selectFacility": {"desc": "Sélectionne une facility : quitte l'édition de zone, désélectionne strip et réglages, met facilityId dans les réglages de drag courants et marque des changements non sauvés.", "params": {"index": {"type": "integer", "desc": "index base 1"}}},
+    "addFacility": {"desc": "Crée une facility « New Facility » (id new_facility_N, stripIds vide, _dirty=true), l'ajoute et la sélectionne.", "params": {}},
+    "removeSelectedFacility": {"desc": "Retire de la liste la facility sélectionnée (le fichier sur disque n'est pas supprimé) et ajuste la sélection.", "params": {}},
+    "saveAllFacilities": {
+      "desc": "Sauve toutes les facilities modifiées dans le dossier drag du niveau, qu'elle crée si besoin.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "false si aucun niveau ou dossier non créable, sinon true (même si une sauvegarde individuelle a échoué)"}]
+    },
+    "saveFacility": {
+      "desc": "Sauve une facility dans <niveau>/<id>.facility.json. Si l'id a changé, renomme d'abord l'ancien fichier (échoue si le nouveau existe déjà).",
+      "params": {"facility": {"type": "table", "desc": "facility à sauver"}},
+      "returns": [{"type": "boolean", "desc": "succès"}]
+    },
+    "drawFacilitiesList": {"desc": "Dessine la liste ImGui avec boutons Add, Remove, Save, Refresh ; les entrées non sauvées sont en orange.", "params": {}, "internal": true},
+    "drawFacilityDetails": {"desc": "Dessine l'édition de la facility sélectionnée : id, nom, description, ajout (liste déroulante avec recherche) et retrait de strips.", "params": {}, "internal": true},
+    "drawFacilitiesPreview": {"desc": "Dessine en debug 3D le nom de la facility sélectionnée à l'origine.", "params": {}, "internal": true}
+  }
+}

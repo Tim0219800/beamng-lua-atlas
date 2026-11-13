@@ -1,0 +1,31 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficActivate.lua",
+  "module": "Nœud flowgraph « Activate Traffic » (once_instant). Active le mode trafic pour une liste d'ids (vehicleIds, typiquement du nœud Spawn Vehicle Group) via traffic:activateTraffic. Sorties : activated (impulsion), vehicleIds (gameplay_traffic.getTrafficList()), total (caché). Au reset ou à l'arrêt : traffic:deactivateTraffic(). Ancien pin « data » renommé vehicleIds (legacyPins).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Appelle onNodeReset().",
+          "internal": true
+        },
+        "init": {
+          "desc": "Appelle onNodeReset().",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Désactive le trafic et remet les flags à zéro.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Publie le nombre total de véhicules IA et l'impulsion activated.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Active le trafic pour vehicleIds (si défini) et publie la liste de trafic validée.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

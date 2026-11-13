@@ -1,0 +1,25 @@
+{
+  "path": "lua/ge/extensions/util/wsTest.lua",
+  "module": "Outil de développement : démarre un serveur web/WebSocket (port 8083, protocole « bng-test », page ./ui/entrypoints/util_wsTest/) écoutant sur toutes les adresses. Un client distant peut exécuter du code Lua GE, recharger le Lua, recharger l'interface CEF, ouvrir la console de développement CEF et mesurer la bande passante. Sert aux tests d'outils externes.",
+  "usage": "extensions.load('util_wsTest')",
+  "notes": [
+    "Sécurité : la commande execGELua évalue du Lua arbitraire envoyé par n'importe quel client connecté, sur toutes les interfaces réseau. À n'utiliser qu'en local de confiance.",
+    "Commandes JSON reconnues (champ type) : execGELua (cmd), reloadGELua, reloadCEF, toggleCEFDevConsole, bandwidthDown, bandwidthUpStart (size). Le message texte « ping » répond « pong ».",
+    "Bug mineur : en cas d'échec du décodage JSON, le message d'erreur utilise la variable `e`, non définie (nil), au lieu de evt.msg.",
+    "Le résultat de execGELua est renvoyé tel quel dans jsonEncode({result = ...}) ; une erreur donne une chaîne « Error: ... »."
+  ],
+  "functions": {
+    "onExtensionLoaded": {
+      "desc": "Crée (ou récupère) le serveur WebSocket via utils/wsUtils sur le port 8083 et affiche son adresse dans la console.",
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Détruit le serveur WebSocket (BNGWebWSServer.destroy) s'il existe.",
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Chaque image : lit les évènements des clients, répond au ping, décode les commandes JSON et les traite, puis met à jour le serveur.",
+      "internal": true
+    }
+  }
+}

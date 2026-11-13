@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/getCameraFOV.lua",
+  "module": "Noeud flowgraph 'Get Camera FOV' (categorie repeat_instant). Donne le champ de vision courant de la camera en degres (core_camera.getFovDeg) sur la sortie 'curFOV'.",
+  "notes": [
+    "Effet de bord : le simple fait de lire le FOV force la camera libre (commands.setFreeCamera)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "work": {
+          "desc": "Passe en camera libre si ce n'est pas deja le cas, puis lit le FOV.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche 'Current FOV'.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

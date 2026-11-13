@@ -1,0 +1,74 @@
+{
+  "path": "lua/ge/extensions/gameplay/backgroundActivities/g2g.lua",
+  "module": "Activité de fond « g2g » : à l'activation, fondu au noir, apparition d'un véhicule aléatoire (voiture ou camion avec Top Speed > 10), puis fondu depuis le noir, le tout via util_stepHandler. À la désactivation, les véhicules créés sont supprimés. getVehicleOptions construit (et met en cache) la liste des modèles et configs candidats à partir de core_vehicles.getVehicleList().",
+  "usage": "gameplay_backgroundActivities_g2g.toggleActive()",
+  "notes": [
+    "vehicleCount vaut 1 : un seul véhicule est créé.",
+    "Le mode de filtrage est figé à 'Default' dans getVehicleOptions ; les autres modes (Old Cars, Race and Rally, Off-road…) ne sont jamais actifs.",
+    "activate() met active = true dès le début, activateFinished le remet à true à la fin de la séquence.",
+    "deactivate() ne remet pas active à false : après une désactivation, isActive() reste true et toggleActive()/activate() ne recréent rien (activate retourne si active est vrai). Bug probable du jeu.",
+    "onUpdate et onDeserialized sont des fonctions vides ; onVehicleSwitched ne fait rien (appel commenté).",
+    "Typo « backrgound » dans les logs."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : {\"util_stepHandler\"}."}
+  },
+  "functions": {
+    "activate": {
+      "desc": "Active l'activité : sans effet si déjà active. Lance une séquence de pas (fondu au noir, spawn d'un véhicule aléatoire parmi getVehicleOptions, fondu depuis le noir) qui appelle activateFinished à la fin. Les ids des véhicules créés sont mémorisés.",
+      "internal": false
+    },
+    "activateFinished": {
+      "desc": "Callback de fin de la séquence d'activation : journalise et force active = true.",
+      "internal": true
+    },
+    "deactivate": {
+      "desc": "Supprime les véhicules créés (notifie l'éditeur si présent, puis obj:delete()) et vide la liste d'ids. Sans effet si l'activité n'est pas active.",
+      "internal": false
+    },
+    "toggleActive": {
+      "desc": "Désactive l'activité si elle est active, sinon l'active.",
+      "internal": false
+    },
+    "isActive": {
+      "desc": "Indique si l'activité est active.",
+      "returns": [{"type": "boolean|nil", "desc": "true si active ; nil tant qu'elle n'a jamais été activée."}],
+      "internal": false
+    },
+    "getVehicleOptions": {
+      "desc": "Retourne (et met en cache) la liste des véhicules candidats : modèles de type Car ou Truck, hors bus et auxiliaires, avec au moins une config dont Top Speed > 10 et non auxiliaire.",
+      "returns": [{"type": "table<integer, {model: string, configs: table[], paints: string[]}>", "desc": "Chaque entrée : clé du modèle, configs {config, name} et noms de peintures."}],
+      "internal": false
+    },
+    "onUpdate": {
+      "desc": "Hook de mise à jour : corps vide.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+      },
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook appelé à la fin d'un niveau : désactive l'activité.",
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook appelé au changement de véhicule contrôlé : ne fait rien.",
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook appelé avant le rechargement des extensions : désactive l'activité.",
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook appelé après le rechargement des extensions : corps vide.",
+      "internal": true
+    },
+    "onCareerActive": {
+      "desc": "Hook appelé quand le mode carrière change d'état ; désactive l'activité si la carrière devient active.",
+      "params": {"enabled": {"type": "boolean", "desc": "true si la carrière est activée."}},
+      "internal": true
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/pointsBarSetThresholds.lua",
+  "module": "Nœud flowgraph « PointsBar Thresholds » (catégorie repeat_instant, couleur/icône ui). Définit les seuils bronze, silver et gold (entrées number) de la barre de points via ui_apps_pointsBar.setThresholds({bronze, silver, gold}), puis met self.mgr.modules.ui.pointsBarChanged à true.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Appelle ui_apps_pointsBar.setThresholds avec les trois seuils et signale le changement au module ui du flowgraph.", "internal": true}
+      }
+    }
+  }
+}

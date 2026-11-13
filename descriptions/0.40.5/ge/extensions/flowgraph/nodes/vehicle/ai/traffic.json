@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/traffic.lua",
+  "module": "Nœud « AI Traffic » (couleur ai, once_p_duration). Met un véhicule en mode IA « traffic » : il roule selon les règles de circulation. N'active pas le système de gestion du trafic. Entrée : aiVehId (sans valeur = véhicule du joueur).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "workOnce": {
+          "desc": "Envoie au véhicule ai.setMode(\"traffic\").",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/logic/compare.lua",
+  "module": "Noeud flowgraph 'Compare' (categorie logic). Compare les entrees A et B (type any) avec une fonction de comparaison choisie dans l'editeur (liste issue de getComparisonOps(), triee par nom). Sorties : flow, flow 'true', flow 'false' et le bool cache 'value'. Si A ou B vaut nil pour un operateur autre que == et ~=, un evenement d'erreur est journalise et toutes les sorties passent a false.",
+  "notes": [
+    "Dans _onPropertyChanged le commentaire de log reference une variable 'value' inexistante, sans effet (ligne commentee).",
+    "Si flow n'est pas connecte, pinOut.flow reflete simplement la valeur de pinIn.flow."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Trie les operateurs de comparaison par nom et selectionne le premier par defaut.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Panneau de proprietes : liste deroulante des fonctions de comparaison.",
+          "internal": true
+        },
+        "refreshFunction": {
+          "desc": "Met a jour compFunc depuis la comparaison choisie ; si absente, installe une fonction vide et signale l'erreur 'Invalid comparison'.",
+          "internal": true
+        },
+        "_onPropertyChanged": {
+          "desc": "Appele quand une propriete change ; relance refreshFunction.",
+          "internal": true,
+          "params": {
+            "key": {
+              "type": "string",
+              "desc": "nom de la propriete"
+            },
+            "val": {
+              "type": "any",
+              "desc": "nouvelle valeur"
+            }
+          }
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde opSymbol de la comparaison courante.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Retrouve la comparaison via opSymbol (ou l'ancien champ data.comparisonFunc) puis appelle refreshFunction.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Calcule value = compFunc(A, B) ; flow suit l'entree flow, true = value, false = not value. Cas nil decrit ci-dessus.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche le symbole de l'operateur.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

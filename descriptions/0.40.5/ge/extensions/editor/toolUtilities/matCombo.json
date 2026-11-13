@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/matCombo.lua",
+  "module": "Sélecteur imgui de couche de matériau de terrain (liste déroulante) pour les outils de l'éditeur. Les couches sont indexées à partir de 0, comme l'index de peinture ; -1 signifie « auto », résolu via util.findMaterialIdx. Un bouton remet la valeur par défaut.",
+  "notes": [
+    "Le noms viennent de util.getMaterialNames() (indices 0..#names).",
+    "La fonction ne modifie rien : elle renvoie la nouvelle valeur choisie, c'est à l'appelant de la stocker."
+  ],
+  "functions": {
+    "draw": {
+      "desc": "Dessine une ligne de sélecteur (bouton de remise à zéro, puis liste déroulante). Renvoie la nouvelle valeur si l'utilisateur a changé la sélection ou remis le défaut, sinon nil.",
+      "params": {
+        "cur": {"type": "integer|string|nil", "desc": "Valeur courante (index de couche, -1 = auto) ; convertie par tonumber, sinon opts.default."},
+        "opts": {"type": "table", "desc": "id (obligatoire, id imgui), label, default (valeur par défaut), allowAuto (propose l'entrée Auto), autoNames (noms à chercher pour l'auto), tooltip."}
+      },
+      "returns": [{"type": "integer|nil", "desc": "Nouvel index choisi, ou nil si rien n'a changé."}],
+      "internal": false
+    }
+  }
+}

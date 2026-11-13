@@ -1,0 +1,35 @@
+{
+  "path": "lua/common/libs/xlsxlib/tests/tests.lua",
+  "module": "Tests unitaires de xlsxlib (Thomas Fischer, 2024). Chaque test charge `test_input_1.xlsx`, lit une feuille ou une plage et compare le résultat au fichier JSON attendu situé dans lua/common/libs/xlsxlib/tests/. Si le fichier attendu n'existe pas, il est créé à partir du résultat courant (avec un avertissement : à vérifier à la main). Lancement : `rerequire('libs/xlsxlib/tests/tests').runTests()`.",
+  "usage": "rerequire('libs/xlsxlib/tests/tests').runTests()",
+  "notes": [
+    "`runTests` crée le dossier /junit-results/ et écrit le rapport dans /junit-results/xlsxlib-results.xml.",
+    "Les tests utilisent le gestionnaire libs/xlsxlib/tests/TestManager ; les noms finissant par `_shouldFail` doivent échouer.",
+    "Utilise les fonctions globales du jeu serialize, jsonEncodePretty, writeFile, jsonReadFile, dumps, log et le moteur FS:fileExists."
+  ],
+  "functions": {
+    "runTests": {
+      "desc": "Crée /junit-results/ puis exécute tous les tests de la table Tests via TestManager et écrit /junit-results/xlsxlib-results.xml.",
+      "params": {},
+      "returns": []
+    }
+  },
+  "classes": {
+    "Tests": {
+      "desc": "Table des cas de test (méthodes appelées par TestManager avec un contexte `context`).",
+      "functions": {
+        "test_nonExistentSheet_shouldFail": {"desc": "Demande une feuille inexistante ; doit échouer (erreur « Sheet not found »).", "params": {"context": {"type": "table", "desc": "Contexte de test."}}},
+        "test_firstSheet": {"desc": "Lit la première feuille du classeur (sans nom de feuille).", "params": {"context": {"type": "table", "desc": "Contexte de test."}}},
+        "test_selectSingleCell": {"desc": "Sélectionne une cellule unique.", "params": {"context": {"type": "table", "desc": "Contexte de test."}}},
+        "test_selectEntireColumn": {"desc": "Sélectionne une colonne entière.", "params": {"context": {"type": "table", "desc": "Contexte de test."}}},
+        "test_selectEntireRow": {"desc": "Sélectionne une ligne entière.", "params": {"context": {"type": "table", "desc": "Contexte de test."}}},
+        "test_selectColumnRange": {"desc": "Sélectionne une plage de colonnes.", "params": {"context": {"type": "table", "desc": "Contexte de test."}}},
+        "test_selectRowRange": {"desc": "Sélectionne une plage de lignes.", "params": {"context": {"type": "table", "desc": "Contexte de test."}}},
+        "test_selectCellRange": {"desc": "Sélectionne une plage de cellules.", "params": {"context": {"type": "table", "desc": "Contexte de test."}}},
+        "test_selectMixedAbsoluteRelative": {"desc": "Sélectionne une plage mêlant références absolues et relatives.", "params": {"context": {"type": "table", "desc": "Contexte de test."}}},
+        "test_selectInvalidRange_shouldFail": {"desc": "Plage invalide ; doit échouer.", "params": {"context": {"type": "table", "desc": "Contexte de test."}}},
+        "test_selectEntireSheet": {"desc": "Sélectionne toute la feuille « Sheet1 ».", "params": {"context": {"type": "table", "desc": "Contexte de test."}}}
+      }
+    }
+  }
+}

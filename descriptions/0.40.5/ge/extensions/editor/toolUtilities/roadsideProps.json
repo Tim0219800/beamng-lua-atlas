@@ -1,0 +1,111 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/roadsideProps.lua",
+  "module": "Placeur partagé de lignes d'objets en bord de route (glissières, barrières, clôtures, lampadaires, bornes, poubelles, abri-bus…). Une table de préréglages (presets) décrit chaque pièce (forme .dae, rotation, écart entre pièces, mode de normale, pièces alternées, embouts) ; runLine pose une ligne de pièces le long d'un rail, placePoints une pièce à chaque point donné, placeScatter des éléments épars aléatoires. Les pièces vont dans des « pools » identifiés par poolId (scène via kitPlacer), que l'outil peut supprimer, compter ou graver (commitPool) en objets persistants. Les lampadaires créent aussi leur lumière (siteLights).",
+  "usage": "local rp = extensions.editor_toolUtilities_roadsideProps\nlocal n = rp.runLine({poolId = 'edgeL', presetKey = 'guardrail', folder = scenetree.findObject('MissionGroup'),\n  railPts = pts, railUps = ups})\nprint(rp.poolCount('edgeL'))\nrp.removePool('edgeL')",
+  "notes": [
+    "Préréglages fournis (clé) : jersey, plastic, fence, chainlink, scrap, guardrail, lampMast, lampVictorian, lampSingle, lampTwin, lampStreet, lampHighway, lampSidewalk, bollard, bollardStone, bollardTall, bin, binMetal, binSmall, busShelter. Un préréglage avec reach est un lampadaire (lumière créée). normalMode 'surface' suit la normale du sol/rail, 'global' dresse la pièce à la verticale (props ponctuels, pas de chaînage).",
+    "Les pièces de mobilier cuites par le kit de props ne font pas partie de la version livrée : elles s'enregistrent via addPresets.",
+    "Les pièces d'un pool sont créées transitoires ; commitPool les rend persistantes (canSave=true) et les détache du pool.",
+    "Les noms d'objets sont « HeroProp_ » + poolId (+ _ownerTag) + index : plusieurs tronçons dans un même pool (keepPool) doivent avoir un ownerTag différent, sinon ils écrasent les noms des précédents.",
+    "Pour les props ponctuels, le pas par défaut est preset.pointStepM ou 25 m ; pour les pièces chaînées, longueur de pièce + gapM + extraGapM. Le pas minimum est 0.05 m.",
+    "placeScatter est déterministe pour un opts.seed donné (congruentiel linéaire 1103515245/12345 modulo 2^31)."
+  ],
+  "fields": {
+    "presets": {"type": "table<string, table>", "desc": "Table des préréglages de pièces, par clé. Champs usuels : name, shapePath, preRot (0 à 3, quarts de tour autour de Z), gapM (écart entre pièces, négatif = recouvrement), nativeLenM, normalMode ('surface' ou 'global'), altPaths (formes alternées), capMode/capPath/capPreRot (embouts), reach/bright (lampadaires)."}
+  },
+  "functions": {
+    "addPresets": {
+      "desc": "Fusionne des préréglages supplémentaires dans la table presets (par clé). Utilisé par le kit de props, hors version livrée, pour enregistrer le mobilier et les pièces civiques.",
+      "params": {"t": {"type": "table<string, table>", "desc": "Préréglages à ajouter ou remplacer."}},
+      "returns": [],
+      "internal": false
+    },
+    "orientation": {
+      "desc": "Rotation donnée à une pièce posée (voir orient) pour un outil qui dresse ses propres pièces. Quaternion partagé : l'utiliser ou le copier avant l'appel suivant.",
+      "params": {
+        "along": {"type": "vec3", "desc": "Direction le long du rail."},
+        "up": {"type": "vec3", "desc": "Direction vers le haut."},
+        "preIdx": {"type": "integer", "desc": "Pré-rotation de la pièce, 0 à 3 (0, 90, 180, 270 degrés autour de Z)."},
+        "sideSign": {"type": "number|nil", "desc": "Côté : valeur négative retourne la pièce de 180 degrés (défaut 1)."}
+      },
+      "returns": [{"type": "quat", "desc": "Rotation (instance partagée du module)."}],
+      "internal": false
+    },
+    "lampLight": {
+      "desc": "Fabrique l'enregistrement de lumière (voir siteLights) d'un lampadaire posé en (px, py, pz) et tourné de q ; la tête est placée sous le haut de la boîte du maillage, au bout du bras s'il y en a un. Renvoie nil si le préréglage n'est pas un lampadaire.",
+      "params": {
+        "presetKey": {"type": "string", "desc": "Clé du préréglage."},
+        "px": {"type": "number", "desc": "x du pied."},
+        "py": {"type": "number", "desc": "y du pied."},
+        "pz": {"type": "number", "desc": "z du pied."},
+        "q": {"type": "quat", "desc": "Rotation de la pièce."},
+        "scale": {"type": "number|nil", "desc": "Échelle (défaut 1)."},
+        "col": {"type": "any|nil", "desc": "Couleur de lueur (défaut siteLights.TONES.warm)."},
+        "bright": {"type": "number|nil", "desc": "Luminosité (défaut celle du préréglage)."},
+        "reach": {"type": "number|nil", "desc": "Rayon de la lumière (défaut celui du préréglage)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "{ px, py, pz, glow, radius, brightness }."}],
+      "internal": false
+    },
+    "beginPointBatch": {
+      "desc": "Démarre un lot de props ponctuels avec dédoublonnage spatial : tout point à moins de minGap d'un point déjà posé dans ce lot est refusé (désagrège les endroits où des lignes se rejoignent). Sans minGap positif, désactive le dédoublonnage.",
+      "params": {"minGap": {"type": "number|nil", "desc": "Distance minimale entre points, en mètres."}},
+      "returns": [],
+      "internal": false
+    },
+    "endPointBatch": {
+      "desc": "Termine le lot de props ponctuels.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "removePool": {
+      "desc": "Supprime le pool de pièces posées par l'appelant (pièces et lumières).",
+      "params": {"poolId": {"type": "string", "desc": "Identifiant du pool."}},
+      "returns": [],
+      "internal": false
+    },
+    "poolCount": {
+      "desc": "Nombre de pièces actuellement dans un pool (0 si vide, non construit ou gravé). Lecture en O(1), utilisable à chaque frame.",
+      "params": {"poolId": {"type": "string", "desc": "Identifiant du pool."}},
+      "returns": [{"type": "integer", "desc": "Nombre de pièces."}],
+      "internal": false
+    },
+    "poolList": {
+      "desc": "Renvoie les pièces posées d'un pool, pour une cuisson qui les relit dans la scène. Lecture seule.",
+      "params": {"poolId": {"type": "string", "desc": "Identifiant du pool."}},
+      "returns": [{"type": "table|nil", "desc": "Liste d'objets de scène, ou nil."}],
+      "internal": false
+    },
+    "commitPool": {
+      "desc": "Grave un pool : rend persistantes (canSave=true) les pièces transitoires et les lumières de ses lampadaires, puis les détache du pool sans les supprimer.",
+      "params": {"poolId": {"type": "string", "desc": "Identifiant du pool."}},
+      "returns": [{"type": "table", "desc": "Liste des identifiants/noms des objets rendus persistants."}],
+      "internal": false
+    },
+    "placePoints": {
+      "desc": "Pose un préréglage à chaque point monde fourni. Remplace le pool sauf si keepPool. Chaque point peut porter ax, ay (direction le long, horizontale) et scl (nombre, ou {x,y,z} dans le repère de la pièce) pour ajuster cette instance. Pour un lampadaire, crée aussi la lumière.",
+      "params": {
+        "opts": {"type": "table", "desc": "poolId, presetKey, folder (groupe de scène parent), points ({x,y,z,ax,ay,scl}), sideSign (défaut 1), keepPool, ownerTag, outPositions (reçoit les positions posées), outLights (reçoit les lumières)."}
+      },
+      "returns": [{"type": "integer", "desc": "Nombre de pièces posées (0 si préréglage ou points manquants)."}],
+      "internal": false
+    },
+    "placeScatter": {
+      "desc": "Disperse des maillages libres aux points donnés (forme, lacet, inclinaison, taille et enfouissement aléatoires) dans un pool. Déterministe pour opts.seed. Remplace toujours le pool.",
+      "params": {
+        "opts": {"type": "table", "desc": "poolId, folder, shapePaths (formes au choix), points ({x,y,z}), seed, base (échelle de base, défaut 1), var (variation relative, défaut 0), tiltMax (inclinaison max en radians, défaut 0.2), buryBase (défaut 0.03 m), buryVar (défaut 0.12), collidable (booléen), outPositions."}
+      },
+      "returns": [{"type": "integer", "desc": "Nombre de pièces posées."}],
+      "internal": false
+    },
+    "runLine": {
+      "desc": "Construit (ou reconstruit) une ligne de props le long d'un rail. keepPool ajoute au pool au lieu de le remplacer, ce qui permet de bâtir une ligne faite de plusieurs rails (un parapet interrompu par des volées arrive en quelques tronçons ouverts). Les props ponctuels (mode global) sont posés à intervalles réguliers, avec lockEnds pour verrouiller les deux extrémités et répartir l'intérieur.",
+      "params": {
+        "opts": {"type": "table", "desc": "poolId, presetKey ('none' = rien), folder, railPts (au moins 2 points), railUps (normales), sideSign, stepM, extraGapM, lockEnds, isLoop, keepPool, ownerTag, outPositions, outLights, rejectFn (renvoie true pour refuser un échantillon)."}
+      },
+      "returns": [{"type": "integer", "desc": "Nombre de pièces posées."}],
+      "internal": false
+    }
+  }
+}

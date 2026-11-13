@@ -4,12 +4,16 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/scene/getPlayerVehicle")` (fichier sous extensions/ mais pas une extension classique)
 
+Noeud flowgraph « Get Player Vehicle ID » (categorie provider). Sorties : vehId (number) id du vehicule controle par le joueur (be:getPlayerVehicleID(0), -1 si aucun) et exist (bool, cache). Ancien nom de pin : objID -> vehId (legacyPins).
+
 ## Classe `C`
+
+Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:init()` |  | 28 |
-| `C:work()` |  | 31 |
+| `C:init()` | Rien a initialiser. | 28 |
+| `C:work()` | Ecrit vehId = be:getPlayerVehicleID(0) or -1 et exist = (vehId ~= -1). | 31 |
 
 ## Appels vers le moteur (C++)
 

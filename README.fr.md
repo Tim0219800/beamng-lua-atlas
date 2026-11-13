@@ -20,19 +20,21 @@ Tout est généré à partir du code Lua fourni avec le jeu (lecture seule) et d
 | `stubs/0.40.5/cpp/ge.lua`, `cpp/vehicle.lua` | Stubs des objets C++ |
 | `descriptions/0.40.5/` | Descriptions rédigées (JSON), fusionnées par le générateur |
 | `donnees-0.40.5.zip` (fichier de la release) | Données brutes : extraction statique et relevés en jeu, nécessaires pour régénérer |
-| `outils/` | Les outils : `extraire.py`, `generer.py`, `importer_releve.py`, `mod_releve/` |
+| `outils/` | Les outils : `extraire.py`, `generer.py`, `importer_releve.py`, `mod_releve/`, `comparer.py`, `reporter_descriptions.py`, `verifier_mod.py`, `bissecter.py` (voir plus bas) |
+| [`NOUVELLE_VERSION.md`](NOUVELLE_VERSION.md) | Procédure pas à pas pour passer l'atlas à une nouvelle version du jeu (prévue : 0.41) |
 
 ### Couverture
 
 | Couche | Modules décrits (✍) | Fonctions documentées |
 |---|---|---|
-| Véhicule | 239 / 242 | 1664 / 1667 |
-| Commun (GE + véhicule) | 87 / 188 | 412 / 869 |
-| GE | 234 / 2060 | 2394 / 11506 |
+| Véhicule | 242 / 242 | 1687 / 1688 |
+| Commun (GE + véhicule) | 188 / 188 | 1220 / 1220 |
+| GE | 2060 / 2060 | 17627 / 17628 |
+| Console | 17 / 17 | 20 / 23 |
 
-Côté GE, la rédaction couvre ce que les moddeurs utilisent le plus : `utils`, `mathlib` (vec3, quat), `extensions`, `guihooks`, jbeam,
-`ge/main`, `map`, `spawn`, tous les `core_*`, `freeroam`, `scenario`, `render`, `mcp`.
-Les autres modules ont une page automatique : fonctions exportées avec paramètres, champs, classes, hooks et commentaires d'origine.
+Les 2507 modules ont une description rédigée (✍) : rôle, paramètres, valeurs de retour, pièges, et bugs du jeu relevés à la lecture.
+Seules quelques fonctions (5 sur 20 559) n'ont que leur commentaire d'origine.
+Les très gros fichiers d'éditeur ou d'interface (groundCoverEditor, heroRoadEditor, layerStack…) sont décrits à partir de leur API exportée plutôt que ligne à ligne, et les nœuds flowgraph ont des méthodes génériques (`work`, `init`…) décrites de façon standard.
 
 Côté C++ (relevé en jeu) : 103 classes d'instance en GE (dont 76 types d'objets de scène, par exemple `BeamNGVehicle` et ses 300 méthodes),
 39 modules C++ avec leurs sous-modules (`Engine.Render`, `Engine.Audio`, `Engine.imgui`…), et `obj` (`BeamObject`, 347 méthodes) dans la VM véhicule.
@@ -83,11 +85,23 @@ Pour rédiger de nouvelles descriptions : suivre [`CONSIGNES_DESCRIPTIONS.md`](C
 - **Bugs du jeu** : plusieurs centaines d'incohérences relevées à la lecture sont listées dans les « Remarques » de chaque module,
   et 69 exports qui pointent vers des fonctions inexistantes sont marqués ⚠. Seuls quelques-uns ont été vérifiés à la main.
 
+## Outils pour les moddeurs
+
+```
+python -I outils/verifier_mod.py <mod.zip | dossier> [...] [--version V]   # ou : --mods-actifs
+python -I outils/bissecter.py debut        # jeu fermé ; puis « bon » / « mauvais » après chaque lancement, « fin » pour restaurer
+python -I outils/comparer.py <ancienne> <nouvelle>                       # diff d'API entre deux versions du jeu
+python -I outils/reporter_descriptions.py <ancienne> <nouvelle>          # reporte les descriptions sur la nouvelle version
+```
+
+- **`verifier_mod.py`** : conflits de fichiers entre mods, fichiers du jeu remplacés, appels à des fonctions inconnues ou retirées, extensions introuvables, hooks jamais émis. Ne modifie rien.
+- **`bissecter.py`** : désactive la moitié des mods actifs à chaque étape pour trouver celui qui pose problème ; garde une copie de `db.json` (`db.json.bak_bissection`).
+- **`comparer.py`** : produit `doc/<version>/changements.md` (ruptures, nouveautés, C++) et un JSON utilisé par le vérificateur.
+
 ## Suite prévue
 
-1. Diff d'API entre versions du jeu (relancer l'extraction à chaque mise à jour et comparer les `statique.json`).
-2. Vérificateur de mods : conflits de fichiers, appels à des fonctions disparues, bissection.
-3. Descriptions rédigées pour `gameplay` (trafic, police, missions).
+1. Passage à la 0.41 : tout l'outillage est prêt, voir [`NOUVELLE_VERSION.md`](NOUVELLE_VERSION.md).
+2. Relire et enrichir les descriptions des très gros fichiers d'éditeur, et remettre les accents dans une partie des nœuds flowgraph.
 
 ## Licence
 

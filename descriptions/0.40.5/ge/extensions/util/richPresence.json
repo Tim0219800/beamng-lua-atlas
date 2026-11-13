@@ -1,0 +1,196 @@
+{
+  "path": "lua/ge/extensions/util/richPresence.lua",
+  "module": "Gère la « présence enrichie » du jeu : le statut affiché dans Steam (rich presence et timeline Steam), l'activité UDS (startActivityByID) et le statut Discord. Il déduit l'activité courante (replay, mode photo, carrière et ses sous-modes, garage, mission, scénario, drag, crawl, drift, niveau, menu principal) et le texte du statut (par exemple « Playing X on Niveau with Marque Modèle »), et il ajoute des évènements à la timeline Steam (crash, rollover, tentative, tour de course, résultat…). Les fonctions set et setActivity sont remplacées par nop quand la fonction est désactivée (versions de développement ou réglage richPresence à faux).",
+  "usage": "print(extensions.util_richPresence.set('yolo'))",
+  "fields": {
+    "state": {"type": "table", "desc": "{levelName, vehicleName, levelIdentifier, vehicleJbeam?} : état utilisé pour composer le message"},
+    "richPresenceEnabled": {"type": "boolean", "desc": "true si les fonctions set/setActivity sont actives"},
+    "setActivity": {"type": "function", "desc": "Fonction d'activité UDS, ou nop quand la présence enrichie est désactivée"},
+    "onDeserialized": {"type": "function", "desc": "nop (à ne pas supprimer, selon le commentaire du code)"}
+  },
+  "notes": [
+    "La présence enrichie n'est active que pour une build de release (titre de fenêtre contenant RELEASE et build « shipping ») ou si UDS existe, et si le réglage richPresence est vrai ; le réglage richPresenceDiscord pilote Discord.",
+    "M.set est défini uniquement par enableToggleableFunctions (appelé à la fin du fichier ou dans onSettingsChanged) ; sans cela il vaut nil jusque-là.",
+    "Les activités sont des identifiants (challenge_type_*, level_*, career_*, freeroam_*, main_menu, etc.) ; un type de mission ou un niveau inconnu retombe sur challenge_generic ou level_generic.",
+    "Le niveau « gridmap » correspond à l'activité level_gridmap_v2 dans la table activities, mais getCurrentActivity construit « level_ » + identifiant du niveau : un niveau dont l'identifiant est gridmap_v2 est reconnu, gridmap seul ne l'est pas.",
+    "Évènements de timeline Steam enregistrés via gameplay_statistic.callbackRegister : vehicle/crash, vehicle/airtime.time (plage), vehicle/rollover, vehicle/jturn, drift/crashes.",
+    "Modes de jeu Steam timeline utilisés : 1 jeu, 2 mise en place/éditeur, 3 menu, 4 écran de chargement.",
+    "Les hooks onDragReset, onDragDataSet, onDragClear, onDragClearComplete, onCrawlStarted, onCrawlCleared, onDriftContextChanged, onCareerActive, onDeliveryModeStarted/Stopped, onPartShopping*, onScenarioChange et onWorldReadyState recalculent simplement l'activité."
+  ],
+  "functions": {
+    "set": {
+      "desc": "Définit le texte de rich presence Steam (clé 'b') ; renvoie le succès. Remplacée par nop si la présence enrichie est désactivée.",
+      "params": {"v": {"type": "any", "desc": "Texte à afficher (converti avec tostring)"}},
+      "returns": [{"type": "boolean|nil", "desc": "true en cas de succès (retour de OnlineServiceProvider.setRichPresence)"}],
+      "internal": false
+    },
+    "setActivity": {
+      "desc": "Démarre une activité UDS par identifiant si elle diffère de la dernière envoyée. Remplacée par nop si désactivée.",
+      "params": {"activityId": {"type": "string", "desc": "Identifiant de l'activité (voir la table activities du fichier)"}},
+      "returns": [],
+      "internal": false
+    },
+    "onExtensionLoaded": {
+      "desc": "Appelé au chargement : initialise la présence enrichie Steam et Discord selon les réglages et enregistre les rappels de statistiques pour la timeline Steam.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Appelé au déchargement : efface le statut Steam et l'activité Discord et retire les rappels de statistiques.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onSettingsChanged": {
+      "desc": "Hook appelé quand les réglages changent : active ou désactive la présence enrichie (Steam, Discord, set/setActivity) selon richPresence et richPresenceDiscord.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook appelé au changement de véhicule joueur : relit le nom et la marque du véhicule (info.json) et met à jour le message.",
+      "params": {
+        "oldId": {"type": "integer", "desc": "Ancien identifiant de véhicule"},
+        "newId": {"type": "integer", "desc": "Nouvel identifiant de véhicule"},
+        "player": {"type": "integer", "desc": "Index du joueur"}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onClientPostStartMission": {
+      "desc": "Hook appelé après le démarrage d'un niveau : mémorise l'identifiant et le nom lisible du niveau, met à jour le message et l'activité.",
+      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau"}},
+      "returns": [],
+      "internal": true
+    },
+    "onGameStateUpdate": {
+      "desc": "Hook appelé quand l'état du jeu change : met à jour le message et l'activité.",
+      "params": {"state": {"type": "table", "desc": "Nouvel état (non utilisé directement)"}},
+      "returns": [],
+      "internal": true
+    },
+    "onAnyMissionChanged": {
+      "desc": "Hook appelé quand une mission change : met à jour le message et l'activité.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorActivated": {
+      "desc": "Hook appelé à l'ouverture de l'éditeur : message « Using World Editor » et mode de jeu Steam 2.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Hook appelé à la fermeture de l'éditeur : met à jour le message et remet le mode de jeu Steam à 1.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "clientEndMission": {
+      "desc": "Hook appelé à la fin d'un niveau : passe la timeline Steam en mode écran de chargement (4).",
+      "params": {"levelpath": {"type": "string", "desc": "Chemin du niveau"}},
+      "returns": [],
+      "internal": true
+    },
+    "clientPreStartMission": {
+      "desc": "Hook appelé avant le démarrage d'un niveau : passe la timeline Steam en mode écran de chargement (4).",
+      "params": {"levelpath": {"type": "string", "desc": "Chemin du niveau"}},
+      "returns": [],
+      "internal": true
+    },
+    "onUiReady": {
+      "desc": "Hook appelé quand l'interface est prête : déduit le mode de jeu Steam (menu, chargement, mise en place, jeu) de l'état courant et met à jour l'activité.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onUiChangedState": {
+      "desc": "Hook appelé au changement d'état de l'interface : met à jour le mode de jeu et la description d'état de la timeline Steam.",
+      "params": {
+        "toState": {"type": "string", "desc": "Nouvel état (menu.*, loading, scenario-*, autre)"},
+        "fromState": {"type": "string", "desc": "Ancien état"}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onResetGameplay": {
+      "desc": "Hook appelé à la réinitialisation du gameplay : ajoute un évènement « reset » à la timeline Steam.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onNewAttempt": {
+      "desc": "Hook appelé au début d'une tentative : évènement « New attempt » dans la timeline Steam.",
+      "params": {"attemptData": {"type": "table", "desc": "Données de la tentative (non utilisées)"}},
+      "returns": [],
+      "internal": true
+    },
+    "onAttemptFailed": {
+      "desc": "Hook appelé à l'échec d'une tentative : évènement « Failed » dans la timeline Steam.",
+      "params": {"attemptData": {"type": "table", "desc": "Données de la tentative (non utilisées)"}},
+      "returns": [],
+      "internal": true
+    },
+    "onAttemptCompleted": {
+      "desc": "Hook appelé à la réussite d'une tentative : évènement « Completed » dans la timeline Steam.",
+      "params": {"attemptData": {"type": "table", "desc": "Données de la tentative (non utilisées)"}},
+      "returns": [],
+      "internal": true
+    },
+    "onRaceWaypointReached": {
+      "desc": "Hook appelé au passage d'un point de course : évènement « Race waypoint » dans la timeline Steam.",
+      "params": {"data": {"type": "table", "desc": "Données du point (non utilisées)"}},
+      "returns": [],
+      "internal": true
+    },
+    "onRaceLap": {
+      "desc": "Hook appelé à la fin d'un tour : évènement « Race lap N » avec le temps formaté mm:ss.mmm dans la timeline Steam.",
+      "params": {"data": {"type": "table", "desc": "Contient lap (numéro de tour) et time (secondes)"}},
+      "returns": [],
+      "internal": true
+    },
+    "onRaceBranchChosen": {
+      "desc": "Hook appelé au choix d'une branche de course : évènement « Race branch » dans la timeline Steam.",
+      "params": {"data": {"type": "table", "desc": "Données de la branche (non utilisées)"}},
+      "returns": [],
+      "internal": true
+    },
+    "onRaceResult": {
+      "desc": "Hook appelé au résultat de course : évènement « Race Result » avec le temps final formaté dans la timeline Steam.",
+      "params": {"data": {"type": "table", "desc": "Contient finalTime (secondes)"}},
+      "returns": [],
+      "internal": true
+    },
+    "onMissionAttemptAggregated": {
+      "desc": "Hook appelé quand une tentative de mission est agrégée : évènement « Mission <type> » avec le nom de la mission dans la timeline Steam.",
+      "params": {
+        "attempt": {"type": "table", "desc": "Tentative (champ type utilisé)"},
+        "mission": {"type": "table", "desc": "Mission (champ name utilisé)"}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onCareerActive": {"desc": "Hook : recalcule l'activité quand la carrière devient active.", "params": {}, "returns": [], "internal": true},
+    "onDeliveryModeStarted": {"desc": "Hook : recalcule l'activité au début du mode livraison.", "params": {}, "returns": [], "internal": true},
+    "onDeliveryModeStopped": {"desc": "Hook : recalcule l'activité à la fin du mode livraison.", "params": {}, "returns": [], "internal": true},
+    "onPartShoppingStarted": {"desc": "Hook : recalcule l'activité au début d'une session d'achat de pièces.", "params": {}, "returns": [], "internal": true},
+    "onPartShoppingTransactionComplete": {"desc": "Hook : recalcule l'activité après une transaction d'achat de pièces.", "params": {}, "returns": [], "internal": true},
+    "onPartShoppingCancelled": {"desc": "Hook : recalcule l'activité à l'annulation d'un achat de pièces.", "params": {}, "returns": [], "internal": true},
+    "onScenarioChange": {"desc": "Hook : recalcule l'activité au changement de scénario.", "params": {}, "returns": [], "internal": true},
+    "onDragReset": {"desc": "Hook : recalcule l'activité à la réinitialisation du drag.", "params": {}, "returns": [], "internal": true},
+    "onDragDataSet": {"desc": "Hook : recalcule l'activité quand les données de drag sont définies.", "params": {}, "returns": [], "internal": true},
+    "onDragClear": {"desc": "Hook : recalcule l'activité à l'effacement des données de drag.", "params": {}, "returns": [], "internal": true},
+    "onDragClearComplete": {"desc": "Hook : recalcule l'activité une fois l'effacement du drag terminé.", "params": {}, "returns": [], "internal": true},
+    "onCrawlStarted": {"desc": "Hook : recalcule l'activité au début d'un parcours de crawl.", "params": {}, "returns": [], "internal": true},
+    "onCrawlCleared": {"desc": "Hook : recalcule l'activité à la fin d'un parcours de crawl.", "params": {}, "returns": [], "internal": true},
+    "onDriftContextChanged": {"desc": "Hook : recalcule l'activité quand le contexte de drift change.", "params": {}, "returns": [], "internal": true},
+    "onWorldReadyState": {
+      "desc": "Hook : recalcule l'activité quand l'état du monde change.",
+      "params": {"levelpath": {"type": "string", "desc": "Chemin du niveau (non utilisé)"}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

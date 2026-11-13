@@ -1,0 +1,40 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gfx/dof.lua",
+  "module": "Nœud flowgraph « DOF » (catégorie par défaut, tags gfx/dof). Fait apparaître (blurIn) ou disparaître (blurOut) un flou de profondeur de champ en fadeTime secondes (défaut 1) en pilotant les variables $DOFPostFx::BlurMin, BlurMax, BlurCurveFar (cible 430) et FocusRangeMax (3), puis rafraîchit DOFPostEffect. Sortie blurDone quand le fondu est terminé. Les valeurs d'origine sont sauvegardées et restaurées au reset ou à l'arrêt.",
+  "notes": [
+    "Les sauvegardes savedBlurMin/Max/... sont lues puis réécrites à chaque changement de mode, sans être remises à nil."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Appelle reset().",
+          "internal": true
+        },
+        "init": {
+          "desc": "Appelle reset().",
+          "internal": true,
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "gestionnaire flowgraph"
+            }
+          }
+        },
+        "reset": {
+          "desc": "Remet le timer et le mode à zéro et restaure les variables DOF sauvegardées.",
+          "internal": false
+        },
+        "updateSettings": {
+          "desc": "Appelle DOFPostEffect.updateDOFSettings() si l'effet existe.",
+          "internal": false
+        },
+        "work": {
+          "desc": "Détecte le mode (in/out), sauvegarde les réglages DOF puis fait avancer le fondu avec dtSim ; met blurDone à true à la fin.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

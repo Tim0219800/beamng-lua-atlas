@@ -1,0 +1,45 @@
+{
+  "path": "lua/ge/extensions/editor/multiSpawnManager.lua",
+  "module": "Outil d'éditeur « Vehicle Groups Manager » (menu Gameplay) pour créer, éditer, charger et sauvegarder des groupes de véhicules (fichiers .vehGroup.json) et les faire apparaître dans le monde via core_multiSpawn. Un groupe est de type « custom » (liste de véhicules choisie à la main : modèle, config, peintures) ou « generator » (paramètres : amount, allMods, allConfigs, minPop, modelPopPower, configPopPower, popDecreaseFactor, maxYear, avec lesquels core_multiSpawn.createGroup génère les véhicules). Les groupes trouvés dans vehicleGroups/ et settings/editor/vehicleGroups/ sont chargés automatiquement au premier affichage.",
+  "usage": "extensions.load('editor_multiSpawnManager')\neditor_multiSpawnManager.loadGroup('vehicleGroups/traffic.vehGroup.json')\neditor_multiSpawnManager.onWindowMenuItem()",
+  "notes": [
+    "Modes d'apparition proposés : road, traffic, lineAhead/Behind/Left/Right/Above, raceGrid, raceGridAlt.",
+    "À la sauvegarde, le groupe est nettoyé : les groupes « custom » perdent generator, les véhicules sans modèle sont retirés, les tables de peinture ne sont conservées que si la peinture vaut « (Custom) » ; les groupes generator perdent data. L'ancien type « locked » est converti en « generator ».",
+    "saveGroup ignore son premier paramètre (file) ; seul filePath est utilisé. Elle suppose que options.groupListIdx désigne un groupe existant dans la liste.",
+    "Le bouton « Delete » appelle core_multiSpawn.deleteVehicles(amount) ; « Set Scene Vehicles to Group » remplace les données du groupe par core_multiSpawn.spawnedVehsToGroup().",
+    "L'état d'apparition (spawnState) repasse à 0 quand core_multiSpawn émet onVehicleGroupSpawned (hook appelé avec vehIds, groupId, nom)."
+  ],
+  "fields": {
+    "filePaths": {"type": "string[]", "desc": "Dossiers explorés pour charger automatiquement les groupes : {\"vehicleGroups/\", \"settings/editor/vehicleGroups/\"}. Modifiable avant le premier affichage de l'outil."}
+  },
+  "functions": {
+    "loadGroup": {
+      "desc": "Lit un fichier .vehGroup.json, en fait le groupe courant (après nettoyage), sélectionne son premier véhicule et l'ajoute à la liste des groupes s'il n'y est pas déjà. Écrit un avertissement dans le log si la lecture échoue.",
+      "params": {"filePath": {"type": "string", "desc": "Chemin du fichier .vehGroup.json."}}
+    },
+    "saveGroup": {
+      "desc": "Écrit le groupe courant (traité par processGroup) dans un fichier JSON et mémorise le dossier et le chemin du fichier.",
+      "params": {
+        "file": {"type": "any", "desc": "Non utilisé (déduit du code)."},
+        "filePath": {"type": "string", "desc": "Chemin de destination."}
+      }
+    },
+    "onEditorGui": {
+      "desc": "Hook d'éditeur appelé à chaque frame : dessine la fenêtre « Vehicle Groups Manager » (menus File et Tools, liste des groupes, édition du groupe, options d'apparition).",
+      "params": {"dt": {"type": "number", "desc": "Durée de la frame en secondes."}},
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre principale et trois fenêtres modales (générateur, peinture personnalisée, remplacement du groupe) et l'entrée de menu « Gameplay ».",
+      "internal": true
+    },
+    "onVehicleGroupSpawned": {
+      "desc": "Hook émis par core_multiSpawn une fois le groupe apparu ; remet spawnState à 0 (fait disparaître « Please wait... »).",
+      "internal": true
+    },
+    "onWindowMenuItem": {
+      "desc": "Handler de l'entrée de menu : initialise les tables au besoin, vide la sélection d'objets de l'éditeur et affiche la fenêtre.",
+      "internal": true
+    }
+  }
+}

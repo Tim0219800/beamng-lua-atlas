@@ -1,0 +1,125 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/render/spline.lua",
+  "module": "Rendu fil de fer et surfaces des splines et couches pour les outils d'édition de splines (l'essentiel de l'ancien render.lua). Module composite : dessine via render/spheres, lines, tris et markup, avec sa propre réserve de vec3 temporaires. handleSplineRendering dessine nœuds, noms, nervures, barres et élévations ; les autres fonctions dessinent coques, rubans, surfaces homologuées ou projetées sur le sol et aperçus. À appeler chaque frame depuis un outil d'éditeur.",
+  "notes": [
+    "Une spline attendue est une table avec nodes, divPoints (points subdivisés), divWidths, binormals, isEnabled, isLink, isLoop, isPolyline, etc. ; les champs exacts viennent de l'outil appelant.",
+    "Les surfaces projetées (renderDrivePathSurface) lancent un raycast vertical depuis 3 m au-dessus (zRayLift) et ajoutent 0.05 m (zRayOffset) ; elles sont ignorées pour les splines isLink.",
+    "Un arc de torsion est dessiné en 16 segments, à 0.97 * 5 m du centre.",
+    "Une demi-spline (champ tileSet ou spacing présent) ne dessine que les nervures droites (indices pairs)."
+  ],
+  "functions": {
+    "drawArc": {
+      "desc": "Dessine un arc de cercle (16 segments) du point a au point b autour de center, avec l'étiquette d'angle de torsion au milieu pour le nœud sélectionné.",
+      "params": {
+        "center": {"type": "vec3", "desc": "Centre de l'arc."},
+        "isSelectedNode": {"type": "boolean", "desc": "true pour afficher l'angle de torsion."},
+        "a": {"type": "vec3", "desc": "Point de départ."},
+        "b": {"type": "vec3", "desc": "Point d'arrivée."},
+        "axis": {"type": "vec3", "desc": "Axe de rotation."},
+        "twistAngle": {"type": "number", "desc": "Angle de torsion ; son signe donne le sens de l'arc."}
+      },
+      "returns": []
+    },
+    "drawRibPoints": {
+      "desc": "Dessine les points de nervure (sphères) et les lignes de nervure : pour une spline complète, gauche et droite reliées ; pour une demi-spline, seulement le bord droit relié au nœud central.",
+      "params": {
+        "ribs": {"type": "vec3[]", "desc": "Points de nervure, par paires gauche/droite."},
+        "spline": {"type": "table", "desc": "Spline (tileSet ou spacing signale une demi-spline ; nodes)."}
+      },
+      "returns": []
+    },
+    "drawBarPoints": {
+      "desc": "Dessine les poignées de barre et leur ligne de chute vers le sol (raycast vertical), colorée selon l'élévation. Sans effet s'il y a moins de 2 barres.",
+      "params": {
+        "bars": {"type": "vec3[]", "desc": "Points de barre."},
+        "elevScale": {"type": "number", "desc": "Hauteur correspondant au rouge de la rampe."}
+      },
+      "returns": []
+    },
+    "handleSplineRendering": {
+      "desc": "Dessine toutes les splines : la sélectionnée avec ses nœuds, surbrillance, gizmo/rotation, nervures, barres, élévation et nom/longueur ; les autres en version atténuée avec leur nom.",
+      "params": {
+        "splines": {"type": "table", "desc": "Liste de splines."},
+        "splineIdx": {"type": "integer", "desc": "Indice de la spline sélectionnée."},
+        "nodeIdx": {"type": "integer", "desc": "Indice du nœud sélectionné."},
+        "isGizmoActive": {"type": "boolean", "desc": "Le gizmo de translation est actif."},
+        "isUseRot": {"type": "boolean", "desc": "Mode rotation (affichage de torsion)."},
+        "isShapeLocked": {"type": "boolean", "desc": "Forme verrouillée."},
+        "isShowElevation": {"type": "boolean", "desc": "Afficher élévations et lignes de chute."},
+        "isShowRibs": {"type": "boolean", "desc": "Afficher les nervures."},
+        "elevScale": {"type": "number", "desc": "Échelle de couleur d'élévation."},
+        "hiddenNodeSet": {"type": "table<integer, boolean>|nil", "desc": "Ensemble de nœuds de la spline sélectionnée dont la grosse sphère, la surbrillance et la ligne d'élévation sont supprimées (coins ingénierés de heroRoad où le nœud PI est loin de la route)."},
+        "noNames": {"type": "boolean|nil", "desc": "Supprime le nom des splines non sélectionnées (réseaux de centaines de liens)."}
+      },
+      "returns": []
+    },
+    "renderLayer": {
+      "desc": "Dessine le fil de fer d'une couche d'une spline (avec décalage binormal), éventuellement projeté au sol par raycast.",
+      "params": {
+        "layer": {"type": "table", "desc": "Couche à dessiner."},
+        "spline": {"type": "table", "desc": "Spline contenant la couche."},
+        "isRaycast": {"type": "boolean", "desc": "Projeter les points sur le sol."},
+        "binormalSpacing": {"type": "integer", "desc": "Espacement des lignes binormales, en points de division."}
+      },
+      "returns": []
+    },
+    "renderMasterLayer": {
+      "desc": "Comme renderLayer pour une couche de spline maître, sans appliquer le décalage binormal.",
+      "params": {
+        "layer": {"type": "table", "desc": "Couche à dessiner."},
+        "spline": {"type": "table", "desc": "Spline contenant la couche."},
+        "isRaycast": {"type": "boolean", "desc": "Projeter sur le sol."},
+        "binormalSpacing": {"type": "integer", "desc": "Espacement des lignes binormales."}
+      },
+      "returns": []
+    },
+    "renderShells": {
+      "desc": "Dessine les coques des splines (fil de fer simple avec étiquettes) quand l'outil est inactif.",
+      "params": {"splines": {"type": "table", "desc": "Liste de splines."}},
+      "returns": []
+    },
+    "renderHalfSplineWireFrame": {
+      "desc": "Dessine le fil de fer des demi-splines (par ex. trottoirs).",
+      "params": {
+        "splines": {"type": "table", "desc": "Liste de splines."},
+        "selSplineIdx": {"type": "integer", "desc": "Indice de la spline sélectionnée."},
+        "binormalSpacing": {"type": "integer", "desc": "Espacement des lignes binormales."}
+      },
+      "returns": []
+    },
+    "renderWireframeRibbons": {
+      "desc": "Dessine un contour fil de fer des splines données.",
+      "params": {"splines": {"type": "table", "desc": "Liste de splines."}},
+      "returns": []
+    },
+    "renderHomologatedSurface": {
+      "desc": "Dessine le fil de fer des splines maîtres, avec une surface en carte de chaleur pour la spline sélectionnée.",
+      "params": {
+        "splines": {"type": "table", "desc": "Liste de splines."},
+        "selSplineIdx": {"type": "integer", "desc": "Indice de la spline sélectionnée."}
+      },
+      "returns": []
+    },
+    "renderDrivePathSurface": {
+      "desc": "Dessine une surface quadrilatérale fil de fer dont les z sont obtenus par raycast sur le sol, le long de divPoints (une ligne sur deux).",
+      "params": {"spline": {"type": "table|nil", "desc": "Spline avec divPoints, divWidths, binormals."}},
+      "returns": []
+    },
+    "renderPreviewRibbon": {
+      "desc": "Dessine un ruban d'aperçu : sphères de nœuds, lignes de largeur et d'arêtes et surface de prévisualisation. Les binormales sont calculées en 2D (horizontales).",
+      "params": {
+        "nodes": {"type": "vec3[]", "desc": "Nœuds du ruban."},
+        "widths": {"type": "number[]", "desc": "Largeur du ruban à chaque nœud, en mètres."}
+      },
+      "returns": []
+    },
+    "renderSplinePolylines": {
+      "desc": "Dessine les polylignes des outils de spline de maillage, d'assemblage, de rail et de décalque : trait épais pour la spline sélectionnée, atténué pour les autres. Une spline isPolyline est tracée par ses nœuds (fermée si isLoop), sinon par divPoints ; les splines désactivées ou isLink sont ignorées.",
+      "params": {
+        "splines": {"type": "table|nil", "desc": "Liste de splines."},
+        "selectedSplineIdx": {"type": "integer", "desc": "Indice de la spline sélectionnée."}
+      },
+      "returns": []
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/staticEditor/vePartPropertyView.lua",
+  "module": "Fenêtre « Part Properties » du Static Editor. Elle affiche dans un inspecteur générique les propriétés scalaires (hors tables) de la table sélectionnée dans l'éditeur (vEditor.propertyTableEditTarget), et écrit directement les modifications dans cette table. Les nombres sont éditables en float, les booléens en case à cocher, le reste en chaîne.",
+  "notes": [
+    "Les clés '__astNodeIdx' et '__schemaProcessed' ainsi que toutes les valeurs de type table sont ignorées.",
+    "L'inspecteur est créé avec editor/api/genericInspector ; le setter écrit newValue dans lastEditTarget[fieldName] (donc modifie la donnée JBeam en mémoire).",
+    "Bug mineur : une chaîne éditée est réécrite telle quelle (string) même si le champ d'origine était un nombre converti en float ; seule la valeur du champ change, le type du champ n'est pas revalidé.",
+    "Le champ type d'un entier est 'float' (tout number est traité comme float)."
+  ],
+  "fields": {
+    "menuEntry": {"type": "string", "desc": "Texte de l'entrée du menu Apps : « Part Properties »."}
+  },
+  "functions": {
+    "open": {"desc": "Affiche la fenêtre « Part Properties » (editor.showWindow)."},
+    "onEditorGui": {
+      "desc": "Hook de l'éditeur appelé à chaque frame : reconstruit la liste de champs quand la cible d'édition change, puis dessine l'inspecteur générique.",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook de l'éditeur appelé à l'initialisation : enregistre la fenêtre (500x400, outil vehicleEditor) et crée l'inspecteur générique avec son setter.",
+      "internal": true
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/drift/driftReset.lua",
+  "module": "Nœud flowgraph « Reset Drift » (catégorie repeat_instant, drift). Remet à zéro scores et systèmes : gameplay_drift_general.reset() puis mgr.modules.drift:resetModule(). Aucun pin déclaré.",
+  "notes": ["Catégorie repeat_instant sans pin : les deux appels sont refaits à chaque frame tant que le nœud est atteint."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Appelle gameplay_drift_general.reset() et resetModule() du module drift."}
+      }
+    }
+  }
+}

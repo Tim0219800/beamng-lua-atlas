@@ -1,0 +1,53 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficSpawnGroup.lua",
+  "module": "Nœud flowgraph « Spawn Vehicle Group » (catégorie par défaut). Fait apparaître un groupe de véhicules avec core_multiSpawn.spawnGroup. Pins : group (sans groupe : groupe de trafic par défaut), quantity (-1 ou nil : valeur trafficAmount des réglages du jeu), shuffle, spawnMode (roadAhead, roadBehind, traffic, lineAhead, lineBehind, lineLeft, lineRight, lineAbove, raceGrid, raceGridAlt ; défaut road), spawnGap (15), startPos, startRot, randomColors, dontDelete ; reset supprime les véhicules créés. Sorties : flow, impulsion loaded, vehicleIds. Les véhicules sont ajoutés au module vehicle du flowgraph.",
+  "notes": [
+    "Le défaut de spawnMode ('road') n'est pas dans la liste de modes proposés (déduit du code).",
+    "Machine à états self.state : 0 attente, 1 apparition en cours, 2 chargé, 3 terminé."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Appelle resetState().",
+          "internal": true
+        },
+        "init": {
+          "desc": "Appelle resetState().",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Supprime les véhicules créés par ce nœud (scène et éditeur) puis réinitialise l'état.",
+          "internal": true
+        },
+        "onVehicleGroupSpawned": {
+          "desc": "Hook appelé quand un groupe a été créé ; si groupId correspond, enregistre les véhicules, publie vehicleIds et passe à l'état 2.",
+          "internal": false,
+          "params": {
+            "vehIds": {
+              "type": "any",
+              "desc": "table des ids de véhicules créés"
+            },
+            "groupId": {
+              "type": "any",
+              "desc": "identifiant du groupe créé par core_multiSpawn"
+            }
+          }
+        },
+        "postInit": {
+          "desc": "Définit les valeurs prédéfinies du pin spawnMode.",
+          "internal": true
+        },
+        "resetState": {
+          "desc": "Remet état, groupId, liste d'ids et sortie flow à zéro.",
+          "internal": false
+        },
+        "work": {
+          "desc": "Au premier flux, lance spawnGroup (ou termine directement si la quantité est 0), puis émet loaded et laisse passer le flux une fois chargé.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

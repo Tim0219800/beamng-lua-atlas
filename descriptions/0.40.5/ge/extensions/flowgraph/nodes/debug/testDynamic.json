@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/debug/testDynamic.lua",
+  "module": "Nœud flowgraph « Category Test » (catégorie once_f_duration), nœud de test de cette catégorie : au flux, passe à l'état de durée « started », compte 5 secondes (mgr.dtReal) avec une barre de progression dans le nœud, puis passe à « finished ». Aucun pin personnalisé.",
+  "notes": ["Bug : dans work(), `not self.durationState == 'started'` est évalué comme `(not self.durationState) == 'started'`, toujours faux ; la garde ne protège donc rien et le minuteur avance même hors de l'état started."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Minuteur à 0 et état 'inactive'.", "params": {"mgr": {"type": "table", "desc": "non utilisé"}}, "internal": true},
+        "_executionStarted": {"desc": "Réinitialise à l'exécution.", "internal": true},
+        "onNodeReset": {"desc": "Réinitialise le minuteur et l'état.", "internal": true},
+        "drawMiddle": {"desc": "Éditeur : barre de progression timer/5.", "params": {"builder": {"type": "table", "desc": "constructeur de nœud"}, "style": {"type": "table", "desc": "style"}}, "internal": true},
+        "workOnce": {"desc": "Minuteur à 0, état 'started'."},
+        "work": {"desc": "Avance le minuteur et passe à 'finished' à 5 s.", "params": {"args": {"type": "any", "desc": "non utilisé"}}}
+      }
+    }
+  }
+}

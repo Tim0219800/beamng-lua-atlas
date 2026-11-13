@@ -1,0 +1,69 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/logic/sequencer.lua",
+  "module": "Noeud flowgraph 'Sequencer' (categorie logic). Active tour a tour les sorties flow value_1..value_N. Mode d'increment 'auto' (+1 par frame), 'manual' (pins next/reset/count) ou 'select' (pin index). Mode de sequence : loop, random, once (pingpong est defini mais non propose). Sorties cachees currentIndex, maxIndex, totalIndex.",
+  "notes": [
+    "Le champ C.todo du code signale que l'index demarre a 2 en mode auto.",
+    "Dans work, 'self.mode == manual' est teste alors que 'manual' est un mode d'increment : self.pinIn.count n'est donc jamais utilise et c = self.count.",
+    "En mode pingpong avec count=1, modulo 0 (non propose dans l'UI).",
+    "updatePins ne supprime pas les liens des pins retirees."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "count=1, mode='loop', incMode='auto', index=1.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "index = 0.",
+          "internal": true
+        },
+        "updateMode": {
+          "desc": "Ajoute/supprime les pins d'entree selon le mode d'increment (index pour select ; next, reset, count pour manual).",
+          "internal": true,
+          "params": {
+            "m": {
+              "type": "string",
+              "desc": "'auto', 'manual' ou 'select'"
+            }
+          }
+        },
+        "drawCustomProperties": {
+          "desc": "Panneau : mode d'increment, mode de sequence (sauf select), nombre de sorties.",
+          "internal": true
+        },
+        "updatePins": {
+          "desc": "Cree ou supprime les sorties flow value_i.",
+          "internal": true,
+          "params": {
+            "old": {
+              "type": "integer",
+              "desc": "ancien nombre"
+            },
+            "new": {
+              "type": "integer",
+              "desc": "nouveau nombre"
+            }
+          }
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde mode, count, incMode.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Relit les reglages, recree les pins et le mode.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Met a jour l'index selon le mode d'increment, calcule la sortie active, met value_i a (i == actif), ecrit currentIndex, maxIndex, totalIndex ; flow vaut le flux d'entree.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche le mode et l'index courant.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

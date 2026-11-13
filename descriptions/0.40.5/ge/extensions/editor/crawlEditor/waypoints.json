@@ -1,0 +1,38 @@
+{
+  "path": "lua/ge/extensions/editor/crawlEditor/waypoints.lua",
+  "module": "Sous-outil « Pathnodes » (points de passage) de l'éditeur Crawl. Le module renvoie un constructeur de classe C. Il édite les nœuds d'un chemin (path.pathnodes, path.segments) : sélection à la souris, création manuelle (Maj+clic), déplacement/rotation de la normale/mise à l'échelle du rayon avec le gizmo d'axes, et champs personnalisés. Il dessine les nœuds, les segments reliant les nœuds triés et un texte de sélection. Toutes les modifications passent par editor.history (annulation/rétablissement).",
+  "notes": [
+    "Dans selectPathnode, setSelectedPathnodeIndex et selectedPathnode, « index » est l'id du nœud (clé de path.pathnodes.objects), pas sa position dans la liste triée.",
+    "Maj enfoncé : on est en mode création de nœud manuel (rayon par défaut 5.0, relié par un segment au dernier nœud trié s'il existe).",
+    "L'échelle du gizmo ne modifie que le rayon du nœud (valeur négative ramenée à 0).",
+    "Le gizmo n'est utilisé que si crawlEditor.allowGizmo() renvoie une valeur vraie.",
+    "Un texte de statut est dessiné à l'écran en (10, 10, 0) : « Selected Pathnode: <nom> <id> » ou « No pathnode selected »."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance de l'outil. Champs : crawlEditor (éditeur parent), path (chemin édité), index (id du nœud sélectionné, -1 par défaut), mouseInfo (dernières infos souris), fields (buffers ImGui des champs personnalisés).",
+      "functions": {
+        "init": {"desc": "Constructeur : mémorise l'éditeur Crawl parent et initialise sélection, champs et données de glisser.", "params": {"crawlEditorParam": {"type": "table", "desc": "module editor_crawlEditor (doit fournir allowGizmo())"}}, "internal": true},
+        "setPath": {"desc": "Définit le chemin dont on édite les nœuds.", "params": {"pathParam": {"type": "table|nil", "desc": "chemin avec pathnodes et segments"}}},
+        "selectPathnode": {"desc": "Sélectionne le nœud d'id donné : met à jour le mode de dessin (highlight/normal) des nœuds, place le gizmo dessus et vide les champs personnalisés. Ne fait rien si id est nil.", "params": {"id": {"type": "integer|nil", "desc": "id du nœud"}}},
+        "updateTransform": {"desc": "Place le gizmo sur la position du nœud (orienté selon sa normale en alignement local). Sans effet si le gizmo n'est pas autorisé.", "params": {"index": {"type": "integer", "desc": "id du nœud"}}},
+        "beginDrag": {"desc": "Début de manipulation du gizmo : mémorise l'état sérialisé, la rotation et le rayon du nœud.", "internal": true},
+        "dragging": {"desc": "Pendant la manipulation : translation (position du gizmo), rotation (nouvelle normale, si le nœud en a une) ou échelle (rayon).", "internal": true},
+        "endDragging": {"desc": "Fin de manipulation : enregistre l'action « Manipulated Pathnode via Gizmo » dans l'historique avec l'ancien et le nouvel état.", "internal": true},
+        "selectedPathnode": {"desc": "Renvoie le nœud sélectionné, ou nil s'il n'y en a pas ou s'il est marqué missing.", "returns": [{"type": "table|nil", "desc": "nœud"}]},
+        "handleMouseDown": {"desc": "Clic : sélectionne le nœud survolé, ou désélectionne si on ne clique pas sur le gizmo.", "params": {"hovered": {"type": "table|nil", "desc": "nœud survolé"}}, "internal": true},
+        "createManualPathnode": {"desc": "Affiche « Add manual Pathnode (Click to place) » au point visé ; au clic, crée (annulable) un nœud au point de raycast, rayon 5.0, nom « Pathnode », et un segment depuis le dernier nœud trié.", "internal": true},
+        "mouseOverPathnodes": {"desc": "Cherche le nœud le plus proche de la caméra dont la distance au rayon de la souris est ≤ 1.0 m.", "returns": [{"type": "table|nil", "desc": "nœud survolé"}]},
+        "drawPathnodeSelectionIndicators": {"desc": "Dessine tous les nœuds (mode highlight, normal ou faded selon la sélection et le mode d'édition « Edit Pathnodes »), les segments et le texte de statut.", "internal": true},
+        "drawPathnodeSegments": {"desc": "Dessine un prisme entre chaque paire de nœuds consécutifs triés avec l'étiquette « Segment from-to » ; plus opaque en mode « Edit Pathnodes ».", "internal": true},
+        "draw": {"desc": "Appelé à chaque frame : mémorise mouseInfo et, si le gizmo est autorisé, met à jour le gizmo et traite l'entrée.", "params": {"mouseInfo": {"type": "table", "desc": "infos souris de l'éditeur"}}, "internal": true},
+        "input": {"desc": "Traite l'entrée : indicateurs, création manuelle avec Maj, survol et sélection au clic. Ne fait rien si mouseInfo.valid est faux.", "internal": true},
+        "drawPathnodeList": {"desc": "Dessine la liste des nœuds du trail avec le bouton « Add Pathnode » (crée un nœud à la position de la caméra, rayon 5.0).", "params": {"trail": {"type": "table", "desc": "trail contenant path.pathnodes"}}},
+        "drawPathnodeDetail": {"desc": "Dessine le panneau de détail d'un nœud (nom, position, rayon, normale, champs personnalisés…) avec historique d'annulation.", "params": {"pathnode": {"type": "table", "desc": "nœud"}, "index": {"type": "integer", "desc": "id du nœud"}}},
+        "getSelectedPathnodeIndex": {"desc": "Renvoie l'id du nœud sélectionné.", "returns": [{"type": "integer", "desc": "id (-1 si aucun au départ)"}]},
+        "setSelectedPathnodeIndex": {"desc": "Définit l'id sélectionné sans mettre à jour le gizmo ni le dessin (contrairement à selectPathnode).", "params": {"indexParam": {"type": "integer", "desc": "id du nœud"}}},
+        "drawCustomFields": {"desc": "Dessine l'éditeur des champs personnalisés d'un nœud (tables names/types/values ; type string édité via un champ de 4096 caractères). Crée les tables si absentes.", "params": {"fields": {"type": "table", "desc": "{names, types, values}"}}}
+      }
+    }
+  }
+}

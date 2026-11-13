@@ -4,36 +4,60 @@
 
 **Accès :** globale `luamqtt_VERSION`
 
-MQTT module
- @module mqtt
+Point d'entrée de la bibliothèque tierce luamqtt (xHasKx, version 3.4.3 d'après le champ _VERSION), client MQTT 3.1.1 et 5.0 en Lua pur. Le module renvoie la table 'mqtt' avec les constantes de version, la création de client, et des boucles d'exécution (ioloop partagé ou synchrone). Utile à un moddeur qui veut échanger avec un broker MQTT depuis le jeu.
 
-MQTT protocol DOC: http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/errata01/os/mqtt-v3.1.1-errata01-os-complete.html
+## Exemple
 
-CONVENTIONS:
+```lua
+local mqtt = require('libs/luamqtt/mqtt/init')
+local cl = mqtt.client({uri = '127.0.0.1:1883', clean = true})
+cl:on({connect = function(pkt) cl:subscribe({topic = 'beamng/#', qos = 0}) end,
+       message = function(msg) log('I','mqtt',msg.topic..' '..tostring(msg.payload)) end})
+mqtt.run_ioloop(cl)
+```
 
-	* errors:
-		* passing invalid arguments (like number instead of string) to function in this library will raise exception
-		* all other errors will be returned in format: false, "error-text"
-			* you can wrap function call into standard lua assert() to raise exception
-Module table
- @field v311 MQTT v3.1.1 protocol version constant
- @field v50  MQTT v5.0   protocol version constant
- @field _VERSION luamqtt version string
- @table mqtt
+## Remarques
+
+- Le module pose aussi une globale luamqtt_VERSION, lue par client_mt:__init (la page auto la liste comme nom du module).
+- Convention de la bibliothèque : un argument de mauvais type lève une exception ; les autres erreurs sont renvoyées sous la forme false, 'texte'.
+- run_ioloop et run_sync sont bloquants : dans le jeu, préférer piloter le client depuis une boucle propre (voir ioloop_mt:iteration / client_mt:_sync_iteration) pour ne pas figer le thread.
+- Le connecteur luasocket exige le module 'socket' (nom nu) ; le dossier libs/luasocket du jeu expose ce module.
 
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `luamqtt_VERSION.client(...)` | Create new MQTT client instance<br> @param ... Same as for mqtt.client.create(...)<br> @see mqtt.client.client_mt:__init | 43 |
-| `luamqtt_VERSION.run_ioloop(...)` | Run default ioloop for given MQTT clients or functions<br> @param ... MQTT clients or lopp functions to add to ioloop<br> @see mqtt.ioloop.get<br> @see mqtt.ioloop.run_until_clients | 55 |
-| `luamqtt_VERSION.run_sync(cl)` | Run synchronous input/output loop for only one given MQTT client.<br> Provided client's connection will be opened.<br> Client reconnect feature will not work, and keep_alive too.<br> @param cl MQTT client instance to run | 71 |
+| `luamqtt_VERSION.client(...)` | Crée un client MQTT (équivalent de mqtt.client.create). | 43 |
+| `luamqtt_VERSION.run_ioloop(...)` | Ajoute les clients (ou fonctions de boucle) à l'ioloop par défaut, lance start_connecting() sur chaque client, puis exécute l'ioloop tant qu'il reste au moins un client. | 55 |
+| `luamqtt_VERSION.run_sync(cl)` | Boucle synchrone pour un seul client : ouvre la connexion puis itère tant que cl.connection existe. Pas de reconnexion ni de keep_alive. | 71 |
+
+### Détail des paramètres
+
+#### `luamqtt_VERSION.client(...)`
+
+Crée un client MQTT (équivalent de mqtt.client.create).
+
+- `...` (*table*) : Table d'arguments de client_mt:__init (uri, clean, version, id, username, password, secure, will, keep_alive, reconnect, connector, ssl_module).
+- **renvoie** : table Instance de client MQTT.
+
+#### `luamqtt_VERSION.run_ioloop(...)`
+
+Ajoute les clients (ou fonctions de boucle) à l'ioloop par défaut, lance start_connecting() sur chaque client, puis exécute l'ioloop tant qu'il reste au moins un client.
+
+- `...` (*table|function*) : Clients MQTT ou fonctions appelées à chaque itération.
+
+#### `luamqtt_VERSION.run_sync(cl)`
+
+Boucle synchrone pour un seul client : ouvre la connexion puis itère tant que cl.connection existe. Pas de reconnexion ni de keep_alive.
+
+- `cl` (*table*) : Client MQTT.
+- **renvoie** : boolean|nil false et le message d'erreur en cas d'échec.
 
 ## Champs
 
 | Champ | Type | Description |
 |---|---|---|
-| `get_ioloop` | any | Returns default ioloop instance<br> @function mqtt.get_ioloop |
+| `get_ioloop` | function | Alias de ioloop.get : renvoie l'instance d'ioloop par défaut (créée si besoin). |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/luamqtt/mqtt/init.lua`.*

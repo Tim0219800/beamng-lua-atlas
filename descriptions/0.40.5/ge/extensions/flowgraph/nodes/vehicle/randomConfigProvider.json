@@ -1,0 +1,65 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/randomConfigProvider.lua",
+  "module": "Nœud fournisseur « Random Config Provider » (catégorie `once_instant`). Choisit au hasard un modèle et une configuration parmi les voitures (`Type == 'Car'`) dont une config a `Top Speed > 10`. Sorties : `model`, `config`, `name` (cachée), `color` (cachée, nom de peinture aléatoire du modèle ou nil).",
+  "notes": [
+    "Les options sont calculées une fois au premier démarrage (`self.options`) depuis `core_vehicles.getVehicleList()`.",
+    "La description du pin `color` est copiée de `name` (« model name »)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Construit la liste `options` des modèles/configs éligibles si elle n'existe pas.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Fonction vide.",
+          "internal": true,
+          "params": {
+            "nodeData": {
+              "type": "table",
+              "desc": "Données sauvegardées du nœud."
+            }
+          }
+        },
+        "_onSerialize": {
+          "desc": "Fonction vide.",
+          "internal": true,
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde à remplir."
+            }
+          }
+        },
+        "drawCustomProperties": {
+          "desc": "Ne dessine rien ; renvoie nil.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affichage ImGui au centre du nœud dans l'éditeur de flowgraph ; purement visuel.",
+          "internal": true,
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "Constructeur de nœud de l'éditeur (builder:Middle())."
+            },
+            "style": {
+              "type": "any",
+              "desc": "Style ImGui de l'éditeur."
+            }
+          }
+        },
+        "init": {
+          "desc": "Constructeur ; initialise les champs modèle/config.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Tire un modèle, une config et une peinture au hasard et les écrit sur les sorties.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

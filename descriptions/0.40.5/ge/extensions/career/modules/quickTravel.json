@@ -1,0 +1,41 @@
+{
+  "path": "lua/ge/extensions/career/modules/quickTravel.lua",
+  "module": "Voyage rapide payant en carrière : calcule un prix selon la distance de route entre le joueur et une destination, puis téléporte le joueur (en mode marche) et le débite. Sert à rejoindre un garage.",
+  "notes": [
+    "Tarif : gratuit sous 300 m ; sinon 5 + distance(m) * 0.004 (arrondi au centime).",
+    "La distance vient d'un planificateur de route (gameplay/route/route) depuis la position du véhicule joueur.",
+    "Le voyage avec le véhicule n'est pas implémenté (TODO dans le code) : sans useWalkingMode, seul le paiement est effectué, sans téléportation.",
+    "getPriceForQuickTravel renvoie deux valeurs : prix et distance."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : career_career."}
+  },
+  "functions": {
+    "getPriceForQuickTravel": {
+      "desc": "Calcule le prix et la distance de route jusqu'à pos.",
+      "params": {"pos": {"type": "vec3", "desc": "Destination."}},
+      "returns": [{"type": "number", "desc": "Prix en argent."}, {"type": "number", "desc": "Distance de route en mètres."}],
+      "internal": false
+    },
+    "quickTravelToPos": {
+      "desc": "Si le joueur peut payer, active le mode marche, téléporte le véhicule en sécurité vers pos et oriente le joueur vers pos, puis débite le prix (tags quickTravel, buying).",
+      "params": {
+        "pos": {"type": "vec3", "desc": "Destination."},
+        "useWalkingMode": {"type": "boolean|nil", "desc": "Si vrai, effectue la téléportation en mode marche."},
+        "reasonString": {"type": "string|nil", "desc": "Clé de traduction du libellé, ui.career.attributeLog.quickTravelPaid par défaut."}
+      },
+      "internal": false
+    },
+    "quickTravelToGarage": {
+      "desc": "Voyage rapide vers le premier emplacement de stationnement du garage (en mode marche, libellé quickTravelGarageTaxi).",
+      "params": {"garagePoi": {"type": "table", "desc": "POI du garage (champ id)."}},
+      "internal": false
+    },
+    "getPriceForQuickTravelToGarage": {
+      "desc": "Prix du voyage jusqu'à la position du garage donnée par freeroam_facilities.getGaragePosRot.",
+      "params": {"garage": {"type": "table", "desc": "Garage."}},
+      "returns": [{"type": "number", "desc": "Prix."}, {"type": "number", "desc": "Distance en mètres."}],
+      "internal": false
+    }
+  }
+}

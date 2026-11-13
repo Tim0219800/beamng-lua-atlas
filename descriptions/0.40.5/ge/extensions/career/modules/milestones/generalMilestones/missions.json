@@ -1,0 +1,63 @@
+{
+  "path": "lua/ge/extensions/career/modules/milestones/generalMilestones/missions.lua",
+  "module": "Jalons liés aux missions de la carrière. Pour l'ensemble des missions showInCareer puis pour chaque branche (déduite de gameplay_missions_unlocks.getForwardMissionInfo(...).branchTags), crée trois jalons : étoiles collectées (mission_totalStarCount / mission_totalStar_branch_<b>), missions réussies avec au moins une étoile par défaut (mission_passMissions[_<b>]) et missions complétées à 100 % des étoiles (mission_completeMissions[_<b>]). Six paliers : 10, 18, 30, 54, 74 et 100 % du total (arrondi au supérieur). Notifie à la fin d'une mission (état stopped).",
+  "notes": [
+    "Seul mission_totalStarCount (global) a le filtre general et la récompense majorLinear ; les autres utilisent minorLinear.",
+    "makeUnlockMissionsMilestones (jalon mission_unlockMissions) est défini mais son appel est commenté dans onGeneralMilestonesCollect ; de même onMissionUnlocked n'est pas exporté (inactif).",
+    "missionIdToMilestonesList et milestoneConfigs ne sont jamais vidés entre deux onGeneralMilestonesCollect : une réactivation de la carrière peut dupliquer les jalons dans ces tables.",
+    "Les étoiles utilisent mission.careerSetup._activeStarCache (defaultStarCount + bonusStarCount) pour le total et gameplay_missions_progress.getUnlockedStarCountsForMissionById pour la progression."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : gameplay_missions_missions, gameplay_missions_progress."}
+  },
+  "functions": {
+    "onGeneralMilestonesCollect": {
+      "desc": "Hook : rassemble les missions de carrière, les groupe par branche et crée les jalons globaux puis par branche.",
+      "params": {"milestonesList": {"type": "table[]", "desc": "Liste à compléter."}},
+      "internal": true
+    },
+    "makeAllMissionStarMilestones": {
+      "desc": "Crée les trois jalons globaux (étoiles, missions réussies, missions complétées), les enregistre pour chaque mission concernée et les ajoute à milestonesList.",
+      "params": {
+        "missions": {"type": "table[]", "desc": "Missions de carrière."},
+        "milestonesList": {"type": "table[]", "desc": "Liste à compléter."}
+      },
+      "internal": false
+    },
+    "makeBranchMissionStarMilestones": {
+      "desc": "Crée les trois mêmes jalons pour une branche (ou compétence) donnée, avec le nom de la branche dans les libellés.",
+      "params": {
+        "missions": {"type": "table[]", "desc": "Missions de la branche."},
+        "branchKey": {"type": "string", "desc": "Identifiant de branche (career_branches.getBranchById)."},
+        "milestonesList": {"type": "table[]", "desc": "Liste à compléter."}
+      },
+      "internal": false
+    },
+    "makeUnlockMissionsMilestones": {
+      "desc": "Crée un jalon de déblocage de missions (mission_unlockMissions, cible (step+1)). Non utilisé : son appel est commenté.",
+      "params": {
+        "missions": {"type": "table[]", "desc": "Missions de carrière."},
+        "milestonesList": {"type": "table[]", "desc": "Liste à compléter."}
+      },
+      "internal": false
+    },
+    "onGeneralMilestonesSetupCallbacks": {
+      "desc": "Hook : fixe la cible de notification de chaque jalon de mission.",
+      "params": {},
+      "internal": true
+    },
+    "setNotificationTarget": {
+      "desc": "Stocke dans milestone._target la cible du prochain palier à notifier (rien si tous notifiés).",
+      "params": {"milestone": {"type": "table", "desc": "Configuration du jalon."}},
+      "internal": false
+    },
+    "onAnyMissionChanged": {
+      "desc": "Hook appelé quand l'état d'une mission change ; à l'état \"stopped\", vérifie les jalons liés à cette mission, notifie les paliers atteints et avance notificationStep.",
+      "params": {
+        "state": {"type": "string", "desc": "État de la mission (stopped...)."},
+        "mission": {"type": "table", "desc": "Mission concernée (id)."}
+      },
+      "internal": true
+    }
+  }
+}

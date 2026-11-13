@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/resetDragRace.lua",
+  "module": "Nœud flowgraph « Reset Drag Race » (catégorie once_instant). Réinitialise la course de dragster (dragBridge.reset) et peut aussi vider les pilotes (pin clearRacers) pour un nouvel essai avec d'autres adversaires. Sorties : flow (impulsion) et success.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "workOnce": {"desc": "Appelle dragBridge.reset() si des données existent, puis clearRacers() si demandé."}
+      }
+    }
+  }
+}

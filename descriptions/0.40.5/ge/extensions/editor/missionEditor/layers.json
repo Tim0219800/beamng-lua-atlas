@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/editor/missionEditor/layers.lua",
+  "module": "Panneau « Layers » de l'éditeur de missions. Une mission cherche ses fichiers dans une liste ordonnée de dossiers (mission.layers, chacun avec un champ dir) jusqu'à trouver un fichier correspondant. Ce panneau permet de réordonner les dossiers, de les éditer (texte ou sélecteur de fichier), d'ouvrir le dossier dans l'explorateur, d'en ajouter après une ligne ou d'en supprimer. Le module renvoie un constructeur : require(...)(missionEditor).",
+  "notes": [
+    "Un layer avec fixed = true est désactivé à l'édition (champ, sélecteur et suppression).",
+    "Le premier layer est étiqueté « Checked First », le dernier « Checked Last ».",
+    "L'ajout d'un dossier appelle dump(add) (reste de débogage dans le log)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance du panneau Layers. Champs : missionEditor, mission, inputs (tampons de texte imgui par layer).",
+      "functions": {
+        "init": {
+          "desc": "Constructeur : mémorise missionEditor.",
+          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "internal": true
+        },
+        "setMission": {
+          "desc": "Définit la mission courante et recrée les champs de saisie.",
+          "params": {"mission": {"type": "table", "desc": "Mission dont mission.layers est édité."}},
+          "internal": true
+        },
+        "createInputFields": {
+          "desc": "Recrée les tampons de texte imgui (im.ArrayChar de 1024) à partir de layer.dir pour chaque layer."
+        },
+        "draw": {
+          "desc": "Dessine la liste des layers avec boutons haut/bas, champ de chemin, dossier, sélecteur, suppression et ajout. Applique les déplacements à la fin de la frame et met mission._dirty à true.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

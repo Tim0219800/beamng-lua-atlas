@@ -1,0 +1,43 @@
+{
+  "path": "lua/ge/extensions/editor/flowgraph/basewindow.lua",
+  "module": "Classe de base des fenêtres de l'éditeur Flowgraph (legend, history, events, garbageDebug, examples, execution, main…). Elle encapsule Begin/End d'une fenêtre éditeur (editor.beginWindow avec self.windowName), le suivi du focus (hasFocus) et ouverture/fermeture/bascule. use(fgEditor, derivedClass) crée une instance de base et y copie les champs de la classe dérivée.",
+  "notes": [
+    "windowName doit être défini par la classe dérivée avant Begin/open/close/toggle.",
+    "use() ne rappelle init() que si la classe dérivée en redéfinit un ; l'init de base prend fgEditor, celui de la dérivée est appelé sans argument."
+  ],
+  "functions": {
+    "createBase": {
+      "desc": "Crée une instance de la classe de base et appelle init(...).",
+      "params": {"...": {"type": "any", "desc": "Arguments passés à init (fgEditor)."}},
+      "returns": [{"type": "table", "desc": "Instance."}],
+      "internal": false
+    },
+    "use": {
+      "desc": "Crée une instance de base pour fgEditor puis copie tous les champs de derivedClass dessus (surcharges) ; appelle l'init de la dérivée s'il diffère de celui de base.",
+      "params": {
+        "fgEditor": {"type": "table", "desc": "Éditeur Flowgraph propriétaire."},
+        "derivedClass": {"type": "table", "desc": "Classe de la fenêtre (windowName, draw, init…)."}
+      },
+      "returns": [{"type": "table", "desc": "Instance de fenêtre."}],
+      "internal": false
+    }
+  },
+  "classes": {
+    "C": {
+      "desc": "Classe de base d'une fenêtre Flowgraph.",
+      "functions": {
+        "init": {"desc": "Mémorise fgEditor et initialise hasFocus à false.", "params": {"fgEditor": {"type": "table", "desc": "Éditeur Flowgraph."}}, "internal": true},
+        "Begin": {"desc": "Ouvre la fenêtre éditeur self.windowName avec le titre donné.", "params": {"name": {"type": "string", "desc": "Titre affiché."}, "flags": {"type": "integer|nil", "desc": "Flags de fenêtre ImGui."}}, "returns": [{"type": "boolean", "desc": "Résultat d'editor.beginWindow (visible)."}], "internal": false},
+        "End": {"desc": "Met à jour hasFocus (focus des fenêtres enfants) puis ferme la fenêtre éditeur.", "params": {}, "internal": false},
+        "attach": {"desc": "Associe le gestionnaire de projet flowgraph (self.mgr).", "params": {"mgr": {"type": "table", "desc": "Manager flowgraph."}}, "internal": false},
+        "open": {"desc": "Affiche la fenêtre.", "params": {}, "internal": false},
+        "close": {"desc": "Cache la fenêtre et remet hasFocus à false.", "params": {}, "internal": false},
+        "toggle": {"desc": "Bascule la visibilité de la fenêtre.", "params": {}, "internal": false},
+        "_onSerialize": {"desc": "Point d'extension de sérialisation, vide par défaut.", "params": {"res": {"type": "table", "desc": "Table à remplir."}}, "internal": true},
+        "__onSerialize": {"desc": "Crée une table, appelle _onSerialize et la renvoie.", "params": {}, "returns": [{"type": "table", "desc": "Données sérialisées."}], "internal": true},
+        "_onDeserialized": {"desc": "Point d'extension de désérialisation, vide par défaut.", "params": {"data": {"type": "table", "desc": "Données."}}, "internal": true},
+        "__onDeserialized": {"desc": "Appelle _onDeserialized puis remet hasFocus à false.", "params": {"data": {"type": "table", "desc": "Données."}}, "internal": true}
+      }
+    }
+  }
+}

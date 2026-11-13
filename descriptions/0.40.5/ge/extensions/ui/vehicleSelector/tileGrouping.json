@@ -1,0 +1,48 @@
+{
+  "path": "lua/ge/extensions/ui/vehicleSelector/tileGrouping.lua",
+  "module": "Détermine dans quels groupes (sections de la grille) une config de véhicule apparaît selon le mode « Grouper par » du sélecteur : Type, Brand, Country, Config Type, Derby Class, Body Style, Source, ainsi que Years (par décennie) et Value (par tranche de prix). Ajoute aussi les groupes spéciaux Favoris et Récents. Utilisé par ui_vehicleSelector_tiles.",
+  "notes": [
+    "Un groupe est une table {groupName, groupOrder} ; groupOrder -1 = Favoris, -2 = Récents, 999 = « Autre ». Pour Type, l'ordre vient de typeOrder (Car et Truck partagent « Cars and trucks »).",
+    "Une config peut être dans plusieurs groupes : Years donne une entrée par décennie couverte, et Favoris/Récents s'ajoutent aux groupes normaux (sauf si showFavouritesMode ou showRecentMode vaut 'hidden').",
+    "Tranches de Value : <10k (Misc), <20k, <50k, <100k, <250k, <500k, <1M, puis 1M+.",
+    "getGroupsForConfig appelle groupModeFunctions[groupMode] (ou groupsForRange) sans vérification : un mode de groupe inconnu provoque une erreur."
+  ],
+  "fields": {
+    "groupModeFunctions": {"type": "table<string, function>", "desc": "Fonctions (valeur) -> groupName, groupOrder pour les modes non basés sur une plage : Type, Brand, Country, Config Type, Derby Class, Body Style, Source."},
+    "isRange": {"type": "table<string, boolean>", "desc": "Modes de groupement par plage : Years et Value."}
+  },
+  "functions": {
+    "getConfigOrModelPropValue": {
+      "desc": "Lit une propriété sur la config, ou à défaut sur le modèle (core_vehicles.getModel).",
+      "params": {
+        "config": {"type": "table", "desc": "Config (avec model_key)."},
+        "prop": {"type": "string", "desc": "Nom de propriété."}
+      },
+      "returns": [{"type": "any", "desc": "Valeur ou nil."}]
+    },
+    "getGroupsForConfig": {
+      "desc": "Renvoie la liste des groupes d'une config pour un mode de regroupement, avec les groupes Favoris et Récents si applicable. La valeur absente est classée dans « Autre ».",
+      "params": {
+        "config": {"type": "table", "desc": "Config du véhicule."},
+        "groupMode": {"type": "string", "desc": "Mode de groupement (Type, Brand, Years, Value, ...)."},
+        "displayData": {"type": "table", "desc": "Options d'affichage (showFavouritesMode, showRecentMode)."}
+      },
+      "returns": [{"type": "table[]", "desc": "Liste de {groupName, groupOrder, isFavouriteGroup?, isRecentGroup?}."}]
+    },
+    "isRangeGroupMode": {
+      "desc": "Indique si le mode groupe par plage (Years, Value).",
+      "params": {"groupMode": {"type": "string", "desc": "Mode de groupement."}},
+      "returns": [{"type": "boolean", "desc": "true pour Years et Value."}]
+    },
+    "getGroupModeFunction": {
+      "desc": "Renvoie la fonction de groupement d'un mode non basé sur une plage.",
+      "params": {"groupMode": {"type": "string", "desc": "Mode de groupement."}},
+      "returns": [{"type": "function|nil", "desc": "Fonction ou nil."}]
+    },
+    "getRangeGroupingFunction": {
+      "desc": "Renvoie la fonction qui découpe une valeur en groupes pour Years ou Value.",
+      "params": {"groupMode": {"type": "string", "desc": "'Years' ou 'Value'."}},
+      "returns": [{"type": "function|nil", "desc": "Fonction ou nil."}]
+    }
+  }
+}

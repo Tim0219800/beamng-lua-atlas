@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/startDragRace.lua",
+  "module": "Nœud flowgraph « Start Drag Race » (catégorie once_instant). Démarre l'activité de course de dragster, à appeler après la mise en place des véhicules. Pin d'entrée : lane (caché, optionnel, contexte freeroam). Sorties : flow (impulsion) et success. Échoue si les données ne sont pas chargées ou si la course est déjà démarrée.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "workOnce": {"desc": "Appelle dragBridge.startDragRaceActivity(lane) après vérifications et renseigne success ; flow est toujours activé."}
+      }
+    }
+  }
+}

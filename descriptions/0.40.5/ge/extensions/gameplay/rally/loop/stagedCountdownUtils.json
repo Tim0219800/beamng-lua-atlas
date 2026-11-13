@@ -1,0 +1,103 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/loop/stagedCountdownUtils.lua",
+  "module": "Fonctions communes au compte à rebours de départ de spéciale (nœud flowgraph et simulation de test) : lecture de l'horloge murale de l'environnement, réglages du compte à rebours selon les options rallyVisualPacenotes/rallyAudioPacenotes, calcul d'un compte à rebours calé sur la minute suivante, geler/dégeler le véhicule, dessin de debug du plan de départ et affichage ImGui d'état dans le nœud.",
+  "notes": [
+    "Horloge murale : ((tod.time + 0.5) % 1) * 86400 secondes ; tod.time = 0 correspond à midi.",
+    "getStageCountdownSettings : le paramètre defaultMaxAnnounced est ignoré ; maxAnnounced reçoit defaultDuration.",
+    "Dans le plan de debug, l'axe Y est la normale : +Y est « back » (derrière la ligne) et -Y « front »."
+  ],
+  "functions": {
+    "getEnvironmentWallClockSecs": {
+      "desc": "Heure murale actuelle de l'environnement, en secondes depuis minuit.",
+      "returns": [{"type": "number", "desc": "Secondes (0 si core_environment ou l'heure est indisponible)."}]
+    },
+    "getStageCountdownSettings": {
+      "desc": "Construit la table de réglages du compte à rebours : duration, maxAnnounced, showVisualCountdown (réglage rallyVisualPacenotes ou nil), playSoundEffects (vrai si rallyAudioPacenotes est désactivé), playVoiceCountdown (réglage rallyAudioPacenotes).",
+      "params": {
+        "defaultDuration": {"type": "number", "desc": "Durée du compte à rebours en secondes."},
+        "defaultMaxAnnounced": {"type": "number", "desc": "Non utilisé (déduit du code)."}
+      },
+      "returns": [{"type": "table", "desc": "{duration, maxAnnounced, showVisualCountdown, playSoundEffects, playVoiceCountdown}."}]
+    },
+    "calculateImmediateMinuteCountdown": {
+      "desc": "Prépare un compte à rebours qui se termine à la prochaine minute pleine de l'horloge murale (fenêtre de lancement = duration + 1 s).",
+      "params": {"duration": {"type": "number", "desc": "Durée du compte à rebours en secondes."}},
+      "returns": [{"type": "table", "desc": "{environmentStartTimeSecs, epochTime = 0, scheduledEventTime, targetStartTime = 1, timer}."}]
+    },
+    "getWallClockTime": {
+      "desc": "Heure murale = (environmentStartTimeSecs + epochTime) modulo 86400.",
+      "params": {
+        "environmentStartTimeSecs": {"type": "number|nil", "desc": "Heure de départ, 0 si nil."},
+        "epochTime": {"type": "number|nil", "desc": "Secondes écoulées, 0 si nil."}
+      },
+      "returns": [{"type": "number", "desc": "Secondes depuis minuit."}]
+    },
+    "buildRallyClockData": {
+      "desc": "Données d'horloge pour l'UI : wallClockSecs, wallClockTime (texte 24 h via rallyUtil.formatTime24Hour) et trois drapeaux de saut à false.",
+      "params": {"wallClockSecs": {"type": "number", "desc": "Heure murale en secondes."}},
+      "returns": [{"type": "table", "desc": "{wallClockSecs, wallClockTime, canSkipTimeControls, isTimeControlSkipAvailable, canSkipCountdown}."}]
+    },
+    "drawDebugPlane": {
+      "desc": "Dessine un plan violet (deux triangles de 10 m de large) avec une sphère au point d'origine ; avec normals, ajoute les axes « back » (vert) et « front » (rouge).",
+      "params": {
+        "pos": {"type": "vec3", "desc": "Position du plan."},
+        "rot": {"type": "quat", "desc": "Orientation du plan."},
+        "normals": {"type": "boolean|nil", "desc": "true pour dessiner les normales."}
+      }
+    },
+    "drawVehicleToPlaneDebug": {
+      "desc": "Dessine la projection du véhicule sur le plan, une ligne et la distance signée (« past » orange si le véhicule a dépassé la ligne, « before » vert sinon). Les vec3 passés en paramètres servent de tampons pour éviter les allocations.",
+      "params": {
+        "vehPos": {"type": "vec3", "desc": "Position du véhicule."},
+        "planePos": {"type": "vec3", "desc": "Position du plan."},
+        "rot": {"type": "quat", "desc": "Orientation du plan."},
+        "tmpPlaneNormal": {"type": "vec3", "desc": "Tampon réutilisable."},
+        "tmpToVehicle": {"type": "vec3", "desc": "Tampon réutilisable."},
+        "tmpClosestPoint": {"type": "vec3", "desc": "Tampon réutilisable."},
+        "tmpMidPoint": {"type": "vec3", "desc": "Tampon réutilisable."}
+      }
+    },
+    "drawDebugVehiclePoint": {
+      "desc": "Dessine une petite sphère au véhicule : verte si inside, rouge sinon.",
+      "params": {
+        "vehPos": {"type": "vec3", "desc": "Position."},
+        "inside": {"type": "boolean", "desc": "Véhicule dans la zone."}
+      }
+    },
+    "freezeVehicle": {
+      "desc": "Gèle le véhicule (action 'setFreeze' true via core_vehicleBridge) pendant la phase de mise en place.",
+      "params": {
+        "vehId": {"type": "integer|nil", "desc": "Id du véhicule."},
+        "logTag": {"type": "string", "desc": "Étiquette de log."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si le véhicule a été trouvé."}]
+    },
+    "unfreezeVehicle": {
+      "desc": "Dégèle le véhicule (action 'setFreeze' false).",
+      "params": {
+        "vehId": {"type": "integer|nil", "desc": "Id du véhicule."},
+        "logTag": {"type": "string", "desc": "Étiquette de log."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si le véhicule a été trouvé."}]
+    },
+    "drawMiddleInfo": {
+      "desc": "Affiche dans le nœud (drawMiddle, ImGui) : indicateur TEST MODE, horloge, époque, heure de l'évènement, temps restant, contrôle de mise en place, état, replanifications, et zone/staged. Ne fait rien si nodeData.useImgui est faux.",
+      "params": {
+        "im": {"type": "table", "desc": "ui_imgui."},
+        "nodeData": {"type": "table", "desc": "Données du nœud (useImgui, test, wallClockSecs, currentEpochTime, scheduledEventTime, stagingCheckTime, state, rescheduleCount, maxReschedules, inZone, staged…)."},
+        "formatTimeFromSeconds": {"type": "function", "desc": "Fonction secondes -> texte."}
+      }
+    },
+    "drawMiddleProgress": {
+      "desc": "Barre de progression du nœud : « Running » avec (duration - timer)/duration, « Done » (pleine) si terminé, « Waiting » (vide) sinon.",
+      "params": {
+        "im": {"type": "table", "desc": "ui_imgui."},
+        "state": {"type": "any", "desc": "État courant du nœud."},
+        "duration": {"type": "number", "desc": "Durée totale en secondes."},
+        "timer": {"type": "number", "desc": "Temps restant en secondes."},
+        "STATE_COUNTDOWN_RUNNING": {"type": "any", "desc": "Valeur d'état « en cours »."},
+        "STATE_FINISHED": {"type": "any", "desc": "Valeur d'état « terminé »."}
+      }
+    }
+  }
+}

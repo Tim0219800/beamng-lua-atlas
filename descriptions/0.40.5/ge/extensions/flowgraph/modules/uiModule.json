@@ -1,0 +1,59 @@
+{
+  "path": "lua/ge/extensions/flowgraph/modules/uiModule.lua",
+  "module": "Module flowgraph (moduleOrder 1000) qui construit les écrans de début et de fin de mission (« mission.control »). Les nœuds flowgraph appellent startUIBuilding, ajoutent des éléments (addUIElement, addObjectives, addRatings, addDriftStats…) et des boutons, puis finishUIBuilding envoie la mise en page à l'interface via guihooks. Il gère aussi le contexte des apps du haut de l'écran, le game state et le prompt de récupération pendant l'exécution du graphe. Dépend de ui_appContainers_topCenter.",
+  "usage": "local ui = mgr.modules.ui\nui:startUIBuilding('startScreen', node)\nui:addHeader({label = 'Ma mission'})\nui:addObjectives(nil, {main = true})\nui:finishUIBuilding()",
+  "notes": [
+    "Hooks écoutés (C.hooks) : onRequestMissionScreenData, onMissionScreenButtonClicked, onGetIsMissionStartOrEndScreenActive.",
+    "Les fonctions add* refusent d'agir (log E) si on n'est pas entre startUIBuilding et finishUIBuilding.",
+    "Modes d'écran gérés par finishUIBuilding : 'startScreen' (ajoute le bouton Start) et 'endScreen'. Tout autre mode ne navigue pas vers mission.control.",
+    "Bug possible : dans setupPages, `pageConfig[pageName].hideInCareer` plante si un élément déclare une page absente de pageConfig (pages connues : timeslip, main, rewards, unlocks, leaderboards, aiCompetitors, drift, lapTimes, rules, recording, crashAnalysisStep).",
+    "Bug possible : nextPage utilise self.pageCounter qui n'est jamais initialisé dans ce fichier (erreur arithmétique sur nil si appelée).",
+    "Bug possible : formatMission (local) met `order = i` avec `i` non défini (donc nil).",
+    "Dans addRatings, quand dnq est vrai, la valeur newBestKeysByKey['highscore'] est forcée à 6 (« hack » signalé dans le code).",
+    "Les temps de tours (addLaptimesForVehicle) sont affichés au format m:ss:mmm."
+  ],
+  "fields": {
+    "moduleOrder": {"type": "integer", "desc": "Ordre de chargement du module (1000, tard)."},
+    "idCounter": {"type": "integer", "desc": "Compteur pour fabriquer les buildId des mises en page."},
+    "hooks": {"type": "string[]", "desc": "Hooks auxquels le module s'abonne."},
+    "dependencies": {"type": "string[]", "desc": "Extensions requises : ui_appContainers_topCenter."}
+  },
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du module UI (instance par gestionnaire flowgraph, accessible via mgr.modules.ui). Garde la mise en page en cours dans self.uiLayout.",
+      "functions": {
+        "getFreeId": {"desc": "Incrémente et renvoie un identifiant unique, utilisé pour le buildId.", "returns": [{"type": "integer", "desc": "nouvel identifiant"}], "internal": true},
+        "init": {"desc": "Appelée à la création du module ; appelle clear().", "internal": true},
+        "clear": {"desc": "Remet à zéro l'état : fade, construction en cours, mise en page et contexte d'app.", "internal": true},
+        "setGameState": {"desc": "Relais vers core_gamestate.setGameState avec les mêmes arguments.", "params": {"...": {"type": "any", "desc": "arguments de core_gamestate.setGameState"}}},
+        "setAppContainerContext": {"desc": "Change le contexte du conteneur d'apps 'topCenter' si le contexte n'est pas vide et que ui_appContainers_topCenter existe, et le mémorise.", "params": {"context": {"type": "string", "desc": "nom du contexte"}}},
+        "keepGameState": {"desc": "Indique s'il faut conserver le game state à l'arrêt du graphe (sinon il est restauré à l'état du début).", "params": {"keep": {"type": "boolean", "desc": "true pour garder le game state actuel"}}},
+        "clearButtonFunctions": {"desc": "Vide la table des fonctions de rappel des boutons.", "internal": true},
+        "startUIBuilding": {"desc": "Commence la construction d'un écran : crée self.uiLayout (mode, header, layout, buttons, nœud d'origine, buildId). Refuse si une construction est déjà en cours.", "params": {"uiMode": {"type": "string", "desc": "'startScreen' ou 'endScreen'"}, "node": {"type": "table", "desc": "nœud flowgraph appelant (utilise node.id et node.graph.id)"}}},
+        "setPageIcon": {"desc": "Remplace l'icône d'une page pendant la construction.", "params": {"pageName": {"type": "string", "desc": "nom de la page"}, "icon": {"type": "string", "desc": "nom d'icône"}}},
+        "setupPages": {"desc": "Calcule la table des pages (ordre, icône, libellé, obligatoire) à partir des éléments du layout et la place dans uiLayout.pages. Ajoute un panneau texte « No layout elements found » si le layout est vide. Les pages 'mandatory' ne le sont qu'en endScreen ; 'rewards' est masquée hors carrière.", "internal": true},
+        "finishUIBuilding": {"desc": "Termine la construction. En startScreen ajoute le bouton Start (qui appelle startFromUi du nœud) ; en startScreen/endScreen ajoute le panneau de replay, prépare les pages, navigue vers 'mission.control' et déclenche le guihook onRequestMissionScreenDataReady."},
+        "setStartScreenAsSimple": {"desc": "Marque l'écran de départ comme simple (pas de panneau de replay)."},
+        "addReplayPanelAndSupportsReplay": {"desc": "Ajoute le panneau « Replay Recording » (fichiers de replay de la mission) si l'activité supporte le replay et que le menu n'est pas simple.", "internal": true},
+        "onRequestMissionScreenData": {"desc": "Hook appelé quand l'UI demande les données de l'écran de mission. Renvoie la mise en page (guihook onRequestMissionScreenDataReady), émet le hook onMissionScreenReady et appelle activity:onMissionScreenReady(mode). Ignoré si le mode contient « test ».", "params": {"mode": {"type": "string", "desc": "mode de l'écran demandé"}}, "internal": true},
+        "onGetIsMissionStartOrEndScreenActive": {"desc": "Hook : ajoute le mode de l'écran actif à la liste fournie.", "params": {"screensActive": {"type": "string[]", "desc": "liste à compléter"}}, "internal": true},
+        "buildListText": {"desc": "Transforme une liste d'éléments en table de fragments HTML <ul><li>…</li></ul> (à concaténer).", "params": {"items": {"type": "string[]", "desc": "textes des puces"}}, "returns": [{"type": "string[]", "desc": "fragments HTML"}]},
+        "onMissionScreenButtonClicked": {"desc": "Hook appelé au clic sur un bouton de l'écran. Ignore les boutons d'un autre gestionnaire (mgrId), exécute la fonction enregistrée, puis efface la mise en page sauf si button.keepLayout.", "params": {"button": {"type": "table", "desc": "meta du bouton (mgrId, funId, keepLayout)"}}, "internal": true},
+        "addUIElement": {"desc": "Ajoute un élément (table avec type, header, pages…) à la mise en page en cours.", "params": {"element": {"type": "table", "desc": "élément d'interface ; element.pages = {nomPage = true}"}}},
+        "addHeader": {"desc": "Définit l'en-tête de l'écran.", "params": {"header": {"type": "table", "desc": "données d'en-tête"}}},
+        "addButton": {"desc": "Enregistre une fonction de rappel et renvoie la table meta du bouton (avec mgrId et funId). Ne l'ajoute pas à l'écran.", "params": {"fun": {"type": "function", "desc": "appelée au clic"}, "meta": {"type": "table|nil", "desc": "propriétés du bouton (label, focus, main, keepLayout…)"}}, "returns": [{"type": "table", "desc": "meta complétée"}]},
+        "addScreenButton": {"desc": "Comme addButton, mais ajoute le bouton à la liste des boutons de l'écran. Ceux ajoutés avant finishUIBuilding apparaissent au-dessus du bouton Start.", "params": {"fun": {"type": "function", "desc": "appelée au clic"}, "meta": {"type": "table|nil", "desc": "propriétés du bouton"}}, "returns": [{"type": "table", "desc": "meta du bouton"}]},
+        "addObjectives": {"desc": "Ajoute l'élément « objectives » (étoiles de la mission) calculé depuis les réglages utilisateur et, si change est fourni, les étoiles débloquées et récompenses. Sans effet s'il n'y a pas d'activité ou si aucune étoile n'est visible.", "params": {"change": {"type": "table|nil", "desc": "résultat de progression (unlockedStarsAttempt, starRewards…)"}, "pages": {"type": "table|nil", "desc": "pages cibles, {main = true} par défaut"}}},
+        "setStartButtonText": {"desc": "Définit le libellé du bouton Start (clé de traduction ou texte).", "params": {"text": {"type": "string", "desc": "libellé"}}},
+        "addRatings": {"desc": "Ajoute les éléments de classement (« ratings » sur la page leaderboards), puis « rewards » (carrière, si récompenses) et « unlocks » (missions/ligues débloquées) quand change est fourni.", "params": {"change": {"type": "table|nil", "desc": "changement de progression de la tentative"}}},
+        "addCrashAnalysisStepDetails": {"desc": "Ajoute un panneau « crashTestStepDetails » avec les points de l'étape d'un crash test.", "params": {"stepDetails": {"type": "table", "desc": "contient stepScoreData"}}},
+        "addDriftStats": {"desc": "Ajoute trois panneaux texte (statistiques de performance, paliers, évènements de drift) sur la page drift, avec une ligne de total.", "params": {"driftStats": {"type": "table", "desc": "perfStats, tiersStats, driftEvents"}}},
+        "addLaptimesForVehicle": {"desc": "Ajoute un panneau « Lap Times » (page lapTimes) avec chaque tour, son temps et l'écart au meilleur (« Best » pour le meilleur).", "params": {"state": {"type": "table", "desc": "contient historicTimes = liste de {lapTime}"}, "attempt": {"type": "any", "desc": "non utilisé dans le code"}}},
+        "nextPage": {"desc": "Insère une page vide dans le layout (prévu pour startPage).", "internal": true},
+        "executionStarted": {"desc": "Appelée au démarrage du graphe : sauvegarde l'état du prompt de récupération et le game state, désactive le prompt, charge ui_apps_genericMissionData et ui_apps_pointsBar, vide la tasklist si une activité existe.", "internal": true},
+        "executionStopped": {"desc": "Appelée à l'arrêt du graphe : nettoie les apps de données, réinitialise le contexte topCenter, restaure le prompt de récupération et (sauf keepGameState) le game state initial, vide la tasklist.", "internal": true}
+      }
+    }
+  }
+}

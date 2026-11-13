@@ -1,0 +1,75 @@
+{
+  "path": "lua/ge/extensions/editor/missionEditor/genericTypeData.lua",
+  "module": "Panneau de l'éditeur de missions qui édite le champ missionTypeData d'une mission. Il liste les types de mission (gameplay_missions_missions.getMissionTypes), choisit l'éditeur spécifique au type (gameplay_missions_missions.getMissionEditorForType) et, à défaut ou en mode « Raw », propose un éditeur JSON brut. Il fournit aussi un popup qui compare les variables de mission avec celles du projet Flowgraph ouvert (ajout et correction de type en un clic). Le module renvoie un constructeur (fonction) : require(...)(missionEditor) crée une instance via C:init.",
+  "usage": "local gtd = require('/lua/ge/extensions/editor/missionEditor/genericTypeData')(missionEditor)\ngtd:setMission(mission)\n-- dans la boucle imgui de l'éditeur :\ngtd:draw()",
+  "notes": [
+    "Le changement de type (changeMissionType) mémorise les anciennes données par mission et par type dans oldMissionTypeData, et les restaure si on revient au type précédent.",
+    "L'éditeur JSON brut plafonne le texte à environ 8*(2+max(128, 4*taille)) / 8 caractères (affiché « char limit »). Un JSON invalide n'est pas sauvegardé et affiche un message en rouge.",
+    "loadEditor n'est pas appelée dans ce fichier ; elle cherche /gameplay/missionTypes/<type>/editor.lua et crée un éditeur par défaut (editorHelper) sinon.",
+    "Le champ mission._dirty est mis à true à chaque modification pour signaler qu'une sauvegarde est nécessaire."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance du panneau « Mission Type Data ». Champs principaux : missionEditor, mission, missionTypes (liste triée), missionTypeEditors (éditeur par type), rawEditPerMission, oldMissionTypeData, mtdIssues.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur appelé par la fonction renvoyée par le module. Récupère la liste triée des types de mission et l'éditeur de chaque type.",
+          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "internal": true
+        },
+        "loadEditor": {
+          "desc": "Cherche /gameplay/missionTypes/<missionType>/editor.lua et l'instancie avec missionEditor. Si le fichier n'existe pas ou ne se charge pas, crée un éditeur générique via gameplay_missions_missions.editorHelper.",
+          "params": {"missionType": {"type": "string", "desc": "Nom du type de mission."}}
+        },
+        "setMission": {
+          "desc": "Définit la mission courante, transmet le conteneur à l'éditeur de son type (setContainer) et recalcule les problèmes (checkContainer) dans self.mtdIssues.",
+          "params": {"mission": {"type": "table", "desc": "Données de la mission (id, missionType, missionTypeData…)."}},
+          "internal": true
+        },
+        "fillGeneric": {
+          "desc": "Remplace mission.missionTypeData par les données neuves fournies par l'éditeur du type de la mission (getNewData), ou {} s'il n'y en a pas.",
+          "params": {"mission": {"type": "table", "desc": "Mission à remplir."}}
+        },
+        "changeMissionType": {
+          "desc": "Change le type de la mission : sauvegarde les données du type actuel, crée (ou restaure) celles du nouveau type, puis rappelle setMission.",
+          "params": {
+            "newType": {"type": "string", "desc": "Nouveau type de mission."},
+            "force": {"type": "boolean|nil", "desc": "Si vrai, efface l'historique des anciennes données de cette mission avant de sauvegarder."}
+          }
+        },
+        "openPopup": {
+          "desc": "Ouvre le popup imgui « missionFGVariables » (aide aux variables Flowgraph).",
+          "internal": false
+        },
+        "variablesHelperPopup": {
+          "desc": "Dessine le popup qui classe les champs du type de mission en variables manquantes, de type différent, correctes, et variables présentes seulement dans le Flowgraph. Les boutons ajoutent les variables manquantes (valeur par défaut du type) ou corrigent leur type dans le projet Flowgraph courant (editor_flowgraphEditor.getManager()). À appeler à chaque frame."
+        },
+        "draw": {
+          "desc": "Dessine le panneau : combo du type de mission, case « Raw », bouton « Auto fix N issues », puis l'éditeur du type ou l'éditeur JSON brut.",
+          "internal": true
+        },
+        "drawTools": {
+          "desc": "Pour chaque type dont l'éditeur définit toolsFunctions, crée un sous-menu et appelle cette fonction.",
+          "internal": true
+        },
+        "drawViewsMenu": {
+          "desc": "Pour chaque type dont l'éditeur définit viewFunctions, crée un sous-menu et appelle cette fonction.",
+          "internal": true
+        },
+        "drawViews": {
+          "desc": "Appelle drawViews(liste des missions) sur chaque éditeur de type qui le définit.",
+          "internal": true
+        },
+        "getCurrentEditorHelper": {
+          "desc": "Renvoie l'éditeur du type de la mission courante.",
+          "returns": [{"type": "table|nil", "desc": "Éditeur (editorHelper) du type courant."}]
+        },
+        "getMissionIssues": {
+          "desc": "Renvoie la liste des problèmes d'une mission : résultat de checkContainer de l'éditeur de son type, plus ceux de calculateMissionIssues du type s'il existe (appelé en pcall).",
+          "params": {"m": {"type": "table", "desc": "Mission à vérifier."}},
+          "returns": [{"type": "table[]", "desc": "Liste d'éléments {label, severity}."}]
+        }
+      }
+    }
+  }
+}

@@ -4,12 +4,16 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/vehicle/freeze")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud « Freeze Vehicle » (catégorie `repeat_instant`). Gèle ou dégèle un véhicule via `core_vehicleBridge.executeAction(veh,'setFreeze', freeze)`. Pins d'entrée : `vehId`, `freeze` (bool). Si `vehId` est absent, véhicule joueur.
+
 ## Classe `C`
+
+Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:init()` |  | 28 |
-| `C:work()` |  | 32 |
+| `C:init()` | Constructeur vide. | 28 |
+| `C:work()` | Envoie l'action `setFreeze` avec la valeur du pin `freeze`. | 32 |
 
 ## Appels vers le moteur (C++)
 

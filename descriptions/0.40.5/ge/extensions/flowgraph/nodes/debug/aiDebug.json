@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/debug/aiDebug.lua",
+  "module": "Nœud flowgraph « AI Debug Display » (catégorie dynamic_p_duration, tags target/trajectory/route/debug). Affiche ou masque les visualisations de débogage de l'IA d'un véhicule en appelant ai.setVehicleDebugMode côté véhicule. Entrées : vehId (number, 0 ou vide = véhicule du joueur) et mode (string : off, target, trajectory, speeds, route ; 'off' par défaut). En mode dynamique 'repeat' la commande est renvoyée à chaque frame.",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "postInit": {"desc": "Propose la liste des modes comme modèles du pin mode dans l'éditeur.", "internal": true},
+        "workOnce": {"desc": "Applique le mode une fois."},
+        "work": {"desc": "Si dynamicMode vaut 'repeat', réapplique le mode à chaque frame."},
+        "SetAIDebugMode": {"desc": "Trouve le véhicule (vehId ou joueur) et lui envoie ai.setVehicleDebugMode({debugMode = mode}) par queueLuaCommand.", "internal": true}
+      }
+    }
+  }
+}

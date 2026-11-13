@@ -1,0 +1,30 @@
+{
+  "path": "lua/common/libs/slaxml/slaxdom.lua",
+  "module": "Extension de SLAXML (bibliothèque tierce de Gavin Kistner) : ajoute à la table SLAXML un analyseur `dom` qui construit un DOM à plat (avec nsPrefix, cdata) et un sérialiseur `xml` qui réécrit un nœud ou un document en texte XML (indentation, tri des attributs, omission d'espaces de noms). Le module renvoie la table SLAXML modifiée. Utilisé par xlsxlib et par les écrivains JUnit du testFramework.",
+  "usage": "local SLAXML = require('libs/slaxml/slaxdom')\nlocal doc = SLAXML:dom('<a x=\"1\"><b>texte</b></a>')\nprint(doc.root.name, doc.root.attr.x)\nprint(SLAXML:xml(doc, {indent = 2}))",
+  "notes": [
+    "Charger ce module remplace `SLAXML.dom` défini dans slaxml.lua (la version ici ajoute nsPrefix, cdata et l'erreur sur le texte non blanc à la racine) et définit `SLAXML.xml`.",
+    "En mode `opts.simple`, `doc.root` n'est pas renseigné (nil) et les liens `parent` / listes `el` ne sont pas créés.",
+    "Chaque attribut existe deux fois : dans `element.attr[i]` (liste de nœuds attribut) et, hors mode simple, dans `element.attr[nom]` (valeur).",
+    "Bug : la sérialisation CDATA écrit `<![[CDATA[` au lieu de `<![CDATA[` ; le résultat n'est pas du XML valide.",
+    "La fonction d'échappement `esc` renvoie deux valeurs (gsub) et n'échappe pas l'apostrophe malgré son entrée dans la table."
+  ],
+  "functions": {
+    "dom": {
+      "desc": "Analyse le XML en DOM à plat. Renvoie un nœud document {type='document', name='#doc', kids, root}. Les éléments portent name, nsURI, nsPrefix, kids, attr (liste + dictionnaire) et, hors mode simple, el et parent. Les textes ont type='text', value et cdata.",
+      "params": {
+        "xml": {"type": "string", "desc": "Texte XML."},
+        "opts": {"type": "table|nil", "desc": "{simple = boolean, stripWhitespace = boolean}."}
+      },
+      "returns": [{"type": "table", "desc": "Document DOM."}]
+    },
+    "xml": {
+      "desc": "Sérialise un nœud (document, élément, texte, commentaire, instruction de traitement) en chaîne XML.",
+      "params": {
+        "n": {"type": "table", "desc": "Nœud DOM à écrire."},
+        "opts": {"type": "table|nil", "desc": "indent (nombre d'espaces ou chaîne), sort (trier les attributs), omit (liste d'URI d'espaces de noms ou de valeurs à omettre)."}
+      },
+      "returns": [{"type": "string", "desc": "Texte XML (lignes séparées par un saut de ligne si indent est donné, sinon concaténées)."}]
+    }
+  }
+}

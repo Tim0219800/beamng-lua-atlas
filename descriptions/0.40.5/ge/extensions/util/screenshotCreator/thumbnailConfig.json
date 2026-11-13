@@ -1,0 +1,102 @@
+{
+  "path": "lua/ge/extensions/util/screenshotCreator/thumbnailConfig.lua",
+  "module": "Lecture et écriture de la configuration de vignette (clé thumbnailConfig) d'un véhicule : elle est stockée dans /vehicles/<modèle>/info_<config>.json pour une configuration, et dans /vehicles/<modèle>/info.json pour le modèle. Elle contient notamment rotation (degrés, rotation du repère de caméra autour de l'axe vertical), pauseDelay (secondes d'attente avant capture) et des caméras enregistrées (configCamEnabled, modelCamEnabled). Le module fournit aussi les axes de référence du véhicule (niveau et orientés selon la rotation) et les conversions décalage de caméra <-> repère véhicule utilisées pour enregistrer et rejouer une caméra.",
+  "notes": [
+    "La configuration d'une config prime sur celle du modèle pour rotation et pauseDelay ; valeurs par défaut 0.",
+    "getCameraConfig renvoie vehCamConfig = {configCamEnabled = false, modelCamEnabled = false} si aucune config de vignette n'existe pour la config.",
+    "Les fonctions de lecture supposent que core_vehicles.getModel(modelName) renvoie une table ; un modèle inconnu peut provoquer une erreur Lua en accédant à modelData.configs.",
+    "getLevelAxes redresse les axes de la boîte du véhicule à l'horizontale (le cap est conservé) pour qu'un véhicule incliné à l'apparition n'incline pas la caméra."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : core_camera et core_vehicles."}
+  },
+  "functions": {
+    "saveVehicleConfig": {
+      "desc": "Enregistre la config de vignette d'une configuration dans son fichier info (infoFilename connu, sinon /vehicles/<modèle>/info_<config>.json) et met à jour la donnée en mémoire.",
+      "params": {
+        "modelName": {"type": "string", "desc": "Nom du modèle."},
+        "configName": {"type": "string", "desc": "Nom de la configuration."},
+        "config": {"type": "table", "desc": "Table thumbnailConfig à enregistrer."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si le fichier existant est illisible ou si l'écriture échoue."}]
+    },
+    "saveModelConfig": {
+      "desc": "Enregistre la config de vignette du modèle dans /vehicles/<modèle>/info.json et met à jour la donnée en mémoire.",
+      "params": {
+        "modelName": {"type": "string", "desc": "Nom du modèle."},
+        "config": {"type": "table", "desc": "Table thumbnailConfig à enregistrer."}
+      },
+      "returns": [{"type": "boolean", "desc": "Succès de l'écriture."}]
+    },
+    "getCameraConfig": {
+      "desc": "Récupère les configs de vignette d'une configuration et de son modèle (en relisant le fichier info_<config>.json si elle n'est pas en mémoire).",
+      "params": {
+        "modelName": {"type": "string", "desc": "Nom du modèle."},
+        "configName": {"type": "string", "desc": "Nom de la configuration."}
+      },
+      "returns": [{"type": "table", "desc": "{vehCamConfig = table, modelCamConfig = table|nil}."}]
+    },
+    "getRotation": {
+      "desc": "Renvoie la rotation de caméra (en degrés) : celle de la config, sinon celle du modèle, sinon 0.",
+      "params": {
+        "modelName": {"type": "string", "desc": "Nom du modèle."},
+        "configName": {"type": "string", "desc": "Nom de la configuration."}
+      },
+      "returns": [{"type": "number", "desc": "Rotation en degrés."}]
+    },
+    "getPauseDelay": {
+      "desc": "Renvoie le délai d'attente avant capture en secondes (config, sinon modèle, sinon 0), jamais négatif.",
+      "params": {
+        "modelName": {"type": "string", "desc": "Nom du modèle."},
+        "configName": {"type": "string", "desc": "Nom de la configuration."}
+      },
+      "returns": [{"type": "number", "desc": "Délai en secondes (>= 0)."}]
+    },
+    "getLevelAxes": {
+      "desc": "Calcule des axes orthonormés à partir de la boîte du véhicule : cap horizontal (axe 1), droite et haut du monde.",
+      "params": {"bb": {"type": "table", "desc": "Boîte englobante orientée (OOBB) avec getAxis(i)."}},
+      "returns": [
+        {"type": "vec3", "desc": "Axe droite."},
+        {"type": "vec3", "desc": "Axe avant (horizontal)."},
+        {"type": "vec3", "desc": "Axe haut (0, 0, 1)."}
+      ]
+    },
+    "getReferenceAxes": {
+      "desc": "Renvoie les axes de référence du véhicule pour la caméra : axes redressés par getLevelAxes, tournés de -rotation degrés autour de l'axe vertical si une rotation est configurée.",
+      "params": {
+        "vehicle": {"type": "table", "desc": "Objet véhicule."},
+        "configName": {"type": "string|nil", "desc": "Nom de la configuration (pour lire la rotation)."},
+        "boundingBox": {"type": "table|nil", "desc": "OOBB déjà calculée ; sinon vehicle:getSpawnWorldOOBB()."}
+      },
+      "returns": [
+        {"type": "vec3", "desc": "Axe droite."},
+        {"type": "vec3", "desc": "Axe avant."},
+        {"type": "vec3", "desc": "Axe haut."}
+      ]
+    },
+    "getCameraOffsets": {
+      "desc": "Convertit la position et l'orientation de la caméra actuelle en décalages relatifs au véhicule (dans ses axes de référence) pour pouvoir les enregistrer.",
+      "params": {
+        "configName": {"type": "string|nil", "desc": "Nom de la configuration."},
+        "vehicle": {"type": "table|nil", "desc": "Objet véhicule (défaut : véhicule du joueur 0)."}
+      },
+      "returns": [
+        {"type": "vec3", "desc": "Décalage de position dans le repère du véhicule."},
+        {"type": "quat", "desc": "Orientation de la caméra dans le repère du véhicule."}
+      ]
+    },
+    "rewindCameraOffsets": {
+      "desc": "Opération inverse de getCameraOffsets : reconstruit la position et l'orientation monde de la caméra pour le véhicule à partir de décalages enregistrés.",
+      "params": {
+        "posOffset": {"type": "vec3", "desc": "Décalage de position enregistré."},
+        "rotOffset": {"type": "quat", "desc": "Orientation enregistrée."},
+        "vehicle": {"type": "table|nil", "desc": "Objet véhicule (défaut : véhicule du joueur 0)."},
+        "configName": {"type": "string|nil", "desc": "Nom de la configuration."}
+      },
+      "returns": [
+        {"type": "vec3", "desc": "Position monde de la caméra."},
+        {"type": "quat", "desc": "Orientation monde de la caméra."}
+      ]
+    }
+  }
+}

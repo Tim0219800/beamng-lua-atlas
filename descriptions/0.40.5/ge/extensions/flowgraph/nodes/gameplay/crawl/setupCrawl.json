@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/crawl/setupCrawl.lua",
+  "module": "Nœud flowgraph « Setup Crawl » (catégorie once_instant, crawl). Prépare un parcours crawl : charge le trail, téléporte le véhicule au départ et charge les prefabs, sans démarrer le timer (utiliser Start Crawl). Pins d'entrée : trailId (chemin du trail) et vehicleId (0 = véhicule joueur). Sorties : success, failed, isSetup.",
+  "notes": ["Si trailId est vide : cherche la variable flowgraph « trailFile », puis le premier *.trail.json du dossier de la mission (mgr.activity.missionFolder).", "Écrit beaucoup de logs (tag SetupCrawl)."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Charge le bridge du crawl.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
+        "work": {"desc": "Résout le trail, appelle bridge.loadCrawlTrail puis bridge.setupCrawl(vehicleId, trail) et renseigne les sorties."}
+      }
+    }
+  }
+}

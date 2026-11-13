@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/setGearbox.lua",
+  "module": "Nœud « Set Gearbox Mode » (catégorie `once_f_duration`). Change le mode de boîte (`arcade` ou `realistic`) via `core_vehicleBridge.executeAction(veh,'setGearboxMode', mode)`, puis envoie un `ping` pour savoir quand c'est reçu. Pins d'entrée : `vehId`, `mode` (string).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro.",
+          "internal": true
+        },
+        "init": {
+          "desc": "Constructeur du nœud, appelé à sa création par l'éditeur/gestionnaire de flowgraph ; initialise l'état interne.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Efface la réponse et passe en durée `inactive`.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Définit les valeurs proposées pour `mode` : arcade, realistic.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Quand le ping revient, passe en `finished`.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Envoie l'action et un ping au véhicule, passe en `started`.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

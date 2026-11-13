@@ -1,0 +1,65 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraPosition.lua",
+  "module": "Noeud flowgraph « Set Camera Position » (repeat_instant). Deplace la camera libre a une position, saisie dans le noeud (mode 'custom') ou fournie par un pin vec3 'pos' (mode 'from Pin', pin cree dynamiquement). La rotation courante de la camera est conservee. Le pin de sortie value (vec3) renvoie la position appliquee.",
+  "notes": [
+    "Le pin 'value' est declare en direction 'out' (vec3) alors que la description dit « position to set camera to » : c'est bien une sortie qui reflete la position appliquee.",
+    "Les valeurs vec3 sont des tables {x,y,z}."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Initialise la position a (0,0,0), le mode a 'custom' et la liste des modes {'custom','from Pin'}.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Panneau de proprietes de l'editeur : choix du mode, champs x/y/z, boutons « Set from camera » et « Preview ». Cree ou supprime le pin 'pos' selon le mode. Renvoie une chaine de raison si une modification a eu lieu.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Passe en camera libre si besoin, lit la position du pin 'pos' en mode 'from Pin', applique la position (SetCamera) et ecrit le pin value.",
+          "internal": false
+        },
+        "drawMiddle": {
+          "desc": "Zone centrale du noeud dans l'editeur (rien d'affiche).",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        },
+        "SetCamera": {
+          "desc": "Appelle core_camera.setPosRot(0, ...) avec la position du noeud et la rotation courante de la camera (core_camera.getQuat).",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde la position (res.ppos) et le mode (res.mode).",
+          "params": {
+            "res": {
+              "type": "any",
+              "desc": "table de sauvegarde du noeud"
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure position et mode ; recree le pin 'pos' en mode 'from Pin'.",
+          "params": {
+            "nodeData": {
+              "type": "any",
+              "desc": "donnees sauvegardees"
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

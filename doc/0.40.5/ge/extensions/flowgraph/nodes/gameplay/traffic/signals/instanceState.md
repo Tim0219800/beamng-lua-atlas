@@ -4,11 +4,15 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/instanceState")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Predict Signal State » (once_instant). Prédit l'état futur d'une instance de feu après `seconds` secondes (positives uniquement) via instance:getStateAfterTime. Sorties : stateName, stateAction.
+
 ## Classe `C`
+
+Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:workOnce()` |  | 24 |
+| `C:workOnce()` | Calcule l'état prédit et écrit stateName / stateAction. | 24 |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceState.lua`.*

@@ -1,0 +1,69 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/states/transition.lua",
+  "module": "Noeud « Transition » du stategraph. Termine l'état courant et passe à un nouvel état : au flow, collecte la valeur de tous ses pins d'entrée personnalisés (hors 'flow') et appelle self.mgr.states:transition(stateId, transitionName, data, self). transitionName vaut 'success' par défaut et se choisit parmi les transitions du noeud état. Les données sont lisibles dans l'état suivant avec le noeud « Get Transition Variables ».",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "savePins = true, allowCustomInPins = true, transitionName = 'success'.",
+          "internal": true
+        },
+        "makePinTemplates": {
+          "desc": "Construit les modèles de pins (nom/type) à partir des autres noeuds transition et transitionStack du projet.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Liste déroulante « Transition Name » basée sur le noeud état parent.",
+          "internal": true
+        },
+        "hideProperties": {
+          "desc": "Libère le cache de modèles de pins.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Si flow, déclenche la transition avec les données des pins (nil s'il n'y en a pas).",
+          "internal": false
+        },
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde transitionName.",
+          "params": {
+            "res": {
+              "type": "any",
+              "desc": "table de sauvegarde"
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure transitionName ('success' par défaut).",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "données sauvegardées"
+            }
+          },
+          "internal": true
+        },
+        "customContextMenu": {
+          "desc": "Ajoute au menu contextuel « Go to target... » listant les graphes cibles de cette transition.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

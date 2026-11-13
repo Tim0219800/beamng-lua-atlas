@@ -1,0 +1,73 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/particleEmitter.lua",
+  "module": "Noeud flowgraph « Particle Emitter » (repeat_instant, auteur BeamNG). Cree un objet ParticleEmitterNode (emetteur BNGP_confetti, dataBlock lightExampleEmitterNodeData1) ajoute au MissionGroup et le positionne. Entrees : clear (impulsion), position (vec3), rotation (quat), color. Sortie : flow.",
+  "notes": [
+    "Bug : _afterTrigger appelle self:hideobject() (minuscule) alors que la methode est hideObject : erreur Lua si cette branche s'execute.",
+    "Bug : fillFields lit self.pinIn.radius, mais aucun pin 'radius' n'est declare dans pinSchema.",
+    "Bug : setPosition teste self.object.objBase qui n'est jamais defini : la position n'est donc jamais appliquee.",
+    "Les pins rotation et color ne sont pas utilises par le code."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Initialise position, radius, clr, object et shown.",
+          "params": {
+            "mgr": {
+              "type": "any",
+              "desc": "gestionnaire flowgraph"
+            }
+          },
+          "internal": true
+        },
+        "createObject": {
+          "desc": "Cree le ParticleEmitterNode (canSave = false) et l'enregistre sous le nom donne.",
+          "params": {
+            "objectName": {
+              "type": "any",
+              "desc": "nom de l'objet dans la scene"
+            }
+          },
+          "internal": true
+        },
+        "showObject": {
+          "desc": "Affiche l'objet existant ou le cree (nom particles__<time>_<id>) et l'ajoute a scenetree.MissionGroup.",
+          "internal": true
+        },
+        "hideObject": {
+          "desc": "Cache l'objet (hidden = true) et met shown a false.",
+          "internal": true
+        },
+        "_afterTrigger": {
+          "desc": "Apres le declenchement : si le flow d'entree est false et que l'emetteur est affiche, tente de le cacher.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "A l'arret : retire l'objet de l'arbre de l'editeur si possible, le supprime et remet l'etat a zero.",
+          "internal": true
+        },
+        "fillFields": {
+          "desc": "Lit position/radius/color des pins avec des valeurs par defaut (rayon 2, couleur {1,0,0,0.8}).",
+          "internal": true
+        },
+        "setPosition": {
+          "desc": "Positionne et met a l'echelle (radius, radius, 50) l'objet.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Cree/affiche l'emetteur ; sur flow, le montre et le positionne (flow sortie true) ; sur clear, le cache (flow sortie false).",
+          "internal": false
+        },
+        "onClientEndMission": {
+          "desc": "Hook de fin de mission : supprime l'emetteur.",
+          "internal": true
+        },
+        "destroy": {
+          "desc": "Appele a la destruction du noeud : supprime l'emetteur.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

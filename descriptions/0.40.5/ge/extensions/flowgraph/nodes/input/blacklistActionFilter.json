@@ -1,0 +1,57 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/input/blacklistActionFilter.lua",
+  "module": "Nœud flowgraph « Set Input Actions by Filters » (once_instant, dépend de core_input_actionFilter ; recommandé pour les missions). Comme « Set Input Actions » mais la liste est construite à partir de modèles d'actions (core_input_actionFilter.getActionTemplates) cochés dans les propriétés ; par défaut : vehicleTeleporting, vehicleMenues, physicsControls, aiControls, vehicleSwitching, freeCam, funStuff, walkingMode. Pins : block, ignoreUnrestriced, id (entrée et sortie).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_onDeserialized": {
+          "desc": "Restaure les réglages propres au nœud à partir des données sauvegardées.",
+          "internal": true,
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "données sauvegardées du nœud"
+            }
+          }
+        },
+        "_onSerialize": {
+          "desc": "Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe.",
+          "internal": true,
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "table de sérialisation à remplir"
+            }
+          }
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine une case à cocher par modèle d'actions, avec le nombre d'actions en infobulle.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Renomme le nœud en Block/Allow Input Actions by Filters si block est codé en dur.",
+          "internal": true,
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "constructeur de nœud de l'éditeur (builder:Middle())"
+            },
+            "style": {
+              "type": "table",
+              "desc": "style de dessin du nœud"
+            }
+          }
+        },
+        "init": {
+          "desc": "Active les modèles par défaut.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Crée la liste via core_input_actionFilter.createActionTemplate(modèles actifs), l'enregistre puis bloque ou autorise les actions.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

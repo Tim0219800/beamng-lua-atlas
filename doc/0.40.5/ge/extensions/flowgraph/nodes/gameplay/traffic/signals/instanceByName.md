@@ -4,14 +4,18 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/instanceByName")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Signal by Name » (once_instant). Cherche une instance de feu par nom dans signalsData.instances. Sorties : exists (caché), instanceData.
+
 ## Classe `C`
+
+Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:_executionStopped()` |  | 31 |
-| `C:init()` |  | 27 |
-| `C:onNodeReset()` |  | 23 |
-| `C:work(args)` |  | 35 |
+| `C:_executionStopped()` | Appelle onNodeReset(). | 31 |
+| `C:init()` | Appelle onNodeReset(). | 27 |
+| `C:onNodeReset()` | Vide la sortie instanceData. | 23 |
+| `C:work(args)` | Parcourt signalsData.instances et publie l'instance de même nom. | 35 |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceByName.lua`.*

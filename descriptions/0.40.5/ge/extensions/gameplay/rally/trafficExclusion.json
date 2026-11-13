@@ -1,0 +1,41 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/trafficExclusion.lua",
+  "module": "Calcule des zones sphériques d'exclusion du trafic IA le long des spéciales de rallye, puis les applique au navgraph (`map.setTrafficExclusionZones` + `map.reset`) pour que le trafic ne circule pas sur le parcours. Les zones viennent de la driveline (drivelineV3) de chaque mission `rallyStage`, échantillonnée tous les 1,5 x rayon, et, pour une boucle, d'un fichier optionnel `trafficGatedRoads.grzones.json` du dossier de la mission. Rayon par défaut : 10 m.",
+  "usage": "gameplay_rally_trafficExclusion.applyForRallyLoop(loopMission, 12)\n-- ...plus tard\ngameplay_rally_trafficExclusion.clearTrafficExclusion()",
+  "notes": [
+    "Seules les missions de type `rallyStage` produisent des zones ; les autres types donnent un avertissement « Unsupported mission type ». Les sections de route (rallyRoadSection) retrouvées via extractMissionIdsFromRallyLoop sont donc ignorées à la création des zones.",
+    "Si aucune mission n'est donnée à createZones, la mission courante de l'éditeur de rallye (editor_rallyEditor.getMissionId) est utilisée.",
+    "applyForRallyLoop et clearTrafficExclusion appellent map.reset(), qui recharge le navgraph : opération coûteuse.",
+    "Les fonctions loadRacePath, createZonesForRallyStage et applyForMissionIds sont du code mort (commenté ou local non utilisé)."
+  ],
+  "functions": {
+    "createZones": {
+      "desc": "Construit la liste de zones d'exclusion pour des missions de rallye. Pour chaque mission `rallyStage`, charge la driveline et échantillonne ses points tous les 1,5 x radius.",
+      "params": {
+        "missions": {"type": "table[]|nil", "desc": "Missions (objets de gameplay_missions_missions). Si vide ou nil, utilise la mission de l'éditeur de rallye."},
+        "radius": {"type": "number|nil", "desc": "Rayon des zones en mètres ; défaut 10."}
+      },
+      "returns": [{"type": "table[]", "desc": "Liste de {pos = vec3, radius = number} ; vide si rien n'est disponible."}]
+    },
+    "extractMissionIdsFromRallyLoop": {
+      "desc": "Lit mission.fgVariables d'une mission de boucle et renvoie les ids des missions utilisées, dans l'ordre : pour chaque étape 1 à 4, la section de route (`stageN_rallyRoadSection`) puis la spéciale (`stageN_rallyStage`), enfin `return_rallyRoadSection`. Les valeurs ont le format « Nom (id) » ; `<none>` est ignoré.",
+      "params": {"mission": {"type": "table", "desc": "Mission de type boucle (avec fgVariables)."}},
+      "returns": [{"type": "string[]", "desc": "Ids de missions ; vide si fgVariables est absent."}]
+    },
+    "applyForRallyLoop": {
+      "desc": "Applique l'exclusion de trafic pour une boucle : retrouve les missions via extractMissionIdsFromRallyLoop, crée les zones, ajoute les sphères du fichier optionnel trafficGatedRoads.grzones.json (champ spheres avec pos {x,y,z} et radius), puis appelle map.setTrafficExclusionZones et map.reset().",
+      "params": {
+        "loopMission": {"type": "table", "desc": "Mission boucle."},
+        "radius": {"type": "number|nil", "desc": "Rayon des zones issues des spéciales ; défaut 10."}
+      },
+      "returns": [{"type": "table[]", "desc": "Zones appliquées ({pos, radius}) ; table vide si loopMission est nil."}]
+    },
+    "clearTrafficExclusion": {
+      "desc": "Supprime toutes les zones d'exclusion (map.clearTrafficExclusionZones) et recharge le navgraph (map.reset)."
+    },
+    "getDefaultRadius": {
+      "desc": "Renvoie le rayon par défaut des zones.",
+      "returns": [{"type": "number", "desc": "10 (mètres)."}]
+    }
+  }
+}

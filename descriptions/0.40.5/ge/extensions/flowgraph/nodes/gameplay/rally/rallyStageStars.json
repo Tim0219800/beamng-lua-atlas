@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageStars.lua",
+  "module": "Nœud flowgraph « Rally Stage Stars » (catégorie once_instant, tags rally, mission, stars). Attribue les médailles bronze/argent/or d'une tentative en comparant son temps (attempt.data.time) aux seuils de la mission (missionTypeData.goldTime, silverTime, bronzeTime) : attempt.unlockedStars.<seuil> = temps <= seuil. Rien n'est évalué si la tentative est abandonnée (dnf) ou sans temps positif. Entrée et sortie : attempt (table 'attemptData').",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "workOnce": {"desc": "Si le flux est actif, met à jour unlockedStars de la tentative et la renvoie dans la pin de sortie attempt.", "internal": true}
+      }
+    }
+  }
+}

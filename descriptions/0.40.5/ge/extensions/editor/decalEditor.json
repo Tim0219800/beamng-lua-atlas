@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/editor/decalEditor.lua",
+  "module": "Éditeur de decals du World Editor (mode d'édition « Edit Decal », fenêtre « Decal Editor », action map « DecalEditor »). Deux onglets : « Templates » (liste des DecalData avec * pour les modifiés ; créer, supprimer, enregistrer un ou tous les templates) et « Instances » (liste et propriétés des decals posés, remplacement de template, duplication). En mode Templates, un clic sur le terrain crée une instance du template sélectionné ; les instances sont visualisées par des sphères de debug colorées par id, sélectionnables à la souris (Ctrl+clic = multi-sélection) et déplaçables avec le gizmo d'axes (Maj + glisser = dupliquer). Toutes les actions sont annulables via editor.history, et les decals sont enregistrés avant la sauvegarde du niveau.",
+  "notes": [
+    "Les templates DummyDecal et tireTrackDecal sont cachés de la liste.",
+    "Distances de debug : sphères jusqu'à 250 m, textes jusqu'à 50 m ; l'opacité des sphères se règle avec le curseur « Gizmo sphere alpha ».",
+    "Une grille spatiale de cellules accélère la recherche des decals visibles et survolés ; elle est reconstruite quand le nombre de decals change.",
+    "Le gizmo est placé sur la moyenne des positions des instances sélectionnées, ou sur la matrice monde de l'instance en alignement local avec une seule sélection.",
+    "Possible erreur : dans onEditorInspectorFieldChanged, le résultat de scenetree.findObjectById n'est pas testé avant template:getClassName() (déduit du code)."
+  ],
+  "functions": {
+    "onEditorAxisGizmoAligmentChanged": {"desc": "Hook appelé quand l'alignement du gizmo (local/monde) change ; si des instances sont sélectionnées en mode Edit Decal, replace le gizmo.", "internal": true},
+    "onEditorBeforeSaveLevel": {"desc": "Hook appelé avant la sauvegarde du niveau ; enregistre tous les templates de decals (editor.saveDecals).", "internal": true},
+    "onEditorGui": {"desc": "Hook appelé à chaque frame de l'éditeur ; si le mode Edit Decal est actif, dessine la fenêtre (curseur d'opacité des sphères, case « Show info labels », onglets Templates et Instances).", "internal": true},
+    "onEditorInitialized": {"desc": "Hook appelé à l'initialisation de l'éditeur : déclare editor.editModes.decalEditMode (onActivate, onDeactivate, onUpdate, onDeleteSelection, icône create_decal, raccourcis auxiliaires) et enregistre la fenêtre 400x600.", "internal": true},
+    "onEditorInspectorFieldChanged": {"desc": "Hook appelé quand un champ change dans l'inspecteur ; pour chaque DecalData modifié, le marque dirty dans scenetree.decalPersistMan et notifie les instances qui l'utilisent (editor.notifyDecalModified).", "params": {"selectedIds": {"type": "integer[]", "desc": "ids des objets sélectionnés"}, "fieldName": {"type": "string", "desc": "champ modifié"}, "fieldValue": {"type": "any", "desc": "nouvelle valeur"}, "arrayIndex": {"type": "integer", "desc": "index dans le champ tableau"}}, "internal": true},
+    "onEditorInspectorHeaderGui": {"desc": "Hook appelé pour dessiner l'en-tête de l'inspecteur ; en mode Edit Decal, affiche l'aperçu du matériau du template sélectionné.", "params": {"inspectorInfo": {"type": "table", "desc": "infos de l'inspecteur (inutilisé)"}}, "internal": true},
+    "onExtensionLoaded": {"desc": "Hook appelé au chargement de l'extension ; écrit « initialized » dans le journal.", "internal": true}
+  }
+}

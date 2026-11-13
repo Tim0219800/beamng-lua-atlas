@@ -1,0 +1,45 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageSuperCountdown.lua",
+  "module": "Nœud flowgraph « Rally Stage Super Countdown » (icône timer, tag rally, pas de catégorie). Compte à rebours autonome de départ de spéciale rally, sans dépendance au planning de boucle rally : trouve la ligne de départ dans pathData (position nommée spName), mesure la proximité du véhicule (distance signée au plan, zone latérale finie de 10 m, arrêt si vitesse < 0,08 m/s), démarre un compte à rebours lissé (durée et nombre d'annonces issus de StagedCountdownUtils.getStageCountdownSettings, défauts 3 s et 3), annonce 3-2-1 puis « Go! » (messages ScenarioFlashMessage, sons, pacenotes système countdown<n>/countdowngo), dégèle le véhicule, réactive les pacenotes, et détecte un faux départ (état false_start, pacenote 'falseStart'). Entrées : flow, reset (impulsion), pathData, spName, vehId, distance (zone de lancement, 1 m par défaut). Sorties : flow (fin, ou faux départ), finished (impulsion), ongoing, waiting, falseStart (impulsion). Envoie chaque frame onRallyDataUpdated (état countdown ou vehicleProximity, horloge rally).",
+  "notes": ["États internes : waiting, countdown_running, launched, finished, false_start. « Go! » reste affiché 0,1 s (GO_DISPLAY_DURATION) et le message dure 1 s.", "hasCrossedStartLine() renvoie toujours false dans ce fichier : le faux départ (triggerFalseStart) n'est donc jamais déclenché par ce nœud tel quel.", "core_flowgraphManager.skipCountdowns permet de sauter le compte à rebours.", "Options data : useImgui, useMessages, bigFinishMsg (true), drawDebug."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise toutes les variables d'état et options data.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
+        "_executionStarted": {"desc": "Charge le pont de boucle rally, remet à zéro le compte à rebours et le cache de position de départ.", "internal": true},
+        "_executionStopped": {"desc": "Remet le compte à rebours à zéro.", "internal": true},
+        "reset": {"desc": "Arrête le chrono et met toutes les sorties à false.", "internal": true},
+        "stopTimer": {"desc": "Réinitialise état, chronos, horloge rally et drapeaux.", "internal": true},
+        "updateStartPosition": {"desc": "Cherche la position de départ nommée dans pathData (avec cache) et mémorise pos/rot.", "returns": [{"type": "boolean", "desc": "Vrai si la position est valide."}], "internal": true},
+        "updateVehicleData": {"desc": "Met à jour position avant et vitesse du véhicule suivi.", "returns": [{"type": "boolean", "desc": "Vrai si valide."}], "internal": true},
+        "updateProximityState": {"desc": "Calcule distance signée, distance latérale, proximité, arrêt, « staged » et distance d'affichage.", "internal": true},
+        "hasCrossedStartLine": {"desc": "Prévu pour détecter un faux départ ; renvoie toujours false.", "returns": [{"type": "boolean", "desc": "Toujours false."}]},
+        "shouldDrawDebug": {"desc": "Renvoie data.drawDebug.", "returns": [{"type": "boolean", "desc": "Dessiner le debug."}]},
+        "drawDebugVisualization": {"desc": "Dessine plan, ligne véhicule-plan et point véhicule si le debug est actif.", "internal": true},
+        "configureCountdownSettings": {"desc": "Charge durée, nombre d'annonces et options visuel/son/voix depuis StagedCountdownUtils.", "internal": true},
+        "calculateScheduledEventTime": {"desc": "Calcule l'horloge et l'heure de lancement d'un compte à rebours immédiat (StagedCountdownUtils.calculateImmediateMinuteCountdown).", "internal": true},
+        "getTimeUntilLaunch": {"desc": "Temps restant avant le lancement.", "returns": [{"type": "number", "desc": "Secondes (>= 0)."}]},
+        "getCountdownPhase": {"desc": "Calcule la phase du compte à rebours (temps restant, valeur entière, valeur annoncée, progression).", "params": {"showingGo": {"type": "boolean", "desc": "Vrai pendant l'affichage de « Go! »."}}, "returns": [{"type": "table", "desc": "{timeUntilLaunch, countdownValue, announcedCountdown, countdownElapsed, progress}."}]},
+        "updateClock": {"desc": "Avance l'horloge du compte à rebours de dtSim tant qu'il est en cours.", "internal": true},
+        "getWallClockTime": {"desc": "Heure murale simulée (secondes) via StagedCountdownUtils.", "returns": [{"type": "number", "desc": "Secondes."}]},
+        "getRallyClockData": {"desc": "Construit les données d'horloge rally pour l'UI.", "returns": [{"type": "table", "desc": "Données d'horloge."}]},
+        "unfreezeVehicle": {"desc": "Dégèle le véhicule (setFreeze false) via core_vehicleBridge.", "returns": [{"type": "boolean", "desc": "Vrai si un véhicule a été dégelé."}]},
+        "startTimer": {"desc": "Démarre le compte à rebours : réglages, calcul de l'heure de lancement, état countdown_running.", "internal": true},
+        "shouldShowVisualCountdown": {"desc": "Renvoie le réglage d'affichage visuel du compte à rebours.", "returns": [{"type": "boolean|nil", "desc": "Afficher."}]},
+        "shouldPlayVoiceCountdown": {"desc": "Renvoie le réglage de compte à rebours vocal.", "returns": [{"type": "boolean|nil", "desc": "Voix."}]},
+        "shouldPlaySoundEffects": {"desc": "Renvoie le réglage d'effets sonores.", "returns": [{"type": "boolean|nil", "desc": "Sons."}]},
+        "enqueueSystemPacenote": {"desc": "Met en file une pacenote système aléatoire dans le rally manager.", "params": {"pacenoteName": {"type": "string", "desc": "Nom (countdown3, countdowngo, falseStart…)."}}, "internal": true},
+        "enableRallyManagerPacenoteProcessing": {"desc": "Réactive le traitement des pacenotes du rally manager.", "internal": true},
+        "show": {"desc": "Affiche un message flash (ScenarioFlashMessage) et éventuellement un Message UI.", "params": {"msg": {"type": "string", "desc": "Texte."}, "big": {"type": "boolean", "desc": "Grand format."}, "duration": {"type": "number|nil", "desc": "Durée en s."}, "luaCall": {"type": "string|nil", "desc": "Code Lua exécuté par l'UI (son)."}}},
+        "finishCountdown": {"desc": "Termine le compte à rebours : « Go! », son, dégel, pacenotes, état launched, flow = true.", "internal": true},
+        "triggerFalseStart": {"desc": "Déclare un faux départ (log, pacenote, état false_start, flow = true).", "internal": true},
+        "updateCountdown": {"desc": "Machine à états du compte à rebours : annonces 3-2-1 et fin.", "internal": true},
+        "updateGoDisplay": {"desc": "Décompte l'affichage de « Go! » puis passe à l'état finished.", "internal": true},
+        "sendRallyDataUpdate": {"desc": "Diffuse l'état de proximité et du compte à rebours via le hook onRallyDataUpdated.", "internal": true},
+        "drawMiddle": {"desc": "Barre de progression et état dans le nœud.", "params": {"builder": {"type": "table", "desc": "Constructeur de nœud."}, "style": {"type": "table", "desc": "Style."}}, "internal": true},
+        "work": {"desc": "Chaque frame : gère reset, position de départ, véhicule, démarrage, compte à rebours, UI et sorties.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+      }
+    }
+  }
+}

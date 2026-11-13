@@ -1,0 +1,66 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/sites/locationsByTag.lua",
+  "module": "Nœud flowgraph « Locations by Tags » (catégorie once_instant). Trouve au plus `count` locations portant un tag donné, éventuellement entre minDist et maxDist d'une position pos. Les résultats sont mélangés (math.random) puis triés par distance à pos si fourni. Sorties : count, found_i (flow) et loc_i (locationData) pour i=1..N (N réglable). Entrées : sitesData, tag, pos, minDist/maxDist (-1 = pas de limite), amount (-1 = maximum).",
+  "notes": [
+    "`reason` est une variable globale dans drawCustomProperties (non déclarée local)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_onDeserialized": {
+          "desc": "Restaure les réglages propres au nœud à partir des données sauvegardées.",
+          "internal": true,
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "table de sérialisation à remplir"
+            }
+          }
+        },
+        "_onSerialize": {
+          "desc": "Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe.",
+          "internal": true,
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "table de sérialisation à remplir"
+            }
+          }
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui).",
+          "internal": true
+        },
+        "init": {
+          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "internal": true,
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "gestionnaire flowgraph"
+            }
+          }
+        },
+        "updatePins": {
+          "desc": "Ajoute ou retire les paires de pins found_i / loc_i.",
+          "internal": true,
+          "params": {
+            "old": {
+              "type": "integer",
+              "desc": "ancien nombre de pins"
+            },
+            "new": {
+              "type": "integer",
+              "desc": "nouveau nombre de pins"
+            }
+          }
+        },
+        "workOnce": {
+          "desc": "Construit la liste des locations (par tag ou par rayon), la mélange, garde les premières, les trie par distance, puis remplit found_i, loc_i et count.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

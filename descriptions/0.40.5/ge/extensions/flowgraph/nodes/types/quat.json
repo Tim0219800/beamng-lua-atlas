@@ -1,0 +1,56 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/types/quat.lua",
+  "module": "Noeud « Quat » (repeat_instant). Construit un quaternion à partir des pins x, y, z, w (0 par défaut) et l'écrit en table {x,y,z,w} sur le pin value (quat).",
+  "notes": [
+    "Le quaternion n'est pas normalisé ; avec tous les pins à 0 on obtient (0,0,0,0), non valide."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "work": {
+          "desc": "Compose le quaternion et écrit la table.",
+          "internal": false
+        },
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        },
+        "drawProperties": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Ne sauvegarde rien.",
+          "params": {
+            "res": {
+              "type": "any",
+              "desc": "table de sauvegarde"
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Ne restaure rien.",
+          "params": {
+            "nodeData": {
+              "type": "any",
+              "desc": "données sauvegardées"
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/tools/loopToolbox.lua",
+  "module": "Fenêtre imgui de debug « Rally Loop Debug » (Loop Toolbox) pour la boucle de rallye, ouverte par gameplay_rallyLoop.toggleDebug(). Elle permet de choisir une mission `rallyLoop` du niveau courant, de la charger ou décharger (gameplay_rallyLoop.setup/unload), de sauter le compte à rebours ou la liaison (Skip), d'avancer ou reculer l'horloge de ±10 s et ±1 min, de mettre l'horloge en pause, et affiche validation, données de proximité, indices de mission, distances, durées, pénalités et planning. Les options de dessin (route, étiquettes, z au premier plan, panneaux, infos de debug) sont sauvegardées dans `/settings/rally/loopToolbox.json`. Le module renvoie un constructeur : `require(...)()`.",
+  "notes": [
+    "Le bouton Skip n'est actif que si manager:canSkip() ; il émet le hook onGameplayInteract.",
+    "Les cases « Vehicle BB » et « Leading Point » sont commentées dans l'interface, mais les champs drawVehBB et drawLeadingPoint sont toujours sauvegardés.",
+    "Les panneaux de rallye (signboards) sont des objets de la scène dont la shapeName contient `s_rally_signboard_` ; findSignboards les repère et drawSignboardsDebug écrit leur nom au-dessus."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Fenêtre d'outils de la boucle de rallye. Champs principaux : missionDropdownItems, selectedMissionIndex, selectedMissionId, selectedMissionDir, drawRoute, drawLabels, drawZOnTop, drawSignboards, drawVehBB, drawLeadingPoint, showDebugInfo (BoolPtr imgui), signboards, syncedManager.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur : initialise les options, charge les réglages sauvegardés et la liste des missions.",
+          "internal": true
+        },
+        "saveSettings": {
+          "desc": "Écrit la mission choisie et les options de dessin dans /settings/rally/loopToolbox.json."
+        },
+        "loadSettings": {
+          "desc": "Relit ce fichier et applique les options ; si le fichier est absent, crée des réglages par défaut tout à faux. Recherche les panneaux si leur affichage était activé."
+        },
+        "applyManagerDrawFlags": {
+          "desc": "Transmet l'option showDebugInfo au manager de boucle (setDrawFlag) et retient ce manager comme synchronisé.",
+          "params": {"manager": {"type": "table|nil", "desc": "RallyLoopManager."}}
+        },
+        "refreshMissionList": {
+          "desc": "Remplit le menu déroulant avec les missions de type rallyLoop du niveau courant (« Nom (id) ») et sélectionne la mission sauvegardée si elle existe."
+        },
+        "getSelectedMissionId": {
+          "desc": "Id de la mission choisie dans le menu (extrait de « Nom (id) »).",
+          "returns": [{"type": "string|nil", "desc": "Id, nil si « <none> »."}]
+        },
+        "findSignboards": {
+          "desc": "Cherche dans la scène les panneaux de rallye et les mémorise dans self.signboards, avec leur position, shapeName et champ dynamique `flag`.",
+          "returns": [{"type": "integer", "desc": "Nombre de panneaux trouvés."}]
+        },
+        "formatDuration": {
+          "desc": "Formate une durée en [h:]mm:ss (ou avec dixièmes).",
+          "params": {
+            "seconds": {"type": "number|nil", "desc": "Durée en secondes."},
+            "showSubseconds": {"type": "boolean|nil", "desc": "true pour afficher les dixièmes."}
+          },
+          "returns": [{"type": "string", "desc": "Texte, 'N/A' si nil."}]
+        },
+        "drawValidation": {
+          "desc": "Affiche les problèmes de validation du planning (bloquants en rouge, autres en orange) ou « Validation: OK ».",
+          "params": {"manager": {"type": "table", "desc": "RallyLoopManager."}},
+          "returns": [{"type": "boolean", "desc": "true s'il existe un problème bloquant ou si le planning est invalide."}]
+        },
+        "draw": {
+          "desc": "Dessine tout le contenu de la fenêtre (à appeler entre im.Begin et im.End).",
+          "params": {"manager": {"type": "table|nil", "desc": "RallyLoopManager actif ; sans manager, seule la partie chargement est affichée."}}
+        },
+        "drawDebug": {
+          "desc": "Dessin 3D de debug : délègue à gameplay_rallyLoop.drawDebug avec les options zOnTop, route et étiquettes.",
+          "internal": true
+        },
+        "drawSignboardsDebug": {
+          "desc": "Dessine le nom court de chaque panneau trouvé au-dessus de sa position (debugDrawer:drawTextAdvanced).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

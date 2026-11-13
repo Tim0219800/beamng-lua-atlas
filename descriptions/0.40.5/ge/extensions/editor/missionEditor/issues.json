@@ -1,0 +1,45 @@
+{
+  "path": "lua/ge/extensions/editor/missionEditor/issues.lua",
+  "module": "Panneau « Issues » de l'éditeur de missions. Il agrège les problèmes détectés par les autres panneaux (méthode getMissionIssues de chaque fenêtre) pour toutes les missions, les stocke dans mission._issueList et affiche une fenêtre tableau triable « Mission Issues Overview ». Le module renvoie un constructeur : require(...)(missionEditor).",
+  "notes": [
+    "Sévérités reconnues : unknown (-1), minor (1), warning (10), error (50), critical (100). Seules warning et error comptent dans importantCount.",
+    "calculateMissionIssues ignore les missions devMission quand shipping_build est faux (build de développement).",
+    "Dans drawIssuesWindow, la colonne « Level » est triée par sortByLevel (colonne 4) et la colonne « Availability » par sortByAvailability (colonne 5).",
+    "Les menus de la fenêtre peuvent corriger automatiquement les problèmes de missionTypeData de toutes les missions (checkContainer(mission, true)) ou supprimer les données en trop (checkContainer(mission, true, {})) : action de masse, à utiliser avec prudence."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance du panneau Issues. Champs : missionEditor, mission, issues = {list = {...}}.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur : mémorise missionEditor et initialise issues.list.",
+          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "internal": true
+        },
+        "setMission": {
+          "desc": "Définit la mission courante.",
+          "params": {"mission": {"type": "table", "desc": "Mission affichée."}},
+          "internal": true
+        },
+        "draw": {
+          "desc": "Affiche, pour la mission courante, la liste à puces des labels de problèmes (ou « No Issues! »). Ne fait rien si mission._issueList n'existe pas.",
+          "internal": true
+        },
+        "drawIssuesWindow": {
+          "desc": "Dessine la fenêtre « mission_issues » : menu d'actions de masse et tableau à 7 colonnes (#, Type, Mission, MissionType, Level, Availability, Label). Cliquer sur une mission l'ouvre dans l'éditeur (setMissionById). Respecte la préférence missionEditor.general.shortIds."
+        },
+        "showIssuesWindow": {
+          "desc": "Affiche la fenêtre d'éditeur « mission_issues »."
+        },
+        "calculateMissionIssues": {
+          "desc": "Recalcule tous les problèmes : pour chaque mission, appelle setMission sur missionTypeWindow puis getMissionIssues(mission) sur chaque fenêtre qui le définit. Remplit issue.label, severity, idx, missionId, missionType, level, availability, et pour la mission _issueList (importantCount, highestSeverity, icon, color).",
+          "params": {
+            "missionList": {"type": "table[]", "desc": "Liste des missions."},
+            "windows": {"type": "table[]", "desc": "Panneaux de l'éditeur pouvant avoir getMissionIssues."},
+            "missionTypeWindow": {"type": "table", "desc": "Panneau genericTypeData, dont setMission est appelé pour chaque mission."}
+          }
+        }
+      }
+    }
+  }
+}

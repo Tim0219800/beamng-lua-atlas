@@ -1,0 +1,50 @@
+{
+  "path": "lua/ge/extensions/telemetry/hardwareAudio.test.lua",
+  "module": "Tests unitaires de telemetry/hardwareAudio (runTestFiles(\"hardwareAudio\")).",
+  "functions": {
+    "testClassifiesKnownOutputTypes": {
+      "desc": "Vérifie la classification casque, écran/TV, haut-parleurs et périphérique virtuel à partir de noms types.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testUnknownNamesStayUnknown": {
+      "desc": "Vérifie qu'un nom sans mot-clé (ex. 'WH-1000XM5') donne la catégorie 'unknown'.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testRawDeviceNameIsRemoved": {
+      "desc": "Vérifie que le nom brut et les champs de diagnostic n'entrent pas dans la télémétrie, alors que sampleRateHz, speakerMode et channels sont conservés.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testMissingDeviceIsNotReported": {
+      "desc": "Vérifie que fromDeviceInfo(nil) renvoie nil.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

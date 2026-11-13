@@ -1,0 +1,42 @@
+{
+  "path": "lua/common/libs/copas/copas/lock.lua",
+  "module": "Sous-module de la bibliothèque tierce Copas : verrou (mutex) entre coroutines Copas. Une coroutine qui demande un verrou déjà pris cède la main jusqu'à ce qu'il soit libéré ou que le délai expire. Par défaut le verrou est ré-entrant et le délai de 10 s. Le module renvoie la table lock.",
+  "usage": "local lock = require(\"libs/copas/copas/lock\").new(5)\nlocal ok, err = lock:get()\n-- section critique\nlock:release()",
+  "notes": [
+    "get renvoie le temps d'attente en cas de succès, ou nil, erreur, temps d'attente avec l'erreur parmi \"timeout\", \"destroyed\", \"lock is not re-entrant\".",
+    "release renvoie nil + « cannot release a lock not owned » si la coroutine courante n'est pas propriétaire."
+  ],
+  "fields": {
+    "__index": {"type": "table", "desc": "Métatable des objets verrou (lock lui-même)."}
+  },
+  "functions": {
+    "new": {
+      "desc": "Crée un verrou.",
+      "params": {
+        "seconds": {"type": "number|nil", "desc": "Délai par défaut d'acquisition en secondes (défaut 10)"},
+        "not_reentrant": {"type": "boolean|nil", "desc": "Si vrai, une coroutine ne peut pas reprendre un verrou qu'elle possède déjà"}
+      },
+      "returns": [{"type": "table", "desc": "Le verrou"}]
+    },
+    "get": {
+      "desc": "Acquiert le verrou ; cède la main tant qu'une autre coroutine le possède. Avec timeout = 0, retourne immédiatement sans céder.",
+      "params": {
+        "self": {"type": "table", "desc": "Le verrou (appel lock:get)"},
+        "timeout": {"type": "number|nil", "desc": "Délai en secondes, prioritaire sur celui de new"}
+      },
+      "returns": [
+        {"type": "number|nil", "desc": "Temps d'attente en cas de succès, sinon nil"},
+        {"type": "string|nil", "desc": "Erreur : timeout, destroyed ou lock is not re-entrant"},
+        {"type": "number|nil", "desc": "Temps d'attente en cas d'échec"}
+      ]
+    },
+    "release": {
+      "desc": "Libère le verrou détenu par la coroutine courante.",
+      "params": {"self": {"type": "table", "desc": "Le verrou (appel lock:release)"}},
+      "returns": [
+        {"type": "boolean|nil", "desc": "true si libéré"},
+        {"type": "string|nil", "desc": "Message d'erreur"}
+      ]
+    }
+  }
+}

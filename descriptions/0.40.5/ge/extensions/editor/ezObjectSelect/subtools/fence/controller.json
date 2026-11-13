@@ -1,0 +1,34 @@
+{
+  "path": "lua/ge/extensions/editor/ezObjectSelect/subtools/fence/controller.lua",
+  "module": "Panneau ImGui du sous-outil « Fence » d'Easy Object Select. Permet de choisir le mesh de clôture (sélection de l'Asset Browser ou objet sélectionné dans Easy Select), de régler la distance de correspondance des ancres (0.05 à 5 m) et l'option « No overlap », puis de lancer Select Fence, et, une fois le mode actif, de valider (Exit Fence Mode), annuler (Cancel Fence) ou supprimer (Delete Fence) la clôture. Délègue toute la logique à fence/session.",
+  "notes": [
+    "Exit Fence Mode et Delete Fence sont désactivés quand la session a atteint sa limite de sécurité (isCapped).",
+    "L'état du panneau (asset choisi, distance, noOverlap, message) est local au module."
+  ],
+  "functions": {
+    "drawWorkspace": {
+      "desc": "Dessine le panneau du sous-outil et traite les clics sur ses boutons (appelle fenceSession.begin / exitAndCommit / cancel / deleteAndCommit / setNoOverlap).",
+      "params": {
+        "options": {"type": "table|nil", "desc": "canEnter (boolean) : si false, Select Fence est désactivé."}
+      },
+      "internal": false
+    },
+    "update": {
+      "desc": "Passe la frame à fenceSession.update (entrées souris/clavier, aperçu, dessin).",
+      "params": {"canAcceptInput": {"type": "boolean", "desc": "true si la vue peut recevoir les entrées."}},
+      "returns": [{"type": "boolean", "desc": "true si une session est active."}],
+      "internal": false
+    },
+    "cancel": {
+      "desc": "Annule la session de clôture en cours (restaure les pièces d'origine).",
+      "params": {},
+      "internal": false
+    },
+    "isModeActive": {
+      "desc": "Indique si le mode clôture est actif.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si une session est active."}],
+      "internal": false
+    }
+  }
+}

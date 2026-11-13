@@ -1,0 +1,50 @@
+{
+  "path": "lua/common/libs/lua-luaepnf/epnf.lua",
+  "module": "lua-luaepnf : bibliothèque tierce (Gerhard Lipp) qui facilite la définition de grammaires LPeg en syntaxe EBNF-like, avec arbre syntaxique (AST) automatique et messages d'erreur de parsing. Ici elle repose sur LuLPeg (libs/LuLPeg/lulpeg), une réimplémentation de LPeg en Lua pur. Rôle limité pour un moddeur : analyser un langage ou un format texte personnalisé.",
+  "usage": "local epnf = require('libs/lua-luaepnf/epnf')\nlocal g = epnf.define(function(_ENV)\n  START 'expr'\n  expr = ID * (P'+' * ID)^0 * EOF()\nend)\nlocal ast = epnf.parsestring(g, 'a+b')",
+  "notes": [
+    "Dans le fichier, 'epnf' est une variable locale du module (le doc auto la dit globale).",
+    "raise (et les erreurs de parsing) écrivent le message avec print() dans la sortie standard (la ligne fautive et un marqueur ^), sans lever d'exception ; seul define lève une assertion 'no start rule defined' si aucune règle START n'est définie.",
+    "Les noms de règles sont créés par assignation dans l'environnement ; ceux déclarés par SUPPRESS ne génèrent pas de nœud d'AST."
+  ],
+  "functions": {
+    "define": {
+      "desc": "Prépare un environnement où l'on définit des règles de grammaire par simple assignation (nom = motif) avec des raccourcis LPeg (majuscules) et les assistants START, SUPPRESS, E, EOF, ID, W, WS. Chaque règle produit un nœud d'AST {id=nom, pos=position, ...}.",
+      "params": {"func": {"type": "function", "desc": "Fonction de définition ; reçoit l'environnement en argument (et son environnement est remplacé sous Lua 5.1)."}, "g": {"type": "table|nil", "desc": "Table de grammaire existante à compléter."}, "e": {"type": "table|nil", "desc": "Environnement de repli pour les noms inconnus (défaut : environnement de func, ou _G)."}},
+      "returns": [{"type": "table", "desc": "Grammaire utilisable avec parse/parsestring/parsefile."}]
+    },
+    "parse": {
+      "desc": "Applique une grammaire à une chaîne et renvoie l'AST.",
+      "params": {"g": {"type": "table", "desc": "Grammaire."}, "name": {"type": "string", "desc": "Nom de l'entrée pour les messages d'erreur."}, "input": {"type": "string", "desc": "Texte à analyser."}, "...": {"type": "any", "desc": "Arguments supplémentaires passés à la correspondance."}},
+      "returns": [{"type": "table|nil", "desc": "AST."}, {"type": "string", "desc": "name."}, {"type": "string", "desc": "input."}]
+    },
+    "parsefile": {
+      "desc": "Lit un fichier entier puis applique la grammaire. Lève une erreur si le fichier ne peut pas être ouvert.",
+      "params": {"g": {"type": "table", "desc": "Grammaire."}, "fname": {"type": "string", "desc": "Chemin du fichier."}, "...": {"type": "any", "desc": "Arguments supplémentaires."}},
+      "returns": [{"type": "table|nil", "desc": "AST."}, {"type": "string", "desc": "Nom (le chemin)."}, {"type": "string", "desc": "Contenu."}]
+    },
+    "parsestring": {
+      "desc": "Comme parse, avec un nom d'entrée généré à partir des 20 premiers caractères du texte.",
+      "params": {"g": {"type": "table", "desc": "Grammaire."}, "str": {"type": "string", "desc": "Texte."}, "...": {"type": "any", "desc": "Arguments supplémentaires."}},
+      "returns": [{"type": "table|nil", "desc": "AST."}, {"type": "string", "desc": "Nom généré."}, {"type": "string", "desc": "Texte."}]
+    },
+    "dumpast": {
+      "desc": "Écrit une représentation indentée de l'AST sur stderr (débogage).",
+      "params": {"node": {"type": "table", "desc": "Nœud racine."}}
+    },
+    "raise": {
+      "desc": "Signale une erreur de validation sémantique de l'AST : affiche 'nom:ligne: message', la ligne fautive et un marqueur sous la position (assert p <= #s).",
+      "params": {"n": {"type": "string", "desc": "Nom de l'entrée."}, "msg": {"type": "string", "desc": "Message."}, "s": {"type": "string", "desc": "Texte analysé."}, "p": {"type": "integer", "desc": "Position dans le texte."}}
+    }
+  },
+  "classes": {
+    "env_index": {
+      "desc": "Table d'assistants visibles dans la fonction passée à define (avec START et SUPPRESS en plus).",
+      "functions": {
+        "E": {"desc": "Motif LPeg qui signale une erreur de parsing avec le message donné.", "params": {"msg": {"type": "string", "desc": "Message d'erreur."}}},
+        "EOF": {"desc": "Motif LPeg : fin de l'entrée, sinon erreur avec le message donné.", "params": {"msg": {"type": "string", "desc": "Message d'erreur."}}},
+        "W": {"desc": "Motif LPeg : mot-clé s, non suivi d'une lettre, chiffre ou _ .", "params": {"s": {"type": "string", "desc": "Mot-clé."}}}
+      }
+    }
+  }
+}

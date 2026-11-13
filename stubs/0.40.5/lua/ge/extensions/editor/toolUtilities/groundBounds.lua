@@ -2,54 +2,52 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/groundBounds.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
+--- Répond aux questions que tout outil de l'éditeur posant une surface sur un contour dessiné au sol doit se poser : qu'est-ce qui est déjà là (routes, jonctions, bâtiments, terrains d'autres outils), que reste-t-il du contour une fois ces obstacles soustraits, et quels côtés sont coupés ou affleurants. Fait aussi l'inverse : publier ce que l'outil occupe. S'appuie sur groundClaims, networkState, polyBool et geom.
 --- Accès : extension `editor_toolUtilities_groundBounds` : `extensions.load("editor_toolUtilities_groundBounds")`, puis la globale `editor_toolUtilities_groundBounds`
 ---@class editor_toolUtilities_groundBounds
 editor_toolUtilities_groundBounds = {}
 
---- The outline minus everything above, as a list of `{ ring, holes, cut, flush }` to surface one at a time.
+--- Soustrait les obstacles du contour et renvoie les morceaux restants à traiter un par un. Chaque morceau est { ring, holes, cut, flush } : cut[i] vrai si le côté i vient d'une soustraction (route ou bâtiment de l'autre côté), flush[i] vrai s'il touche un terrain déjà posé par un autre outil (jonction ouverte).
 ---Source : lua/ge/extensions/editor/toolUtilities/groundBounds.lua:122
----@param ring any
----@param obs any
----@param owner any
----@param site any
+---@param ring table Contour (au moins 3 points) ; sinon renvoie {}.
+---@param obs table[]|nil Obstacles (résultat de obstacles) ; sans obstacle, un seul morceau égal au contour.
+---@param owner any Propriétaire à exclure.
+---@param site any|nil Étiquette de site ignorée.
+---@return table[]  Liste de morceaux { ring, holes, cut, flush }.
 function editor_toolUtilities_groundBounds.clip(ring, obs, owner, site) end
 
---- The biggest of them, for a tool that lays ONE thing on its outline rather than one per piece. A car park cut in two by a
---- road is two car parks, and the second is a second lot to draw -- not something to infer from the first.
+--- Renvoie le plus grand morceau (par aire absolue), pour un outil qui ne pose qu'UNE chose sur son contour.
 ---Source : lua/ge/extensions/editor/toolUtilities/groundBounds.lua:157
----@param areas any
+---@param areas table[]|nil Morceaux issus de clip.
+---@return table|nil  Le plus grand morceau, ou nil.
 function editor_toolUtilities_groundBounds.largest(areas) end
 
---- Everything near this outline that `owner` may not pave: road and junction surfaces, and every claim another ground tool
---- has staked -- a placed building's footprint, a park. `site` is the shelf folder of the site being edited, if it has one:
---- wherever a copy of it already stands, that copy is this outline and not something in its way. `roadMargin` keeps it
---- further off the roads than the default.
+--- Liste ce que owner ne doit pas paver près de ce contour : surfaces de route et jonctions (networkState.surfaces, avec au moins 0.10 m de marge) et revendications des autres outils. Renvoie aussi une seconde liste où les routes sont agrandies de 0.6 m, pour y placer des éléments en retrait.
 ---Source : lua/ge/extensions/editor/toolUtilities/groundBounds.lua:40
----@param ring any
----@param owner any
----@param site any
----@param roadMargin any
+---@param ring table Contour du site (points {x, y}).
+---@param owner any Nom du propriétaire à exclure.
+---@param site any|nil Dossier (étiquette) du site en édition : là où une copie existe déjà, elle est le contour et non un obstacle.
+---@param roadMargin number|nil Marge de route supérieure au défaut.
+---@return table[]  Anneaux obstacles.
+---@return table[]  Mêmes obstacles, routes agrandies de 0.6 m.
 function editor_toolUtilities_groundBounds.obstacles(ring, owner, site, roadMargin) end
 
---- Which clipped piece a point is on, if it is on one at all. What everything standing round the perimeter asks before it
---- stands -- a flight of steps, a lamp on the wall -- and the flights want the piece itself, since the wall is laid one
---- piece at a time and a flight has to open the one it comes through.
+--- Indique sur quel morceau tombe un point (dans l'anneau et hors de ses trous), ou nil s'il n'est sur aucun.
 ---Source : lua/ge/extensions/editor/toolUtilities/groundBounds.lua:169
----@param areas any
----@param x any
----@param y any
+---@param areas table[]|nil Morceaux issus de clip.
+---@param x number X monde.
+---@param y number Y monde.
+---@return integer|nil  Indice du morceau dans areas, ou nil.
 function editor_toolUtilities_groundBounds.pieceAt(areas, x, y) end
 
---- Tell the other ground tools what this one is standing on. No margin: two surfaces meeting should read as one, and a gap
---- would show as a strip of bare terrain the width of whatever was allowed.
+--- Annonce aux autres outils de terrain ce que celui-ci occupe, sans marge (groundClaims.publish avec marge 0), pour que deux surfaces contiguës se lisent comme une seule.
 ---Source : lua/ge/extensions/editor/toolUtilities/groundBounds.lua:184
----@param owner any
----@param rings any
+---@param owner any Nom du propriétaire.
+---@param rings table[] Anneaux occupés.
 function editor_toolUtilities_groundBounds.publish(owner, rings) end
 
---- A fingerprint of everything outside an outline that its shape depends on, so a road or a building moved under one rebuilds
---- it. Asked every frame of every outline, so neither half builds a ring to answer: the roads fingerprint what a scan would
---- read without scanning, and a claim is counted when it is published rather than measured here.
+--- Empreinte de tout ce qui, hors du contour, détermine sa forme (réseau routier et revendications), pour reconstruire quand une route ou un bâtiment bouge. Calculée à chaque frame sans construire d'anneau.
 ---Source : lua/ge/extensions/editor/toolUtilities/groundBounds.lua:189
+---@return number  networkState.sig() + groundClaims.sig() * 104729.
 function editor_toolUtilities_groundBounds.sig() end
 

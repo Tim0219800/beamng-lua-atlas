@@ -4,11 +4,20 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/gameplay/drift/setDriftRacePath")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Drift Race Path » (catégorie repeat_instant, drift). Utilise un chemin de course (pin racePath) pour définir checkpoints, destination et position de départ via gameplay_drift_destination.setRacePath. Pin d'entrée supplémentaire : disableWrongWayAndDist (désactive les messages de mauvais sens et de distance restante). Sorties : pathData (données du chemin pour d'autres nœuds) et waypoints (table).
+
+## Remarques
+
+- Chemin résolu avec mgr:getRelativeAbsolutePath ; sorties inchangées s'il est invalide.
+- Rappelle setRacePath à chaque frame tant que le nœud est atteint.
+
 ## Classe `C`
+
+Classe du nœud.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:work()` |  | 24 |
+| `C:work()` | Appelle setRacePath({filePath, disableWrongWayAndDist}) puis lit getWaypoints() et getPathData(file). | 24 |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftRacePath.lua`.*

@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/ui/router/routes/options.lua",
+  "module": "Routes des options (Vue) : racine « options » (repli vers menu via fallbackTarget) avec infoBar sans info système, et enfant category (screenId pause.options.category, topBar masquée). Les écrans d'options détaillés se trouvent dans menu.options.* et pause.options.",
+  "notes": [
+    "Module de configuration de routes : il n'exporte aucune fonction. routeManager le lit (via l'extension ui_router_routes_<nom>) quand routes.lua l'inclut par `{ include = \"<nom>\" }`.",
+    "Les clés de `Children` forment les segments du nom pointé : « <module>.<enfant> ». `children` (minuscule) dans un nœud désigne ses sous-routes ; `include` y monte un autre module.",
+    "`ui` est hérité par les routes enfants (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause) : un enfant ne le redéfinit que pour ce qui change."
+  ],
+  "fields": {
+    "Root": {
+      "type": "table",
+      "desc": "{screenId = \"options\", title = \"Options\", fallbackTarget = \"menu\", ui = Vue uniquement, infoBar visible sans info système, topBar masquée, uiApps masquées}"
+    },
+    "Children": {
+      "type": "table<string, table>",
+      "desc": "category."
+    },
+    "ModuleName": {
+      "type": "string",
+      "desc": "Nom du module de routes (premier segment du nom pointé)."
+    }
+  }
+}

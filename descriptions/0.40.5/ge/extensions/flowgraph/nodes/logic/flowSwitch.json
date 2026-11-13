@@ -1,0 +1,48 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/logic/flowSwitch.lua",
+  "module": "Noeud flowgraph 'Flow Switch' (categorie logic). Interrupteur avec les entrees flow 'on' et 'off' ; l'etat peut aussi etre bascule en cliquant la case sur le noeud dans l'editeur. La sortie flow vaut le flux d'entree si l'interrupteur est sur ON. L'etat initial est sauvegarde dans le projet (storedOn).",
+  "notes": [
+    "Si storedOn n'a jamais ete defini (nil), _executionStarted met self.on a nil, ce qui equivaut a OFF."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Etat initial : off.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine une case a cocher cliquable ; un clic bascule l'etat et, si l'edition est autorisee, memorise storedOn.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Restaure l'etat sauvegarde (storedOn).",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Restaure l'etat sauvegarde (storedOn).",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde storedOn dans le champ 'on'.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Relit storedOn depuis le champ 'on'.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Si 'on' a du flux, passe a ON ; si 'off' a du flux, passe a OFF (off l'emporte si les deux). Sortie flow = etat ET flux d'entree.",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "any",
+              "desc": "non utilise"
+            }
+          }
+        }
+      }
+    }
+  }
+}

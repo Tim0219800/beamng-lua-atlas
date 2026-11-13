@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/math/increaser.lua",
+  "module": "Noeud flowgraph 'Increaser' (categorie repeat_instant). Garde en memoire le maximum de la valeur d'entree : si 'value' depasse la valeur interne, celle-ci est remplacee. 'clear' remet a data.resetValue (0). Sorties : flow, impulsion 'changed', 'result'.",
+  "notes": [
+    "pinOut.changed n'est remis a false que si 'value' n'est pas nil."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "currentValue=0, resetValue=0.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Remet currentValue a resetValue.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Applique clear, met a jour le maximum, ecrit result ; flow suit l'entree flow.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche la valeur courante.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

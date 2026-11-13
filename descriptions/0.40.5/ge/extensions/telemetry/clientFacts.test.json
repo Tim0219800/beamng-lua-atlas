@@ -1,0 +1,42 @@
+{
+  "path": "lua/ge/extensions/telemetry/clientFacts.test.lua",
+  "module": "Tests unitaires de telemetry/clientFacts, exécutés avec extensions.testFramework_TestManager:runTestFiles(\"clientFacts\"). Chaque fonction testXxx(ctx) reçoit un contexte de test (ctx:assert, ctx:assertEqual). Aucun intérêt direct pour un moddeur, sinon comme exemple d'usage de clientFacts.",
+  "functions": {
+    "testCiProviderDetection": {
+      "desc": "Vérifie que chaque variable d'environnement CI connue (JENKINS_URL, GITLAB_CI, GITHUB_ACTIONS, TF_BUILD, TEAMCITY_VERSION, BUILDKITE, CIRCLECI, TRAVIS, APPVEYOR, CI) donne le bon fournisseur.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte du framework de test."}},
+      "returns": [],
+      "internal": true
+    },
+    "testCiProviderPriority": {
+      "desc": "Vérifie que jenkins l'emporte quand plusieurs variables CI sont définies.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte du framework de test."}},
+      "returns": [],
+      "internal": true
+    },
+    "testFalseCiFlags": {
+      "desc": "Vérifie que les valeurs '0', 'false', 'FALSE' et '' ne déclenchent pas la détection CI.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte du framework de test."}},
+      "returns": [],
+      "internal": true
+    },
+    "testCollectedContextContract": {
+      "desc": "Simule Engine, os.getenv et les globales beamng_*, appelle clientFacts.collect('30') puis vérifie les champs obtenus (plateforme 'pc', fournisseur gitlab, osVersion, deviceType 'desktop', mémoire, GPU, booléens false conservés, VR). Restaure ensuite les globales.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte du framework de test."}},
+      "returns": [],
+      "internal": true
+    },
+    "testDesktopPlatformNormalization": {
+      "desc": "Vérifie normalizePlatform : '' donne 'pc', 'steamdeck' est conservé, nil reste nil.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte du framework de test."}},
+      "returns": [],
+      "internal": true
+    },
+    "testPreferredGpuSelection": {
+      "desc": "Vérifie selectPreferredGPU : premier adaptateur dédié préféré, repli sur le premier, nil pour une liste vide.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte du framework de test."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

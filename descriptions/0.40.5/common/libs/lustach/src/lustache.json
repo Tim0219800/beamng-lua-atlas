@@ -1,0 +1,16 @@
+{
+  "path": "lua/common/libs/lustach/src/lustache.lua",
+  "module": "Bibliothèque tierce lustache (Olivine Labs, licence MIT, version 1.3.1-0) : moteur de gabarits Mustache en Lua. Ce fichier est le point d'entrée : il crée un renderer et expose ses méthodes (render, compile, parse, clear_cache) directement sur la table `lustache`. Les clés `partials` et `tags` peuvent être affectées pour définir les partiels et les délimiteurs.",
+  "usage": "local lustache = require('common/libs/lustach/src/lustache')\nprint(lustache:render('Bonjour {{nom}} !', {nom = 'Tim'}))",
+  "notes": [
+    "Appeler les méthodes avec les deux-points (`lustache:render(...)`) : le renderer détecte et refuse `lustache.render(...)` avec une chaîne comme premier argument.",
+    "Le fichier ajoute une fonction globale `string.split_lustache(str, sep)` (découpe sur les caractères de `sep` pris comme classe de caractères) utilisée par le contexte et le renderer.",
+    "Le module est requis sous le chemin `common/libs/lustach/src/lustache` (le dossier s'appelle `lustach`, sans « e »).",
+    "Seules les clés `partials` et `tags` sont écrivables sur le module (via __newindex) ; les autres écritures sont ignorées."
+  ],
+  "fields": {
+    "name": {"type": "string", "desc": "\"lustache\"."},
+    "version": {"type": "string", "desc": "Version de la bibliothèque : \"1.3.1-0\"."},
+    "renderer": {"type": "table", "desc": "Instance du renderer (voir lustache/renderer) vers laquelle sont redirigées les clés inconnues."}
+  }
+}

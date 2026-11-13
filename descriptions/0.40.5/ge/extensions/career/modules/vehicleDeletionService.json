@@ -1,0 +1,40 @@
+{
+  "path": "lua/ge/extensions/career/modules/vehicleDeletionService.lua",
+  "module": "Service de suppression différée de véhicules en carrière : un véhicule « marqué » est supprimé (avec appel d'un callback) quand il est à plus de 100 m de la caméra et derrière elle, pour qu'il disparaisse sans que le joueur le voie. Les véhicules d'inventaire sont retirés via career_modules_inventory.removeVehicleObject, les autres via obj:delete(). Le hook onUpdate n'est branché que tant qu'au moins un véhicule est marqué.",
+  "notes": [
+    "Bug potentiel : onUpdate appelle obj:getPositionXYZ() sans vérifier que getObjectByID a retourné un objet ; un véhicule supprimé ailleurs sans passer par onVehicleDestroyed provoquerait une erreur.",
+    "onExtensionLoaded retourne false si la carrière n'est pas active, ce qui empêche le chargement du module.",
+    "À chaque démarrage de mission (onAnyMissionChanged, état started), tous les véhicules marqués sont supprimés immédiatement (sans callback)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{'career_career'}."}
+  },
+  "functions": {
+    "flagForDeletion": {
+      "desc": "Marque un véhicule pour suppression différée et active la boucle onUpdate.",
+      "params": {
+        "vehId": {"type": "integer", "desc": "Id du véhicule."},
+        "callback": {"type": "function|nil", "desc": "Appelé juste avant la suppression (défaut nop)."}
+      },
+      "internal": false
+    },
+    "clearFlags": {
+      "desc": "Retire le marquage d'un véhicule (et débranche onUpdate s'il ne reste rien).",
+      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "internal": false
+    },
+    "deleteFlaggedVehicles": {"desc": "Supprime immédiatement tous les véhicules marqués.", "internal": false},
+    "onExtensionLoaded": {"desc": "Hook de chargement : retourne false si la carrière n'est pas active.", "returns": [{"type": "boolean|nil", "desc": "false pour refuser le chargement."}], "internal": true},
+    "onAnyMissionChanged": {
+      "desc": "Hook émis à chaque changement d'état de mission : à « started » en carrière, supprime les véhicules marqués.",
+      "params": {"state": {"type": "string", "desc": "État de la mission."}, "mission": {"type": "table|nil", "desc": "Mission concernée."}},
+      "internal": true
+    },
+    "onClientStartMission": {"desc": "Hook de démarrage de niveau : vide la liste des véhicules marqués.", "internal": true},
+    "onVehicleDestroyed": {
+      "desc": "Hook émis quand un véhicule est détruit : retire son marquage.",
+      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "internal": true
+    }
+  }
+}

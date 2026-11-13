@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/ui/photomode/postFxPersistence.lua",
+  "module": "Sauvegarde et relecture sur disque de l'état des effets de post-traitement du mode photo (profondeur de champ, flou de mouvement, occlusion spéculaire, qualité SSAO/SSR/reflets/miroirs, visibilité des occupants). Le fichier sert à restaurer les réglages d'origine du joueur après une session photo. Les valeurs lues sont normalisées (booléens, nombres, chaînes) et les champs inconnus sont ignorés.",
+  "notes": [
+    "Fichier écrit : settings/photomodePostFxRestoreState.json, au format {version = 1, effects = {...}}. Un ancien fichier sans enveloppe (table d'effets directe) est aussi accepté à la lecture.",
+    "Champs booléens : dofEnabled, dofAutofocus, specularOcclusionEnabled, screenSpaceShadowsEnabled, motionBlurEnabled, occupantsVisible. Champs numériques : dofMaxBlurNear, dofMaxBlurFar, dofFocusRange, dofAperture, dofFalloffSharpness, motionBlurStrength. Champs chaînes : ssaoQualityMode, ssrQualityMode, reflectionQualityMode, mirrorsQualityMode.",
+    "Si un champ DOF (dofEnabled, dofMaxBlurNear, dofMaxBlurFar, dofFocusRange) est présent mais pas dofAutofocus, dofAutofocus est forcé à false.",
+    "Les booléens acceptent true/false, 1/0, \"1\"/\"0\", \"true\"/\"false\" ; toute autre valeur donne false."
+  ],
+  "fields": {
+    "RESTORE_STATE_FILE": {
+      "type": "string",
+      "desc": "Chemin relatif du fichier de sauvegarde : \"settings/photomodePostFxRestoreState.json\"."
+    }
+  },
+  "functions": {
+    "saveRestoreState": {
+      "desc": "Normalise la table d'effets puis l'écrit dans RESTORE_STATE_FILE. Renvoie nil, false si la table n'est pas valide ou ne contient aucun champ connu.",
+      "params": {
+        "effectsState": {"type": "table", "desc": "Table d'effets (champs listés dans les notes) ; les champs inconnus sont ignorés."}
+      },
+      "returns": [
+        {"type": "table|nil", "desc": "État normalisé, ou nil si rien à sauvegarder."},
+        {"type": "boolean", "desc": "true si l'écriture du fichier a réussi (une erreur est journalisée sinon)."}
+      ],
+      "internal": false
+    },
+    "loadRestoreState": {
+      "desc": "Lit le fichier de sauvegarde et renvoie l'état normalisé des effets, ou nil si le fichier est absent, illisible ou sans champ connu.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "État normalisé des effets."}],
+      "internal": false
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "path": "lua/ge/extensions/editor/raceEditor/trackLayout.lua",
+  "module": "Sous-fenêtre « Track Layout » de l'éditeur de course (raceEditor). Elle règle le nombre de tours par défaut (defaultLaps, minimum 1), les nœuds de départ et d'arrivée (startNode, endNode), les positions de départ normale, inverse, lancée et lancée inverse (defaultStartPosition, reverseStartPosition, rollingStartPosition, rollingReverseStartPosition) et l'option « Simplify AI Path » (simplifyAiPath). Elle affiche la classification calculée par path:classify() (Reversible, Rolling Start, Closed, Branching) et dessine dans le monde les libellés « Stop Control » et « Split N ». Changements via editor.history. Le module renvoie un constructeur : require('/lua/ge/extensions/editor/raceEditor/trackLayout')(raceEditor).",
+  "notes": [
+    "Une position de départ nommée STOP_ZONE, SS_stop_control ou TC_out est reconnue comme zone d'arrêt et reçoit le texte « Stop Control » dans le monde.",
+    "Les nœuds marqués useAsSplit (sauf le dernier de la liste triée) sont numérotés « Split 1 », « Split 2 »… dans le monde.",
+    "Un circuit ouvert ne peut pas avoir plus d'un tour ; un circuit fermé n'a pas besoin de End Node (infobulles du code).",
+    "C:selector indexe objects.objects[self.path[fieldName]] : la valeur -1 (« None ») dépend du fait que la collection renvoie un objet « manquant » pour cet indice."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Fenêtre Track Layout (windowDescription = 'Track Layout'). Instanciée avec init(raceEditor).",
+      "functions": {
+        "init": {
+          "desc": "Mémorise raceEditor.",
+          "params": {"raceEditor": {"type": "table", "desc": "Module editor_raceEditor."}},
+          "internal": true
+        },
+        "setPath": {
+          "desc": "Définit le chemin de course édité.",
+          "params": {"path": {"type": "table", "desc": "Objet gameplay/race/path."}}
+        },
+        "selected": {
+          "desc": "Appelé quand l'onglet devient actif ; ne fait rien.",
+          "internal": true
+        },
+        "unselect": {
+          "desc": "Appelé quand l'onglet est quitté ; ne fait rien.",
+          "internal": true
+        },
+        "draw": {
+          "desc": "Appelé à chaque frame : dessine le formulaire, la zone d'arrêt et les splits.",
+          "internal": true
+        },
+        "changeField": {
+          "desc": "Si la nouvelle valeur diffère de path[field], valide une action d'historique qui modifie ce champ du chemin.",
+          "params": {
+            "field": {"type": "string", "desc": "Champ du chemin (defaultLaps, startNode, endNode, defaultStartPosition, simplifyAiPath…)."},
+            "new": {"type": "any", "desc": "Nouvelle valeur (ID d'objet, -1 pour aucun, nombre ou booléen)."}
+          }
+        },
+        "drawGeneralInfo": {
+          "desc": "Dessine le formulaire (tours, nœuds, positions de départ, classification, option de simplification IA) puis la zone d'arrêt et les splits.",
+          "internal": true
+        },
+        "displayClassification": {
+          "desc": "Affiche une ligne « nom » avec icône coche ou croix selon classification[field].",
+          "params": {
+            "classification": {"type": "table", "desc": "Résultat de path:classify()."},
+            "name": {"type": "string", "desc": "Libellé."},
+            "field": {"type": "string", "desc": "Clé testée (reversible, allowRollingStart, closed, branching)."},
+            "tt": {"type": "string|nil", "desc": "Infobulle."}
+          }
+        },
+        "drawStopZone": {
+          "desc": "Cherche une position de départ nommée STOP_ZONE, SS_stop_control ou TC_out et y dessine le texte « Stop Control ».",
+          "internal": true
+        },
+        "drawSplits": {
+          "desc": "Dessine « Split N » sur chaque pathnode useAsSplit (hors dernier nœud de la liste triée).",
+          "internal": true
+        },
+        "selector": {
+          "desc": "Liste déroulante de choix d'un nœud ou d'une position pour un champ du chemin (None = -1), avec libellé dessiné dans le monde et prévisualisation du nom survolé.",
+          "params": {
+            "name": {"type": "string", "desc": "Libellé."},
+            "objects": {"type": "table", "desc": "Collection (objects, sorted) : path.pathnodes ou path.startPositions."},
+            "fieldName": {"type": "string", "desc": "Champ du chemin contenant l'ID choisi."},
+            "clrI": {"type": "ColorI|nil", "desc": "Couleur de fond du texte dans le monde."},
+            "tt": {"type": "string|nil", "desc": "Infobulle."}
+          }
+        }
+      }
+    }
+  }
+}

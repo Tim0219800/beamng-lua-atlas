@@ -4,11 +4,31 @@
 
 **Accès :** extension `gameplay_freeformDelivery_loader` : `extensions.load("gameplay_freeformDelivery_loader")`, puis la globale `gameplay_freeformDelivery_loader`
 
+Charge un fichier de définition de livraison libre (JSON) : lit les données, charge le fichier de sites (sitesFile), fait apparaître les prefabs (prefabFile ou prefabFiles) à l'origine du monde, indexe les véhicules qu'ils contiennent par leur internalName, puis recharge la collision et le navgraph si les prefabs en contiennent. Utilisé par gameplay_freeformDelivery_freeformDelivery.load.
+
+## Remarques
+
+- Champs ajoutés à la table renvoyée : _basePath (chemin du fichier), sites (objet Sites), _prefabIds (ids des prefabs spawnés), _vehicleIndex (internalName -> id de véhicule), _hasColliders. Les champs vehicles et targetAreas sont remplacés par {} s'ils manquent.
+- Les chemins relatifs du fichier sont résolus par gameplay_freeformDelivery_utils.resolvePath.
+- Les prefabs sont spawnés avec canSave = false, ajoutés à MissionGroup, et un systemYield() est fait après chaque prefab (à appeler dans un job/coroutine).
+- be:reloadCollision() est appelé si un TSStatic a un collisionType différent de None ; map.reset() est appelé si un BeamNGWaypoint (sans excludeFromMap) ou un DecalRoad avec drivability > 0 est trouvé. Pendant le chargement du niveau (core_gamestate.loading()), ces rechargements sont seulement loggués.
+- Deux véhicules avec le même internalName : le dernier écrase le précédent (avertissement loggué).
+- Dans findAllObjectsRecursive, le test obj.size est fait sur une méthode d'objet C++ : une erreur de chargement d'un sous-objet fait échouer tout le chargement (retour nil).
+
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `gameplay_freeformDelivery_loader.load(deliveryPath)` |  | 142 |
+| `gameplay_freeformDelivery_loader.load(deliveryPath)` | Charge une livraison : renvoie la table de données du JSON enrichie des sites, prefabs et index de véhicules. Renvoie nil (erreur loggée) si le fichier, les sites ou un prefab ne peuvent pas être chargés. | 142 |
+
+### Détail des paramètres
+
+#### `gameplay_freeformDelivery_loader.load(deliveryPath)`
+
+Charge une livraison : renvoie la table de données du JSON enrichie des sites, prefabs et index de véhicules. Renvoie nil (erreur loggée) si le fichier, les sites ou un prefab ne peuvent pas être chargés.
+
+- `deliveryPath` (*string*) : Chemin du fichier JSON de la livraison.
+- **renvoie** : table|nil Données de la livraison (vehicles, targetAreas, sites, _prefabIds, _vehicleIndex, ...).
 
 ## Appels vers le moteur (C++)
 

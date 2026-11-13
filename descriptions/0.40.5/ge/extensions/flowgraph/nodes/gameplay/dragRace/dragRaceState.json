@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/dragRaceState.lua",
+  "module": "Nœud flowgraph « Drag Race State » (catégorie repeat_instant). Nœud de surveillance pure de l'état de la course de dragster (données de gameplay_drag_dragBridge.getData). Sorties : flow, started, completed, staged, countdownOver (impulsions), isStarted, isCompleted, isStaged (bool), dragType (drag, bracketRace, headsUpRace), context (freeroam, activity…), localPhase (stage, countdown, race, stop).",
+  "notes": ["Sans données de course, toutes les sorties sont remises à faux ou chaîne vide.", "Écrase self.data (la table de données du nœud) par {} au démarrage."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "_executionStarted": {"desc": "Réinitialise les derniers états.", "internal": true},
+        "work": {"desc": "Lit dragBridge.getData(), détecte les transitions started/completed et les changements de phase du pilote jouable."}
+      }
+    }
+  }
+}

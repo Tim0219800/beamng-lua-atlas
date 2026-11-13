@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/util/screenshotCreator/framing/isometric.lua",
+  "module": "Mode de cadrage « Fixed isometric » de screenshotCreator : place la caméra à distance fixe (15 m) du centre du véhicule, dans la direction locale (-1, -1, 0.75) normalisée selon les axes de référence du véhicule, regardant le centre. La position est ensuite recentrée de façon orthogonale (jusqu'à 8 itérations) pour que le projeté des points de cadrage soit centré dans la zone utile de l'image, en tenant compte des marges éventuelles. Il s'enregistre via onScreenshotCreatorCollectFramingModes (id « fixedIsometric », ordre 150).",
+  "notes": [
+    "Résolution par défaut 500x281 et champ de vision par défaut 20 degrés quand le contexte n'en fournit pas.",
+    "Les marges ne sont utilisées que si useFramingMargins (ou useMargins) est vrai.",
+    "Le résultat contient framingData.boundBy = 'fixed distance' et framingData.fit (distance, décalages, position, rotation). frame est un alias de resolve.",
+    "Le mode déclare supportsFixedRotation = false et fixedDistance = 15."
+  ],
+  "functions": {
+    "resolve": {
+      "desc": "Calcule la caméra isométrique fixe pour le véhicule du contexte.",
+      "params": {"context": {"type": "table", "desc": "Contexte : vehicle (obligatoire), configName, resolution, fov/fieldOfView, margin, useFramingMargins"}},
+      "returns": [
+        {"type": "table|nil", "desc": "{pos, rot, name = 'fixed isometric camera', debugData, framingData} ou nil en cas d'erreur"},
+        {"type": "string|nil", "desc": "Message d'erreur si context.vehicle est absent"}
+      ],
+      "internal": false
+    },
+    "frame": {
+      "desc": "Alias de resolve.",
+      "params": {"context": {"type": "table", "desc": "Voir resolve"}},
+      "returns": [{"type": "table|nil", "desc": "Voir resolve"}, {"type": "string|nil", "desc": "Message d'erreur"}],
+      "internal": false
+    },
+    "onScreenshotCreatorCollectFramingModes": {
+      "desc": "Hook de collecte des modes de cadrage : ajoute à la liste le mode {id = 'fixedIsometric', label = 'Fixed isometric', order = 150, fixedDistance, supportsFixedRotation = false, resolve}.",
+      "params": {"modes": {"type": "table[]", "desc": "Liste de modes à compléter"}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

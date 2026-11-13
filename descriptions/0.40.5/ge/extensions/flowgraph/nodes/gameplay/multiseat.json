@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/multiseat.lua",
+  "module": "Nœud flowgraph « Multiseat » (catégorie once_instant, sans pin). Active le réglage 'multiseat' une fois (workOnce) en sauvegardant la valeur précédente, puis la restaure à l'arrêt de l'exécution du graphe.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise self.activated à false.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
+        "_executionStarted": {"desc": "Remet self.activated à false au démarrage du graphe.", "internal": true},
+        "workOnce": {"desc": "Lit le réglage 'multiseat' (défaut false), le mémorise dans self.previous puis met 'multiseat' à true via settings.setValue.", "internal": true},
+        "_executionStopped": {"desc": "Si le nœud avait activé le multiseat, restaure la valeur d'origine du réglage.", "internal": true}
+      }
+    }
+  }
+}

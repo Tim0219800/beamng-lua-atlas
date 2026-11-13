@@ -1,0 +1,82 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/siteView.lua",
+  "module": "Gère la caméra des outils d'éditeur à contour (open space editor, parking lot editor) : quelle étape d'édition est affichée (Footprint ou Design) et laquelle des trois caméras (pan, rotate, free) cadre la sélection. S'appuie sur editor/toolUtilities/toolCamera pour les déplacements. Un seul outil est actif à la fois, donc l'état (étape, mode, dernière sélection) est unique au niveau du module. Le massing editor garde sa propre version, mais offre les mêmes boutons.",
+  "usage": "local sv = require('editor/toolUtilities/siteView')\nsv.init({ ring = function() return myOutlinePoints end, terrainZ = function(x, y) return core_terrain.getTerrainHeight(vec3(x, y, 0)) end, selIndex = function() return selected end, onStep = function(key) end })\nsv.reset()\n-- chaque frame : sv.followSelection(); sv.drive(isDrawing)",
+  "notes": [
+    "init(c) attend une table avec ring() (liste de points avec .x/.y), terrainZ(x, y), selIndex() et onStep(key) ; seuls ring et selIndex sont facultatifs dans le code, terrainZ est appelé sans test dès qu'on cadre.",
+    "Sans contour (ring() nil ou vide), focus() cadre le point (0, 0) avec un rayon de 24 m.",
+    "Le mode 'pan' place la caméra à l'altitude qui fait tenir le contour dans le champ (rayon / tan(fov/2)) plus 5 m de marge ; le mode 'rotate' orbite avec un rayon d'au moins 8 m.",
+    "Le mode 'free' rend la caméra de l'éditeur à l'utilisateur ; re-cliquer dessus ne fait rien."
+  ],
+  "fields": {
+    "steps": {"type": "table", "desc": "Liste des étapes d'édition proposées dans l'interface : { key = 'footprint', label, icon } et { key = 'design', label, icon }."},
+    "modes": {"type": "table", "desc": "Liste des boutons de caméra : { mode = 'pan'|'rotate'|'free', icon, tip }."}
+  },
+  "functions": {
+    "init": {
+      "desc": "Lie le module à l'outil hôte en stockant le contexte. `ring` renvoie le contour à cadrer, `terrainZ` le sol sous un point, `selIndex` la sélection courante (pour recadrer quand elle change) et `onStep` est appelé quand l'étape change.",
+      "params": {"c": {"type": "table", "desc": "Contexte { ring, terrainZ, selIndex, onStep }."}},
+      "returns": []
+    },
+    "focus": {
+      "desc": "Envoie la caméra active (pan ou orbite) vers la sélection, d'après le contour fourni par ring(). Mémorise aussi la sélection courante.",
+      "params": {"m": {"type": "string|nil", "desc": "'pan' ou autre (orbite) ; par défaut le mode courant."}},
+      "returns": []
+    },
+    "activate": {
+      "desc": "Prend la main sur la caméra de l'éditeur (toolCam.takeOver) puis cadre la sélection.",
+      "params": {"m": {"type": "string|nil", "desc": "Mode à activer ; par défaut le mode courant."}},
+      "returns": []
+    },
+    "setMode": {
+      "desc": "Change de caméra. Vers 'free' : rend la caméra à l'éditeur. Depuis 'free' vers un autre mode : reprend la main et cadre ; sinon, recadre simplement.",
+      "params": {"m": {"type": "string", "desc": "'pan', 'rotate' ou 'free'."}},
+      "returns": []
+    },
+    "setStep": {
+      "desc": "Change d'étape d'édition et appelle ctx.onStep(key). 'footprint' impose la caméra pan (les nœuds sont dessinés à plat) et retient si l'utilisateur était en free ; en quittant, restaure free si c'était le cas, sinon repasse en rotate.",
+      "params": {"key": {"type": "string", "desc": "'footprint' ou 'design'."}},
+      "returns": []
+    },
+    "clickMode": {
+      "desc": "Action d'un bouton de caméra : bascule vers ce mode, ou recadre s'il est déjà actif (sauf 'free', où rien ne se passe). C'est ce deuxième appui qui sert de « aller au site ».",
+      "params": {"m": {"type": "string", "desc": "Mode du bouton cliqué."}},
+      "returns": []
+    },
+    "followSelection": {
+      "desc": "Recadre si la sélection (ctx.selIndex()) a changé depuis le dernier cadrage. Sans effet en mode free.",
+      "params": {},
+      "returns": []
+    },
+    "drive": {
+      "desc": "Pilotage par frame de la caméra (toolCam.drive), sauf en mode free.",
+      "params": {"blocked": {"type": "boolean", "desc": "Supprime le mouvement pendant les interactions modales de l'outil (tracé, glissement d'une poignée)."}},
+      "returns": []
+    },
+    "handBack": {
+      "desc": "Rend la caméra de l'éditeur en quittant l'outil (toolCam.handBack(false)).",
+      "params": {},
+      "returns": []
+    },
+    "reset": {
+      "desc": "Remet l'état d'ouverture de l'outil : étape design, mode rotate, puis active et cadre la caméra en orbite.",
+      "params": {},
+      "returns": []
+    },
+    "isShaping": {
+      "desc": "Vrai quand l'étape courante est 'footprint'.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "step == 'footprint'."}]
+    },
+    "getStep": {
+      "desc": "Renvoie l'étape courante.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "'footprint' ou 'design'."}]
+    },
+    "getMode": {
+      "desc": "Renvoie le mode de caméra courant.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "'pan', 'rotate' ou 'free'."}]
+    }
+  }
+}

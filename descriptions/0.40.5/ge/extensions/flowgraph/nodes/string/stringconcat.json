@@ -1,0 +1,58 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/string/stringconcat.lua",
+  "module": "Noeud « Concat » (simple, OBSOLÈTE : « Use the Format String node instead »). Concatène toutes ses entrées (converties par tostring) en une chaîne. Un nouveau pin value<N+1> est ajouté automatiquement quand le dernier est lié et les pins vides en fin de liste sont retirés. Les valeurs nil ou false sont ignorées.",
+  "notes": [
+    "Les valeurs false sont ignorées : les booléens doivent être convertis manuellement (todo du fichier)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Sortie à '', cache d'entrées vide, savePins = true.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Vide le cache d'entrées.",
+          "internal": true
+        },
+        "updateCache": {
+          "desc": "Reconstruit le cache de chaînes depuis les pins d'entrée et indique s'il a changé.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Recalcule la sortie par table.concat(cache) si le cache a changé.",
+          "internal": false
+        },
+        "onLink": {
+          "desc": "Hook : à la création d'un lien, nettoie les pins.",
+          "params": {
+            "link": {
+              "type": "any",
+              "desc": "lien créé"
+            }
+          },
+          "internal": true
+        },
+        "onUnlink": {
+          "desc": "Hook : à la suppression d'un lien, nettoie les pins.",
+          "params": {
+            "link": {
+              "type": "any",
+              "desc": "lien supprimé"
+            }
+          },
+          "internal": true
+        },
+        "cleanupPins": {
+          "desc": "Garde exactement un pin vide en fin de liste (en crée un ou supprime les surplus).",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Vide.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

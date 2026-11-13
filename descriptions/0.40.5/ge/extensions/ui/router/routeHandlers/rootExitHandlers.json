@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/ui/router/routeHandlers/rootExitHandlers.lua",
+  "module": "Gestionnaire de sortie des routes racines (garage / menu).",
+  "functions": {
+    "garageExitHandler": {
+      "desc": "Bascule entre « menu » et « garage » : sans route courante, navigue vers « menu » ; si la route courante est « menu », navigue vers « garage » ; sinon navigue vers « menu ».",
+      "params": {},
+      "returns": [{"type": "boolean|nil", "desc": "true dans les deux premiers cas, nil dans le dernier."}],
+      "internal": false
+    }
+  }
+}

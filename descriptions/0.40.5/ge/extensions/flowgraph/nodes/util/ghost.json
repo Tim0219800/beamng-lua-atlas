@@ -1,0 +1,50 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/ghost.lua",
+  "module": "Nœud caché « GHOST » (catégorie logic, hidden=true). Sert de remplaçant quand un projet flowgraph référence un type de nœud qui n'existe plus : il garde les données d'origine (ghostData) pour ne pas les perdre à la sauvegarde, affiche le type d'origine et marque une erreur « Node ... doesn't exist! ». Ne fait rien à l'exécution.",
+  "notes": [
+    "Le nom affiché est construit avec le motif %a+, il ne garde que le dernier groupe de lettres du type (les chiffres coupent le mot)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Initialise formerNodeType à « NOT GHOST ».",
+          "internal": true
+        },
+        "work": {
+          "desc": "Ne fait rien.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine le type de nœud d'origine et un bouton « Dump ghost data » qui affiche ghostData dans la console.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "Constructeur de nœud de l'éditeur."
+            },
+            "style": {
+              "type": "table",
+              "desc": "Style du nœud."
+            }
+          },
+          "internal": true
+        },
+        "__onSerialize": {
+          "desc": "Renvoie les données d'origine (ghostData) telles quelles pour que le nœud soit resauvegardé à l'identique.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Enregistre l'erreur, mémorise le type d'origine, renomme le nœud « [GHOST]<dernier mot du type> » et garde nodeData dans ghostData.",
+          "params": {
+            "nodeData": {
+              "type": "table",
+              "desc": "Données sauvegardées du nœud d'origine."
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

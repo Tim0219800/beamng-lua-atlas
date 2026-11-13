@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/debug/multiFlow.lua",
+  "module": "Nœud flowgraph « Multi Flow » (type simple, catégorie logic), nœud de test avec quatre entrées flow a, b, c, d. Affiche dans le nœud une case par entrée (vert, jaune, rouge, magenta) cochée si l'entrée a du flux ; si data.logOnWork est vrai, imprime leurs valeurs à chaque exécution.",
+  "notes": ["C.todo du jeu : « Maybe merge this with displayFlow node »."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Met data.logOnWork à faux.", "internal": true},
+        "work": {"desc": "Si data.logOnWork, imprime l'état des quatre entrées."},
+        "drawMiddle": {"desc": "Éditeur : dessine quatre cases cochées selon l'état des pins.", "params": {"builder": {"type": "table", "desc": "constructeur de nœud"}, "style": {"type": "table", "desc": "style"}}, "internal": true}
+      }
+    }
+  }
+}

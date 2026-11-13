@@ -1,0 +1,25 @@
+{
+  "path": "lua/common/libs/luasocket/socket/tp.lua",
+  "module": "Bibliothèque tierce LuaSocket (Diego Nehab) : sous-système commun aux protocoles texte SMTP/FTP (« Telnet-like Protocol »). `connect` ouvre une connexion TCP et renvoie un objet dont les méthodes lisent les réponses du serveur à code numérique à trois chiffres (réponses multilignes comprises) et envoient des commandes. Utilisé par socket.smtp.",
+  "notes": [
+    "L'objet renvoyé par connect expose : check(ok), command(cmd, arg), send(data), receive(pat), source(source, step), sink(snk, pat), getfd, dirty, getcontrol et close.",
+    "`check(ok)` accepte un motif Lua (ex. \"2..\"), une liste de motifs, ou une fonction (code, réponse) ; renvoie le code numérique et le texte, ou nil et la réponse si le code ne correspond pas.",
+    "Bug du code : la méthode `sink` utilise une variable `c` non définie (elle devrait utiliser self.c) ; elle échoue si on l'appelle.",
+    "TIMEOUT par défaut : 60 s."
+  ],
+  "fields": {
+    "TIMEOUT": {"type": "number", "desc": "Délai par défaut des opérations réseau en secondes (60)."}
+  },
+  "functions": {
+    "connect": {
+      "desc": "Crée un socket (create ou socket.tcp), fixe le délai, se connecte et renvoie l'objet de contrôle. En cas d'échec, ferme le socket et renvoie nil et l'erreur.",
+      "params": {
+        "host": {"type": "string", "desc": "Hôte du serveur."},
+        "port": {"type": "integer", "desc": "Port du serveur."},
+        "timeout": {"type": "number|nil", "desc": "Délai en secondes ; défaut TIMEOUT."},
+        "create": {"type": "function|nil", "desc": "Fabrique de socket ; défaut socket.tcp."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Objet de contrôle du protocole, ou nil."}, {"type": "string|nil", "desc": "Message d'erreur."}]
+    }
+  }
+}

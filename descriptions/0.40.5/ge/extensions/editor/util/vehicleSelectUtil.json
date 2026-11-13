@@ -1,0 +1,80 @@
+{
+  "path": "lua/ge/extensions/editor/util/vehicleSelectUtil.lua",
+  "module": "Classe utilitaire imgui de l'éditeur : un sélecteur de véhicule en cascade Type > Modèle > Config, avec en option jusqu'à 3 peintures (paintNameKeys paintName/paintName2/paintName3) et un fichier de config personnalisé (.pc). Le module renvoie un constructeur : `require('editor/util/vehicleSelectUtil')(name, data)`. Utilisé par exemple par le nœud flowgraph imVehicleSelect, multiSpawnManager, trafficManager et le mission editor.",
+  "usage": "local sel = require('editor/util/vehicleSelectUtil')('Mon véhicule')\nsel:setOptions({enablePaints = true, paintLayers = 2})\n-- dans un callback imgui :\nlocal reason = sel:widget() -- 'type' | 'model' | 'config' | 'paintName' | 'customConfig' | nil\nif reason then print(sel.model, sel.config, sel.configPath) end",
+  "notes": [
+    "widget() renvoie la raison du changement (updateReason) ou nil : 'type', 'model', 'config', 'paintName'/'paintName2'/'paintName3' (clé du champ) ou 'customConfig'.",
+    "Résultat lu dans les champs de l'instance : model (clé), config (clé), configPath ('vehicles/<model>/<config>.pc' ou chemin custom), paintName, paintName2, paintName3, vehType, customConfigActive.",
+    "Types autorisés par défaut : Car, Truck, Automation, Trailer, Prop, Utility, Traffic, Unknown, Any ; si allowedTypes n'a qu'un élément, le combo Type est désactivé. Sous-types de config autorisés : PropTraffic, PropParked.",
+    "Si un seul modèle (ou une seule config) est disponible, il est sélectionné automatiquement et le combo est grisé.",
+    "setModelListByField et setConfigListByField sont des stubs vides (marqués TODO) : ils ne font rien.",
+    "fetchData met self.modelName = dumps(Name), donc le nom contient des guillemets tant qu'il est issu de ce chemin.",
+    "Dans la boucle des modèles, si un modèle n'a pas de Name, `label` vaut nil et la concaténation lève une erreur."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Instance du sélecteur. Champs d'options : allowedTypes, allowedSubtypes, modelBlacklist (table clé->true), configBlacklist (model -> {configKey = true}), enableConfigs (true), enablePaints (false), enableCustomConfig (false), paintLayers (3), columnWidth (80 par défaut, multiplié par im.uiscale).",
+      "functions": {
+        "init": {
+          "desc": "Constructeur : crée un id unique, réinitialise sélections et options, puis applique `data` s'il est donné.",
+          "params": {
+            "name": {"type": "string|nil", "desc": "Nom affiché de l'instance ('Vehicle' par défaut)."},
+            "data": {"type": "table|nil", "desc": "Sélection initiale : model, config, customConfigPath, customConfigActive, configPath, paintName(2,3)."}
+          },
+          "internal": true
+        },
+        "setModel": {
+          "desc": "Définit directement le modèle par sa clé ; renseigne vehType et modelName depuis core_vehicles.getModel, ou remet model à nil si inconnu.",
+          "params": {"model": {"type": "string", "desc": "Clé du modèle (nom de dossier vehicles/<model>)."}}
+        },
+        "setConfig": {
+          "desc": "Définit directement la config par sa clé (le modèle doit déjà être défini) ; calcule configName et configPath. Remet config à nil si la config n'existe pas.",
+          "params": {"config": {"type": "string", "desc": "Clé de la config (nom du .pc sans extension)."}}
+        },
+        "setOptions": {
+          "desc": "Copie les options enableConfigs, enablePaints, enableCustomConfig, paintLayers et columnWidth présentes (truthy) dans data vers l'instance.",
+          "params": {"data": {"type": "table", "desc": "Options à appliquer."}}
+        },
+        "resetModel": {"desc": "Efface la liste des modèles et le modèle choisi."},
+        "resetConfig": {"desc": "Efface les configs, la config choisie et la config personnalisée."},
+        "resetPaint": {"desc": "Efface les peintures disponibles et choisies."},
+        "resetSelections": {"desc": "Efface type, modèle, config et peintures."},
+        "resetOptions": {"desc": "Remet les options par défaut (types autorisés, blacklists vides, enableConfigs vrai, enablePaints faux, 3 couches de peinture)."},
+        "setModelListByField": {
+          "desc": "Stub (TODO) : devrait filtrer les modèles par champ/valeur ; ne fait rien.",
+          "params": {
+            "key": {"type": "string", "desc": "Nom du champ."},
+            "value": {"type": "any", "desc": "Valeur recherchée."},
+            "disallow": {"type": "boolean", "desc": "true pour blacklister au lieu de whitelister."}
+          }
+        },
+        "setConfigListByField": {
+          "desc": "Stub (TODO) : devrait filtrer les configs d'un modèle par champ/valeur ; ne fait rien.",
+          "params": {
+            "model": {"type": "string", "desc": "Clé du modèle."},
+            "key": {"type": "string", "desc": "Nom du champ."},
+            "value": {"type": "any", "desc": "Valeur recherchée."},
+            "disallow": {"type": "boolean", "desc": "true pour blacklister au lieu de whitelister."}
+          }
+        },
+        "getPaintPtr": {
+          "desc": "Convertit une peinture (table {r,g,b,a}, ou table avec baseColor en tableau ou en x/y/z/w) en tableau flottant imgui à 4 composantes ; blanc par défaut.",
+          "params": {"paintTbl": {"type": "table|nil", "desc": "Peinture ou baseColor."}},
+          "returns": [{"type": "cdata", "desc": "Tableau float[4] temporaire de l'éditeur (editor.getTempFloatArray4_TableTable)."}]
+        },
+        "fetchData": {
+          "desc": "Charge si nécessaire les listes de modèles (filtrés par type et blacklist, triés par nom), de configs (filtrées par blacklist et sous-types) et de peintures du modèle courant.",
+          "internal": true
+        },
+        "widget": {
+          "desc": "Dessine l'interface (combos Type, Model, Config, Paint 1-3, champ de config personnalisée) et applique les remises à zéro en cascade.",
+          "returns": [{"type": "string|nil", "desc": "Raison du changement : 'type', 'model', 'config', 'paintName', 'paintName2', 'paintName3', 'customConfig', ou nil."}]
+        },
+        "onActivate": {"desc": "Callback d'edit mode vide.", "internal": true},
+        "onDeactivate": {"desc": "Callback d'edit mode vide.", "internal": true}
+      }
+    }
+  }
+}

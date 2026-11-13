@@ -1,0 +1,469 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/loop/rallyLoopManager.lua",
+  "module": "Gestionnaire d'une boucle de rallye (rally loop) : une mission qui enchaîne service de départ, jusqu'à 4 couples liaison/spéciale (stageN_rallyRoadSection / stageN_rallyStage), une liaison de retour et le parc d'assistance. Il construit la séquence de missions à partir des fgVariables de la mission, calcule l'horaire (contrôles horaires TC, lignes de départ SS, arrêts), en tire une liste linéaire d'évènements, tient l'horloge de rallye (epoch), enregistre les pénalités et les cartes de temps dans un rallyEventLog, et fournit les données de flux (getStreamData) pour l'interface. Instancié par l'extension gameplay_rallyLoop avec (missionId, missionDir) ; les nœuds flowgraph du rallye l'appellent pour enregistrer les passages aux contrôles.",
+  "usage": "local mgr = require('gameplay_rally_loop_rallyLoopManager')(missionId, missionDir)\nmgr:setClockPaused(false)\nlocal ev = mgr:getEvents()[mgr:getNextEventIndex()]\nprint(ev.label, ev.time)",
+  "notes": [
+    "Le module renvoie un constructeur ; C:init(missionId, missionDir) est appelé automatiquement. Si la mission a des fgVariables, la séquence et l'horaire sont calculés dans init ; sinon la séquence reste vide.",
+    "Horloge (self.clock) : en secondes dans l'epoch du rallye. Elle est négative avant le départ du rallye (départ = prochaine minute pleine après l'heure de l'environnement + 120 s), vaut 0 au départ du rallye puis croît. Elle démarre en pause (clockPaused = true) et n'est libérée que par onUIStartButtonClicked.",
+    "Heure murale = (rallyStartTimeSecs + clock) modulo 86400. Pour tod.time du moteur, 0 correspond à midi : secondes du jour = ((tod.time*24 + 12) % 24) * 3600.",
+    "Séquence de missions : 'serviceOut', puis pour chaque stage 1 à 4 la liaison puis la spéciale, puis la liaison de retour, puis 'serviceIn'. serviceOut et serviceIn sont des entrées fictives (notActualMission = true).",
+    "Étiquettes : TC0 au premier départ (TC{n-1}B si startingSSNumber > 1), TC{n} pour la liaison avant la spéciale n, TC{n-1}A pour la liaison de retour. Les ssLabel du schedule sont des chaînes de nombre (\"1\", \"2\"…) ; l'étiquette affichée est 'SS' .. ssLabel.",
+    "Types d'évènements (self.events[i].type) : 'tc', 'ss_start', 'ss_stop', 'service_in'. Champs d'un évènement : type, label, spName (nom de la start position du race path), time (epoch, minute alignée, nil pour service_in), pos ({x,y,z}), missionId, missionIndex, canIncurLatePenalty, hideTimecardEntry, eventId, eventGroup, inServicePark, timecardIndex.",
+    "Pénalités enregistrées dans eventLog via addItem(event, clock, 'penalty', data) : penaltyType = false_start, route_recalc, speeding (10 s fixes), test_penalty, ainsi que les pénalités horaires de loop/penalties (getTimingStatus : time_control_early, retard…). Les pénalités 'time_control_early' sont retirées quand rallyEnableEarlyTimeControlPenalties est faux.",
+    "Réglages figés au démarrage de la boucle (initSettings) : rallyEnableFalseStarts, rallyRepairVehicleOnRecovery, rallyEnableEarlyTimeControlPenalties, rallyEnableTraffic (mission.lastUserSettings en priorité, sinon settings globaux) ; rallyShowStageApps est global. isNgrcMode = not repairVehicleOnRecovery.",
+    "Les chronos et temps de spéciale sont en secondes ; distances en km pour distanceKm et totaux ; limite de vitesse du parc : 30 km/h (serviceParkSpeedLimitKph).",
+    "Bug mineur : dans init, UiColors.updateForLoop et rallyClockData.isNgrcMode sont d'abord appelés avec self.isNgrcMode = nil (défini plus bas par initSettings) ; ils sont réappliqués en fin d'init.",
+    "Code mort : validateMissionSequence n'est pas appelé (appel commenté dans buildMissionSequence) ; onRecalculatedRoute est entièrement commenté (le compteur de recalculs n'est donc jamais incrémenté par ce hook) ; dans _processRegularMission, ssLabel est d'abord 'SS'..n puis immédiatement écrasé par tostring(n).",
+    "getNextMissionId incrémente currentMissionIndex même quand la fin de séquence est dépassée (l'index reste au-delà de la dernière entrée, donc getCurrentMissionId renvoie nil).",
+    "updateScheduleData : timeDiffWithEnd utilise nextEvent.time + 59 alors que eventWallClockEnd utilise nextEvent.time + 60 (fin exclusive).",
+    "extractMissionId utilise le motif '%((.+)%)$' : renvoie ce qui est entre les dernières parenthèses finales d'une chaîne « Nom (id) » (glouton), nil pour '<none>' ou une chaîne sans parenthèses.",
+    "Le module appelle guihooks.trigger avec 'Message', 'RallyClockSkipped' (oldTime, newTime, skippedSeconds) et 'RallyGameplayInteract' ({forceShowTimecard} ou {}), et extensions.hook('onVehicleTeleportedToLastRoad', vehId)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance du gestionnaire de boucle. Champs principaux : missionId, missionDir, mission, missionName, fgVariables, missionSequence (liste d'ids), currentMissionIndex (0 = pas démarré), schedule (une entrée par mission de la séquence), events (liste linéaire des évènements), nextEventIndex, clock, clockPaused, environmentStartTimeSecs, rallyStartTimeSecs, scheduleParams, skipParams, eventLog (RallyEventLog), streamData/rallyClockData/scheduleData/timecardData/uiColors (tables réutilisées sur place), roadSectionPenaltyKeeper, speedingDetector, totalSSCount, totalSSDistanceKm, totalRoadSectionDistanceKm, totalDistanceKm.",
+      "functions": {
+        "getServiceParkSpeedLimitKph": {"desc": "Limite de vitesse dans le parc d'assistance (30 km/h).", "returns": [{"type": "number", "desc": "km/h."}]},
+        "getServiceParkSpeedLimitDisplay": {"desc": "Même limite formatée pour l'affichage, en km/h ou mph arrondi à 5 selon le réglage uiUnitLength.", "returns": [{"type": "string", "desc": "Par exemple '30 km/h'."}]},
+        "init": {
+          "desc": "Initialise l'état de la boucle : tables d'UI, heure de départ de l'environnement, horloge en pause, paramètres d'horaire (départ rallye 120 s après la minute pleine, 60 s de TC à la ligne de départ, créneau de 1 min) et de saut. Si la mission fournit des fgVariables, construit la séquence et calcule l'horaire (calculateSchedule(true)), puis lit les réglages.",
+          "params": {
+            "missionId": {"type": "string", "desc": "Id de la mission rallyLoop."},
+            "missionDir": {"type": "string", "desc": "Dossier de la mission."}
+          },
+          "internal": true
+        },
+        "resolveMissionBoolSetting": {
+          "desc": "Lit un réglage booléen en priorité dans mission.lastUserSettings, sinon dans settings.getValue, sinon la valeur par défaut.",
+          "params": {
+            "key": {"type": "string", "desc": "Nom du réglage."},
+            "defaultValue": {"type": "boolean", "desc": "Valeur de repli."}
+          },
+          "returns": [{"type": "boolean", "desc": "Valeur résolue."}]
+        },
+        "resolveGlobalBoolSetting": {
+          "desc": "Lit un réglage booléen global (settings.getValue) ou la valeur par défaut.",
+          "params": {
+            "key": {"type": "string", "desc": "Nom du réglage."},
+            "defaultValue": {"type": "boolean", "desc": "Valeur de repli."}
+          },
+          "returns": [{"type": "boolean", "desc": "Valeur résolue."}]
+        },
+        "isDevTrafficDisabled": {"desc": "Vrai pour une mission de dev dont missionTypeData.devDisableTraffic est vrai.", "returns": [{"type": "boolean", "desc": "true si le trafic est désactivé par la mission de dev."}]},
+        "initSettings": {"desc": "Fige les réglages de la boucle : enableFalseStarts, repairVehicleOnRecovery, earlyTimeControlPenaltiesEnabled, trafficEnabled, showStageApps et isNgrcMode.", "internal": true},
+        "applyStartScreenSettings": {
+          "desc": "Applique les réglages choisis sur l'écran de départ (rallyEnableFalseStarts, rallyRepairVehicleOnRecovery, rallyEnableEarlyTimeControlPenalties), met à jour isNgrcMode, les données d'horloge et les couleurs.",
+          "params": {"values": {"type": "table|nil", "desc": "Table clé -> booléen (ignorée si ce n'est pas une table)."}}
+        },
+        "getRecoveryRepairVehicle": {
+          "desc": "Indique si le véhicule est réparé lors d'une récupération : toujours si rallyRepairVehicleOnRecovery, sinon seulement hors spéciale (mode hardcore/NGRC : pas de réparation en spéciale).",
+          "returns": [{"type": "boolean", "desc": "true si réparation."}]
+        },
+        "getTrafficEnabled": {"desc": "Trafic activé pour la boucle (faux pour une mission de dev qui le désactive).", "returns": [{"type": "boolean", "desc": "true si activé."}]},
+        "getShowStageApps": {"desc": "Réglage rallyShowStageApps (true par défaut).", "returns": [{"type": "boolean", "desc": "true si les apps de spéciale sont affichées."}]},
+        "onSettingsChanged": {"desc": "Hook appelé quand les réglages changent : relit rallyShowStageApps.", "internal": true},
+        "extractMissionId": {
+          "desc": "Extrait l'id de mission d'une valeur « Nom (id) » de fgVariable. Renvoie nil pour nil ou '<none>'.",
+          "params": {"value": {"type": "string|nil", "desc": "Valeur du champ."}},
+          "returns": [{"type": "string|nil", "desc": "Id de mission."}]
+        },
+        "_getExpectedScheduleLabel": {
+          "desc": "Étiquette attendue pour un message de validation : 'ROAD'..(roadSectionCount+1) pour une liaison, 'SS'..nextSSNumber pour une spéciale, nil sinon.",
+          "params": {
+            "missionType": {"type": "string|nil", "desc": "'rallyRoadSection' ou 'rallyStage'."},
+            "nextSSNumber": {"type": "integer|nil", "desc": "Prochain numéro de spéciale."},
+            "roadSectionCount": {"type": "integer|nil", "desc": "Nombre de liaisons déjà traitées."}
+          },
+          "returns": [{"type": "string|nil", "desc": "Étiquette."}],
+          "internal": true
+        },
+        "_getValidationHint": {
+          "desc": "Conseil de correction selon le message d'erreur (mot 'driveline' ou 'race') et le type de mission.",
+          "params": {
+            "missionType": {"type": "string|nil", "desc": "Type de mission."},
+            "errorMessage": {"type": "string|nil", "desc": "Message d'erreur du rallyManager."}
+          },
+          "returns": [{"type": "string|nil", "desc": "Conseil ou nil."}],
+          "internal": true
+        },
+        "_addValidationIssue": {
+          "desc": "Ajoute un problème de validation (blocking = true par défaut) et marque l'horaire invalide (scheduleValid = false).",
+          "params": {"issue": {"type": "table", "desc": "{type, missionId, missionType, label, message, hint, blocking}."}},
+          "internal": true
+        },
+        "buildMissionSequence": {"desc": "Construit missionSequence : 'serviceOut', puis liaison et spéciale de chaque stage 1 à 4 présents, la liaison de retour, puis 'serviceIn'. Remet currentMissionIndex à 0.", "internal": true},
+        "validateMissionSequence": {"desc": "Vérifie que la première mission est serviceOutMission. Non appelée dans cette version (appel commenté).", "returns": [{"type": "boolean", "desc": "true si valide."}], "internal": true},
+        "calculateRallyStartTime": {"desc": "Calcule rallyStartTimeSecs : heure de l'environnement arrondie à la minute supérieure plus currentTimeToRallyStartSecs (120 s).", "returns": [{"type": "number", "desc": "Secondes du jour."}]},
+        "getRallyStartTimeSecs": {"desc": "Heure de départ du rallye en secondes du jour.", "returns": [{"type": "number|nil", "desc": "Secondes."}]},
+        "getRallyStartTimeFormatted": {"desc": "Heure de départ formatée (HH:MM).", "returns": [{"type": "string", "desc": "Texte."}]},
+        "getRallyStartDurationSecs": {"desc": "Durée entre l'heure de l'environnement et le départ du rallye.", "returns": [{"type": "number|nil", "desc": "Secondes."}]},
+        "getRallyPreStartAllocatedDurationSecs": {"desc": "Durée prévue avant le départ (scheduleParams.currentTimeToRallyStartSecs).", "returns": [{"type": "number", "desc": "Secondes."}]},
+        "getSlotSizeMinutes": {"desc": "Taille du créneau de replanification du départ de spéciale (1 minute).", "returns": [{"type": "number", "desc": "Minutes."}]},
+        "getWallClockTimeSecs": {"desc": "Heure murale courante = (rallyStartTimeSecs + clock) % 86400.", "returns": [{"type": "number|nil", "desc": "Secondes du jour, nil si l'horaire n'est pas calculé."}]},
+        "getWallClockDay": {"desc": "Numéro de jour (1, 2…) de l'horloge murale.", "returns": [{"type": "integer|nil", "desc": "Jour."}]},
+        "getWallClockTimeFormatted": {"desc": "Heure murale avec secondes et dixièmes, suivie de « , Day N ».", "returns": [{"type": "string", "desc": "Texte, ou 'N/A'."}]},
+        "getEpochTime": {"desc": "Temps de l'epoch du rallye (négatif avant le départ).", "returns": [{"type": "number", "desc": "Secondes."}]},
+        "getEpochTimeFormatted": {"desc": "Epoch formaté avec signe, par exemple '+0:01:30'.", "returns": [{"type": "string", "desc": "Texte."}]},
+        "setClockPaused": {
+          "desc": "Met l'horloge en pause ou la relance.",
+          "params": {"paused": {"type": "boolean", "desc": "true pour figer."}}
+        },
+        "getClockPaused": {"desc": "Indique si l'horloge est en pause.", "returns": [{"type": "boolean", "desc": "État."}]},
+        "adjustClock": {
+          "desc": "Ajoute des secondes à l'horloge (avance ou recul).",
+          "params": {"seconds": {"type": "number", "desc": "Secondes à ajouter."}}
+        },
+        "getScheduledEventTime": {
+          "desc": "Cherche dans events l'heure planifiée de l'évènement dont spName vaut eventName pour la mission courante.",
+          "params": {"eventName": {"type": "string", "desc": "Nom de la start position (spName)."}},
+          "returns": [{"type": "number|nil", "desc": "Heure en epoch, nil si introuvable."}]
+        },
+        "calculateSchedule": {
+          "desc": "Calcule tout l'horaire : initialise l'état, parcourt la séquence (serviceOut, missions réelles chargées via un RallyManager temporaire, serviceIn), puis construit les évènements et les cartes de temps. Arrête et vide events au premier échec de mission.",
+          "params": {"includeDebugData": {"type": "boolean|nil", "desc": "true pour garder la liste de points de driveline (dessin de debug)."}},
+          "returns": [{"type": "boolean", "desc": "false si une mission n'a pas pu être traitée."}]
+        },
+        "getCurrentMissionId": {"desc": "Id de la mission courante de la séquence.", "returns": [{"type": "string|nil", "desc": "Id, nil si hors séquence."}]},
+        "isInRoadSection": {"desc": "Vrai si l'entrée courante du schedule est une liaison (roadSectionLabel défini).", "returns": [{"type": "boolean", "desc": "État."}]},
+        "isInSpecialStage": {"desc": "Vrai si l'entrée courante est une spéciale chronométrée (ssLabel défini).", "returns": [{"type": "boolean", "desc": "État."}]},
+        "shouldPenalizeSpeeding": {"desc": "Les excès de vitesse sont pénalisés partout sauf en spéciale.", "returns": [{"type": "boolean", "desc": "État."}]},
+        "getRallyLoopMissionId": {"desc": "Id de la mission rallyLoop.", "returns": [{"type": "string", "desc": "Id."}]},
+        "getRallyLoopName": {"desc": "Nom (non traduit) de la mission rallyLoop.", "returns": [{"type": "string|nil", "desc": "Nom."}]},
+        "getRallyLoopMission": {"desc": "Objet mission de la boucle.", "returns": [{"type": "table|nil", "desc": "Mission."}]},
+        "getVoicepackPickForMission": {
+          "desc": "Résout le voicepack à utiliser via voicepack.resolveLoopVoicepackPick selon le réglage rallyVoicepackPick.",
+          "params": {
+            "missionId": {"type": "string", "desc": "Id de la mission."},
+            "missionDir": {"type": "string", "desc": "Dossier de la mission."}
+          },
+          "returns": [{"type": "any", "desc": "Choix de voicepack (déduit du code : valeur renvoyée par voicepack.resolveLoopVoicepackPick)."}]
+        },
+        "getNextMissionId": {
+          "desc": "Passe à la mission suivante de la séquence et renvoie son id. Incrémente toujours l'index, même au-delà de la fin.",
+          "returns": [{"type": "string|nil", "desc": "Id, nil si séquence vide ou terminée."}]
+        },
+        "startNextMission": {
+          "desc": "Lance la mission suivante de la séquence depuis la mission en cours (startFromWithinMission instantané) et lève missionExecutionTransferFlag. Échoue s'il n'y a pas de mission au premier plan.",
+          "returns": [{"type": "boolean", "desc": "true si lancée."}]
+        },
+        "restartRallyLoop": {"desc": "Relance la mission rallyLoop depuis elle-même (instantané) et lève missionExecutionTransferFlag."},
+        "gotoRallyLoopInstant": {"desc": "Identique à restartRallyLoop : redémarre instantanément la mission rallyLoop."},
+        "getSchedule": {"desc": "Table schedule (une entrée par mission de la séquence : tcIn/tcOut/ssStartLine/ssStopControl avec pos, rot, nom, étiquette, heure, speedLimitKph, distanceKm…).", "returns": [{"type": "table|nil", "desc": "Schedule."}]},
+        "getStageLabels": {"desc": "Liste des étiquettes de spéciales ('SS1', 'SS2'…).", "returns": [{"type": "string[]", "desc": "Étiquettes."}]},
+        "isScheduleValid": {"desc": "Vrai tant qu'aucun problème bloquant n'a été trouvé.", "returns": [{"type": "boolean", "desc": "État."}]},
+        "getValidationIssues": {"desc": "Liste des problèmes de validation.", "returns": [{"type": "table[]", "desc": "Problèmes."}]},
+        "hasValidationIssues": {"desc": "Vrai s'il y a au moins un problème de validation.", "returns": [{"type": "boolean", "desc": "État."}]},
+        "getEvents": {"desc": "Liste linéaire des évènements.", "returns": [{"type": "table[]|nil", "desc": "Évènements."}]},
+        "getNextEventIndex": {"desc": "Index (1-based) du prochain évènement à valider.", "returns": [{"type": "integer", "desc": "Index."}]},
+        "getCurrentRacePath": {"desc": "Chemin du race.race.json de la mission courante (nil pour serviceOut/serviceIn).", "returns": [{"type": "string|nil", "desc": "Chemin."}]},
+        "advanceToNextEvent": {"desc": "Passe à l'évènement suivant (nextEventIndex = #events + 1 à la fin)."},
+        "filterTimingResultForSettings": {
+          "desc": "Si les pénalités d'avance sont désactivées, retire les pénalités 'time_control_early' du résultat de timing et recalcule le total.",
+          "params": {"timingResult": {"type": "table|nil", "desc": "Résultat de Penalties.getTimingStatus."}},
+          "returns": [{"type": "table|nil", "desc": "{status, totalPenalty, hasPenalty, penalties}."}]
+        },
+        "recordTimeCardEntry": {
+          "desc": "Enregistre le passage à l'évènement courant. Vérifie que l'évènement appartient à la mission courante et que entryName == spName. Calcule l'écart horaire, journalise les pénalités horaires puis un item 'timecard' (actualTime, timeDiff, timingResult, stageTimeSecs, splits pour ss_stop), force l'affichage de la carte de temps, replanifie la ligne de départ si on arrive à un TC trop près, met à jour la carte puis avance.",
+          "params": {
+            "entryName": {"type": "string", "desc": "Nom de la start position franchie."},
+            "stageTimeSecs": {"type": "number|nil", "desc": "Temps de la spéciale (pour ss_stop)."}
+          },
+          "returns": [{"type": "boolean", "desc": "false si l'enregistrement est refusé."}]
+        },
+        "roundToNextMinute": {
+          "desc": "Arrondit à la minute supérieure (délègue à scheduleUtils).",
+          "params": {"timeSecs": {"type": "number", "desc": "Secondes."}},
+          "returns": [{"type": "number", "desc": "Secondes."}]
+        },
+        "_findNextSSStartEvent": {"desc": "Cherche vers l'avant, à partir de nextEventIndex, le prochain évènement 'ss_start'.", "returns": [{"type": "table|nil", "desc": "Évènement."}, {"type": "integer|nil", "desc": "Index."}], "internal": true},
+        "_findPreviousSSStartEvent": {"desc": "Cherche vers l'arrière le 'ss_start' de la spéciale en cours.", "returns": [{"type": "table|nil", "desc": "Évènement."}, {"type": "integer|nil", "desc": "Index."}], "internal": true},
+        "_findNextTCEvent": {"desc": "Cherche vers l'avant le prochain évènement 'tc'.", "returns": [{"type": "table|nil", "desc": "Évènement."}, {"type": "integer|nil", "desc": "Index."}], "internal": true},
+        "_findPreviousTCEvent": {"desc": "Cherche vers l'arrière le dernier évènement 'tc'.", "returns": [{"type": "table|nil", "desc": "Évènement."}, {"type": "integer|nil", "desc": "Index."}], "internal": true},
+        "_updateSSStartTime": {
+          "desc": "Modifie l'heure du prochain 'ss_start' (marque scheduledTimeWasAdjusted, incrémente rescheduleCount).",
+          "params": {
+            "newTime": {"type": "number", "desc": "Nouvelle heure en epoch."},
+            "onlyIfLater": {"type": "boolean", "desc": "Si true, ne change que si newTime est strictement postérieure."},
+            "reason": {"type": "string", "desc": "Raison (log)."}
+          },
+          "returns": [{"type": "table", "desc": "{success, newTime, oldTime, rescheduleCount} ou {success=false, reason}."}],
+          "internal": true
+        },
+        "calculateStartLineTime": {
+          "desc": "Replanifie la ligne de départ de spéciale d'après l'heure d'arrivée au TC : minute suivante s'il reste au moins 35 s dans la minute, sinon minute pleine après arrivée + 60 s. Ne met à jour que si la nouvelle heure est plus tardive.",
+          "params": {"tcArrivalTime": {"type": "number", "desc": "Heure d'arrivée en epoch."}},
+          "returns": [{"type": "number|nil", "desc": "Heure de départ résultante."}]
+        },
+        "getEventLog": {"desc": "Journal d'évènements (RallyEventLog).", "returns": [{"type": "table", "desc": "Journal."}]},
+        "getTotalSSDistanceKm": {"desc": "Distance totale des spéciales en km.", "returns": [{"type": "number", "desc": "km."}]},
+        "getTotalRoadSectionDistanceKm": {"desc": "Distance totale des liaisons en km.", "returns": [{"type": "number", "desc": "km."}]},
+        "getTotalDistanceKm": {"desc": "Distance totale en km.", "returns": [{"type": "number", "desc": "km."}]},
+        "getTotalTime": {"desc": "Temps total (spéciales + pénalités) du journal.", "returns": [{"type": "number", "desc": "Secondes."}]},
+        "getTotalPenalty": {"desc": "Pénalités totales du journal.", "returns": [{"type": "number", "desc": "Secondes."}]},
+        "getTimeOfDay": {"desc": "Heure du jour de l'environnement ; en repli {time = 0.92} (heure de départ par défaut pour l'Italie) si core_environment ne renvoie rien.", "returns": [{"type": "table|nil", "desc": "Table tod."}]},
+        "formatTimeFromSeconds": {
+          "desc": "Formate des secondes du jour selon le format 24 h (USE_24H_FORMAT = true) ou 12 h.",
+          "params": {
+            "timeSecs": {"type": "number", "desc": "Secondes du jour."},
+            "includeSeconds": {"type": "boolean|nil", "desc": "Inclure les secondes."},
+            "includeTenths": {"type": "boolean|nil", "desc": "Inclure les dixièmes."}
+          },
+          "returns": [{"type": "table", "desc": "{time = 'HH:MM', ampm = 'AM'|'PM'|nil}."}]
+        },
+        "formatTimeFromSecondsString": {
+          "desc": "Comme formatTimeFromSeconds mais renvoie une chaîne (avec AM/PM si 12 h).",
+          "params": {
+            "timeSecs": {"type": "number", "desc": "Secondes du jour."},
+            "includeSeconds": {"type": "boolean|nil", "desc": "Inclure les secondes."},
+            "includeTenths": {"type": "boolean|nil", "desc": "Inclure les dixièmes."}
+          },
+          "returns": [{"type": "string", "desc": "Texte."}]
+        },
+        "formatDuration": {
+          "desc": "Formate une durée en M:SS (valeur absolue).",
+          "params": {"seconds": {"type": "number|nil", "desc": "Secondes."}},
+          "returns": [{"type": "string|nil", "desc": "Texte."}]
+        },
+        "formatStageTime": {
+          "desc": "Formate un temps de spéciale arrondi au dixième : S.T, M:SS.T ou H:MM:SS.T selon la durée.",
+          "params": {"seconds": {"type": "number|nil", "desc": "Secondes."}},
+          "returns": [{"type": "string|nil", "desc": "Texte."}]
+        },
+        "getTimeOfDayFormatted": {"desc": "Heure du jour de l'environnement formatée (avec secondes).", "returns": [{"type": "string", "desc": "Texte, ou 'N/A'."}]},
+        "epochToWallClock": {
+          "desc": "Convertit un temps d'epoch en secondes du jour absolues (epoch + rallyStartTimeSecs, sans modulo).",
+          "params": {"epochTime": {"type": "number|nil", "desc": "Epoch."}},
+          "returns": [{"type": "number|nil", "desc": "Secondes."}]
+        },
+        "_calculateRoadSectionTimes": {
+          "desc": "Calcule les heures d'une liaison : TC_in = heure courante, TC_out = minute supérieure de (heure courante + temps alloué).",
+          "params": {
+            "tcInPos": {"type": "vec3|nil", "desc": "Position TC_in."},
+            "tcOutPos": {"type": "vec3|nil", "desc": "Position TC_out."},
+            "currentScheduleTimeSecs": {"type": "number", "desc": "Heure courante de l'horaire."},
+            "timeAllocationSecs": {"type": "number|nil", "desc": "Temps alloué en secondes."}
+          },
+          "returns": [
+            {"type": "number|nil", "desc": "tcInTime."},
+            {"type": "number|nil", "desc": "tcOutTime."},
+            {"type": "number|nil", "desc": "Durée de la section."},
+            {"type": "number", "desc": "Heure courante mise à jour."}
+          ],
+          "internal": true
+        },
+        "_calculateStageTimes": {
+          "desc": "Calcule les heures d'une spéciale : ligne de départ = minute supérieure de (heure courante + 60 s), arrêt = minute supérieure de (départ + temps alloué).",
+          "params": {
+            "ssStartLinePos": {"type": "vec3|nil", "desc": "Position de la ligne de départ."},
+            "ssStopControlPos": {"type": "vec3|nil", "desc": "Position du contrôle d'arrêt."},
+            "currentScheduleTimeSecs": {"type": "number", "desc": "Heure courante."},
+            "timeAllocationSecs": {"type": "number|nil", "desc": "Temps alloué."}
+          },
+          "returns": [
+            {"type": "number|nil", "desc": "Heure de la ligne de départ."},
+            {"type": "number|nil", "desc": "Heure du contrôle d'arrêt."},
+            {"type": "number|nil", "desc": "Durée de transition."},
+            {"type": "number|nil", "desc": "Durée de la section."},
+            {"type": "number", "desc": "Heure courante mise à jour."}
+          ],
+          "internal": true
+        },
+        "_calculateRoadSectionLabels": {
+          "desc": "Détermine les étiquettes TC_in et TC_out d'une liaison : TC_in reprend le dernier TC pour la première liaison ou la liaison de retour ; TC_out = 'TC'..nextSSNumber, ou 'TC'..(nextSSNumber-1)..'A' pour la liaison de retour.",
+          "params": {
+            "roadSectionCount": {"type": "integer", "desc": "Rang de la liaison."},
+            "nextSSNumber": {"type": "integer", "desc": "Prochain numéro de spéciale."},
+            "isServiceInRoadSection": {"type": "boolean", "desc": "true pour la liaison de retour."},
+            "lastTCLabel": {"type": "string|nil", "desc": "Dernier TC attribué."},
+            "tcInPos": {"type": "vec3|nil", "desc": "Position TC_in."},
+            "tcOutPos": {"type": "vec3|nil", "desc": "Position TC_out."}
+          },
+          "returns": [
+            {"type": "string|nil", "desc": "tcInLabel."},
+            {"type": "string|nil", "desc": "tcOutLabel."},
+            {"type": "string|nil", "desc": "Dernier TC mis à jour."}
+          ],
+          "internal": true
+        },
+        "_addServiceOutToSchedule": {
+          "desc": "Ajoute l'entrée serviceOut au schedule (TC0, ou TC{n-1}B si on continue un rallye) et renvoie son étiquette.",
+          "params": {
+            "currentScheduleTimeSecs": {"type": "number", "desc": "Heure courante."},
+            "startingSSNumber": {"type": "integer", "desc": "Numéro de la première spéciale."}
+          },
+          "returns": [{"type": "string", "desc": "Étiquette TC."}],
+          "internal": true
+        },
+        "_addServiceInToSchedule": {"desc": "Ajoute l'entrée serviceIn (position du stall serviceStallPos, sans heure ni TC).", "internal": true},
+        "_processRegularMission": {
+          "desc": "Charge une mission de spéciale ou de liaison via un RallyManager temporaire (distance, temps alloué, limite de vitesse, positions TC/SS), détermine son type, calcule ses étiquettes et heures, ajoute l'entrée au schedule. En cas d'échec, ajoute un problème de validation (scheduleLoadFailed ou scheduleMissingStageStartPositions).",
+          "params": {
+            "missionId": {"type": "string", "desc": "Id de la mission."},
+            "currentScheduleTimeSecs": {"type": "number", "desc": "Heure courante."},
+            "nextSSNumber": {"type": "integer", "desc": "Prochain numéro de spéciale."},
+            "roadSectionCount": {"type": "integer", "desc": "Nombre de liaisons déjà traitées."},
+            "lastTCLabel": {"type": "string|nil", "desc": "Dernier TC."},
+            "serviceInRoadSectionId": {"type": "string|nil", "desc": "Id de la liaison de retour."},
+            "includeDebugData": {"type": "boolean", "desc": "Garder les points de driveline."}
+          },
+          "returns": [{"type": "table", "desc": "{currentScheduleTimeSecs, nextSSNumber, roadSectionCount, lastTCLabel, success, isStage}."}],
+          "internal": true
+        },
+        "_initScheduleCalculation": {"desc": "Réinitialise schedule, events, validation, totaux, calcule l'heure de départ du rallye, initialise l'horloge (négative) et crée le roadSectionPenaltyKeeper et le speedingDetector.", "returns": [{"type": "table", "desc": "État initial du calcul (returnRoadSectionId, startingSSNumber, nextSSNumber, roadSectionCount, lastTCLabel, rallyStartTimeSecs, currentScheduleTimeSecs)."}], "internal": true},
+        "_postProcessSchedule": {"desc": "Définit la position de déclenchement du serviceOut (TC_in de la première liaison), construit les évènements et les données de carte de temps.", "internal": true},
+        "_buildEventsFromSchedule": {"desc": "Construit la liste events : un TC pour serviceOut, un 'service_in', et pour chaque spéciale 'ss_start' + 'ss_stop', pour chaque liaison un 'tc' (TC_out). Place nextEventIndex sur le premier évènement avec heure.", "internal": true},
+        "initTimecardData": {"desc": "Construit une fois la structure timecardData (une entrée par TC, plus une entrée de temps par spéciale), avec groupes 'group-N'.", "internal": true},
+        "updateTimecardEntry": {
+          "desc": "Met à jour l'entrée de carte de temps d'un évènement (heure enregistrée, statut early/late/on-time, temps de spéciale) d'après le journal.",
+          "params": {"eventIndex": {"type": "integer", "desc": "Index dans events."}},
+          "internal": true
+        },
+        "updateScheduleData": {"desc": "Met à jour sur place scheduleData pour le prochain évènement : étiquette, type, heures de la minute prévue, écart (timeDiff négatif = en avance), statut et pénalité courants, limite de vitesse, parc d'assistance, isSpeeding.", "internal": true},
+        "getRallyManager": {"desc": "RallyManager de gameplay_rally (mis en cache) ; nil si l'extension gameplay_rally n'est pas chargée.", "returns": [{"type": "table|nil", "desc": "RallyManager."}]},
+        "getUse24hFormat": {"desc": "Format 24 h (constante USE_24H_FORMAT = true).", "returns": [{"type": "boolean", "desc": "true."}]},
+        "getWallClockTimeTable": {"desc": "Heure murale avec secondes sous forme de table {time, ampm}.", "returns": [{"type": "table|nil", "desc": "Table."}]},
+        "updateRallyClockData": {"desc": "Met à jour sur place rallyClockData : heure, jour, temps total, drapeaux de saut, pénalités d'avance activées.", "internal": true},
+        "activateRallyModeInteractActionMap": {
+          "desc": "Active (pushActionMap) ou désactive (popActionMap) la carte d'actions 'RallyModeInteract'.",
+          "params": {"enabled": {"type": "boolean|nil", "desc": "true pour activer."}}
+        },
+        "onUpdate": {
+          "desc": "Appelé à chaque frame : avance l'horloge de dtSim si elle n'est pas en pause, évalue le saut, active la carte d'actions si le saut est possible, met à jour le roadSectionPenaltyKeeper et le speedingDetector (hors spéciale, avec limite ; mode strict pour serviceIn et serviceOut).",
+          "params": {
+            "dtReal": {"type": "number", "desc": "Temps réel."},
+            "dtSim": {"type": "number", "desc": "Temps de simulation."},
+            "dtRaw": {"type": "number", "desc": "Temps brut."}
+          },
+          "internal": true
+        },
+        "onGuiUpdate": {
+          "desc": "Appelé par la boucle GUI ; ne fait rien (instrumentation du profileur seulement).",
+          "params": {
+            "dtReal": {"type": "number", "desc": "Temps réel."},
+            "dtSim": {"type": "number", "desc": "Temps de simulation."},
+            "dtRaw": {"type": "number", "desc": "Temps brut."}
+          },
+          "internal": true
+        },
+        "evaluateSkip": {"desc": "Évalue si le saut d'horloge est possible : prochain évènement 'tc', vitesse < 30 km/h (hystérésis de 0.5 m/s) et distance du joueur au TC entre 5 m et 50 m. Avec les pénalités d'avance, autorise le saut manuel ; sans, saute automatiquement.", "internal": true},
+        "setCanSkipTimeControls": {
+          "desc": "Fixe les deux drapeaux de saut de contrôle horaire.",
+          "params": {
+            "canSkip": {"type": "boolean", "desc": "Saut manuel possible maintenant."},
+            "isTimeControlSkipAvailable": {"type": "boolean", "desc": "Saut disponible (affichage)."}
+          }
+        },
+        "isTimeControlSkipAvailable": {"desc": "Drapeau de saut disponible.", "returns": [{"type": "boolean", "desc": "État."}]},
+        "canSkipTimeControls": {"desc": "Drapeau de saut manuel possible.", "returns": [{"type": "boolean", "desc": "État."}]},
+        "canSkip": {"desc": "Vrai si un saut de contrôle horaire ou de compte à rebours est possible.", "returns": [{"type": "boolean", "desc": "État."}]},
+        "skipToNextEvent": {
+          "desc": "Avance l'horloge jusqu'à 1 s avant le prochain TC et notifie l'UI (RallyClockSkipped). Refuse si le prochain évènement n'est pas un TC ou si la cible n'est pas dans le futur.",
+          "returns": [{"type": "boolean", "desc": "true si l'horloge a été avancée."}]
+        },
+        "skipLiaisonForTesting": {
+          "desc": "Outil de test : téléporte le véhicule à distanceBefore m (50 par défaut) avant le TC_out de la liaison en cours, resynchronise le rallyManager et règle l'horloge 1 s avant l'heure du TC_out.",
+          "params": {"options": {"type": "table|nil", "desc": "{distanceBefore = 50, resetVehicle = true}."}},
+          "returns": [
+            {"type": "boolean", "desc": "true si réussi."},
+            {"type": "string|nil", "desc": "Raison de l'échec."}
+          ]
+        },
+        "onRallyModeInteract": {"desc": "Hook de l'action d'interaction : saute au prochain évènement si possible, sinon déclenche l'évènement UI RallyGameplayInteract."},
+        "drawDebug": {
+          "desc": "Dessine en debug les épingles, positions TC/SS et éventuellement le tracé et les étiquettes de chaque mission du schedule (rouge pour les liaisons, bleu pour les spéciales, gris pour les services).",
+          "params": {
+            "zOnTop": {"type": "boolean|nil", "desc": "Dessiner au premier plan."},
+            "drawRoute": {"type": "boolean|nil", "desc": "Dessiner les formes (true par défaut)."},
+            "drawLabels": {"type": "boolean|nil", "desc": "Dessiner les textes (false par défaut)."}
+          }
+        },
+        "setupForNewMission": {"desc": "Oublie le rallyManager mis en cache."},
+        "getMissionExecutionTransferFlag": {"desc": "Drapeau indiquant que l'exécution est transférée à une autre mission.", "returns": [{"type": "boolean", "desc": "État."}]},
+        "setMissionExecutionTransferFlag": {
+          "desc": "Fixe le drapeau de transfert d'exécution.",
+          "params": {"val": {"type": "boolean", "desc": "Valeur."}}
+        },
+        "getDrawFlag": {
+          "desc": "Lit un drapeau de dessin (par exemple showDebugInfo).",
+          "params": {"flagName": {"type": "string", "desc": "Nom du drapeau."}},
+          "returns": [{"type": "boolean", "desc": "Valeur (false par défaut)."}]
+        },
+        "setDrawFlag": {
+          "desc": "Fixe un drapeau de dessin.",
+          "params": {
+            "flagName": {"type": "string", "desc": "Nom du drapeau."},
+            "value": {"type": "boolean", "desc": "Valeur."}
+          }
+        },
+        "getEnvironmentStartTimeFormatted": {"desc": "Heure de l'environnement au démarrage, formatée.", "returns": [{"type": "string", "desc": "Texte, ou 'N/A'."}]},
+        "onRallyDataUpdated": {
+          "desc": "Reçoit les données du rallyManager ou des nœuds (activeState, vehicleProximity avec distances arrondies au centimètre, countdownData) et les mémorise pour le flux UI.",
+          "params": {"data": {"type": "table|nil", "desc": "Paquet de données."}}
+        },
+        "getStreamData": {
+          "desc": "Met à jour sur place et renvoie la table de flux envoyée à l'UI : activeState (testActiveState en mode test), rallyClock, stageData (seulement en spéciale, avec label et unité km), vehicleProximity, countdownData, scheduleData, timecardData, penaltyData (résumé des pénalités), showStageApps, missionName traduit, uiColors.",
+          "returns": [{"type": "table", "desc": "Données de flux."}]
+        },
+        "setCountdownCanSkip": {
+          "desc": "Mémorise que le compte à rebours peut être sauté (mis à jour par le nœud de compte à rebours).",
+          "params": {"canSkip": {"type": "boolean|nil", "desc": "État."}}
+        },
+        "canSkipCountdown": {"desc": "Vrai si le compte à rebours peut être sauté.", "returns": [{"type": "boolean", "desc": "État."}]},
+        "rescheduleNextSSStart": {
+          "desc": "Repousse le prochain 'ss_start' au créneau suivant (slotSizeMinutes, arrondi à la minute) quand le véhicule n'est pas en position à -10 s. Replanifie toujours.",
+          "returns": [{"type": "table", "desc": "Résultat de _updateSSStartTime."}]
+        },
+        "getSSRescheduleCount": {"desc": "Nombre de replanifications du prochain 'ss_start'.", "returns": [{"type": "integer", "desc": "Compteur."}]},
+        "recordFalseStartPenalty": {
+          "desc": "Enregistre une pénalité de faux départ pour la prochaine spéciale : compte les faux départs déjà journalisés pour l'évènement et utilise Penalties.calculateFalseStartPenalty(n).",
+          "returns": [{"type": "boolean", "desc": "false s'il n'y a pas de ss_start à venir."}]
+        },
+        "recordRouteRecalcPenalty": {
+          "desc": "Enregistre une pénalité de recalcul d'itinéraire (penaltyType 'route_recalc') sur le prochain TC et affiche un message « Route penalty recorded ».",
+          "params": {"penaltyData": {"type": "table", "desc": "{amount, data = {violationNumber, recalcCount}} (produit par roadSectionPenaltyKeeper)."}},
+          "returns": [{"type": "boolean", "desc": "false s'il n'y a pas de TC à venir."}]
+        },
+        "recordSpeedingPenalty": {
+          "desc": "Enregistre une pénalité d'excès de vitesse fixe de 10 s sur le prochain évènement 'tc' ou 'service_in'.",
+          "params": {"speedingData": {"type": "table", "desc": "{speedOver, speedLimit, strictMode, …} produit par speedingDetector."}},
+          "returns": [{"type": "boolean", "desc": "false s'il n'y a pas d'évènement éligible."}]
+        },
+        "recordTestPenalty": {
+          "desc": "Outil de test : enregistre une pénalité 'test_penalty' (10 s par défaut) sur l'évènement courant et affiche un message.",
+          "params": {"amount": {"type": "number|nil", "desc": "Secondes (entier > 0)."}},
+          "returns": [{"type": "boolean", "desc": "false si montant <= 0 ou aucun évènement."}]
+        },
+        "getServiceOutTCPos": {"desc": "Position {x,y,z} du déclencheur serviceOut (TC_in de la première liaison).", "returns": [{"type": "number[]|nil", "desc": "Position."}]},
+        "getServiceOutTCRot": {"desc": "Rotation {x,y,z,w} du déclencheur serviceOut.", "returns": [{"type": "number[]|nil", "desc": "Quaternion."}]},
+        "onUIStartButtonClicked": {"desc": "Appelé quand le joueur clique sur Démarrer : applique les réglages de l'écran de départ, relance l'horloge, active le bouton restartMission de core_recoveryPrompt et dégèle le véhicule."},
+        "onRecalculatedRoute": {
+          "desc": "Hook de recalcul d'itinéraire ; actuellement sans effet (code commenté).",
+          "params": {"source": {"type": "any", "desc": "Source du recalcul."}},
+          "internal": true
+        },
+        "onCreatedRallyGroundMarkerRoute": {"desc": "Hook appelé à la création de la route de marqueurs au sol : remet à zéro le roadSectionPenaltyKeeper.", "internal": true},
+        "trackRecovery": {
+          "desc": "Enregistre une récupération ('recovery') ou un retournement ('flip') : avance l'horloge de RecoveryClockAdvance.getSeconds(type, enSpéciale), avance aussi l'heure du jour (RallyLoopTime.advancePlayingTime), notifie l'UI et journalise l'item avec la position du joueur.",
+          "params": {"recoveryType": {"type": "string", "desc": "'recovery' ou 'flip'."}}
+        },
+        "onRallyRouteRecoveryComplete": {
+          "desc": "Hook de fin de récupération de route : mémorise data dans lastRouteRecoveryData et log.",
+          "params": {"data": {"type": "table|nil", "desc": "{vehId, repairVehicle}."}},
+          "internal": true
+        },
+        "applyTrafficExclusion": {"desc": "Applique l'exclusion de trafic de la boucle (TrafficExclusion.applyForRallyLoop)."},
+        "clearTrafficExclusion": {"desc": "Supprime l'exclusion de trafic (TrafficExclusion.clearTrafficExclusion)."},
+        "setTestMode": {
+          "desc": "Active ou désactive le mode test ; en le désactivant, remet currentActiveState à inactif.",
+          "params": {"enabled": {"type": "boolean|nil", "desc": "État."}}
+        },
+        "getTestMode": {"desc": "Mode test actif.", "returns": [{"type": "boolean", "desc": "État."}]},
+        "getEnableFalseStarts": {"desc": "Pénalités de faux départ activées.", "returns": [{"type": "boolean", "desc": "État."}]},
+        "setTestActiveState": {
+          "desc": "Fixe l'état actif forcé en mode test (et currentActiveState si le mode test est actif).",
+          "params": {"state": {"type": "any", "desc": "Valeur RallyUtil.activeState_*."}}
+        }
+      }
+    }
+  }
+}

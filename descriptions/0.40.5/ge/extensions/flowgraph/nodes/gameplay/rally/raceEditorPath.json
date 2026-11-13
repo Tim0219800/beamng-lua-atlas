@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/raceEditorPath.lua",
+  "module": "Nœud flowgraph « Rally Mode Race Editor Path » (catégorie once_instant, tag rally). Renvoie le nom de fichier de course à utiliser dans la pin fname : 'race.race.json' (source « Mission ») si un identifiant de mission du Mission Manager est détecté, sinon le fichier ouvert dans editor_raceEditor (source « Editor ») s'il n'est pas un fichier vierge (/gameplay/races/new.path.json ou NewRace.race.json). Dans l'éditeur, affiche la source et le fichier.",
+  "notes": ["Si editor_raceEditor existe mais que le fichier ouvert est vierge, loadCurrentRaceFileState ne renvoie rien (nil) ; fname est alors nil."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "drawMiddle": {"desc": "Affiche « Source: … » dans le corps du nœud.", "params": {"builder": {"type": "table", "desc": "Constructeur de nœud imgui."}, "style": {"type": "table", "desc": "Style."}}, "internal": true},
+        "drawCustomProperties": {"desc": "Affiche le fichier de course et sa source dans le panneau de propriétés.", "internal": true},
+        "workOnce": {"desc": "Détermine le fichier de course, le logge (niveau D) et l'écrit dans la pin fname.", "internal": true}
+      }
+    }
+  }
+}

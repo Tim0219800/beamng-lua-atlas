@@ -4,19 +4,36 @@
 
 **Accès :** extension `editor_lightClassConverter` : `extensions.load("editor_lightClassConverter")`, puis la globale `editor_lightClassConverter`
 
+Ajoute un bouton « Convert To Spot Light / Point Light » en haut de l'inspecteur quand la sélection ne contient que des PointLight ou que des SpotLight. La conversion remplace l'objet sur place en gardant l'id SimObject, le nom, le groupe parent, la transformation et les champs communs ; c'est une seule étape d'undo réversible (restauration par la sérialisation d'origine).
+
+## Remarques
+
+- Le bouton n'apparaît pas si la sélection est mixte ou contient un autre type ; si un objet est verrouillé (isLocked), un message jaune remplace le bouton.
+- Rayon : « radius » (PointLight) et « range » (SpotLight) sont mappés explicitement, sinon la lumière reprend la valeur par défaut et perd ses ombres.
+- intensity et brightness ne sont pas copiés bruts (unités différentes : lumens/candelas) ; brightness est réappliqué en dernier pour éviter une dérive à chaque conversion.
+- Émet le hook onEditorObjectAdded(id) après chaque conversion ou undo.
+
 **Dépendances (chargées avant) :** `editor_inspector`
 
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `editor_lightClassConverter.onEditorInspectorHeaderGui(inspectorInfo)` | rendered at the top of the object inspector window (see the<br> "onEditorInspectorHeaderGui" hook fired by editor_inspector) *(hook)* | 195 |
+| `editor_lightClassConverter.onEditorInspectorHeaderGui(inspectorInfo)` | Dessine le bouton de conversion en haut de la fenêtre d'inspecteur (hook émis par editor_inspector). Utilise la sélection verrouillée de l'instance si elle existe, sinon editor.selection.object. *(interne)* *(hook)* | 195 |
+
+### Détail des paramètres
+
+#### `editor_lightClassConverter.onEditorInspectorHeaderGui(inspectorInfo)`
+
+Dessine le bouton de conversion en haut de la fenêtre d'inspecteur (hook émis par editor_inspector). Utilise la sélection verrouillée de l'instance si elle existe, sinon editor.selection.object.
+
+- `inspectorInfo` (*table|nil*) : Instance d'inspecteur ; son champ selection.object est utilisé s'il existe.
 
 ## Champs
 
 | Champ | Type | Description |
 |---|---|---|
-| `dependencies` | table | Depend on the inspector so this loads after it and the header gui hook + the<br> object/history apis we use are guaranteed to be available. |
+| `dependencies` | table<integer, string> | {"editor_inspector"} : chargé après l'inspecteur pour disposer du hook de header et des API. |
 
 ## Hooks émis
 

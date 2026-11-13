@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/colors.lua",
+  "module": "Nœud « Set Vehicle Colors » (catégorie `repeat_instant`, tags colors). Change les trois peintures du véhicule : `color1` (principale, `obj.color`), `color2` (`colorPalette0`), `color3` (`colorPalette1`). Chaque pin `color` est une table de 8 nombres : les 4 premiers = couleur de base (r,g,b,a), les 4 suivants = données métalliques passées à `createVehiclePaint`. Finit par `obj:setMetallicPaintData`. Pin `vehId` : si absent, véhicule joueur (`be:getPlayerVehicleID(0)`).",
+  "notes": [
+    "Appelé à chaque frame tant que le flux est actif.",
+    "Pas de test sur `obj` nil.",
+    "La couleur est convertie en linéaire (`asLinear4F`) avant d'être posée."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "postInit": {
+          "desc": "Marque les trois pins couleur avec `colorSetup = {vehicleColor = true}` (sélecteur de peinture véhicule dans l'éditeur).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Crée une peinture par pin couleur non nil, l'applique à l'objet véhicule et envoie la liste des peintures avec `setMetallicPaintData`.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

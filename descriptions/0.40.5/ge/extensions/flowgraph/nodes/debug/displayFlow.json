@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/debug/displayFlow.lua",
+  "module": "Nœud flowgraph « Display Flow » (type simple, catégorie logic, tag util). Affiche une case cochée verte quand le flux atteint le nœud (considéré actif si le dernier flux date de moins de 5 frames). L'infobulle montre un taux de rafraîchissement estimé (1 / intervalle entre deux flux). Pin d'entrée : value (flow). Aucune sortie.",
+  "notes": ["C.todo du jeu : « Randomly bugs out when first starting the execution sometimes »."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise lastTime, time et lastUsedFrame.", "internal": true},
+        "work": {"desc": "Mémorise le temps écoulé depuis le dernier flux et le numéro de frame courant (mgr.frameCount)."},
+        "drawMiddle": {"desc": "Éditeur : dessine la case cochée (active/inactive) et cumule le temps.", "params": {"builder": {"type": "table", "desc": "constructeur de nœud"}, "style": {"type": "table", "desc": "style"}}, "internal": true},
+        "drawTooltip": {"desc": "Éditeur : infobulle « N fps ».", "internal": true}
+      }
+    }
+  }
+}

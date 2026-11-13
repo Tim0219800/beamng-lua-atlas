@@ -1,0 +1,34 @@
+{
+  "path": "lua/ge/extensions/util/screenshotCreator/modelSelection.lua",
+  "module": "Onglet « Models selection » de l'outil de création de vignettes (ImGui) : liste tous les modèles de véhicules (core_vehicles.getModelList), regroupés par type, avec des cases à cocher pour choisir lesquels seront photographiés. Il propose des filtres par type (Cars, Trucks, Heavy Machinery, Trailers, Props, Other), des boutons Player Vehicle Model, Select All, Unselect All, Invert Selection, et deux colonnes « Unselected / Selected Models ». Le module job.lua l'interroge via getSelectedModels pour construire la liste de travail.",
+  "notes": [
+    "La liste est construite au premier usage (ensurePopulated) puis conservée ; appeler repopulate() pour la reconstruire.",
+    "Si le réglage shippedConfigsOnly est actif, seuls les modèles livrés avec le jeu (shippedConfigs.isModelShipped) sont visibles et sélectionnables.",
+    "Les filtres de type sont combinés par OU ; les modèles qui ne correspondent pas restent affichés mais grisés.",
+    "getSelectedModels renvoie le JBeam du véhicule du joueur si rien n'est coché : cela provoque une erreur Lua s'il n'y a aucun véhicule joueur (getPlayerVehicle(0) vaut nil).",
+    "getSelectedCount, lui, compte uniquement les cases cochées (0 si rien) et ne tient pas compte de ce repli."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : ui_imgui, ui_vehicleSelector_tileGrouping, core_vehicles, util_screenshotCreator_settings, util_screenshotCreator_shippedConfigs."}
+  },
+  "functions": {
+    "drawTab": {
+      "desc": "Dessine l'onglet ImGui « Models selection » (filtres, boutons, listes). À appeler à chaque frame dans la fenêtre de l'outil, entre BeginTabBar et EndTabBar ; ne dessine rien si l'onglet n'est pas actif.",
+      "internal": true
+    },
+    "selectPlayerVehicle": {
+      "desc": "Coche uniquement le modèle du véhicule du joueur (comparaison avec JBeam) et décoche tous les autres. Journalise une erreur (tag selectCurVeh) s'il n'y a pas de véhicule joueur."
+    },
+    "getSelectedModels": {
+      "desc": "Renvoie les clés des modèles cochés et visibles. Si aucun n'est coché, renvoie le modèle du véhicule joueur.",
+      "returns": [{"type": "string[]", "desc": "Clés de modèles (dossier de véhicule, ex. « pickup »)."}]
+    },
+    "getSelectedCount": {
+      "desc": "Compte les modèles cochés et visibles.",
+      "returns": [{"type": "integer", "desc": "Nombre de modèles sélectionnés."}]
+    },
+    "repopulate": {
+      "desc": "Reconstruit la liste des modèles depuis core_vehicles.getModelList() ; toutes les sélections sont perdues."
+    }
+  }
+}

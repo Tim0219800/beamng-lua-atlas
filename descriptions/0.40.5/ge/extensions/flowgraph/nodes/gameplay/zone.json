@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/zone.lua",
+  "module": "Nœud flowgraph « In Zone » (repeat_instant, couleur sites). Détecte si un véhicule (vehId) est dans les zones de sitesData : teste des points de la boîte englobante orientée de spawn (getSpawnWorldOOBB) avec sites:getZonesForPosition, publie inside, et dessine les zones en debug (rouge pulsé si dehors, blanc si dedans).",
+  "notes": [
+    "Bug : work lit self.pinIn.flow, mais aucun pin d'entrée « flow » n'est déclaré dans pinSchema ; self.pinIn.flow est donc nil et l'indexation provoque une erreur Lua.",
+    "Bug : la boucle `for i = 0, 8` teste toujours oobb:getPoint(0) au lieu de getPoint(i).",
+    "Le pin sitesData n'a pas de tableType."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Initialise les couleurs rouge et blanc de dessin.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Teste si le véhicule est dans une zone, dessine les zones en debug et écrit inside.",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "arguments transmis par le moteur (non utilisés)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

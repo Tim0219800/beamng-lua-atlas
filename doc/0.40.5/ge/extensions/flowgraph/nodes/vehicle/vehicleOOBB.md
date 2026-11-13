@@ -4,12 +4,20 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/vehicle/vehicleOOBB")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud « Get Vehicle Bounds » (catégorie `repeat_instant`, tags telemetry/bounds/corner). Donne les coins de la boîte englobante orientée du véhicule (`getSpawnWorldOOBB`) : sorties `corner_FR`, `corner_FL`, `corner_BR`, `corner_BL`, `center` (vec3). Pin d'entrée : `vehId` (défaut 0, sinon joueur).
+
+## Remarques
+
+- `center` est la moyenne des coins d'indices 0, 3, 4, 7 de l'OOBB.
+
 ## Classe `C`
+
+Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:init(mgr, ...)` |  | 28 |
-| `C:work(args)` |  | 31 |
+| `C:init(mgr, ...)` | Constructeur vide. | 28 |
+| `C:work(args)` | Écrit les quatre coins et le centre sur les sorties. | 31 |
 
 ## Appels vers le moteur (C++)
 

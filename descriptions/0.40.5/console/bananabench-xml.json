@@ -1,0 +1,19 @@
+{
+  "path": "lua/console/bananabench-xml.lua",
+  "module": "Script de la VM console : lance bananabench sur une liste fixe de 9 véhicules (barstow, burnside, etki, fullsize, moonhawk, pessima, pickup, pigeon, pressure_ball) et écrit un rapport XML « performance » (report > test > result avec success, performance, executiontime, compiletime et métriques realtime/maxmbeams) dans bananabench.xml. Il définit aussi une petite classe globale `XML` (create, addChild, encode, toString) pour générer du XML.",
+  "notes": [
+    "Probablement cassé avec la version actuelle de bananabench : `writeXML` lit `v.tests[1].res[dynamicCol]` et les champs `beamspersec`, alors que bananabench.lua renvoie des `res` plats {Mbeamspersec, percentRealtime, time, spawntime} (sans indice 1/2 ni champ beamspersec) ; l'accès à res[dynamicCol] vaut nil et provoque une erreur.",
+    "Le script s'exécute au chargement ; la classe `XML` est une globale. Les variables `str` de XML:encode et XML:toString sont aussi globales (pas de `local`).",
+    "Les attributs `mesure` et `unit` du rapport reprennent le format d'un outil de reporting de performance externe ; le champ executed vaut toujours 'yes' et passed 'yes' (l'analyse des logs est commentée)."  ],
+  "classes": {
+    "XML": {
+      "desc": "Petit constructeur de document XML (classe globale).",
+      "functions": {
+        "create": {"desc": "Crée un nœud XML vide (name, attribs, children).", "params": {}, "returns": [{"type": "table", "desc": "Nœud XML."}]},
+        "addChild": {"desc": "Ajoute un nœud enfant.", "params": {"xml": {"type": "table", "desc": "Nœud enfant."}}},
+        "encode": {"desc": "Renvoie le document complet avec l'en-tête `<?xml version=\"1.0\" encoding=\"UTF-8\"?>`.", "params": {}, "returns": [{"type": "string", "desc": "Texte XML."}]},
+        "toString": {"desc": "Sérialise le nœud et ses enfants avec indentation de 2 espaces.", "params": {"indent": {"type": "integer|nil", "desc": "Niveau d'indentation (défaut 0)."}}, "returns": [{"type": "string", "desc": "Texte XML."}]}
+      }
+    }
+  }
+}

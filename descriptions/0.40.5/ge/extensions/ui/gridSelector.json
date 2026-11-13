@@ -1,0 +1,159 @@
+{
+  "path": "lua/ge/extensions/ui/gridSelector.lua",
+  "module": "Façade unique entre l'interface (UI Vue) et les sélecteurs en grille (véhicules, gameplay, apps, freeroam, course rapide, light runner, lignes de bus). Chaque appel reçoit le nom du backend en premier argument et est redirigé (dispatch) vers l'extension `ui_<nom>_general` correspondante. Le module normalise les chemins, les groupes de tuiles, les filtres, les données d'affichage, l'en-tête et les détails de gestion avant de les renvoyer à l'UI, et fournit des valeurs de repli pour les méthodes optionnelles absentes d'un backend.",
+  "usage": "local snap = ui_gridSelector.getSelectorSnapshot('vehicleSelector', {keys = {}})\nfor _, group in ipairs(snap.groups) do log('I', 'x', #group.tiles) end",
+  "notes": [
+    "Noms de backend valides : vehicleSelector, gameplaySelector, appSelector, freeroamSelector, quickraceSelector, lightRunnerSelector, busRouteSelector. Un autre nom donne une erreur de log et nil.",
+    "Un chemin (path) est normalisé en { keys = {...} } : accepte { keys = {...} } ou un tableau de segments (string, number, boolean convertis en string). Tout autre chose donne { keys = {} } avec un avertissement.",
+    "Contrat backend : méthodes requises getTiles, getFilters, getSearchText, setSearchText, getDisplayDataOptions, setDisplayDataOption, resetDisplayDataToDefaults, getScreenHeaderTitleAndPath, getDetails. Méthodes optionnelles avec repli : getManagementDetails, executeButton, executeDoubleClick, toggleFavourite, requestClusterTiles, requestDetails, clearAllFilters, closedFromUI, profilerFinish.",
+    "getActiveFilters, toggleFilter, updateRangeFilter, resetRangeFilter, resetSetFilter et exitCallback sont transmises au backend mais n'ont PAS de repli : si le backend ne les définit pas, une erreur est loguée et nil est renvoyé.",
+    "Le commentaire placé avant M.toggleFavourite dans le code (exploreFolder/goToMod commentés) est du code désactivé ; exploreFolder et goToMod sont en réalité définies plus bas dans le fichier.",
+    "Une tuile sans `key` reçoit une clé générée `__missingTileKey_<backend>_<n>`."
+  ],
+  "fields": {
+    "BackendContract": {"type": "table", "desc": "Décrit le contrat attendu des backends : `requiredMethods` (liste de noms) et `optionalMethods` (liste de noms)."},
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions backend chargées avant ce module (les sept `ui_*Selector_general`)."}
+  },
+  "functions": {
+    "getBackendByName": {
+      "desc": "Renvoie la table de l'extension backend associée au nom donné, ou nil si le nom est inconnu.",
+      "params": {"backendName": {"type": "string", "desc": "vehicleSelector, gameplaySelector, appSelector, freeroamSelector, quickraceSelector, lightRunnerSelector ou busRouteSelector"}},
+      "returns": [{"type": "table|nil", "desc": "Le module backend (ex. ui_vehicleSelector_general)."}]
+    },
+    "getTiles": {
+      "desc": "Demande les tuiles au backend pour un chemin et renvoie un tableau de groupes normalisé (groupes et tuiles non-tables ignorés, copie superficielle, clé générée si manquante).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "path": {"type": "table|nil", "desc": "Chemin { keys = {...} } ou tableau de segments."}, "...": {"type": "any", "desc": "Arguments supplémentaires transmis au backend."}},
+      "returns": [{"type": "table[]", "desc": "Liste de groupes { tiles = {...}, ... }."}]
+    },
+    "requestClusterTiles": {
+      "desc": "Demande au backend les tuiles d'un cluster (méthode optionnelle, repli : nil).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "path": {"type": "table|nil", "desc": "Chemin à normaliser."}, "...": {"type": "any", "desc": "Arguments transmis."}},
+      "returns": [{"type": "any", "desc": "Résultat du backend."}]
+    },
+    "getFilters": {
+      "desc": "Renvoie les filtres du backend (requis).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}},
+      "returns": [{"type": "table", "desc": "Données de filtres du backend."}]
+    },
+    "getActiveFilters": {
+      "desc": "Renvoie les filtres actifs du backend (sans repli).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}},
+      "returns": [{"type": "any", "desc": "Filtres actifs."}]
+    },
+    "toggleFilter": {
+      "desc": "Active ou désactive un filtre côté backend (sans repli).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}}
+    },
+    "updateRangeFilter": {
+      "desc": "Met à jour un filtre de plage côté backend (sans repli).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}}
+    },
+    "resetRangeFilter": {
+      "desc": "Réinitialise un filtre de plage côté backend (sans repli).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}}
+    },
+    "resetSetFilter": {
+      "desc": "Réinitialise un filtre à ensemble de valeurs côté backend (sans repli).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}}
+    },
+    "clearAllFilters": {
+      "desc": "Efface tous les filtres (optionnel, repli : false).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}},
+      "returns": [{"type": "boolean|any", "desc": "false si non implémenté."}]
+    },
+    "getSearchText": {
+      "desc": "Renvoie le texte de recherche courant du backend (requis).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}},
+      "returns": [{"type": "string", "desc": "Texte de recherche."}]
+    },
+    "setSearchText": {
+      "desc": "Définit le texte de recherche du backend (requis).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis (texte)."}}
+    },
+    "getDisplayDataOptions": {
+      "desc": "Renvoie les options d'affichage (tri, regroupement, etc.) du backend (requis).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}},
+      "returns": [{"type": "table", "desc": "Options d'affichage."}]
+    },
+    "setDisplayDataOption": {
+      "desc": "Modifie une option d'affichage du backend (requis).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}}
+    },
+    "resetDisplayDataToDefaults": {
+      "desc": "Remet les options d'affichage aux valeurs par défaut (requis).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}}
+    },
+    "getScreenHeaderTitleAndPath": {
+      "desc": "Renvoie le titre et les segments de chemin de l'en-tête d'écran pour le chemin donné (requis).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "path": {"type": "table|nil", "desc": "Chemin à normaliser."}, "...": {"type": "any", "desc": "Arguments transmis."}},
+      "returns": [{"type": "table", "desc": "{ title, pathSegments }."}]
+    },
+    "profilerFinish": {
+      "desc": "Notifie le backend de la fin d'un profilage (optionnel, repli : nil).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}}
+    },
+    "closedFromUI": {
+      "desc": "Notifie le backend que l'écran a été fermé depuis l'UI (optionnel, repli : nil).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}}
+    },
+    "getDetails": {
+      "desc": "Renvoie les détails de l'élément sélectionné (requis).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}},
+      "returns": [{"type": "any", "desc": "Détails fournis par le backend."}]
+    },
+    "requestDetails": {
+      "desc": "Demande au backend de préparer les détails d'un élément (optionnel, repli : nil).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}}
+    },
+    "executeButton": {
+      "desc": "Exécute un bouton d'action du panneau de détails (optionnel, repli : nil).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}}
+    },
+    "getManagementDetails": {
+      "desc": "Renvoie les boutons/détails de gestion (optionnel, repli : { buttons = {} }).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}},
+      "returns": [{"type": "table", "desc": "{ buttons = {...}, ... }."}]
+    },
+    "exitCallback": {
+      "desc": "Appelle exitCallback du backend (sans repli).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}}
+    },
+    "executeDoubleClick": {
+      "desc": "Exécute l'action de double-clic sur une tuile (optionnel, repli : nil).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}}
+    },
+    "toggleFavourite": {
+      "desc": "Bascule l'état favori d'un élément (optionnel, repli : false).",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "...": {"type": "any", "desc": "Arguments transmis."}},
+      "returns": [{"type": "boolean|any", "desc": "false si non implémenté."}]
+    },
+    "getSelectorSnapshotSlices": {
+      "desc": "Construit une charge utile contenant seulement les tranches demandées : tiles (groups + defaultFocusKey), filters, displayData, searchText, managementDetails, header. Si aucune tranche n'est activée, toutes le sont.",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "path": {"type": "table|nil", "desc": "Chemin à normaliser."}, "options": {"type": "table<string, boolean>|nil", "desc": "Tranches à inclure (clé = true)."}},
+      "returns": [{"type": "table", "desc": "{ backendName, path, groups?, defaultFocusKey?, filters?, displayData?, searchText?, managementDetails?, header? }."}]
+    },
+    "getSelectorRefresh": {
+      "desc": "Alias de getSelectorSnapshotSlices.",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "path": {"type": "table|nil", "desc": "Chemin."}, "options": {"type": "table|nil", "desc": "Tranches."}},
+      "returns": [{"type": "table", "desc": "Voir getSelectorSnapshotSlices."}]
+    },
+    "getSelectorSnapshot": {
+      "desc": "Renvoie un instantané complet (toutes les tranches) du sélecteur pour un chemin.",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "path": {"type": "table|nil", "desc": "Chemin."}},
+      "returns": [{"type": "table", "desc": "Voir getSelectorSnapshotSlices. La tuile par défaut (forceAutoFocus ou isDefaultSelected) donne defaultFocusKey."}]
+    },
+    "getInitialData": {
+      "desc": "Alias de getSelectorSnapshot.",
+      "params": {"backendName": {"type": "string", "desc": "Nom du backend."}, "path": {"type": "table|nil", "desc": "Chemin."}},
+      "returns": [{"type": "table", "desc": "Instantané complet."}]
+    },
+    "exploreFolder": {
+      "desc": "Ouvre un dossier dans l'explorateur de fichiers du système (Engine.Platform.exploreFolder).",
+      "params": {"_backendName": {"type": "string", "desc": "Ignoré."}, "path": {"type": "string", "desc": "Chemin du dossier."}}
+    },
+    "goToMod": {
+      "desc": "Navigue l'UI vers la page de détails d'un mod (route menu.mods.details).",
+      "params": {"_backendName": {"type": "string", "desc": "Ignoré."}, "modId": {"type": "string", "desc": "Identifiant du mod."}}
+    }
+  }
+}

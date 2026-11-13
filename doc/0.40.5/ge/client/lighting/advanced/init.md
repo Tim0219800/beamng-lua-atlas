@@ -4,6 +4,13 @@
 
 **Accès :** `require("client/lighting/advanced/init")`
 
+Light manager « Advanced Lighting ». Charge les sous-modules shaders, lightViz et shadowViz, puis, si le gestionnaire existe (LightManager.findByName), publie la table globale ADVLMCallbacks avec onActivate/onDeactivate. À l'activation, il active l'objet AL_FormatToken (cible hors écran nécessaire à MSAA et HDR) ; à la désactivation, il le désactive.
+
+## Remarques
+
+- Sur macOS (variable $platform == « macos »), onActivate ne fait rien.
+- Le bloc de préférences $pref::LightManager::* du début est entièrement commenté.
+
 ## Appels vers le moteur (C++)
 
 - `scenetree.` `findObject`

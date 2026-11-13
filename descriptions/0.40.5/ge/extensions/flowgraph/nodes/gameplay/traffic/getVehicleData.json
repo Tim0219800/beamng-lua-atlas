@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/getVehicleData.lua",
+  "module": "Nœud flowgraph « Get Traffic Vehicle Data » (repeat_instant). Lit les paramètres d'un véhicule actif dans le trafic (gameplay_traffic.getTrafficData) : role (nom du rôle), state, camVisible, crashDamage, respawnCount.",
+  "notes": [
+    "Si le véhicule n'est pas dans le trafic, les sorties gardent leurs anciennes valeurs."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "work": {
+          "desc": "Recopie les données du véhicule de trafic vehId sur les sorties.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

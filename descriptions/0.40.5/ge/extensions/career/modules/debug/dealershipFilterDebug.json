@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/career/modules/debug/dealershipFilterDebug.lua",
+  "module": "Outil de debug « General > Filter Debug » : fenêtre ImGui où l'on colle un JSON de filtre de concessionnaire (filter avec whiteList/blackList, subFilters avec probability…) ; le JSON est décodé à chaque modification, le filtre est appliqué (via util/configListGenerator) et le résultat est affiché en tableau. Utile pour régler les filtres de véhicules d'un concessionnaire.",
+  "usage": "extensions.load(\"career/modules/debug/dealershipFilterDebug\")\ncareer_modules_debug_dealershipFilterDebug.show()",
+  "notes": ["show() permet d'ouvrir l'outil hors carrière : elle branche drawDebugMenu sur le hook onUpdate.", "Le message d'erreur de décodage est stocké dans une variable globale nommée 'error' (masque la fonction Lua error)."],
+  "fields": {
+    "debugOrder": {"type": "number", "desc": "Ordre de tri dans la fenêtre de debug (11)."},
+    "debugName": {"type": "string", "desc": "'General > Filter Debug'."}
+  },
+  "functions": {
+    "drawDebugMenu": {
+      "desc": "Dessine la fenêtre 'Filter Debug Input' (zone de texte JSON, statut 'All Good :)' ou 'Decoding Error') puis les résultats du filtre.",
+      "params": {},
+      "returns": []
+    },
+    "show": {
+      "desc": "Affiche l'outil hors carrière : M.onUpdate = drawDebugMenu puis extensions.hookUpdate('onUpdate').",
+      "params": {},
+      "returns": []
+    }
+  }
+}

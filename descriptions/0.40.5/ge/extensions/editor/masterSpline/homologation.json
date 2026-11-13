@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/editor/masterSpline/homologation.lua",
+  "module": "Utilitaire de l'outil Master Spline pour « homologuer » une spline par rapport à un preset de standard routier (roadDesignStandards) : il mesure les écarts géométriques (pente, rayon de virage, dévers, gradient de largeur) et les corrige par itérations. Le mode actif est spline.splineAnalysisMode : 0 pente, 1 rayon, 2 dévers, 3 largeur. Le preset vient de spline.homologationPreset.",
+  "notes": [
+    "Constantes internes : 5 itérations d'optimisation par image, rayon analysé sur 5 points de chaque côté, tolérance de violation de rayon 0.01, lissage laplacien 0.2, pas de dévers 1 degré, nudge de largeur 0.05.",
+    "analyseSpline remplit les tableaux d'erreur normalisée de la spline (eSlopeNorm, eRadiusNorm, eBankingNorm, eWidthNorm) utilisés pour l'affichage.",
+    "Un splineAnalysisMode hors 0 à 3 provoque une erreur (func nil) dans analyseSpline et optimiseSpline ; il n'y a pas de garde.",
+    "Les tolérances du preset viennent de presetsMap : maxSlope, minRadius, maxBanking, maxWidthGradient."
+  ],
+  "functions": {
+    "getOptimisationIterationsPerFrame": {
+      "desc": "Renvoie le nombre d'itérations d'optimisation à exécuter par image (5).",
+      "returns": [{"type": "integer", "desc": "Itérations par image."}]
+    },
+    "analyseSpline": {
+      "desc": "Analyse la spline avec la métrique courante (spline.splineAnalysisMode) et remplit le tableau d'erreurs normalisées correspondant, à partir de divPoints/divWidths et du preset d'homologation.",
+      "params": {"spline": {"type": "table", "desc": "Spline avec nodes, divPoints, divWidths, nmls, homologationPreset et splineAnalysisMode."}}
+    },
+    "optimiseSpline": {
+      "desc": "Recalcule la géométrie (catmullRomFree), analyse la spline, la marque isDirty, puis lance numIter itérations de l'optimiseur correspondant au mode (pente, rayon, dévers ou largeur). Modifie les nœuds, normales ou largeurs en place.",
+      "params": {
+        "spline": {"type": "table", "desc": "Spline à optimiser."},
+        "numIter": {"type": "integer", "desc": "Nombre d'itérations à effectuer dans cet appel (typiquement getOptimisationIterationsPerFrame())."}
+      }
+    }
+  }
+}

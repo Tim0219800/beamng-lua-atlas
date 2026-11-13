@@ -1,0 +1,28 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/vePowerTrain.lua",
+  "module": "Fenêtre 'Powertrain' (Powertrain Inspector) du Vehicle Editor live. Chaque frame elle demande au véhicule powertrain.serializeDevicesInfo() (stocké dans vEditor.powertrainDevices), propose un combo des devices triés par nom, puis affiche leurs données jbeam et leurs données live grâce à powerTrainUtils. Dépend de editor_veMain.",
+  "notes": [
+    "Incohérence : exporte `onDeserialize` (sans 'd') alors que le hook d'extension est `onDeserialized` ; devicePtr/windowOpen ne sont donc probablement pas restaurés.",
+    "La liste de devices est recalculée quand vEditor.resetDeviceString est vrai (changement de véhicule ou activation de l'éditeur)."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "{'editor_veMain'}."},
+    "menuEntry": {"type": "string", "desc": "'Powertrain Inspector'."}
+  },
+  "functions": {
+    "onUpdate": {"desc": "Appelé chaque frame : demande les infos de devices au véhicule et dessine le combo, les données jbeam et les données live.", "params": {"dt": {"type": "number", "desc": "Delta temps."}}, "internal": true},
+    "open": {"desc": "Ouvre la fenêtre.", "internal": false},
+    "onSerialize": {"desc": "Renvoie {windowOpen, devicePtr}.", "returns": [{"type": "table", "desc": "{windowOpen = boolean, devicePtr = integer}"}], "internal": true},
+    "onDeserialize": {"desc": "Restaure windowOpen et devicePtr (nom non standard).", "params": {"data": {"type": "table", "desc": "Table de onSerialize."}}, "internal": true},
+    "onVehicleSwitched": {
+      "desc": "Au changement de véhicule, si l'éditeur est actif, vide la liste de devices et force le recalcul de la liste de noms.",
+      "params": {
+        "oldVehicle": {"type": "integer", "desc": "ID de l'ancien véhicule."},
+        "newVehicle": {"type": "integer", "desc": "ID du nouveau véhicule."},
+        "player": {"type": "integer", "desc": "Index du joueur."}
+      },
+      "internal": true
+    },
+    "onEditorActivated": {"desc": "Appelé à l'activation de l'éditeur : force le recalcul de la liste de devices.", "internal": true}
+  }
+}

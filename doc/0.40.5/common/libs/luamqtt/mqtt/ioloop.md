@@ -4,50 +4,59 @@
 
 **Accès :** `require("libs/luamqtt/mqtt/ioloop")`
 
-ioloop module
- @module mqtt.ioloop
- @alias ioloop
+Boucle d'entrées/sorties de luamqtt : fait vivre plusieurs clients MQTT (et des fonctions utilisateur) dans un même thread, en mode non bloquant avec un petit délai réseau, ce qui permet les PINGREQ de keep_alive et la reconnexion. Ne fonctionne qu'avec les connecteurs luasocket standard.
 
-	ioloop module
+## Exemple
 
-	In short: allowing you to work with several MQTT clients in one script, and allowing them to maintain
-	a long-term connection to broker, using PINGs.
+```lua
+local ioloop = require('libs/luamqtt/mqtt/ioloop')
+local loop = ioloop.get()
+loop:add(client)
+client:start_connecting()
+-- dans une boucle propre au jeu :
+loop:iteration()
+```
 
-	NOTE: this module will work only with MQTT clients using standard luasocket/luasocket_ssl connectors.
+## Remarques
 
-	In long:
-	Providing an IO loop instance dealing with efficient (as much as possible in limited lua IO) network communication
-	for several MQTT clients in the same OS thread.
-	The main idea is that you are creating an ioloop instance, then adding created and connected MQTT clients to it.
-	The ioloop instance is setting a non-blocking mode for sockets in MQTT clients and setting a small timeout
-	for their receive/send operations. Then ioloop is starting an endless loop trying to receive/send data for all added MQTT clients.
-	You may add more or remove some MQTT clients from the ioloop after it's created and started.
-
-	Using that ioloop is allowing you to run a MQTT client for long time, through sending PINGREQ packets to broker
-	in keepAlive interval to maintain long-term connection.
-
-	Also, any function can be added to the ioloop instance, and it will be called in the same endless loop over and over
-	alongside with added MQTT clients to provide you a piece of processor time to run your own logic (like running your own
-	network communications or any other thing good working in an io-loop)
- module table
+- run_until_clients est bloquant ; dans le jeu, appeler plutôt iteration() périodiquement (par ex. depuis onUpdate) pour ne pas figer le thread.
 
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `libs_luamqtt_mqtt_ioloop.create(args)` | Create IO loop instance with given options<br> @see ioloop_mt:__init<br> @treturn ioloop_mt ioloop instance | 149 |
-| `libs_luamqtt_mqtt_ioloop.get(autocreate, args)` | Returns default ioloop instance<br> @tparam[opt=true] boolean autocreate Automatically create ioloop instance<br> @tparam[opt] table args Arguments for creating ioloop instance<br> @treturn ioloop_mt ioloop instance | 163 |
+| `libs_luamqtt_mqtt_ioloop.create(args)` | Crée une instance d'ioloop. | 149 |
+| `libs_luamqtt_mqtt_ioloop.get(autocreate, args)` | Renvoie l'ioloop par défaut (singleton), créé à la demande. | 163 |
+
+### Détail des paramètres
+
+#### `libs_luamqtt_mqtt_ioloop.create(args)`
+
+Crée une instance d'ioloop.
+
+- `args` (*table*) : timeout (défaut 0.005 s), sleep (défaut 0), sleep_function.
+- **renvoie** : table Instance ioloop_mt.
+
+#### `libs_luamqtt_mqtt_ioloop.get(autocreate, args)`
+
+Renvoie l'ioloop par défaut (singleton), créé à la demande.
+
+- `autocreate` (*boolean*) : Créer automatiquement (défaut true).
+- `args` (*table*) : Arguments de création.
+- **renvoie** : table|nil Instance ioloop.
 
 ## Classe `ioloop_mt`
 
+Instance d'ioloop renvoyée par create/get.
+
 | Méthode | Description | Ligne |
 |---|---|---|
-| `ioloop_mt:__init(args)` | Initialize ioloop instance<br> @tparam table args							ioloop creation arguments table<br> @tparam[opt=0.005] number args.timeout		network operations timeout in seconds<br> @tparam[opt=0] number args.sleep				sleep interval after each iteration<br> @tparam[opt] function args.sleep_function	custom sleep function to call after each iteration<br> @treturn ioloop_mt ioloop instance | 53 |
-| `ioloop_mt:add(client)` | Add MQTT client or a loop function to the ioloop instance<br> @tparam client_mt\|function client		MQTT client or a loop function to add to ioloop<br> @return true on success or false and error message on failure | 66 |
-| `ioloop_mt:can_sleep()` | Perform sleep if no one of the network operation in current iteration was not timeouted | 127 |
-| `ioloop_mt:iteration()` | Perform one ioloop iteration | 109 |
-| `ioloop_mt:remove(client)` | Remove MQTT client or a loop function from the ioloop instance<br> @tparam client_mt\|function client		MQTT client or a loop function to remove from ioloop<br> @return true on success or false and error message on failure | 85 |
-| `ioloop_mt:run_until_clients()` | Run ioloop until at least one client are in ioloop | 136 |
+| `ioloop_mt:__init(args)` | Initialise l'instance avec timeout, sleep et sleep_function (défaut socket.sleep). | 53 |
+| `ioloop_mt:add(client)` | Ajoute un client MQTT ou une fonction de boucle. Pour un client, appelle client:set_ioloop(self) pour l'associer à la boucle. | 66 |
+| `ioloop_mt:can_sleep()` | Si aucun délai réseau (timeout) n'a encore eu lieu pendant l'itération, appelle sleep_function(args.timeout) une seule fois (par défaut socket.sleep) pour ne pas tourner à vide. | 127 |
+| `ioloop_mt:iteration()` | Effectue une itération : appelle _ioloop_iteration de chaque client et chaque fonction ajoutée, puis dort args.sleep secondes si sleep > 0. | 109 |
+| `ioloop_mt:remove(client)` | Retire un client ou une fonction de l'ioloop. | 85 |
+| `ioloop_mt:run_until_clients()` | Boucle bloquante : itère tant qu'il reste au moins un client dans l'ioloop. | 136 |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/luamqtt/mqtt/ioloop.lua`.*

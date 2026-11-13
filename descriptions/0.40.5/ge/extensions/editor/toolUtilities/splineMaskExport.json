@@ -1,0 +1,21 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/splineMaskExport.lua",
+  "module": "Exporte des surfaces de rubans (splines) sous forme de masque PNG 16 bits (GFXFormatR16) à la taille de la grille du terrain. Chaque texel vaut 65535 si son centre monde est dans un quadrilatère, 0 sinon. Sert aux outils de splines pour fabriquer un masque utilisable par l'éditeur de terrain (peinture). Nécessite un terrain chargé et l'extension editor_terrainEditor.",
+  "usage": "extensions.editor_toolUtilities_splineMaskExport.export('/levels/mon_niveau/masque.png', sources, 0.5)",
+  "notes": [
+    "Sans bloc de terrain ou sans terrain editor, la fonction logue une erreur ('E') et sort sans rien renvoyer.",
+    "Parcourt chaque texel de la grille : coût élevé sur de grands terrains.",
+    "Le résultat n'est pas renvoyé : le succès ou l'échec de saveFile est seulement loggé."
+  ],
+  "functions": {
+    "export": {
+      "desc": "Construit un kd-tree des quadrilatères des sources (agrandis de `margin`), rasterise un bitmap de la taille du terrain et l'enregistre en PNG.",
+      "params": {
+        "filepath": {"type": "string", "desc": "Chemin du fichier .png à écrire."},
+        "sources": {"type": "table", "desc": "Table de tables de quadrilatères représentant les surfaces de rubans."},
+        "margin": {"type": "number|nil", "desc": "Marge ajoutée autour des quadrilatères (0 par défaut), en mètres (déduit du code)."}
+      },
+      "returns": []
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequence.lua",
+  "module": "Nœud flowgraph « Get Signal Sequence » (repeat_instant). Lit une séquence de feux (signalSequenceData) : step (currStep), maxSteps (#timelineTimes), duration (totalDuration), phase (currPhase), active, timed (not ignoreTimer).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "work": {
+          "desc": "Recopie les propriétés de la séquence sur les sorties.",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "arguments transmis par le moteur (non utilisés)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -2,69 +2,68 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/siteDecals.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
+--- Décalques estampillés tels qu'un site les porte : flèches de circulation, texte EXIT peint, rustines de réparation d'asphalte. Ce sont des glyphes pris dans une planche (atlas) et posés en un point, orientés dans une direction, et non de la peinture tracée le long d'une ligne (c'est ce qui les distingue de siteMarks). Le module crée les DecalData (modèles), pose les instances via l'éditeur, les convertit vers/depuis le format du manifeste et les rend persistantes.
 --- Accès : extension `editor_toolUtilities_siteDecals` : `extensions.load("editor_toolUtilities_siteDecals")`, puis la globale `editor_toolUtilities_siteDecals`
 ---@class editor_toolUtilities_siteDecals
 editor_toolUtilities_siteDecals = {}
 
---- A whole plan stamped at once, making whatever templates it calls for. `tag` names them apart from every other site's.
---- Answers the instances and the template ids, which are two different things to clean up: an instance goes when the site
---- does, a template is shared by all of that site's stamps.
+--- Estampille tout un plan d'un coup, en créant les modèles requis. tag distingue ces modèles de ceux des autres sites. Renvoie les instances et les identifiants de modèles, deux choses à nettoyer différemment : une instance part avec le site, un modèle est partagé par tous les décalques du site.
 ---Source : lua/ge/extensions/editor/toolUtilities/siteDecals.lua:90
----@param plan any
----@param tag any
----@param terrainZ any
+---@param plan table|nil Liste d'enregistrements de décalques.
+---@param tag string Étiquette du site.
+---@param terrainZ function terrainZ(x, y) renvoie la hauteur du terrain.
+---@return table  Instances de décalques.
+---@return integer[]  Identifiants des modèles DecalData créés.
 function editor_toolUtilities_siteDecals.build(plan, tag, terrainZ) end
 
---- Hand the templates to the level, which is what makes the stamps off them survive a save. The persistence manager keeps
---- the instances against their template, so marking the few templates dirty writes out all the stamps -- there is nothing
---- per-stamp to flip. Per-site templates are what keeps this from writing out a neighbour's stamps too.
+--- Donne les modèles au niveau, ce qui fait survivre à la sauvegarde les décalques posés d'après eux : le gestionnaire de persistance garde les instances contre leur modèle, donc marquer les quelques modèles « sales » écrit tous les décalques. Sans effet si decalPersistMan n'existe pas.
 ---Source : lua/ge/extensions/editor/toolUtilities/siteDecals.lua:119
----@param tplIds any
+---@param tplIds integer[]|nil Identifiants de modèles renvoyés par build.
 function editor_toolUtilities_siteDecals.commit(tplIds) end
 
---- One stamp, from the record that describes it.
+--- Pose un décalque depuis son enregistrement : position (x, y) à la hauteur du terrain plus lift, normale vers le haut, tangente dirigée selon l'angle a.
 ---Source : lua/ge/extensions/editor/toolUtilities/siteDecals.lua:36
----@param tpl any
----@param rec any
----@param terrainZ any
+---@param tpl userdata Modèle DecalData.
+---@param rec table { x, y, a, size, frame, lift }.
+---@param terrainZ function terrainZ(x, y) renvoie la hauteur du terrain.
+---@return any  Instance de décalque renvoyée par editor.addDecalInstanceWithTan.
 function editor_toolUtilities_siteDecals.emit(tpl, rec, terrainZ) end
 
---- The facing of a stamp, as an angle, from the direction vector a builder already has.
+--- Angle de cap d'un décalque (atan2(ty, tx)) à partir du vecteur direction qu'un constructeur a déjà.
 ---Source : lua/ge/extensions/editor/toolUtilities/siteDecals.lua:130
----@param tx any
----@param ty any
+---@param tx number Composante x de la direction.
+---@param ty number Composante y de la direction.
+---@return number  Angle en radians.
 function editor_toolUtilities_siteDecals.facing(tx, ty) end
 
---- The stamps as a manifest carries them, local to the bake origin. Grouped by template for the same reason the marks are
---- grouped by style: a lot stamps a few dozen glyphs off two sheets.
---- The facing is written down as an angle rather than the direction vector it came in as, so standing the site on a new
---- heading is one addition instead of a rotation per stamp.
+--- Convertit un plan de décalques au format du manifeste, local à l'origine de cuisson (ox, oy). Groupés par modèle (même mat, rows, cols, prio). Renvoie nil si le plan est vide.
 ---Source : lua/ge/extensions/editor/toolUtilities/siteDecals.lua:49
----@param plan any
----@param ox any
----@param oy any
+---@param plan table|nil Liste d'enregistrements de décalques.
+---@param ox number x de l'origine de cuisson.
+---@param oy number y de l'origine de cuisson.
+---@return table|nil  { tpls = { {mat, rows, cols, prio, size}, ... }, items = { {t, x, y, a, size, frame, lift}, ... } }.
 function editor_toolUtilities_siteDecals.localise(plan, ox, oy) end
 
---- And back: the manifest's stamps as a plan, stood where a placement is and turned onto its heading. `ox, oy` is the point
---- in the site's own frame the placement turns about, the same one everything else it stands is measured off.
+--- L'inverse de localise : les décalques du manifeste comme plan, posés là où se trouve un placement et tournés sur son cap. (ox, oy) est le point du repère du site autour duquel le placement tourne.
 ---Source : lua/ge/extensions/editor/toolUtilities/siteDecals.lua:69
----@param rec any
----@param px any
----@param py any
----@param yaw any
----@param ox any
----@param oy any
+---@param rec table|nil Enregistrement du manifeste { tpls, items }.
+---@param px number x du placement.
+---@param py number y du placement.
+---@param yaw number|nil Cap en radians (défaut 0).
+---@param ox number|nil x du pivot dans le repère du site (défaut 0).
+---@param oy number|nil y du pivot (défaut 0).
+---@return table|nil  Plan de décalques en coordonnées monde, ou nil s'il est vide.
 function editor_toolUtilities_siteDecals.place(rec, px, py, yaw, ox, oy) end
 
---- Take the stamps down again.
+--- Retire des décalques posés (editor.deleteDecalInstance).
 ---Source : lua/ge/extensions/editor/toolUtilities/siteDecals.lua:110
----@param objs any
+---@param objs table|nil Instances renvoyées par build.
 function editor_toolUtilities_siteDecals.remove(objs) end
 
---- Get, or make, the DecalData one group of stamps comes off. Named after the site standing it, because burning a site
---- flips its own templates to persistent and must not flip a neighbour's.
+--- Récupère ou crée le DecalData d'un groupe de décalques, nommé d'après le site qui le dresse. Champs posés : material, frame, texRows, texCols, size, renderPriority (défaut 5).
 ---Source : lua/ge/extensions/editor/toolUtilities/siteDecals.lua:20
----@param name any
----@param spec any
+---@param name string Nom d'objet du modèle.
+---@param spec table { mat, frame, rows, cols, size, prio }.
+---@return userdata|nil  Objet DecalData, ou nil si la création échoue.
 function editor_toolUtilities_siteDecals.template(name, spec) end
 

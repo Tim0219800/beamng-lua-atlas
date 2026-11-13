@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/profileSweep.lua",
+  "module": "Balayage de profil : des bandes 2D ouvertes (latéral y, hauteur z) sont balayées le long d'une suite de stations portant chacune leur repère, pour produire un maillage unique par matériau. Contrairement à deckSweep, le repère est fourni par l'appelant (binormale inclinée et normale d'une route), donc la section tourne avec la route. Les stations sont décimées selon une tolérance de corde sur le centre et deux points clés de la section (meshRefine.decimateStations).",
+  "notes": [
+    "Dépend de editor/toolUtilities/meshPart et editor/heroRoadEditor/meshRefine.",
+    "Les UV sont {longueur d'arc de la station s, abscisse curviligne le long de la bande}."
+  ],
+  "functions": {
+    "at": {
+      "desc": "Point monde du point de section (y, z) à la station a : a.pos + a.b * y + a.n * z.",
+      "params": {
+        "a": {"type": "table", "desc": "Station avec x,y,z, bx,by,bz (vecteur transversal) et nx,ny,nz (vecteur haut)."},
+        "y": {"type": "number", "desc": "Décalage latéral dans la section."},
+        "z": {"type": "number", "desc": "Hauteur dans la section."}
+      },
+      "returns": [{"type": "table", "desc": "Point {x,y,z}."}],
+      "internal": false
+    },
+    "build": {
+      "desc": "Balaye les bandes le long des stations. Chaque station : { x,y,z, bx,by,bz (transversal), nx,ny,nz (haut), s (abscisse) }. Chaque bande : { pts = {{y,z},...}, nrm = {{ny,nz},...} (normales unitaires vers la face visible), mat }. Les faces quadrangulaires sont générées par meshPart.face4n.",
+      "params": {
+        "st": {"type": "table", "desc": "Liste de stations."},
+        "strips": {"type": "table", "desc": "Liste de bandes de profil."},
+        "opts": {"type": "table", "desc": "{ tol, tolZ, maxSeg } pour la décimation, keyL et keyR = points de section {y,z} surveillés."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Parts (une par matériau) ; nil si moins de 2 stations."}, {"type": "table", "desc": "Indices des stations conservées."}],
+      "internal": false
+    }
+  }
+}

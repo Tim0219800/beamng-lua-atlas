@@ -1,0 +1,29 @@
+{
+  "path": "lua/ge/extensions/editor/sitesEditor/parkingSpots.lua",
+  "module": "Sous-éditeur 'Parking Spots' de l'éditeur de sites. Le module renvoie un constructeur de classe C. Une place est une boîte orientée (pos, rot, scl) ; l'éditeur propose gizmo de transformation (transformUtil), préréglages de taille (Car 2.5x6x3, LargeCar 3.25x8x4, Bus 4x14x8), saisie d'angles en degrés, et le mode 'MultiSpot' qui répète la place N fois (1 à 25) dans une direction (Left, Right, Front, Back) avec un décalage et une rotation. Création, suppression, duplication (Shift + glisser) et transformations passent par editor.history (annulable).",
+  "notes": [
+    "Les angles saisis sont en degrés ; les rotations internes sont des quaternions (conversion XYZ euler en radians).",
+    "setSites restaure rot depuis rotOrig si présent (corrige les rotations ajustées automatiquement pour les multispots) puis supprime rotOrig.",
+    "Une place dupliquée reçoit un nom unique 'Nom (n)' via makeUniqueName.",
+    "hitTest ne renvoie rien (nil) tant que la souris n'est pas enfoncée (mouseInfo.down) ; il teste la boîte orientée de chaque spot du multispot avec intersectsRay_OBB (la caméra doit être hors de la boîte)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet renvoyé par le constructeur. Champs : sitesEditor, key, current (place sélectionnée), list, isMultiSpot, multiSpotData (spotAmount, spotOffset, spotDirection, spotRotation), listDisplay (assigné par sitesEditor), requestGizmo.",
+      "functions": {
+        "init": {"desc": "Constructeur : prépare les valeurs de multispot, l'état de glissement et l'utilitaire transformUtil ('Edit Sites', 'Transform'). Définit aussi la méthode C:requestGizmo(mode) qui programme la (re)configuration du gizmo sur 3 images.", "params": {"sitesEditor": {"type": "table", "desc": "Module editor_sitesEditor."}, "key": {"type": "string", "desc": "'parkingSpots'."}}, "returns": [], "internal": true},
+        "setSites": {"desc": "Définit les sites édités, restaure les rotations d'origine des multispots et désélectionne.", "params": {"sites": {"type": "table", "desc": "Objet sites."}}, "returns": [], "internal": false},
+        "select": {"desc": "Sélectionne une place : place le transform, active l'édition et recopie ses réglages de multispot dans l'UI.", "params": {"ps": {"type": "table|nil", "desc": "Place à sélectionner."}}, "returns": [], "internal": false},
+        "hitTest": {"desc": "Renvoie la place dont la boîte (ou l'une des boîtes du multispot) est touchée au plus près par le rayon souris, seulement lors d'un clic.", "params": {"mouseInfo": {"type": "table", "desc": "Infos souris (camPos, rayDir, down)."}, "objects": {"type": "table", "desc": "Table des places."}}, "returns": [{"type": "table|nil", "desc": "Place touchée ou nil."}], "internal": false},
+        "create": {"desc": "Crée une place à la position donnée avec l'échelle 'Car' (action annulable 'Create Parking Spot') et la renvoie.", "params": {"pos": {"type": "vec3", "desc": "Position de la nouvelle place."}}, "returns": [{"type": "table", "desc": "Place créée (self.current)."}], "internal": false},
+        "remove": {"desc": "Supprime une place (action annulable 'Remove Parking Spot').", "params": {"ps": {"type": "table", "desc": "Place à supprimer."}}, "returns": [], "internal": false},
+        "setTransform": {"desc": "Copie pos, rot, scl de la place courante dans transformUtil.", "params": {}, "returns": [], "internal": false},
+        "updateFromTransform": {"desc": "Copie pos, rot, scl de transformUtil vers la place courante (pendant un glissement).", "params": {}, "returns": [], "internal": false},
+        "updateTransform": {"desc": "Enregistre une action annulable 'Update Transform of ...' avec les anciennes et nouvelles valeurs.", "params": {}, "returns": [], "internal": false},
+        "updateMultiSpot": {"desc": "Recopie les réglages de multispot de l'UI vers la place courante.", "params": {}, "returns": [], "internal": false},
+        "_beginShiftDuplicate": {"desc": "Duplique la place courante (action annulable 'Duplicate Parking Spot') quand un glissement commence avec Shift, et fait adopter la copie par la liste.", "params": {}, "returns": [], "internal": true},
+        "drawElement": {"desc": "Dessine l'éditeur de la place : gizmo, choix de taille, angles de rotation, case 'Is MultiSpot' et ses curseurs (Amount of Spots 1 à 25, Offset 0 à 5, Spot Rotation -1.55 à 1.55).", "params": {"ps": {"type": "table", "desc": "Place affichée."}, "mouseInfo": {"type": "table", "desc": "Infos souris."}}, "returns": [], "internal": false}
+      }
+    }
+  }
+}

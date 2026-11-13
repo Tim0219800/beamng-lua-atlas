@@ -1,0 +1,72 @@
+{
+  "path": "lua/ge/extensions/career/modules/tutorialPopups.lua",
+  "module": "Gère les popups d'introduction (tutoriel et aides contextuelles) de la carrière : mémorise lesquelles ont déjà été vues (drapeaux sauvegardés dans <profil>/career/tutorialData.json), les ouvre via ui_popup depuis /gameplay/tutorials/pages/, et met en file d'attente celles qui arriveraient pendant une popup « véhicule endommagé » du tutoriel. Expose aussi des fonctions nommées (showWelcomeSplashscreen, onCareerTuningStarted, onEnterCargoOverviewScreen…) qui servent de hooks ou d'appels directs pour afficher la popup associée une seule fois.",
+  "usage": "career_modules_tutorialPopups.introPopup(\"tuning\")        -- une seule fois\ncareer_modules_tutorialPopups.introPopup(\"tuning\", true)  -- forcée",
+  "notes": [
+    "Des fonctions sont générées dynamiquement depuis la table interne introPopupTable : showWelcomeSplashscreen (welcome), showBeforeDrivingSplashscreen (driving), showCrashRecoverSplashScreen (crashRecover), onRefuelingStartTransaction (refueling), onAvailableMissionsSentToUi (missions), showPostMissionSplash (postMission), onCareerTuningStarted (tuning), garageModeStartStep (garage), showLogbookSplash (logbook), showTutorialOverSplash (finishing, logbook, leagues, performanceIndex), onEnterCargoOverviewScreen (delivery/cargoScreen), onComputerInsurance (insurance), onVehiclePaintingUiOpened (vehiclePainting). D'autres entrées (addWalkingModeLogbookEntry, addCamerasLogbookEntry, showTraversalSplashScreen, showBasicTutorialComplete, onVehicleBought) existent mais n'ouvrent aucune popup (liste vide). Ces fonctions ne figurent pas dans la liste auto des pages.",
+    "introPopup marque le drapeau comme vu avant l'ouverture, puis appelle ui_popup.openPopupById avec root /gameplay/tutorials/pages/.",
+    "Si le tutoriel est actif, qu'un crash a eu lieu et que la popup de dégâts (v2/damagedVehicle, v2/damagedVehicleTimeTrial, v2/damagedVehicleCareer) n'est pas encore fermée, la popup demandée est mise en attente et rouverte à la fermeture de la suivante.",
+    "Le champ allTutorialFlags est défini à la fin du fichier ; showAllSplashscreensAndLogbookEntries remet tous ces drapeaux à false avant de tout réafficher."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{'ui_popup', 'gameplay_tutorial_damageTracker'}."},
+    "allTutorialFlags": {"type": "string[]", "desc": "Liste des ids de popups connus (welcome, driving, crashRecover, bigmap, refueling, missions, tuning, insurance, leagues, etc.)."}
+  },
+  "functions": {
+    "setFlagsTable": {
+      "desc": "Remplace la table complète des drapeaux « popup vue ».",
+      "params": {"flagsTable": {"type": "table<string, boolean>|nil", "desc": "Nouvelle table ; nil donne une table vide."}},
+      "internal": false
+    },
+    "getTutorialFlag": {
+      "desc": "Lit le drapeau d'une popup (true si vue).",
+      "params": {"key": {"type": "string", "desc": "Id de la popup."}},
+      "returns": [{"type": "boolean|nil", "desc": "Valeur du drapeau."}],
+      "internal": false
+    },
+    "setTutorialFlag": {
+      "desc": "Met à jour le drapeau d'une popup.",
+      "params": {"key": {"type": "string", "desc": "Id de la popup."}, "value": {"type": "boolean", "desc": "Vue ou non."}},
+      "internal": false
+    },
+    "wasIntroPopupsSeen": {
+      "desc": "Indique si toutes les popups listées ont déjà été vues.",
+      "params": {"pages": {"type": "string[]|nil", "desc": "Ids de popups."}},
+      "returns": [{"type": "boolean", "desc": "true si toutes ont leur drapeau (true aussi pour une liste vide)."}],
+      "internal": false
+    },
+    "introPopup": {
+      "desc": "Ouvre une popup d'intro. Sans force, ne fait rien si elle a déjà été vue. Peut être mise en attente après une popup de dégâts du tutoriel.",
+      "params": {"id": {"type": "string", "desc": "Id de la page (ex. \"v2/basicControls\")."}, "force": {"type": "boolean|nil", "desc": "Si vrai, ignore le drapeau « déjà vue »."}},
+      "internal": false
+    },
+    "introPopupSequence": {
+      "desc": "Ouvre plusieurs popups à la suite (ui_popup.openPopupsByIds) et marque tous les ids comme vus.",
+      "params": {"ids": {"type": "string[]", "desc": "Ids de pages."}, "force": {"type": "boolean|nil", "desc": "Si faux ou nil, ne marque que les pages non encore vues ; la séquence est ouverte dans tous les cas."}},
+      "internal": false
+    },
+    "showNonTutorialWelcomeSplashscreen": {
+      "desc": "Affiche (forcées) les popups d'accueil sans tutoriel : welcomeNoTutorial, leagues, performanceIndex, logbook.",
+      "internal": false
+    },
+    "showAllSplashscreensAndLogbookEntries": {
+      "desc": "Remet tous les drapeaux à false puis ré-affiche toutes les popups d'accueil et toutes les popups de la table interne (utile pour revoir les aides).",
+      "internal": false
+    },
+    "drawDebugFunctions": {
+      "desc": "Dessine le menu imgui de debug « Intro Popups » : tout revoir, tout marquer non vu, cases à cocher par popup, bouton d'édition du contenu.",
+      "internal": true
+    },
+    "onExtensionLoaded": {"desc": "Hook de chargement : lit les drapeaux depuis tutorialData.json du profil courant.", "internal": true},
+    "onSaveCurrentProfile": {
+      "desc": "Hook de sauvegarde du profil : écrit les drapeaux dans tutorialData.json.",
+      "params": {"currentSavePath": {"type": "string", "desc": "Dossier de sauvegarde du profil."}},
+      "internal": true
+    },
+    "onIntroPopupCareerClosed": {
+      "desc": "Hook émis à la fermeture d'une popup : si c'est une popup de dégâts, marque la fermeture, puis rouvre la première popup en attente.",
+      "params": {"id": {"type": "string", "desc": "Id de la popup fermée."}},
+      "internal": true
+    }
+  }
+}

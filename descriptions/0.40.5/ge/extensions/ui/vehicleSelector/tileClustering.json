@@ -1,0 +1,68 @@
+{
+  "path": "lua/ge/extensions/ui/vehicleSelector/tileClustering.lua",
+  "module": "Regroupe les configurations de véhicules en « clusters » (une tuile par modèle ou par marque + sous-modèle) pour la grille du sélecteur de véhicules, et fabrique la tuile de chaque cluster : nom, aperçu, chemin de navigation, favoris et récents, statistiques de la config représentative, icônes de source. Il est appelé par ui_vehicleSelector_tiles ; un moddeur s'en sert peu directement.",
+  "notes": [
+    "Deux modes de cluster : 'brandSubModelOrModel' (clé = « Marque SousModèle », le sous-modèle valant à défaut la clé du modèle) et 'model' (clé = model_key, suivie du vehicleSelectorSubCluster si useSubCluster est vrai).",
+    "L'aperçu d'un cluster est /vehicles/<modèle>/default.png s'il existe, sinon model.preview, sinon default.jpg. La config représentative est default_pc du modèle (tri Automatic ou Name) ; sinon la dernière de la liste triée selon sortMode.",
+    "getClusteredItemsStats trie clusteredItems.list en place quand sortMode n'est ni 'Automatic' ni 'Name'.",
+    "clusterItems : un mode de cluster inconnu provoque une erreur (clusterModeFunctions[clusterMode] est appelé sans vérification).",
+    "Les tuiles de cluster portent doubleClickMode = 'capture' et un champ gotoPath {'configsForBrandSubModelOrModel', modèle, sous-modèle, marque} suivi de group.gotoParams."
+  ],
+  "functions": {
+    "clusterItems": {
+      "desc": "Regroupe des configs selon le mode de cluster. Chaque cluster contient configsByKey, count, list, ainsi que years et value (minimums des configs, pour le tri).",
+      "params": {
+        "configs": {"type": "table", "desc": "Configs à regrouper (chacune avec key et model_key)."},
+        "clusterMode": {"type": "string", "desc": "'brandSubModelOrModel' ou 'model'."}
+      },
+      "returns": [{"type": "table<string, table>", "desc": "Clusters indexés par nom de groupe."}]
+    },
+    "createTileFromClusteredItems": {
+      "desc": "Crée la tuile d'un cluster selon le mode demandé.",
+      "params": {
+        "clusteredItems": {"type": "table", "desc": "Un cluster issu de clusterItems."},
+        "group": {"type": "table", "desc": "Groupe parent (key, gotoParams)."},
+        "clusterMode": {"type": "string", "desc": "'brandSubModelOrModel' ou 'model'."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Tuile (key, name, preview, subElementCount, favouriteIdx, recentIdx, gotoPath, doubleClickDetails, sourceIcons, Value, Weight, Top Speed, Power, Power/Weight, 0-60 mph, 0-100 km/h, isAuxiliary...), ou nil si mode inconnu."}]
+    },
+    "getClusterModeFunction": {
+      "desc": "Renvoie la fonction qui calcule le nom de cluster d'une config pour un mode donné.",
+      "params": {"clusterMode": {"type": "string", "desc": "Mode de cluster."}},
+      "returns": [{"type": "function|nil", "desc": "Fonction (config) -> string, ou nil."}]
+    },
+    "getClusteredItemsFavouriteIconPercent": {
+      "desc": "Parcourt un cluster pour déterminer les favoris et récents qu'il contient.",
+      "params": {"clusteredItems": {"type": "table", "desc": "Cluster (configsByKey, count)."}},
+      "returns": [
+        {"type": "number", "desc": "Plus grand indice de favori (0 si aucun)."},
+        {"type": "number", "desc": "Plus petit indice de récent (math.huge si aucun)."},
+        {"type": "number", "desc": "Part des configs favorites, entre 0 et 1."},
+        {"type": "table|nil", "desc": "Config favorite d'indice le plus haut."},
+        {"type": "table|nil", "desc": "Config la plus récente."}
+      ]
+    },
+    "getClusteredItemsStats": {
+      "desc": "Choisit l'aperçu, le modèle, la config et la config représentative d'un cluster selon sortMode.",
+      "params": {
+        "clusteredItems": {"type": "table", "desc": "Cluster."},
+        "sortMode": {"type": "string", "desc": "Mode de tri (Automatic, Name, Value, Weight, ...)."}
+      },
+      "returns": [
+        {"type": "string", "desc": "Chemin de l'image d'aperçu."},
+        {"type": "string", "desc": "Clé du modèle."},
+        {"type": "string", "desc": "Clé de la config représentative."},
+        {"type": "table", "desc": "Config représentative."}
+      ]
+    },
+    "getSources": {
+      "desc": "Renvoie les étiquettes et icônes de provenance d'une config : officielle BeamNG ('beamNG'), personnalisée ('wrench'), Automation (logo SVG), mod ('puzzleModule'), fichiers jbeam manquants ('danger').",
+      "params": {
+        "config": {"type": "table", "desc": "Config du véhicule."},
+        "model": {"type": "table", "desc": "Données du modèle."},
+        "onlyIcons": {"type": "boolean", "desc": "true pour ne renvoyer que les icônes, sans le texte traduit."}
+      },
+      "returns": [{"type": "string[]", "desc": "Liste d'icônes (et textes si onlyIcons est faux)."}]
+    }
+  }
+}

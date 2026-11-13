@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/procedural/procCamPathPosRot.lua",
+  "module": "Noeud flowgraph 'Procedural Static CamPath' (categorie once_p_duration). Cree une trajectoire de camera a deux cles identiques (position pos, rotation rot, FOV 60) pour afficher un point de vue fixe, l'enregistre via camera:addCustomPath et sort son nom unique sur 'pathName'.",
+  "notes": [
+    "Le commentaire du code indique que la categorie devrait etre f_duration mais qu'il n'existe pas de callback de fin."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "workOnce": {
+          "desc": "Construit les deux marqueurs (duree 1000), genere un nom unique (id du noeud + 'pcp') et ajoute le chemin au module camera.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

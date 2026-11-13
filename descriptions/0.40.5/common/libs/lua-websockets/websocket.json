@@ -1,0 +1,19 @@
+{
+  "path": "lua/common/libs/lua-websockets/websocket.lua",
+  "module": "Point d'entrée de la bibliothèque tierce lua-websockets (Gerhard Lipp, licence MIT), implémentation WebSocket (RFC 6455) en Lua pur. Ce module regroupe les sous-modules client et server (chargés à la demande) et les constantes d'opcodes de trame. Il est chargé via require('libs/lua-websockets/websocket').",
+  "usage": "local ws = require('libs/lua-websockets/websocket')\nlocal c = ws.client.new({timeout = 2})\nlocal ok, err = c:connect('ws://127.0.0.1:8080', 'echo')\nif ok then c:send('salut', ws.TEXT) end",
+  "notes": [
+    "Les require internes utilisent le chemin 'libs/lua-websockets/websocket.frame' (avec un point) ; c'est la convention de require de Lua, équivalente à un slash.",
+    "Les backends 'ev' (client_ev, server_ev) exigent la bibliothèque 'ev' (lua-ev) et les backends 'copas' exigent 'libs/copas/copas' ; sans ces dépendances, le require échoue."
+  ],
+  "fields": {
+    "client": {"type": "table", "desc": "Table paresseuse (voir websocket/client.lua) : client.new / client.sync (backend synchrone), client.copas, client.ev."},
+    "server": {"type": "table", "desc": "Table paresseuse (voir websocket/server.lua) : server.copas, server.ev."},
+    "CONTINUATION": {"type": "integer", "desc": "Opcode 0 : trame de continuation d'un message fragmenté."},
+    "TEXT": {"type": "integer", "desc": "Opcode 1 : message texte."},
+    "BINARY": {"type": "integer", "desc": "Opcode 2 : message binaire."},
+    "CLOSE": {"type": "integer", "desc": "Opcode 8 : fermeture de la connexion."},
+    "PING": {"type": "integer", "desc": "Opcode 9 : ping."},
+    "PONG": {"type": "integer", "desc": "Opcode 10 : pong."}
+  }
+}

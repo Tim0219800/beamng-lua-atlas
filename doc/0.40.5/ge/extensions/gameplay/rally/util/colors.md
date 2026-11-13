@@ -4,41 +4,49 @@
 
 **Accès :** extension `gameplay_rally_util_colors` : `extensions.load("gameplay_rally_util_colors")`, puis la globale `gameplay_rally_util_colors`
 
+Palette de couleurs et constantes d'affichage (alphas, rayons, largeurs) partagées par les outils de rallye : snaproads, notes d'allure (pacenotes), waypoints et curseur de l'éditeur. Ne contient aucune fonction, uniquement des champs. Les couleurs sont des tables {r, g, b} entre 0 et 1, sauf clr_error et clr_no_error qui sont des ImVec4 (ui_imgui).
+
+## Remarques
+
+- Les couleurs sont des tables {r,g,b} sans alpha : l'alpha est fourni séparément (champs *_alpha*).
+- clr_error (1, 0.2, 0.2, 1) et clr_no_error (0.2, 1, 0.2, 1) sont des ImVec4 pour imgui, pas des tables.
+- Autres champs non listés individuellement : snaproads_* (rayon 0.7, 0.5 recce, 0.2 conduite ; alphas 0.8/0.2/0.5 ; couleurs recce rouge, route orange), recce_* (driveline rouge, cut teal), pacenote_* (alphas, largeurs de lien 1.5 -> 0.25, couleur interlink rose), waypoint_* (cs vert, ce rouge, variantes adjacentes et fonds, alphas de survol 0.95/1.0), new_pacenote_cursor_* (lien blanc, cs vert clair, ce rouge clair, alpha 0.8).
+
 ## Champs
 
 | Champ | Type | Description |
 |---|---|---|
-| `cam_last_pos_alpha` | any |  |
-| `cam_last_pos_radius` | any |  |
-| `clr_aqua` | table |  |
-| `clr_black` | table |  |
-| `clr_blue` | table |  |
-| `clr_blue_light` | table |  |
-| `clr_error` | any |  |
-| `clr_green` | table |  |
-| `clr_green_dark` | table |  |
-| `clr_green_pastel` | table |  |
-| `clr_grey` | table |  |
-| `clr_grey_dark` | table |  |
-| `clr_grey_light` | table |  |
-| `clr_grey_light_2` | table |  |
-| `clr_light_green` | table |  |
-| `clr_light_red` | table |  |
-| `clr_lime_green` | table |  |
-| `clr_no_error` | any |  |
-| `clr_orange` | table |  |
-| `clr_pink` | table |  |
-| `clr_purple` | table |  |
-| `clr_red` | table |  |
-| `clr_red_dark` | table |  |
-| `clr_red_pastel` | table |  |
-| `clr_teal` | table |  |
-| `clr_teal_2` | table |  |
-| `clr_white` | table | colors |
-| `clr_yellow` | table |  |
-| `new_pacenote_cursor_alpha` | number |  |
-| `new_pacenote_cursor_clr_ce` | any |  |
-| `new_pacenote_cursor_clr_cs` | any |  |
+| `cam_last_pos_alpha` | number | Alpha de cette sphère (0.8). |
+| `cam_last_pos_radius` | number | Rayon de la sphère de dernière position caméra : snaproads_radius x 2 = 1.4 m. |
+| `clr_aqua` | number[] | {0, 0.8, 0.8}. |
+| `clr_black` | number[] | {0, 0, 0}. |
+| `clr_blue` | number[] | {0, 0, 1}. |
+| `clr_blue_light` | number[] | {0.392, 0.612, 1}. |
+| `clr_error` | ImVec4 | Rouge d'erreur pour imgui (1, 0.2, 0.2, 1). |
+| `clr_green` | number[] | {0, 1, 0}. |
+| `clr_green_dark` | number[] | {0, 0.5, 0}. |
+| `clr_green_pastel` | number[] | {0.718, 1, 0.455}. |
+| `clr_grey` | number[] | {0.5, 0.5, 0.5}. |
+| `clr_grey_dark` | number[] | {0.2, 0.2, 0.2}. |
+| `clr_grey_light` | number[] | {0.75, 0.75, 0.75}. |
+| `clr_grey_light_2` | number[] | {0.8, 0.8, 0.8}. |
+| `clr_light_green` | number[] | {0.5, 1, 0.5}. |
+| `clr_light_red` | number[] | {1, 0.5, 0.5}. |
+| `clr_lime_green` | number[] | {0.66, 1, 0}. |
+| `clr_no_error` | ImVec4 | Vert « pas d'erreur » pour imgui (0.2, 1, 0.2, 1). |
+| `clr_orange` | number[] | {1, 0.64, 0}. |
+| `clr_pink` | number[] | {1, 0, 1} (magenta). |
+| `clr_purple` | number[] | {0.73, 0, 1}. |
+| `clr_red` | number[] | {1, 0, 0}. |
+| `clr_red_dark` | number[] | {0.5, 0, 0}. |
+| `clr_red_pastel` | number[] | {1, 0.494, 0.635}. |
+| `clr_teal` | number[] | {0, 0.76, 0.55}. |
+| `clr_teal_2` | number[] | {0, 1, 0.58}. |
+| `clr_white` | number[] | {1, 1, 1}. |
+| `clr_yellow` | number[] | {1, 1, 0}. |
+| `new_pacenote_cursor_alpha` | number | Alpha du curseur de nouvelle note d'allure dans l'éditeur (0.8). |
+| `new_pacenote_cursor_clr_ce` | number[] | Couleur du point d'arrivée (CE) du curseur : clr_light_red. |
+| `new_pacenote_cursor_clr_cs` | number[] | Couleur du point de départ (CS) du curseur : clr_light_green. |
 | `new_pacenote_cursor_clr_link` | any | rallyEditor/pacenotes.lua |
 | `new_pacenote_cursor_linkFromWidth` | number |  |
 | `new_pacenote_cursor_linkHeightRadiusShinkFactor` | number |  |

@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/editor/api/colorTemperatureUI.lua",
+  "module": "Widget ImGui de l'éditeur pour choisir une température de couleur de lumière en Kelvin, avec presets (bougie, sodium, LED, xénon…), type de filament et dégradation. Sert aux inspecteurs de lumières. Le module convertit aussi un Kelvin en RGB linéaire (approximation du lieu de Planck, Rec.709/sRGB D65).",
+  "usage": "local r, g, b = editor_api_colorTemperatureUI.kelvinToRGBLinear(3200)\nlocal s = editor_api_colorTemperatureUI.kelvinToColorStringLinear(3200, 1) -- \"r g b a\"",
+  "notes": [
+    "Kelvin borné à 1667..25000 dans kelvinToRGBLinear ; défaut 6500 si nil.",
+    "Le RGB renvoyé est normalisé (la composante max vaut 1) et les valeurs négatives sont ramenées à 0.",
+    "L'état de l'UI (Kelvin, preset, filament, dégradation) est gardé par id dans des tables locales du module."
+  ],
+  "functions": {
+    "draw": {
+      "desc": "Dessine le widget (slider Kelvin, presets, combo de type de filament, slider de dégradation si le filament en a une). Les valeurs passent par les callbacks de opts : getKelvin(), setKelvin(k, isFinal), getRGBA(), setRGBA(r,g,b,a,isFinal), getFilamentId(), setFilamentId(id, isFinal), getDegradation(), setDegradation(v, isFinal).",
+      "params": {
+        "opts": {"type": "table", "desc": "id (string, défaut \"kelvin\"), label (défaut \"Color temperature\"), minK/maxK (défaut 1000..20000) et les callbacks get/set ci-dessus. isFinal vaut true à la fin d'une édition."}
+      },
+      "returns": []
+    },
+    "kelvinToRGBLinear": {
+      "desc": "Convertit une température de couleur en RGB linéaire normalisé (max = 1).",
+      "params": {"k": {"type": "number|nil", "desc": "Température en Kelvin, bornée à 1667..25000 (6500 si nil)"}},
+      "returns": [
+        {"type": "number", "desc": "r"},
+        {"type": "number", "desc": "g"},
+        {"type": "number", "desc": "b"}
+      ]
+    },
+    "kelvinToColorStringLinear": {
+      "desc": "Comme kelvinToRGBLinear mais renvoie la chaîne \"r g b a\" (6 décimales), format de couleur des champs d'objets.",
+      "params": {
+        "k": {"type": "number|nil", "desc": "Température en Kelvin"},
+        "alpha": {"type": "number|nil", "desc": "Alpha, 1 par défaut"}
+      },
+      "returns": [{"type": "string", "desc": "\"r g b a\""}]
+    }
+  }
+}

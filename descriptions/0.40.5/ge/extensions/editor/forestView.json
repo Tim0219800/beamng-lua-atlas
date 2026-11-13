@@ -1,0 +1,28 @@
+{
+  "path": "lua/ge/extensions/editor/forestView.lua",
+  "module": "Fenêtre « Forest View » de l'éditeur, destinée à lister les ForestItemData de la forêt (« theForest ») sous forme de boutons triés par nom. Le module est en grande partie inachevé : les hooks d'activation/désactivation du mode d'édition sont commentés à l'export, donc la liste n'est jamais remplie et la fenêtre reste vide.",
+  "notes": [
+    "Bug : forestItemDataTreeNode appelle selectForestItemData, dont la définition est entièrement commentée ; cliquer sur un bouton lèverait une erreur si la liste contenait des éléments.",
+    "populateForestItems, onEditorEditModeActivated et onEditorEditModeDeactivated sont définis mais jamais appelés (les exports M.onEditorEditModeActivated/Deactivated sont commentés) : forestItemsInfo reste vide."
+  ],
+  "functions": {
+    "onEditorActivated": {
+      "desc": "Hook appelé à l'activation de l'éditeur ; corps vide.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Hook appelé chaque frame par l'éditeur : dessine la fenêtre « Forest View » avec un bouton par entrée de forestItemsInfo.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre « forestEditorView » (220x320).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

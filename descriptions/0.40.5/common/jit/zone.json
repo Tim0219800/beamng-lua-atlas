@@ -1,0 +1,21 @@
+{
+  "path": "lua/common/jit/zone.lua",
+  "module": "Module jit.zone de LuaJIT (Mike Pall, licence MIT, 2005-2026) : pile hiérarchique de « zones » nommées utilisée par le profileur (jit.p avec l'option z) pour regrouper les échantillons par zone logique. Le module est un objet appelable : zone('nom') empile une zone, zone() sans argument en dépile une (erreur « empty zone stack » si vide).",
+  "usage": "local zone = require('jit.zone')\nzone('IA')\n  zone('A*')\n  print(zone:get()) --> 'A*'\n  zone()\nprint(zone:get()) --> 'IA'\nzone()",
+  "notes": [
+    "L'appel zone() renvoie la zone dépilée.",
+    "Le profileur détecte la zone courante via la pile : toute zone empilée doit être dépilée, sinon les zones suivantes sont faussées."
+  ],
+  "functions": {
+    "flush": {
+      "desc": "Vide complètement la pile de zones.",
+      "params": {"t": {"type": "table", "desc": "Le module lui-même (appel avec ':' : zone:flush())."}},
+      "returns": []
+    },
+    "get": {
+      "desc": "Renvoie le nom de la zone courante (sommet de pile), nil si la pile est vide.",
+      "params": {"t": {"type": "table", "desc": "Le module lui-même (appel zone:get())."}},
+      "returns": [{"type": "string|nil", "desc": "Nom de la zone courante."}]
+    }
+  }
+}

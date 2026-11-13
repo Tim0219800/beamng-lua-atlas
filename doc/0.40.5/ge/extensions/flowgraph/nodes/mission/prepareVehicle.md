@@ -4,11 +4,15 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/mission/prepareVehicle")` (fichier sous extensions/ mais pas une extension classique)
 
+Noeud flowgraph 'Prepare Vehicle' (categorie once_instant). Prepare un ou plusieurs vehicules pour le gameplay (electrique et valeurs) via self.mgr.modules.mission:prepareVehicle. Pins optionnels : vehId (defaut vehicule joueur) et vehicleIds (table d'ids supplementaires).
+
 ## Classe `C`
+
+Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:workOnce()` |  | 19 |
+| `C:workOnce()` | Prepare vehId (ou le vehicule joueur) avec le second argument false, puis chaque id de vehicleIds avec le second argument true sauf s'il s'agit du vehicule principal ou du joueur. | 19 |
 
 ## Appels vers le moteur (C++)
 

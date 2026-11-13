@@ -1,0 +1,322 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/notebook/pacenote.lua",
+  "module": "Une pacenote de rallye (une note du copilote) : classe instanciée par le carnet (notebook, path.lua). Elle porte deux waypoints (cornerStart et cornerEnd) dans une sortedList, un contenu structuré à six emplacements (structured.lua), des textes par langue (distance avant/après, texte libre), un mode audio (auto, freeform, structuredOnline, structuredOffline, custom), un type de déclenchement, des mesures géométriques du virage et des caches (compilation, longueur, position caméra). Elle compose le texte et les fichiers audio via les compositeurs et le voicepack du carnet, produit l'objet « compilé » joué par le copilote (audioObjs, événement visuel), se valide, se sérialise et se dessine dans l'éditeur (debugDrawer). Utile à un moddeur pour lire ou modifier un carnet chargé.",
+  "usage": "local Pacenote = require('/lua/ge/extensions/gameplay/rally/notebook/pacenote')\nlocal pn = Pacenote(notebook, 'Pacenote 12')\nprint(pn:noteOutputPreview(), pn:getAudioModeString())\nlocal corner = pn:corner() -- nil ou { type='corner', ... }",
+  "notes": [
+    "Le module renvoie un constructeur : Pacenote(notebook, name, forceId). Le notebook doit fournir getNextUniqueIdentifier, getLanguages, selectedCodriverLanguage, getTextCompositor, getOfflineTextCompositor, getVisualCompositor2, resolveActiveVoicepack, load*PacenoteMetadata, etc.",
+    "C.noteFields = { before, beforeMeters, note, after, afterMeters } : clés des champs d'un texte par langue (self.notes[lang]).",
+    "self.notes n'est plus sauvegardé : onSerialize n'écrit pas les textes ; le texte structuré est reconstruit au chargement. Un notebook en mode freeform perd donc son texte libre à la sauvegarde (avertissement 'W' journalisé).",
+    "Bug probable : playbackAllowed utilise la variable `context` alors que sa définition est commentée (local context = {currLap, maxLap}) ; setfenv(func, context) reçoit donc nil (global) et la branche « code Lua » échoue ou se comporte de façon indéfinie. Seuls nil/vide, true/t, false/f sont fiables.",
+    "validate() remplit self.validation_issues et ne renvoie rien ; utiliser is_valid() ensuite (true si aucune anomalie).",
+    "Les modes de dessin (drawDebugPacenote*) dépendent de pacenoteToolsState (selected_pn_id, selected_wp_id, shift, showMeasurements) fourni par l'éditeur ; ils sont sans objet hors éditeur.",
+    "setNavgraph est un stub qui journalise 'setNavgraph() not implemented'.",
+    "La distance « après » est mesurée depuis cornerEnd par défaut, ou depuis cornerStart si distanceMeasureWaypoint == 'cs' (valeur par défaut 'ce', non sérialisée tant qu'elle vaut 'ce')."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Instance de pacenote. Champs : notebook, id, pk (identifiant aléatoire stable), name, todo, playback_rules (condition texte), isolate, triggerType, slowCornerReleaseType, slowCorner, ignoreDistanceCalls, includeLinkWord, distanceBeforeModifier, distanceMeasureWaypoint, audioMode, notes (par langue), structured, pacenoteWaypoints (sortedList), metadata (metadata.system masque le mode structuré), measurements {corner1, corner2, splitPoint, variants, selectedType, selected}, sortOrder, validation_issues, halfpoint, prevNote/nextNote, customAudioAnchors.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur : initialise tous les champs par défaut (déclenchement dynamique, mode audio auto, textes vides par langue du carnet, structuré vide, liste de waypoints vide).",
+          "params": {
+            "notebook": {"type": "table", "desc": "Carnet propriétaire."},
+            "name": {"type": "string|nil", "desc": "Nom (défaut « Pacenote <id> »)."},
+            "forceId": {"type": "integer|nil", "desc": "Identifiant imposé."}
+          },
+          "internal": true
+        },
+        "getNextUniqueIdentifier": {"desc": "Délègue au carnet pour obtenir un identifiant unique (utilisé par les waypoints).", "returns": [{"type": "integer", "desc": "Identifiant."}], "internal": true},
+        "getNextWaypointType": {"desc": "Type du prochain waypoint à créer : cornerStart s'il manque, sinon cornerEnd s'il manque, sinon nil.", "returns": [{"type": "string|nil", "desc": "Type de waypoint."}]},
+        "setAllRadii": {
+          "desc": "Fixe le rayon de tous les waypoints (ou seulement de ceux d'un type).",
+          "params": {"newRadius": {"type": "number", "desc": "Rayon en mètres."}, "wpType": {"type": "string|nil", "desc": "Type à filtrer, nil pour tous."}}
+        },
+        "allToTerrain": {"desc": "Recale chaque waypoint sur le terrain avec zSnap.zSnapWithCurrentMethod."},
+        "noteOutputFreeform": {
+          "desc": "Texte libre final d'une langue, avec variables de distance avant/après interpolées. Chaîne vide si la compilation a échoué ou si la note est inutilisable.",
+          "params": {"lang": {"type": "string|nil", "desc": "Langue (défaut : celle du copilote sélectionné)."}},
+          "returns": [{"type": "string", "desc": "Texte."}]
+        },
+        "structuredPhraseEntriesOnline": {
+          "desc": "Entrées de phrases du compositeur texte « en ligne » pour le contenu structuré projeté ; peut résoudre les variantes audio du voicepack de mission.",
+          "params": {
+            "lang": {"type": "string|nil", "desc": "Langue pour les champs avant/après."},
+            "distBefore": {"type": "string|nil", "desc": "Surcharge du texte de distance avant."},
+            "distAfter": {"type": "string|nil", "desc": "Surcharge du texte de distance après."},
+            "opts": {"type": "table|nil", "desc": "resolveVariants, includeMissingVariant."}
+          },
+          "returns": [{"type": "table[]|nil", "desc": "Entrées { text, category, ... } ; nil si pas de compositeur."}]
+        },
+        "structuredPhraseEntriesOffline": {
+          "desc": "Idem pour le mode hors ligne (voicepack actif et compositeur hors ligne).",
+          "params": {"opts": {"type": "table|nil", "desc": "resolveVariants, includeMissingVariant."}},
+          "returns": [{"type": "table[]|nil", "desc": "Entrées ; nil sans voicepack ou compositeur."}]
+        },
+        "noteOutputStructuredOnline": {
+          "desc": "Liste de textes du mode structuré en ligne ; si le compositeur est absent, retombe sur les textes mémorisés dans self.notes[lang].note.structured.",
+          "params": {"lang": {"type": "string|nil", "desc": "Langue."}},
+          "returns": [{"type": "string[]", "desc": "Textes."}]
+        },
+        "noteOutputStructuredOffline": {"desc": "Liste de textes du mode structuré hors ligne ({} si indisponible).", "returns": [{"type": "string[]", "desc": "Textes."}]},
+        "measurementTypeForCorner": {
+          "desc": "Type de mesure normalisé d'un corner (via geoPacenotes.normalizeMeasurementType).",
+          "params": {"corner": {"type": "table|nil", "desc": "Élément corner."}},
+          "returns": [{"type": "string", "desc": "Type de mesure (single, split2, split3)."}]
+        },
+        "measurementVariantForType": {
+          "desc": "Variante de mesure pour un type, avec repli sur la variante par défaut puis measurements.corner1.",
+          "params": {"measurementType": {"type": "string|nil", "desc": "Type de mesure."}},
+          "returns": [{"type": "table|nil", "desc": "Mesure (diameter, direction, arcDegrees, arcMeters, chordMeters…)."}]
+        },
+        "selectedMeasurementVariant": {"desc": "Variante de mesure correspondant au corner actuel.", "returns": [{"type": "table|nil", "desc": "Mesure."}]},
+        "structuredForProjection": {
+          "desc": "Copie du structuré { schemaVersion, items } enrichie, sur le corner, des mesures vivantes : direction (-1 gauche, 1 droite), intensity (diamètre), arcDegrees, arcMeters, chordMeters. Ne modifie pas le structuré source.",
+          "returns": [{"type": "table", "desc": "Structuré projeté."}]
+        },
+        "currentStructuredOutput": {"desc": "Textes structurés actuels (en ligne), ou le champ structuré mémorisé en repli.", "returns": [{"type": "string[]", "desc": "Textes."}]},
+        "currentStructuredContentOutput": {"desc": "Comme currentStructuredOutput mais sans les distances avant/après.", "returns": [{"type": "string[]", "desc": "Textes."}]},
+        "getNoteFieldBefore": {
+          "desc": "Texte de distance « avant » d'une langue ('' si absent).",
+          "params": {"lang": {"type": "string|nil", "desc": "Langue (défaut : copilote sélectionné)."}},
+          "returns": [{"type": "string", "desc": "Texte."}]
+        },
+        "getNoteFieldBeforeMeters": {
+          "desc": "Distance « avant » en mètres (-1 si inconnue).",
+          "params": {"lang": {"type": "string|nil", "desc": "Langue."}},
+          "returns": [{"type": "number", "desc": "Mètres."}]
+        },
+        "getNoteFieldFreeform": {
+          "desc": "Texte libre brut d'une langue ('' si absent).",
+          "params": {"lang": {"type": "string|nil", "desc": "Langue."}},
+          "returns": [{"type": "string", "desc": "Texte."}]
+        },
+        "getNoteFieldStructured": {
+          "desc": "Texte structuré mémorisé d'une langue ({} si absent).",
+          "params": {"lang": {"type": "string|nil", "desc": "Langue."}},
+          "returns": [{"type": "table", "desc": "Liste de textes."}]
+        },
+        "getNoteFieldAfter": {
+          "desc": "Texte de distance « après » d'une langue ('' si absent).",
+          "params": {"lang": {"type": "string|nil", "desc": "Langue."}},
+          "returns": [{"type": "string", "desc": "Texte."}]
+        },
+        "getNoteFieldAfterMeters": {
+          "desc": "Distance « après » en mètres (-1 si inconnue).",
+          "params": {"lang": {"type": "string|nil", "desc": "Langue."}},
+          "returns": [{"type": "number", "desc": "Mètres."}]
+        },
+        "setNoteFieldBefore": {
+          "desc": "Définit texte et distance « avant » pour la langue du copilote sélectionné.",
+          "params": {"val": {"type": "string", "desc": "Texte."}, "meters": {"type": "number", "desc": "Distance en mètres (-1 inconnue)."}}
+        },
+        "setNoteFieldFreeform": {
+          "desc": "Définit le texte libre d'une langue.",
+          "params": {"val": {"type": "string", "desc": "Texte."}, "lang": {"type": "string|nil", "desc": "Langue."}}
+        },
+        "setNoteFieldStructured": {
+          "desc": "Définit le texte structuré mémorisé d'une langue.",
+          "params": {"val": {"type": "table", "desc": "Liste de textes."}, "lang": {"type": "string|nil", "desc": "Langue."}}
+        },
+        "setNoteFieldAfter": {
+          "desc": "Définit texte et distance « après » pour la langue du copilote sélectionné.",
+          "params": {"val": {"type": "string", "desc": "Texte."}, "meters": {"type": "number", "desc": "Distance en mètres (-1 inconnue)."}}
+        },
+        "getCustomAudioFiles": {
+          "desc": "Mode custom : demande au carnet les noms de clips attribués à cette pacenote (répartition automatique plus ancrages manuels) et les résout en chemins complets via le voicepack propriétaire.",
+          "returns": [{"type": "string[]", "desc": "Chemins de fichiers audio."}]
+        },
+        "getCustomAudioFile": {"desc": "Premier fichier audio custom, ou '' s'il n'y en a pas.", "returns": [{"type": "string", "desc": "Chemin."}]},
+        "getCustomDescription": {"desc": "Description (transcription) du premier clip custom, '' si absente.", "returns": [{"type": "string", "desc": "Description."}]},
+        "clearResolvedAudioObjs": {"desc": "Efface le cache des audioObjs résolus (tirage de variante)."},
+        "clearCachedFgData": {"desc": "Efface le cache de compilation et les audioObjs résolus ; à appeler après modification du contenu."},
+        "clearCompilationFailures": {"desc": "Remet à false le drapeau d'échec de compilation."},
+        "didCompileFail": {"desc": "true si la compilation a été marquée en échec.", "returns": [{"type": "boolean", "desc": "Résultat."}]},
+        "resolveAudioObjs": {
+          "desc": "Résout (une fois par mode, résultat mis en cache) les audioObjs : pour chaque objet ayant des candidats, tire une variante au hasard (math.random).",
+          "params": {"mode": {"type": "string", "desc": "'freeform', 'structuredOnline', 'structuredOffline' ou 'custom'."}, "audioObjs": {"type": "table[]|nil", "desc": "audioObjs non résolus."}},
+          "returns": [{"type": "table[]|nil", "desc": "audioObjs concrets."}],
+          "internal": true
+        },
+        "audioLenTotal": {"desc": "Durée audio totale (s) des audioObjs du mode actif.", "returns": [{"type": "number", "desc": "Secondes."}]},
+        "checkFilesExist": {
+          "desc": "true si tous les noms de fichiers sont non vides et existent (FS:fileExists).",
+          "params": {"audioMode": {"type": "string", "desc": "Mode (utilisé seulement pour un log commenté)."}, "fnames": {"type": "string[]", "desc": "Fichiers à tester."}},
+          "returns": [{"type": "boolean", "desc": "Résultat."}]
+        },
+        "audioObjs": {"desc": "audioObjs du mode audio courant issus de asCompiled (résolus, en cache) ; nil si la compilation a échoué ou mode inconnu.", "returns": [{"type": "table[]|nil", "desc": "Liste d'audioObjs (pacenoteFname, audioLen, category, structuredTimingAfter…)."}]},
+        "audioObjsFresh": {"desc": "Recalcule les audioObjs du mode courant sans passer par le cache de compilation.", "returns": [{"type": "table[]|nil", "desc": "audioObjs résolus."}]},
+        "asCompiled": {
+          "desc": "Compile la pacenote (mis en cache) : audioObjs et durées pour les quatre modes, texte d'aperçu, distances avant/après et événement visuel (visualPacenoteEvent) produit par le compositeur visuel. Renvoie nil si _compileFailed.",
+          "returns": [{"type": "table|nil", "desc": "{ id, name, noteText, audioObjs*, audioLen*, visualPacenoteEvent, distanceBefore, distanceAfter }."}]
+        },
+        "validate": {"desc": "Remplit validation_issues : waypoint cs/ce manquant, nom vide, note vide, fichier custom manquant, note libre manquante ou transcription inconnue."},
+        "is_valid": {"desc": "true si validation_issues est vide (après validate).", "returns": [{"type": "boolean", "desc": "Résultat."}]},
+        "getAudioModeSetting": {"desc": "Mode audio propre à la pacenote (peut être auto).", "returns": [{"type": "integer", "desc": "Valeur de RallyEnums.pacenoteAudioMode."}]},
+        "getAudioMode": {"desc": "Mode audio effectif : celui du carnet si le réglage est auto.", "returns": [{"type": "integer", "desc": "Valeur de RallyEnums.pacenoteAudioMode."}]},
+        "getAudioModeString": {"desc": "Nom lisible du mode effectif.", "returns": [{"type": "string", "desc": "Nom."}]},
+        "isAudioModeStructuredOnline": {"desc": "true si le mode effectif est structuredOnline.", "returns": [{"type": "boolean", "desc": "Résultat."}]},
+        "isAudioModeStructuredOffline": {"desc": "true si le mode effectif est structuredOffline.", "returns": [{"type": "boolean", "desc": "Résultat."}]},
+        "isAudioModeFreeform": {"desc": "true si le mode effectif est freeform.", "returns": [{"type": "boolean", "desc": "Résultat."}]},
+        "isAudioModeCustom": {"desc": "true si le mode effectif est custom.", "returns": [{"type": "boolean", "desc": "Résultat."}]},
+        "setAudioMode": {"desc": "Définit le mode audio propre à la pacenote.", "params": {"mode": {"type": "integer", "desc": "Valeur de RallyEnums.pacenoteAudioMode."}}},
+        "useStructured": {"desc": "true si le contenu structuré est utilisé : mode structuré en ligne ou hors ligne, et pas une pacenote système (metadata.system).", "returns": [{"type": "boolean", "desc": "Résultat."}]},
+        "selectedCodriverLanguage": {"desc": "Langue du copilote sélectionné (via le carnet).", "returns": [{"type": "string", "desc": "Langue."}]},
+        "selectedCodriver": {"desc": "Copilote sélectionné (via le carnet).", "returns": [{"type": "table", "desc": "Copilote."}]},
+        "pacenoteTextForSelect": {"desc": "Libellé pour une liste de sélection : deuxième mot du nom + ' - ' + aperçu.", "returns": [{"type": "string", "desc": "Libellé."}]},
+        "slowCornerAsText": {"desc": "'[S] slow corner' si slowCorner, sinon ''.", "returns": [{"type": "string", "desc": "Texte."}]},
+        "triggerTypeAsText": {"desc": "Texte « triggerType: [indicateur] nom » pour l'éditeur.", "returns": [{"type": "string", "desc": "Texte."}]},
+        "triggerTypeAsSmallIndicator": {"desc": "Abréviation du type de déclenchement : I, csS, cs+50%, ce-5m, ceS ; nil pour les autres.", "returns": [{"type": "string|nil", "desc": "Indicateur."}]},
+        "getCornerStartWaypoint": {"desc": "Premier waypoint de type cornerStart (liste triée), ou nil.", "returns": [{"type": "table|nil", "desc": "Waypoint."}]},
+        "getCornerEndWaypoint": {"desc": "Premier waypoint de type cornerEnd, ou nil.", "returns": [{"type": "table|nil", "desc": "Waypoint."}]},
+        "onSerialize": {
+          "desc": "Données à sauvegarder : oldId, name, pk, playback_rules, isolate, triggerType, slowCornerReleaseType, audioMode, todo, metadata, waypoints, structured, slowCorner, ignoreDistanceCalls, includeLinkWord, distanceBeforeModifier, distanceMeasureWaypoint (si différent de 'ce'), customAudioAnchors (si présents). Les textes notes ne sont pas écrits.",
+          "returns": [{"type": "table", "desc": "Table sérialisable en JSON."}],
+          "internal": true
+        },
+        "onDeserialized": {
+          "desc": "Recharge depuis les données sauvegardées : convertit l'ancien codriverWait en triggerType, ignore les waypoints hérités fwdAudioTrigger, copie data.notes si présent et recharge structured.",
+          "params": {"data": {"type": "table", "desc": "Données issues de onSerialize."}, "oldIdMap": {"type": "table", "desc": "Table de correspondance anciens/nouveaux identifiants."}},
+          "internal": true
+        },
+        "upgradeFromV2ToV3": {"desc": "Migration de format : transforme chaque langData.note en { freeform = ancien, structured = {} }.", "internal": true},
+        "markTodo": {"desc": "Marque la pacenote comme à faire."},
+        "clearTodo": {"desc": "Retire la marque à faire."},
+        "setNavgraph": {"desc": "Stub : journalise un avertissement 'not implemented'.", "params": {"navgraphName": {"type": "string", "desc": "Non utilisé."}, "fallback": {"type": "any", "desc": "Non utilisé."}}},
+        "setAdjacentNotes": {"desc": "Mémorise les pacenotes précédente et suivante (pour le dessin).", "params": {"prevNote": {"type": "table|nil", "desc": "Précédente."}, "nextNote": {"type": "table|nil", "desc": "Suivante."}}},
+        "clearAdjacentNotes": {"desc": "Oublie les pacenotes adjacentes."},
+        "drawDebugPacenoteHelper": {
+          "desc": "Dessin commun : cs, caméra d'orbite, ce et géométrie de mesure selon drawConfig (cs, ce, campoint, measurement, textes, couleurs, rayons).",
+          "params": {"drawConfig": {"type": "table", "desc": "Configuration de dessin."}, "pacenoteToolsState": {"type": "table", "desc": "État des outils de l'éditeur."}},
+          "internal": true
+        },
+        "drawDebugMeasurement": {"desc": "Dessine les arcs mesurés (cercle ajusté, points p1 p2 p3, qualité d'ajustement) de la variante sélectionnée ; ignore les arcs de diamètre >= 750 m ; marque les points de coupure de plusieurs segments."},
+        "drawDebugPacenotePartitionAllSnaproad": {"desc": "Dessin utilisé lors de la création d'une pacenote (cs et ce, rayon réduit).", "params": {"pacenoteToolsState": {"type": "table", "desc": "État des outils."}}},
+        "drawDebugPacenoteNoSelection": {"desc": "Dessin utilisé quand aucune pacenote n'est sélectionnée (cs seulement).", "params": {"pacenoteToolsState": {"type": "table", "desc": "État."}, "globalOpacity": {"type": "number", "desc": "Opacité globale."}}},
+        "drawDebugPacenoteNoSelectionRainbow": {
+          "desc": "Variante colorée du dessin sans sélection (couleur de cs imposée, étiquette facultative).",
+          "params": {
+            "pacenoteToolsState": {"type": "table", "desc": "État."},
+            "globalOpacity": {"type": "number", "desc": "Opacité."},
+            "csColor": {"type": "table", "desc": "Couleur {r,g,b}."},
+            "showLabel": {"type": "boolean", "desc": "Afficher l'étiquette."},
+            "textColor": {"type": "table", "desc": "Couleur du texte."}
+          }
+        },
+        "drawDebugPacenoteBackground": {
+          "desc": "Dessin en arrière-plan (cs et ce, faible opacité).",
+          "params": {"pacenoteToolsState": {"type": "table", "desc": "État."}, "globalOpacity": {"type": "number", "desc": "Opacité."}, "showTextOverride": {"type": "boolean|nil", "desc": "Force l'affichage du texte."}}
+        },
+        "drawDebugPacenoteNext": {"desc": "Dessin de la pacenote suivante de la sélection.", "params": {"pacenoteToolsState": {"type": "table", "desc": "État."}, "pn_sel": {"type": "table", "desc": "Pacenote sélectionnée (non utilisé)."}, "globalOpacity": {"type": "number", "desc": "Opacité."}}},
+        "drawDebugPacenotePrev": {"desc": "Dessin de la pacenote précédente de la sélection.", "params": {"pacenoteToolsState": {"type": "table", "desc": "État."}, "pn_sel": {"type": "table", "desc": "Pacenote sélectionnée (non utilisé)."}, "globalOpacity": {"type": "number", "desc": "Opacité."}}},
+        "drawDebugPacenoteSelected": {"desc": "Dessin de la pacenote sélectionnée (cs, ce, point de caméra si la caméra pacenoteOrbit est active, mesures).", "params": {"pacenoteToolsState": {"type": "table", "desc": "État."}, "globalOpacity": {"type": "number", "desc": "Opacité."}}},
+        "waypointForBeforeLink": {"desc": "Waypoint de référence pour la distance « avant » : cornerStart.", "returns": [{"type": "table|nil", "desc": "Waypoint."}]},
+        "getDistanceMeasureWaypoint": {"desc": "'cs' ou 'ce' (défaut) : waypoint d'où se mesure la distance « après ».", "returns": [{"type": "string", "desc": "'cs' ou 'ce'."}]},
+        "setDistanceMeasureWaypoint": {"desc": "Définit le waypoint de mesure (toute valeur autre que 'cs' revient à 'ce' et n'est pas stockée).", "params": {"value": {"type": "string|nil", "desc": "'cs' ou 'ce'."}}},
+        "waypointForAfterLink": {"desc": "Waypoint de départ pour la distance « après » selon distanceMeasureWaypoint.", "returns": [{"type": "table|nil", "desc": "Waypoint."}]},
+        "distanceCornerEndToCornerStart": {
+          "desc": "Distance le long de la route entre le waypoint de lien « après » de cette pacenote et le cornerStart de la suivante, via snaproad:distanceBetweenPositions. Renvoie 0.0 si un waypoint manque et nil si aucune snaproad n'est disponible.",
+          "params": {"toPacenote": {"type": "table", "desc": "Pacenote suivante."}},
+          "returns": [{"type": "number|nil", "desc": "Distance en mètres."}]
+        },
+        "noteOutputCustom": {"desc": "Mode custom : descriptions des clips assignés, jointes par ' | ' ; nil s'il n'y en a pas.", "returns": [{"type": "string|nil", "desc": "Texte."}]},
+        "noteOutputPreview": {"desc": "Aperçu texte selon le mode (structuré, freeform, custom) ; '<empty>' si rien ; préfixé de '[S] ' pour un slow corner.", "returns": [{"type": "string", "desc": "Aperçu."}]},
+        "noteTextForDrawDebug": {"desc": "Texte affiché au-dessus du waypoint dans la vue 3D (= noteOutputPreview).", "returns": [{"type": "string", "desc": "Texte."}]},
+        "audioFnameFreeform": {"desc": "Chemin du fichier audio du texte libre dans le dossier freeform de la mission.", "returns": [{"type": "string", "desc": "Chemin."}]},
+        "audioItemsStructuredOnline": {
+          "desc": "Éléments audio du mode structuré en ligne : { candidates, category } ou { fname, category } par phrase.",
+          "params": {"opts": {"type": "table|nil", "desc": "includeMissingVariant."}},
+          "returns": [{"type": "table[]", "desc": "Éléments audio."}]
+        },
+        "audioFnamesStructuredOnline": {
+          "desc": "Noms de fichiers (premier candidat si plusieurs) du mode structuré en ligne.",
+          "params": {"opts": {"type": "table|nil", "desc": "includeMissingVariant."}},
+          "returns": [{"type": "string[]", "desc": "Chemins."}]
+        },
+        "audioItemsStructuredOffline": {
+          "desc": "Éléments audio du mode structuré hors ligne, selon le voicepack actif ; liste vide sans voicepack ou compositeur.",
+          "params": {"opts": {"type": "table|nil", "desc": "includeMissingVariant."}},
+          "returns": [{"type": "table[]", "desc": "Éléments audio."}]
+        },
+        "audioFnamesStructuredOffline": {
+          "desc": "Noms de fichiers du mode structuré hors ligne.",
+          "params": {"opts": {"type": "table|nil", "desc": "includeMissingVariant."}},
+          "returns": [{"type": "string[]", "desc": "Chemins."}]
+        },
+        "playbackAllowed": {
+          "desc": "Évalue playback_rules : vide/nil ou 'true'/'t' autorise, 'false'/'f' refuse, sinon la condition est compilée avec loadstring et exécutée (voir notes : bug sur `context`). Renvoie le résultat et un message d'erreur éventuel.",
+          "params": {"currLap": {"type": "integer|nil", "desc": "Tour courant (-1 par défaut)."}, "maxLap": {"type": "integer|nil", "desc": "Nombre de tours (-1 par défaut)."}},
+          "returns": [{"type": "boolean|any", "desc": "Autorisé ou non."}, {"type": "string|nil", "desc": "Erreur de syntaxe ou d'exécution."}]
+        },
+        "vehiclePlacementPosAndRot": {
+          "desc": "Position et rotation pour placer un véhicule avant la pacenote : à distAway mètres de cs le long de sa normale, du côté opposé à ce, orienté vers cs.",
+          "params": {"distAway": {"type": "number|nil", "desc": "Distance en mètres (15 par défaut)."}},
+          "returns": [{"type": "vec3|nil", "desc": "Position."}, {"type": "quat|nil", "desc": "Rotation ; nil, nil si cs ou ce manque."}]
+        },
+        "nameComponents": {"desc": "Découpe le nom en base et numéro final (motif « (.-)%s*([%d%.]+)$ »).", "returns": [{"type": "string|nil", "desc": "Base."}, {"type": "string|nil", "desc": "Numéro."}]},
+        "matchesSearchPattern": {
+          "desc": "true si le texte libre d'une des langues correspond au motif de recherche (rallyUtil.matchSearchPattern).",
+          "params": {"searchPattern": {"type": "string", "desc": "Motif."}},
+          "returns": [{"type": "boolean", "desc": "Résultat."}]
+        },
+        "_moveWaypointTowardsStepper": {
+          "desc": "Avance un waypoint de 2 m le long de la route, relance autofillDistanceCalls du carnet et réaligne la normale.",
+          "params": {"snaproad": {"type": "table", "desc": "Snaproad."}, "wp": {"type": "table", "desc": "Waypoint."}, "fwd": {"type": "boolean", "desc": "Sens d'avance."}},
+          "internal": true
+        },
+        "moveWaypointTowards": {
+          "desc": "Répète step fois l'avance de 2 m d'un waypoint le long de la route.",
+          "params": {"snaproads": {"type": "table", "desc": "Snaproad (nom pluriel trompeur)."}, "wp": {"type": "table", "desc": "Waypoint."}, "fwd": {"type": "boolean", "desc": "Sens."}, "step": {"type": "integer|nil", "desc": "Nombre de pas (1 par défaut)."}}
+        },
+        "isLastPacenote": {"desc": "true si c'est la dernière pacenote triée du carnet.", "returns": [{"type": "boolean", "desc": "Résultat."}]},
+        "refreshFreeform": {"desc": "Nettoie (trim) le texte libre et le réécrit, sauf s'il est vide, bloqué (autofill_blocker) ou de transcription inconnue."},
+        "toggleSlowCorner": {"desc": "Bascule slowCorner."},
+        "toggleIgnoreDistanceCalls": {"desc": "Bascule ignoreDistanceCalls."},
+        "toggleIncludeLinkWord": {"desc": "Bascule includeLinkWord (vrai par défaut)."},
+        "toggleDistanceBeforeModifier": {"desc": "Bascule distanceBeforeModifier (place la distance avant les modificateurs post-virage)."},
+        "toggleIsolate": {"desc": "Bascule isolate ; à l'activation, met les distances avant/après au niveau interne autodist_internal_level1, à la désactivation les vide pour que l'autofill reprenne (sauf champs bloqués)."},
+        "setTriggerType": {"desc": "Définit le type de déclenchement.", "params": {"val": {"type": "integer", "desc": "Valeur de RallyEnums.triggerType."}}},
+        "getTriggerType": {"desc": "Type de déclenchement.", "returns": [{"type": "integer", "desc": "RallyEnums.triggerType."}]},
+        "setSlowCornerReleaseType": {"desc": "Définit le type de relâchement du slow corner.", "params": {"val": {"type": "integer", "desc": "RallyEnums.slowCornerReleaseType."}}},
+        "getSlowCornerReleaseType": {"desc": "Type de relâchement du slow corner.", "returns": [{"type": "integer", "desc": "RallyEnums.slowCornerReleaseType."}]},
+        "isSlowCornerReleaseCsStaticMinus40": {"desc": "true si slowCorner et type csStaticMinus40.", "returns": [{"type": "boolean", "desc": "Résultat."}]},
+        "isSlowCornerReleaseCsHalf": {"desc": "true si slowCorner et type csHalf.", "returns": [{"type": "boolean", "desc": "Résultat."}]},
+        "isSlowCornerReleaseCsStatic": {"desc": "true si slowCorner et type csStatic.", "returns": [{"type": "boolean", "desc": "Résultat."}]},
+        "isSlowCornerReleaseCeStatic": {"desc": "true si slowCorner et type ceStatic.", "returns": [{"type": "boolean", "desc": "Résultat."}]},
+        "isSlowCornerReleaseCeMinus5": {"desc": "true si slowCorner et type ceMinus5.", "returns": [{"type": "boolean", "desc": "Résultat."}]},
+        "refreshStructured": {"desc": "Recompose le texte structuré en ligne et le stocke dans le champ structuré de la langue sélectionnée."},
+        "getPosForOrbitCamera": {"desc": "Position de la caméra d'orbite (en cache) : centroïde de halfpoint, cs et ce ; sinon milieu de cs et ce ; sinon cs ; sinon (0,0,0).", "returns": [{"type": "vec3", "desc": "Position."}]},
+        "setCachedLength": {"desc": "Mémorise la longueur de la pacenote.", "params": {"len": {"type": "number", "desc": "Longueur en mètres."}}},
+        "invalidateCamPosCache": {"desc": "Oublie la position de caméra en cache."},
+        "getCachedLength": {"desc": "Longueur mémorisée.", "returns": [{"type": "number|nil", "desc": "Longueur."}]},
+        "generateFreeformFromStructured": {"desc": "Génère un texte libre à partir du structuré (compositeTextEscaped), en préservant les positions personnalisées des variables de distance, et l'enregistre."},
+        "canDeleteAudioFiles": {"desc": "true en mode structuredOnline ou freeform (fichiers générés).", "returns": [{"type": "boolean", "desc": "Résultat."}]},
+        "deleteAudioFiles": {"desc": "Supprime (FS:removeFile) les fichiers audio générés de la pacenote selon le mode ; sans effet si non supprimable."},
+        "deleteLanguage": {"desc": "Supprime les textes d'une langue.", "params": {"lang": {"type": "string", "desc": "Langue."}}},
+        "customAudioFileDir": {"desc": "Dossier audio custom du carnet.", "returns": [{"type": "string", "desc": "Chemin."}]},
+        "items": {"desc": "Éléments structurés ordonnés (structured:orderedItems).", "returns": [{"type": "table[]", "desc": "Éléments."}]},
+        "findItem": {
+          "desc": "Premier élément structuré d'un type donné.",
+          "params": {"itemType": {"type": "string", "desc": "Type (caution, corner, nom de modificateur)."}},
+          "returns": [{"type": "table|nil", "desc": "Élément."}]
+        },
+        "findItems": {
+          "desc": "Tous les éléments structurés d'un type donné.",
+          "params": {"itemType": {"type": "string", "desc": "Type."}},
+          "returns": [{"type": "table[]", "desc": "Éléments."}]
+        },
+        "caution": {"desc": "Élément de l'emplacement 1 s'il est de type caution.", "returns": [{"type": "table|nil", "desc": "Élément."}]},
+        "cautionLevel": {"desc": "Niveau de prudence (1 à 3) ou nil.", "returns": [{"type": "integer|nil", "desc": "Niveau."}]},
+        "hasCorner": {"desc": "true si l'emplacement 4 contient un corner.", "returns": [{"type": "boolean", "desc": "Résultat."}]},
+        "corner": {"desc": "Élément de l'emplacement 4 s'il est de type corner.", "returns": [{"type": "table|nil", "desc": "Élément corner."}]},
+        "hasModifier": {
+          "desc": "true si un élément du type donné existe.",
+          "params": {"itemType": {"type": "string", "desc": "Type de modificateur."}},
+          "returns": [{"type": "boolean", "desc": "Résultat."}]
+        },
+        "applyMeasurements": {"desc": "Les mesures étant des données de projection, ne fait que rafraîchir le texte structuré (refreshStructured) sans modifier les éléments canoniques."}
+      }
+    }
+  }
+}

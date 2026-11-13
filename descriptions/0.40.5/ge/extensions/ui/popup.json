@@ -1,0 +1,96 @@
+{
+  "path": "lua/ge/extensions/ui/popup.lua",
+  "module": "Extension GE qui ouvre les popups de tutoriel de l'interface (hook UI OpenTutorialPopup). Un popup est décrit par un dossier de contenu (par défaut /gameplay/tutorials/pages/<id>/) contenant content.json (titre, texte, image, lignes, composant Vue) ou content.html. Le module lit ces fichiers, traduit les textes et envoie la liste d'entrées à l'UI. Il propose aussi des popups prédéfinis (aides à la conduite, choix de défi, contrat, drag).",
+  "usage": "ui_popup.openPopupById('v2/dragStripTimeslipIntro')\nui_popup.openPopupsByIds({'dragTreeStages','dragTreeCountdown'}, {root='/gameplay/tutorials/pages/v2/'})\nui_popup.closeTutorialPopup()",
+  "notes": [
+    "Dans openDragTimeslipTutorialPopup, la variable `slip` n'est jamais définie (globale nil) : entry.slip reste nil. De plus, si le contenu 'v2/dragStripTimeslipIntro' est introuvable, entry vaut nil et la liste {entry} est vide.",
+    "Pour un content.json dont vueComponent vaut DragTimeslipTutorialPopup, entry.slip vient de options.slip ou de gameplay_drag_dragBridge.createTimeslipData(). Pour ApmOnboardingPopup, entry.startingMoney (défaut 0) et entry.endMoney (défaut 10000) viennent des options.",
+    "Si content.json existe, content.html est ignoré. Les images relatives sont résolues par rapport au dossier du popup ; un chemin commençant par '/' est gardé tel quel.",
+    "L'option options.context permet de traduire title/text via core_locales.contextTranslate ; les textes de rows utilisent toujours _tr."
+  ],
+  "functions": {
+    "resolveAssetPath": {
+      "desc": "Construit le chemin d'une ressource : renvoie assetPath tel quel s'il commence par '/', sinon basePath concaténé avec assetPath.",
+      "params": {"basePath": {"type": "string", "desc": "Dossier de base (avec '/' final)."}, "assetPath": {"type": "string|nil", "desc": "Chemin relatif ou absolu."}},
+      "returns": [{"type": "string|nil", "desc": "nil si assetPath est nil ou vide."}],
+      "internal": false
+    },
+    "readPopupEntryById": {
+      "desc": "Lit le contenu d'un popup : content.json (prioritaire) ou content.html, et renvoie une entrée {id, type='info', isPopup=true, title, text, image, aspectRatio, vueComponent, topics, rows…} ou {id, content, …} pour le HTML.",
+      "params": {
+        "id": {"type": "string", "desc": "Identifiant du popup (sous-dossier de la racine)."},
+        "options": {"type": "table|nil", "desc": "root (défaut '/gameplay/tutorials/pages/'), context (contexte de traduction), slip, startingMoney/startMoney, endMoney/money."}
+      },
+      "returns": [{"type": "table|nil", "desc": "L'entrée, ou nil si aucun des deux fichiers n'existe."}],
+      "internal": false
+    },
+    "openPopupEntries": {
+      "desc": "Envoie des entrées déjà construites à l'UI via guihooks.trigger('OpenTutorialPopup', {popups = entries}).",
+      "params": {"entries": {"type": "table[]|nil", "desc": "Liste d'entrées de popup."}, "options": {"type": "table|nil", "desc": "Non utilisé."}},
+      "returns": [{"type": "boolean", "desc": "false si la liste est vide ou nil, sinon true."}],
+      "internal": false
+    },
+    "openPopupById": {
+      "desc": "Lit puis ouvre un seul popup.",
+      "params": {"id": {"type": "string", "desc": "Identifiant du popup."}, "options": {"type": "table|nil", "desc": "Voir readPopupEntryById."}},
+      "returns": [{"type": "boolean", "desc": "false si le contenu est introuvable."}],
+      "internal": false
+    },
+    "openPopupsByIds": {
+      "desc": "Lit plusieurs popups (en ignorant ceux introuvables) et les ouvre ensemble, dans l'ordre donné.",
+      "params": {"ids": {"type": "string[]", "desc": "Identifiants des popups."}, "options": {"type": "table|nil", "desc": "Voir readPopupEntryById."}},
+      "returns": [{"type": "boolean", "desc": "false si ids est vide/invalide ou si aucun contenu n'a été trouvé."}],
+      "internal": false
+    },
+    "closeTutorialPopup": {
+      "desc": "Ferme le popup de tutoriel affiché (hook UI CloseTutorialPopup).",
+      "returns": [{"type": "boolean", "desc": "Toujours true."}],
+      "internal": false
+    },
+    "collectPopupIdsFromRoot": {
+      "desc": "Parcourt récursivement une racine et renvoie les noms de sous-dossiers contenant content.json ou content.html, triés alphabétiquement.",
+      "params": {"root": {"type": "string|nil", "desc": "Dossier racine (défaut '/gameplay/tutorials/pages/v2/') ; un '/' final est ajouté si absent."}},
+      "returns": [{"type": "string[]", "desc": "Liste d'identifiants triée."}, {"type": "string", "desc": "La racine normalisée."}],
+      "internal": false
+    },
+    "openAllPopupsFromRoot": {
+      "desc": "Ouvre tous les popups trouvés sous une racine (utile pour tout prévisualiser).",
+      "params": {"options": {"type": "table|nil", "desc": "options.root pour la racine ; les autres options sont transmises à openPopupsByIds."}},
+      "returns": [{"type": "boolean", "desc": "false si aucun popup trouvé."}],
+      "internal": false
+    },
+    "openDrivingAssistsPopup": {
+      "desc": "Ouvre le popup « aides à la conduite » (composant Vue GearboxSelect, id 'drivingAssists').",
+      "params": {"options": {"type": "table|nil", "desc": "Non utilisé."}},
+      "returns": [{"type": "boolean", "desc": "true."}],
+      "internal": false
+    },
+    "openOptionalChallengeSelectionPopup": {
+      "desc": "Ouvre le popup de sélection de défi facultatif (composant Vue OptionalChallengeSelect).",
+      "params": {"options": {"type": "table|nil", "desc": "Non utilisé."}},
+      "returns": [{"type": "boolean", "desc": "true."}],
+      "internal": false
+    },
+    "openDragTimeslipTutorialPopup": {
+      "desc": "Ouvre l'intro du ticket de chronométrage drag ('v2/dragStripTimeslipIntro') suivie éventuellement d'autres popups. Voir la note sur le bug de la variable slip.",
+      "params": {"options": {"type": "table|nil", "desc": "Passé à openPopupEntries."}, "additionalIds": {"type": "string[]|nil", "desc": "Identifiants de popups à ajouter à la suite."}},
+      "returns": [{"type": "boolean", "desc": "Résultat de openPopupEntries."}],
+      "internal": false
+    },
+    "openContractSignPopup": {
+      "desc": "Ouvre le popup de signature de contrat (composant Vue ContractSign), avec titre, texte, nom du joueur, somme et image configurables, puis d'éventuels popups supplémentaires.",
+      "params": {
+        "options": {"type": "table|nil", "desc": "id, title, text, contractTitle, contractText, userName, money (défaut 10000), image, root ; textes par défaut issus des clés ui.career.tutorial.popup.contractSign.*."},
+        "additionalIds": {"type": "string[]|nil", "desc": "Popups à ajouter à la suite."}
+      },
+      "returns": [{"type": "boolean", "desc": "Résultat de openPopupEntries."}],
+      "internal": false
+    },
+    "showDragTreeStagesPopup": {
+      "desc": "Ouvre en série les popups dragStripStageCar, dragTreeStages, dragTreeCountdown et dragStripTimeslipIntro.",
+      "params": {"options": {"type": "table|nil", "desc": "options.root (défaut '/gameplay/tutorials/pages/v2/')."}},
+      "returns": [{"type": "boolean", "desc": "Résultat de openPopupsByIds."}],
+      "internal": false
+    }
+  }
+}

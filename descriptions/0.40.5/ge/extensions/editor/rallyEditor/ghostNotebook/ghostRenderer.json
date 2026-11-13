@@ -1,0 +1,63 @@
+{
+  "path": "lua/ge/extensions/editor/rallyEditor/ghostNotebook/ghostRenderer.lua",
+  "module": "Dessine dans la vue 3D les libellés du carnet fantôme de l'éditeur de rallye. Pour chaque pacenote du carnet fantôme, il projette le début de virage sur la route (snaproad), trie les entrées par distance le long de la route et n'affiche que celles proches de la caméra. Texte blanc sur fond bleu foncé via debugDrawer:drawTextAdvanced. Le module renvoie un constructeur (classe C).",
+  "notes": [
+    "Le tracé en prismes de la route fantôme est désactivé dans le code (appel à drawRoutePrisms commenté dans drawEntry) : seuls les libellés sont affichés.",
+    "Distance d'affichage = préférence getPrefPacenoteLabelDistance (100 m par défaut) autour de la position de la caméra projetée sur la snaproad.",
+    "Si un pacenote est sélectionné dans l'éditeur, seul le fantôme le plus proche (et ses voisins selon les préférences) est étiqueté ; les voisins sont à 50 % d'opacité du texte. Sans sélection, tous les libellés proches sont dessinés.",
+    "Le cache (entrées triées) est reconstruit quand le carnet ou la snaproad change (comparaison par référence)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet renvoyé par le constructeur (new(rallyEditor)). Champs : rallyEditor, cache {path, snaproad, entries}.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur interne : mémorise l'éditeur et vide le cache.",
+          "params": {"rallyEditor": {"type": "table", "desc": "Instance de l'éditeur (fournit les préférences et getGhostNotebookLabelForPacenote)."}},
+          "internal": true
+        },
+        "buildCache": {
+          "desc": "Construit la liste des entrées du carnet fantôme : pour chaque pacenote non manquant ayant un début et une fin de virage, calcule les positions de route, la position du libellé et la distance le long de la route, puis trie par distance. Stocke le résultat dans self.cache.",
+          "params": {
+            "path": {"type": "table", "desc": "Carnet fantôme (utilise path.pacenotes.sorted)."},
+            "snaproad": {"type": "table", "desc": "Objet snaproad de la route (closestSnapResult, driveline)."}
+          },
+          "returns": [{"type": "table", "desc": "Cache {path, snaproad, entries}."}],
+          "internal": false
+        },
+        "getCache": {
+          "desc": "Renvoie le cache courant s'il correspond au même carnet et à la même snaproad, sinon le reconstruit.",
+          "params": {
+            "path": {"type": "table", "desc": "Carnet fantôme."},
+            "snaproad": {"type": "table", "desc": "Snaproad."}
+          },
+          "returns": [{"type": "table", "desc": "Cache."}],
+          "internal": false
+        },
+        "drawEntry": {
+          "desc": "Dessine le libellé d'une entrée à sa position de début de virage. Le texte vient de rallyEditor.getGhostNotebookLabelForPacenote, sinon du nom du pacenote. Ne dessine rien si drawLabel est faux ou si le texte est vide.",
+          "params": {
+            "entry": {"type": "table", "desc": "Entrée du cache {pacenote, positions, labelPos, distanceAlongRoute}."},
+            "lineColor": {"type": "ColorF", "desc": "Couleur de ligne (inutilisée tant que le tracé est désactivé)."},
+            "textAlpha": {"type": "number", "desc": "Opacité du texte, 0 à 1."},
+            "textBgAlpha": {"type": "integer", "desc": "Opacité du fond du texte, 0 à 255."},
+            "drawLabel": {"type": "boolean", "desc": "Dessiner ou non le libellé."},
+            "prismWidth": {"type": "number", "desc": "Largeur du prisme (inutilisée tant que le tracé est désactivé)."}
+          },
+          "internal": false
+        },
+        "draw": {
+          "desc": "Appelée à chaque image : localise la caméra sur la snaproad, sélectionne les entrées dans la fenêtre de distance, décide quelles étiquettes afficher (sélection et voisins précédent/suivant selon les préférences) et appelle drawEntry.",
+          "params": {
+            "path": {"type": "table", "desc": "Carnet fantôme à afficher."},
+            "snaproad": {"type": "table", "desc": "Snaproad de la route."},
+            "globalOpacity": {"type": "number|nil", "desc": "Multiplicateur d'opacité, 1.0 par défaut."},
+            "pacenoteToolsState": {"type": "table|nil", "desc": "État des outils pacenote (selected_pn_id, selected_wp_id)."},
+            "activePath": {"type": "table|nil", "desc": "Carnet actuellement édité, pour retrouver le pacenote sélectionné."}
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

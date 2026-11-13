@@ -1,0 +1,49 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/textures.lua",
+  "module": "Navigateur de textures de decals de l'outil Dynamic Decals (interface). Ajoute dans le navigateur les onglets « Textures » (ordre 10) et « Tags » (ordre 20), un inspecteur pour la sélection `editor.selection[\"dynamicDecalTexture\"]` (édition des métadonnées/tags du fichier sidecar), la sélection multiple (Maj = plage, Ctrl = ajout), un menu contextuel pour affecter une texture à une propriété et une notification quand des fichiers de métadonnées manquants ont été créés. La logique de fichiers est dans editor_api_dynamicDecals_textures.",
+  "notes": [
+    "Les fichiers dont le nom commence par « _ » sont exclus de la liste.",
+    "Préférences `dynamicDecalsTool.textureBrowser` : loadImagesPerFrameCount (int 3), enableVirtualScrolling (bool true : seules les textures visibles sont chargées), texturePreviewSize (float 128, de 32 à 512).",
+    "setup crée le dossier des textures (FS:directoryCreate) et appelle textures.setup() de l'API.",
+    "Le même bloc de notification est dupliqué dans setup et dans onTextureFileAdded.",
+    "onTextureFileDeleted modifie la liste pendant ipairs ; sans conséquence pour un seul fichier supprimé."
+  ],
+  "functions": {
+    "getTexturesDirectoryPath": {
+      "desc": "Renvoie le dossier des textures de decals (délègue à editor_api_dynamicDecals_textures).",
+      "params": {},
+      "returns": [{"type": "string", "desc": "Chemin du dossier de textures."}],
+      "internal": false
+    },
+    "dynamicDecals_onTextureFileAdded": {
+      "desc": "Hook appelé quand un fichier texture est ajouté au dossier surveillé : si des fichiers de métadonnées manquants ont été créés, ajoute une notification avec boutons de sélection.",
+      "params": {"filepath": {"type": "string", "desc": "Chemin du fichier ajouté (non utilisé directement)."}},
+      "returns": [],
+      "internal": true
+    },
+    "dynamicDecals_onTextureFileDeleted": {
+      "desc": "Hook appelé quand un fichier texture est supprimé : le retire de la sélection `dynamicDecalTexture` (qui devient nil si elle est vide).",
+      "params": {"filepath": {"type": "string", "desc": "Chemin du fichier supprimé."}},
+      "returns": [],
+      "internal": true
+    },
+    "registerEditorPreferences": {
+      "desc": "Enregistre la sous-catégorie `dynamicDecalsTool.textureBrowser` (loadImagesPerFrameCount, enableVirtualScrolling, texturePreviewSize).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : récupère les modules liés, enregistre les onglets Textures et Tags, la page de doc « Browser / Textures » et l'inspecteur du type dynamicDecalTexture, crée le dossier des textures, initialise l'API de textures et notifie les fichiers de métadonnées manquants.",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

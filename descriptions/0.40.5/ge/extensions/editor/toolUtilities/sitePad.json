@@ -1,0 +1,106 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/sitePad.lua",
+  "module": "Une plate-forme de terrain plane (« pad ») sur laquelle un outil de site peut dessiner, et le sol propre du site taillé dedans. enter aplatit un carré de 300 m à 50 m d'altitude (niveau de référence du site) en mémorisant le sol réel ; leave le remet tel qu'il était ; carve y taille le plan de sol du site (terrasse, rampe, marches, sous-sol) pour qu'on le voie en dessinant ; suspend/resume l'enlèvent le temps d'une sauvegarde de niveau. Un seul pad à la fois (un seul outil tient l'écran).",
+  "notes": [
+    "PAD_SIZE_M = 300 (carré pris à plat, coupé à une taille que rien de ce que les outils dessinent ne dépasse), PAD_Z = 50 (niveau de référence ; haut pour qu'un sous-sol, une cour anglaise ou des marches aient du sol à entailler).",
+    "Le pad est une planche à dessin : il n'appelle volontairement PAS setTerrainDirty, pour que ouvrir un outil ne demande pas de sauvegarde du niveau. suspend() doit l'enlever pendant une sauvegarde, sinon un plateau de 300 m serait écrit comme vrai sol.",
+    "Le pad est clippé au bloc de terrain (un site au bord de la carte obtient la part de pad qui existe). Sans terrain ni extension editor_terrainEditor, enter renvoie false.",
+    "Les hauteurs de la grille de terrain sont mesurées depuis la base du bloc, pas depuis le z monde (écart de centaines de mètres) : toGridZ convertit ; cellZ renvoie des hauteurs en repère de grille, groundZ en repère monde.",
+    "Paramètres de taille de la découpe (identiques à ceux avec lesquels le constructeur de ville nivelle un site posé) : profondeur d'influence 12, marge 3, décroissance 2, lissage 6.",
+    "En mode real (sol réel), carve ajoute aussi les ouvrages qui l'emportent localement (heldFn), pour que la coupe cède devant l'accotement d'une route comme le fera le nivellement du niveau."
+  ],
+  "functions": {
+    "enter": {
+      "desc": "Aplatit le carré centré sur (cx, cy) en mémorisant ce qui s'y trouvait, pour que leave le remette. Un pad déjà posé est d'abord remis (deux pads qui se chevauchent perdraient le sol réel). Appelle d'abord beforeEnterFn s'il n'y avait pas de pad.",
+      "params": {
+        "cx": {"type": "number", "desc": "x du centre."},
+        "cy": {"type": "number", "desc": "y du centre."},
+        "drop": {"type": "number|nil", "desc": "Abaisse le sol de cette distance SOUS le niveau de référence (un outil dont le site a du sol propre dessous, sous-sol ou cour anglaise, peut ainsi voir dedans). Le site reste à level() : le niveau de référence et la surface taillée se séparent."},
+        "real": {"type": "boolean|nil", "desc": "Laisse le sol tel quel et ne fait que le mémoriser : un site dessiné autour de sa parcelle est conçu sur le sol où il se tiendra. Un tel pad n'a pas de niveau de référence ; level n'est pas pour lui."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si le pad est posé."}],
+      "internal": false
+    },
+    "leave": {
+      "desc": "Remet le sol comme il était. Seulement les hauteurs : ce que l'outil a construit sur le pad part par son propre démontage. Tout ce qui a été taillé DANS le pad part avec lui.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "false s'il n'y avait pas de pad."}],
+      "internal": false
+    },
+    "centreFor": {
+      "desc": "Où un outil doit centrer son pad d'après les bornes de ce qu'il tient déjà (centre de la boîte englobante des points). Sans points, la visée de la caméra (util.lookAtGround), là où les outils posent une forme de départ.",
+      "params": {"ring": {"type": "table|nil", "desc": "Liste de points {x,y}."}},
+      "returns": [{"type": "number", "desc": "x du centre."}, {"type": "number", "desc": "y du centre."}],
+      "internal": false
+    },
+    "carve": {
+      "desc": "Taille le plan de sol du site dans le pad, pour qu'une place en contrebas, une terrasse ou un escalier soient VISIBLES pendant le dessin. features est la même liste que celle cuite pour le placeur. La dernière coupe est d'abord annulée (une coupe se fond dans le sol autour, et se fondre dans un sol déjà abaissé grignoterait le pad à chaque fois) ; sans features, c'est tout ce que fait l'appel.",
+      "params": {
+        "features": {"type": "table|nil", "desc": "Liste de features { quad } ou { rings, z } avec mode et band."},
+        "prio": {"type": "number|nil", "desc": "Sur sol réel, bande de priorité du site ; ce qui l'emporte à proximité entre dans la même passe à sa propre priorité."}
+      },
+      "returns": [{"type": "boolean", "desc": "false s'il n'y a pas de pad."}],
+      "internal": false
+    },
+    "suspend": {
+      "desc": "Enlève le pad du sol le temps d'une sauvegarde de niveau, en retenant sa position et ce qui y était taillé. Une sauvegarde écrit le terrain tel qu'elle le trouve : une planche à dessin restée là serait écrite comme vrai sol.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "false s'il n'y avait pas de pad."}],
+      "internal": false
+    },
+    "resume": {
+      "desc": "Remet le pad en place après suspend, avec la même taille de coupe.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si le pad et sa coupe sont rétablis."}],
+      "internal": false
+    },
+    "isDown": {
+      "desc": "Vrai si un pad est posé.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si pad posé."}],
+      "internal": false
+    },
+    "cellZ": {
+      "desc": "Hauteur d'origine d'une cellule de la grille de hauteurs du pad (avant la pose), dans les unités de la grille (depuis la base du bloc) ; nil hors du pad.",
+      "params": {"gx": {"type": "integer", "desc": "Colonne de la grille."}, "gy": {"type": "integer", "desc": "Ligne de la grille."}},
+      "returns": [{"type": "number|nil", "desc": "Hauteur en repère de grille."}],
+      "internal": false
+    },
+    "groundZ": {
+      "desc": "Le sol en (x, y) tel qu'il était avant la pose du pad ou toute coupe ; nil hors du pad. Ce dont un niveau se mesure : mesuré sur la coupe, chaque coupe déplacerait le niveau de la suivante.",
+      "params": {"x": {"type": "number", "desc": "x monde."}, "y": {"type": "number", "desc": "y monde."}},
+      "returns": [{"type": "number|nil", "desc": "Hauteur z monde."}],
+      "internal": false
+    },
+    "setHeld": {
+      "desc": "Enregistre qui répond à ce qui l'emporte sur un site en sol réel : fn(x0, y0, x1, y1) renvoie ces features, chacune avec sa bande.",
+      "params": {"fn": {"type": "function", "desc": "fn(x0, y0, x1, y1) -> liste de features."}},
+      "returns": [],
+      "internal": false
+    },
+    "setBeforeEnter": {
+      "desc": "Enregistre qui rend une dernière fois le sol réel avant qu'un pad ne le mémorise : fn() s'exécute à l'entrée d'un éditeur (seulement s'il n'y avait pas déjà de pad).",
+      "params": {"fn": {"type": "function", "desc": "fn() sans argument."}},
+      "returns": [],
+      "internal": false
+    },
+    "drop": {
+      "desc": "De combien le sol du pad est sous le niveau de référence ; nil sans pad.",
+      "params": {},
+      "returns": [{"type": "number|nil", "desc": "Abaissement en mètres."}],
+      "internal": false
+    },
+    "redrop": {
+      "desc": "Recoupe le pad à un autre abaissement, là où il se trouve. Sa coupe tombe avec lui : elle avait été taillée dans l'ancien sol. Renvoie false sans pad ou si l'abaissement est inchangé.",
+      "params": {"d": {"type": "number", "desc": "Nouvel abaissement en mètres."}},
+      "returns": [{"type": "boolean", "desc": "true si le pad a été refait."}],
+      "internal": false
+    },
+    "level": {
+      "desc": "Le niveau monde (50 m) contre lequel un site posé sur le pad est TRACÉ. À utiliser pour tout ce qui se tient sur la planche à dessin à la place d'un échantillonnage du sol, qui n'est plus plat une fois que le site y a taillé ses formes.",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Niveau de référence (PAD_Z = 50)."}],
+      "internal": false
+    }
+  }
+}

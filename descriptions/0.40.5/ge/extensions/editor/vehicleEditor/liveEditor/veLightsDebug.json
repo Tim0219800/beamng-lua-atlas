@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/veLightsDebug.lua",
+  "module": "Fenêtre 'Lights Debug' du Vehicle Editor live. Dessine avec debugDrawer les props lumineux du véhicule (vdata.props dont mesh vaut SPOTLIGHT ou POINTLIGHT) : pour un spot, une sphère, une ligne de direction de longueur lightRange et une pointe de flèche ; pour un point de lumière, une sphère et une sphère translucide de rayon lightRange. Options : spots, points, X-Ray (sans test de profondeur), noms, vecteurs unitaires (longueur 1).",
+  "notes": [
+    "Le dessin se fait dans le hook onVehicleEditorRenderJBeams émis par editor_veMain ; la position vient de prop:getLiveTransformWorld() + vEditor.vehiclePos.",
+    "Un drawLine nul est dessiné avant chaque prop comme contournement d'un bug du debugDrawer (indiqué dans le code).",
+    "setSolidTriCulling(false) est appelé à chaque frame mais jamais rétabli (ligne commentée)."
+  ],
+  "fields": {
+    "menuEntry": {"type": "string", "desc": "'Lights Debug'."}
+  },
+  "functions": {
+    "onVehicleEditorRenderJBeams": {
+      "desc": "Hook émis par editor_veMain à chaque frame de rendu : dessine les spots et points lumineux des props du véhicule si la fenêtre est ouverte.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+      },
+      "internal": true
+    },
+    "onUpdate": {"desc": "Appelé chaque frame : dessine la fenêtre avec les cases à cocher.", "internal": true},
+    "open": {"desc": "Ouvre la fenêtre.", "internal": false},
+    "onSerialize": {"desc": "Renvoie {windowOpen}.", "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}], "internal": true},
+    "onDeserialized": {"desc": "Restaure l'état d'ouverture.", "params": {"data": {"type": "table", "desc": "Table de onSerialize."}}, "internal": true}
+  }
+}

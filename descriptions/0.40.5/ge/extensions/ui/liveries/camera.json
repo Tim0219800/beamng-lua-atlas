@@ -1,0 +1,102 @@
+{
+  "path": "lua/ge/extensions/ui/liveries/camera.lua",
+  "module": "Pilote la caméra de l'éditeur de livrées : vues prédéfinies autour du véhicule (haut, gauche, droite, arrière, avant), cadrage de la caméra sur l'angle d'un décalque, et mode « transformation » où la caméra passe en caméra libre ou en orbite pendant le placement d'un décalque. Les mouvements sont exécutés dans des jobs (core_jobsystem) car la caméra a besoin d'une image pour se mettre à jour. Utilisé par l'interface de livrées via ui_liveries_camera.",
+  "notes": [
+    "Un job de caméra en cours est annulé dès qu'une nouvelle demande arrive (activeRequestId sert à ignorer les jobs périmés).",
+    "setView émet l'évènement UI « liveries_camera_viewApplied » avec { view = id } après un délai fixe de 0,35 s, car l'orbite n'a pas de callback de fin (voir core/cameraModes/orbit.lua).",
+    "Les rotations d'orbite sont des vec3 en degrés (yaw, pitch, roll) : top (90,-90,0), left (-90,0,0), right (90,0,0), back (0,0,0), front (180,0,0).",
+    "Un décalque est considéré « orthographique » si sa direction de caméra est à moins de 0,98 de produit scalaire d'un des six axes (top, left, right, back, front) ; il est alors cadré sur la vue prédéfinie correspondante.",
+    "En mode transformation, si le placement à la souris est actif (editor_api_dynamicDecals.isUseMousePos), la caméra reste en orbite ; sinon elle passe en caméra libre.",
+    "Le déplacement de la caméra libre est multiplié par 0,1 quand ui_liveries_decal.getSmallIncrements() est vrai.",
+    "Le code contient un commentaire TODO indiquant que captureCameraName est probablement une protection devenue inutile."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant celle-ci : editor_api_dynamicDecals."}
+  },
+  "functions": {
+    "setup": {
+      "desc": "Démarre le module : mémorise la rotation d'orbite par défaut actuelle du véhicule du joueur pour la restaurer plus tard. Sans effet si déjà démarré.",
+      "internal": false
+    },
+    "teardown": {
+      "desc": "Arrête le module : termine la transformation en cours (stopTransform), annule le job de caméra, et restaure la rotation d'orbite par défaut mémorisée par setup. Sans effet si le module n'est pas démarré.",
+      "internal": false
+    },
+    "getViews": {
+      "desc": "Renvoie la liste des vues prédéfinies pour l'interface.",
+      "returns": [{"type": "table[]", "desc": "Éléments { id, labelKey, icon } pour top, left, right, back, front."}],
+      "internal": false
+    },
+    "setView": {
+      "desc": "Applique une vue prédéfinie : repasse en caméra de jeu en mode orbite, règle la rotation par défaut du véhicule puis réinitialise la caméra, dans un job. Déclenche liveries_camera_viewApplied à la fin.",
+      "params": {"viewId": {"type": "string", "desc": "« top », « left », « right », « back » ou « front »."}},
+      "returns": [{"type": "boolean", "desc": "false (avec avertissement) si la vue est inconnue, sinon true."}],
+      "internal": false
+    },
+    "activateOrbitMode": {
+      "desc": "Passe en caméra de jeu et active la caméra orbite du joueur 0.",
+      "returns": [{"type": "boolean", "desc": "Toujours true."}],
+      "internal": false
+    },
+    "panToLayer": {
+      "desc": "Place la caméra libre à la position et à l'orientation mémorisées dans le décalque (camPosition, camDirection convertis dans le repère monde du véhicule).",
+      "params": {"layerUid": {"type": "string", "desc": "Uid d'une couche de type decal ayant une pose de caméra."}},
+      "returns": [{"type": "boolean", "desc": "false si la couche est introuvable ou sans pose de caméra."}],
+      "internal": false
+    },
+    "orbitToLayer": {
+      "desc": "Cadre la caméra orbite sur un décalque : vue prédéfinie si le décalque est orthographique, sinon rotation de l'orbite sur l'angle du décalque sans toucher à la distance.",
+      "params": {"layerUid": {"type": "string", "desc": "Uid d'une couche decal avec pose de caméra."}},
+      "returns": [{"type": "boolean", "desc": "false si la couche est inutilisable."}],
+      "internal": false
+    },
+    "previewLayer": {
+      "desc": "Prévisualise un décalque : vue prédéfinie s'il est orthographique, sinon restaure l'angle exact (caméra libre : pose du décalque ; orbite active : rotation directe ; autre caméra : passage en orbite).",
+      "params": {"layerUid": {"type": "string", "desc": "Uid d'une couche decal avec pose de caméra."}},
+      "returns": [{"type": "boolean", "desc": "false si la couche est inutilisable."}],
+      "internal": false
+    },
+    "startTransformAtLayer": {
+      "desc": "Démarre le mode transformation sur un décalque existant : mémorise la caméra courante, puis cadre le décalque en orbite (placement souris) ou en caméra libre.",
+      "params": {"layerUid": {"type": "string", "desc": "Uid du décalque à éditer."}},
+      "returns": [{"type": "boolean", "desc": "false si une transformation est déjà active ou si la couche est inutilisable."}],
+      "internal": false
+    },
+    "startTransform": {
+      "desc": "Démarre le mode transformation pour un nouveau décalque : mémorise la caméra courante, puis garde l'orbite (placement souris) ou passe en caméra libre. Sans effet si une transformation est déjà active.",
+      "internal": false
+    },
+    "ensureTransformOrbitMode": {
+      "desc": "Force la caméra en orbite pendant une transformation. Si elle était libre, annule les jobs, arrête le mouvement et, pour un décalque existant, remet l'orbite sur son angle.",
+      "returns": [{"type": "boolean", "desc": "false si aucune transformation n'est active, sinon true."}],
+      "internal": false
+    },
+    "toggleTransformCameraMode": {
+      "desc": "Bascule pendant une transformation entre caméra libre et caméra orbite.",
+      "returns": [{"type": "boolean", "desc": "false si aucune transformation n'est active, sinon true."}],
+      "internal": false
+    },
+    "stopTransform": {
+      "desc": "Termine la transformation : annule les jobs, arrête les mouvements et rotations, repasse en caméra de jeu, restaure la caméra et la rotation d'orbite mémorisées, puis réinitialise la caméra.",
+      "internal": false
+    },
+    "panUpDown": {
+      "desc": "Entrée d'axe haut/bas pendant une transformation. En caméra libre, monte (valeur positive) ou descend (valeur négative) ; en orbite, fait tourner le tangage (rotate_pitch). Sans effet hors transformation.",
+      "params": {
+        "value": {"type": "number", "desc": "Valeur d'axe signée."},
+        "filterType": {"type": "any", "desc": "Type de filtre d'entrée transmis à core_camera.rotate_pitch."},
+        "player": {"type": "any", "desc": "Joueur transmis à core_camera.rotate_pitch (déduit du code)."}
+      },
+      "internal": false
+    },
+    "moveLeftRight": {
+      "desc": "Entrée d'axe gauche/droite pendant une transformation. En caméra libre, déplace latéralement ; en orbite, fait tourner le lacet (rotate_yaw). Sans effet hors transformation.",
+      "params": {
+        "value": {"type": "number", "desc": "Valeur d'axe signée."},
+        "filterType": {"type": "any", "desc": "Type de filtre d'entrée transmis à core_camera.rotate_yaw."},
+        "player": {"type": "any", "desc": "Joueur transmis à core_camera.rotate_yaw (déduit du code)."}
+      },
+      "internal": false
+    }
+  }
+}

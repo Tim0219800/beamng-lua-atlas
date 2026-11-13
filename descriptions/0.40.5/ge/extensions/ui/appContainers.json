@@ -1,0 +1,121 @@
+{
+  "path": "lua/ge/extensions/ui/appContainers.lua",
+  "module": "Registre générique des « conteneurs » d'apps d'interface (topLeft, topCenter, topRight) et de la visibilité de chaque app. Les extensions topLeft/topCenter/topRight s'enregistrent avec registerContainer ; ce module garde l'état visible/caché de chaque app et prévient l'interface Vue via guihooks.trigger sur le trigger du conteneur. Il sauvegarde et restaure la visibilité via onSerialize/onDeserialize (rechargement Lua) et propose une fenêtre ImGui de debug.",
+  "notes": [
+    "Anciens identifiants acceptés partout : utilityApps -> topLeft, gameplayApps -> topCenter, secondaryApps -> topRight (resolveContainerId).",
+    "setVerboseLogging ne fait rien d'utile : elle renvoie simplement enabled en booléen sans rien mémoriser.",
+    "Les fonctions d'écriture loguent une erreur et retournent sans rien faire si le conteneur ou l'app est inconnu ; getAppVisibility renvoie alors false.",
+    "onDeserialize rappelle setAppVisibility pour chaque app, donc émet un trigger UI par app restaurée."
+  ],
+  "functions": {
+    "resolveContainerId": {
+      "desc": "Convertit un ancien identifiant de conteneur (utilityApps, gameplayApps, secondaryApps) en identifiant actuel ; renvoie l'argument tel quel sinon.",
+      "params": {"containerId": {"type": "string", "desc": "Identifiant de conteneur, ancien ou nouveau."}},
+      "returns": [{"type": "string", "desc": "Identifiant actuel."}],
+      "internal": false
+    },
+    "registerContainer": {
+      "desc": "Enregistre un nouveau conteneur. Exige config.id ; refuse (avec avertissement) un identifiant déjà enregistré. Copie la table apps (visible forcé en booléen).",
+      "params": {"config": {"type": "table", "desc": "{id=string, trigger=string (nom du guihook), debugLabel=string|nil, apps={[appId]={visible=boolean}}}."}},
+      "returns": [{"type": "boolean", "desc": "true si enregistré, false sinon."}],
+      "internal": false
+    },
+    "setAppVisibility": {
+      "desc": "Affiche ou cache une app d'un conteneur et envoie {appId, visible, allApps} à l'interface via le trigger du conteneur.",
+      "params": {
+        "containerId": {"type": "string", "desc": "Identifiant du conteneur."},
+        "appId": {"type": "string", "desc": "Identifiant de l'app (doit être déclaré dans le conteneur)."},
+        "visible": {"type": "boolean", "desc": "Nouvelle visibilité."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getAppVisibility": {
+      "desc": "Renvoie la visibilité actuelle d'une app (false si conteneur ou app inconnus).",
+      "params": {
+        "containerId": {"type": "string", "desc": "Identifiant du conteneur."},
+        "appId": {"type": "string", "desc": "Identifiant de l'app."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si visible."}],
+      "internal": false
+    },
+    "hideAllApps": {
+      "desc": "Cache toutes les apps d'un conteneur, envoie {hideAll=true, allApps} à l'interface puis émet le hook onUIContainerAppsHidden(containerId résolu).",
+      "params": {"containerId": {"type": "string", "desc": "Identifiant du conteneur."}},
+      "returns": [],
+      "internal": false
+    },
+    "showApp": {
+      "desc": "Raccourci pour setAppVisibility(containerId, appId, true).",
+      "params": {"containerId": {"type": "string", "desc": "Conteneur."}, "appId": {"type": "string", "desc": "App."}},
+      "returns": [],
+      "internal": false
+    },
+    "hideApp": {
+      "desc": "Raccourci pour setAppVisibility(containerId, appId, false).",
+      "params": {"containerId": {"type": "string", "desc": "Conteneur."}, "appId": {"type": "string", "desc": "App."}},
+      "returns": [],
+      "internal": false
+    },
+    "toggleApp": {
+      "desc": "Inverse la visibilité d'une app.",
+      "params": {"containerId": {"type": "string", "desc": "Conteneur."}, "appId": {"type": "string", "desc": "App."}},
+      "returns": [],
+      "internal": false
+    },
+    "getVisibleApps": {
+      "desc": "Liste les identifiants des apps visibles d'un conteneur (ordre non garanti, itération pairs).",
+      "params": {"containerId": {"type": "string", "desc": "Conteneur."}},
+      "returns": [{"type": "table<integer, string>", "desc": "Tableau d'appId ; vide si conteneur inconnu."}],
+      "internal": false
+    },
+    "getAvailableApps": {
+      "desc": "Renvoie une copie de la table des apps d'un conteneur sous la forme {[appId]={visible=boolean}}.",
+      "params": {"containerId": {"type": "string", "desc": "Conteneur."}},
+      "returns": [{"type": "table<string, table>", "desc": "Copie des apps ; vide si conteneur inconnu."}],
+      "internal": false
+    },
+    "setDebug": {
+      "desc": "Active ou désactive la fenêtre ImGui « App Containers Debug » (boutons Show/Hide par app, Hide All, Show All).",
+      "params": {"enabled": {"type": "boolean", "desc": "true pour afficher la fenêtre."}},
+      "returns": [],
+      "internal": false
+    },
+    "setVerboseLogging": {
+      "desc": "Sans effet réel : renvoie enabled converti en booléen.",
+      "params": {"enabled": {"type": "boolean", "desc": "Ignoré."}},
+      "returns": [{"type": "boolean", "desc": "enabled en booléen."}],
+      "internal": false
+    },
+    "onSerialize": {
+      "desc": "Hook de sérialisation (rechargement des extensions) : renvoie {[containerId]={[appId]=visible}}.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Visibilité de toutes les apps."}],
+      "internal": true
+    },
+    "onDeserialize": {
+      "desc": "Hook de restauration après rechargement : réapplique la visibilité sauvegardée via setAppVisibility (accepte les anciens identifiants).",
+      "params": {"data": {"type": "table", "desc": "Table produite par onSerialize."}},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook de chargement de l'extension ; ne fait rien.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook de déchargement : vide la table des conteneurs.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Appelé à chaque frame par le système d'extensions ; dessine la fenêtre ImGui de debug uniquement si setDebug(true).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

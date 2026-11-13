@@ -1,0 +1,63 @@
+{
+  "path": "lua/ge/extensions/ui/vehicleSelector/tileSorting.lua",
+  "module": "Fonctions de tri des tuiles du sélecteur de véhicules selon le mode « Trier par » : Name, Value, Years, Weight, Top Speed, Power, Weight/Power, 0-60 mph, 0-100 km/h, Config Type. Chaque comparateur départage les égalités par nom, en plaçant « Autre » en dernier.",
+  "notes": [
+    "Les comparateurs sont de type table.sort : fonction (a, b) -> boolean, sur des tuiles ou configs (champs Name/name/label, Value, Years, Weight, ...).",
+    "Sens de tri : Weight, Top Speed, Power, Value, Years sont croissants. Weight/Power et les temps 0-60 mph / 0-100 km/h sont triés en ordre décroissant de la valeur (d'après le code : `>`), les valeurs absentes valant math.huge.",
+    "Config Type suit l'ordre fixe Factory, Service, Race, Drift, Rally, Police, Custom, Powerglow, Other... ; les types inconnus passent après.",
+    "Un sortMode inconnu (y compris 'Automatic') retombe sur le tri par nom."
+  ],
+  "functions": {
+    "getSortFunction": {
+      "desc": "Renvoie le comparateur d'un mode de tri ; par défaut le tri par nom.",
+      "params": {"sortMode": {"type": "string", "desc": "Name, Value, Years, Weight, Top Speed, Power, Weight/Power, 0-60 mph, 0-100 km/h ou Config Type."}},
+      "returns": [{"type": "function", "desc": "Comparateur (a, b) -> boolean."}]
+    },
+    "sortTiles": {
+      "desc": "Trie une liste de tuiles en place avec le comparateur du mode.",
+      "params": {
+        "tiles": {"type": "table[]", "desc": "Tuiles à trier."},
+        "sortMode": {"type": "string", "desc": "Mode de tri."}
+      }
+    },
+    "sortByNameButOtherAlwaysLast": {
+      "desc": "Compare par nom (Name, name ou label) ; l'élément nommé comme le libellé « Autre » (traduit) est toujours placé en dernier.",
+      "params": {
+        "a": {"type": "table", "desc": "Premier élément."},
+        "b": {"type": "table", "desc": "Second élément."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si a doit précéder b."}]
+    },
+    "sortByValue": {
+      "desc": "Compare par prix (Value, ou sa borne min si c'est une plage), puis par nom.",
+      "params": {
+        "a": {"type": "table", "desc": "Premier élément."},
+        "b": {"type": "table", "desc": "Second élément."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si a doit précéder b."}]
+    },
+    "sortByYears": {
+      "desc": "Compare par année (Years, ou sa borne min), puis par nom ; année absente = math.huge.",
+      "params": {
+        "a": {"type": "table", "desc": "Premier élément."},
+        "b": {"type": "table", "desc": "Second élément."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si a doit précéder b."}]
+    },
+    "sortByConfigTypeName": {
+      "desc": "Compare par type de config selon l'ordre prédéfini, puis par nom.",
+      "params": {
+        "a": {"type": "table", "desc": "Premier élément."},
+        "b": {"type": "table", "desc": "Second élément."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si a doit précéder b."}]
+    },
+    "sortGroup": {
+      "desc": "Trie les tuiles d'un groupe (group.tiles) en place selon le mode de tri.",
+      "params": {
+        "group": {"type": "table", "desc": "Groupe avec un champ tiles."},
+        "sortMode": {"type": "string", "desc": "Mode de tri."}
+      }
+    }
+  }
+}

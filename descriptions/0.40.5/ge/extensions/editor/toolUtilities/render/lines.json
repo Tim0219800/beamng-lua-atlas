@@ -1,0 +1,41 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/render/lines.lua",
+  "module": "Dessin de lignes de debug pour les outils d'édition de splines de l'éditeur (issu de l'ancien render.lua monolithique). Chaque fonction trace un segment p0-p1 avec le style (couleur, épaisseur) correspondant à un usage : spline, fil de fer, ligne de chute d'élévation, normale, navigation, etc. Module feuille : dépend de utils/debugDraw, du style partagé et de util (rampe de couleur bleu vers rouge).",
+  "usage": "local rLines = require('editor/toolUtilities/render/lines')\nrLines.drawSplineLine(vec3(0,0,10), vec3(5,0,10))",
+  "notes": [
+    "Les variantes « culled » ne dessinent que si les DEUX extrémités sont à moins de 600 m de la caméra ; drawSplineLine, drawArcSegment, drawJoinLine et drawLineImmediate ne sont pas filtrées.",
+    "Les couleurs sont des entiers packés (fonction color()) provenant de editor/toolUtilities/style.",
+    "drawWireFrameLine modifie p0.z et p1.z de +0.05 (effet de bord sur les arguments) alors que ses copies offsetP0/offsetP1 sont dessinées sans le décalage : le décalage voulu n'est pas appliqué au tracé."
+  ],
+  "functions": {
+    "drawLineImmediate": {"desc": "Trace une ligne sans filtrage par distance (debugDraw.drawLineInstance_MinArg).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}, "thickness": {"type": "number", "desc": "Épaisseur."}, "col": {"type": "integer", "desc": "Couleur packée."}}, "returns": []},
+    "drawLineCulled": {"desc": "Trace une ligne seulement si les deux extrémités sont à moins de 600 m de la caméra.", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}, "thickness": {"type": "number", "desc": "Épaisseur."}, "col": {"type": "integer", "desc": "Couleur packée."}}, "returns": []},
+    "drawForegroundLine": {"desc": "Trace une ligne par-dessus la géométrie (sans test de profondeur) via debugDrawer:drawLine.", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}, "col": {"type": "integer", "desc": "Couleur packée."}}, "returns": []},
+    "drawSplineLineForeground": {"desc": "Ligne de spline au premier plan (couleur colourSplineForegroundF).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawWireFrameLine": {"desc": "Fil de fer de couche (colourLayerWire, épaisseur 2).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawWireFrameLine2": {"desc": "Fil de fer de deuxième couche (colourLayerWire2).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawWireFrameLine3": {"desc": "Fil de fer de troisième couche (colourLayerWire3).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawPreviewWireLine": {"desc": "Fil de fer d'aperçu (colourPreviewWire).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawRibLine": {"desc": "Ligne de nervure : passe de halo (colourRibGlow) puis passe de cœur (colourRibLine).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawActiveSegLine": {"desc": "Segment actif (colourLayerWire, épaisseur 2).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawGroundLine": {"desc": "Ligne au sol (colourGround).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawGroundLineDull": {"desc": "Ligne au sol atténuée (colourGroundDull).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawDropLine": {"desc": "Ligne de chute d'élévation colorée selon la valeur v sur la rampe bleu vers rouge entre 0 et lim.", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}, "v": {"type": "number", "desc": "Valeur à représenter."}, "lim": {"type": "number", "desc": "Valeur maximale de la rampe."}}, "returns": []},
+    "drawDropLineThick": {"desc": "Comme drawDropLine avec l'épaisseur dropThicknessThicker.", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}, "v": {"type": "number", "desc": "Valeur."}, "lim": {"type": "number", "desc": "Maximum de la rampe."}}, "returns": []},
+    "drawDropLineDull": {"desc": "Ligne de chute atténuée (colourDropDull).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawElevDropLine": {"desc": "Ligne de chute douce, fine et translucide (alpha 110), pour nœuds sélectionnés ou centres de jonction. Teinte selon |v| / lim (lim vaut 100 par défaut).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}, "v": {"type": "number", "desc": "Valeur (valeur absolue utilisée)."}, "lim": {"type": "number|nil", "desc": "Maximum de la rampe, défaut 100."}}, "returns": []},
+    "drawSquareCornerLine": {"desc": "Ligne de marque d'angle droit (colourSquareCorner).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawSquareCornerLineForeground": {"desc": "Marque d'angle droit au premier plan (colourSquareCornerF).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawNormalLine": {"desc": "Ligne de normale (colourNormal).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawRefNormalLine": {"desc": "Ligne de normale de référence (colourRefNormal).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawNavLine": {"desc": "Ligne de graphe de navigation (colourNav).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawPathLine": {"desc": "Ligne de chemin (colourPath).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawBarCeilingLine": {"desc": "Ligne de plafond de barre, colorée selon v sur la rampe bleu vers rouge.", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}, "v": {"type": "number", "desc": "Valeur."}, "lim": {"type": "number", "desc": "Maximum de la rampe."}}, "returns": []},
+    "drawSplineLineLinked": {"desc": "Ligne de spline liée à une autre (colourSplineLinked).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawSplineLineDull": {"desc": "Ligne de spline atténuée (colourSplineDull).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawSplineLineUnselected": {"desc": "Ligne de spline non sélectionnée (colourSplineDull, épaisseur 2).", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawSplineLine": {"desc": "Ligne de spline sélectionnée : halo (épaisseur 4) puis cœur (épaisseur 2). Non filtrée par distance.", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawArcSegment": {"desc": "Segment d'arc (colourArcSeg, épaisseur arcSegThickness). Non filtré par distance.", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []},
+    "drawJoinLine": {"desc": "Ligne de jonction/boucle à épaisseur pulsée dans le temps (os.clock, loopPulseHz). Non filtrée par distance.", "params": {"p0": {"type": "vec3", "desc": "Début."}, "p1": {"type": "vec3", "desc": "Fin."}}, "returns": []}
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/fileVehicleGroup.lua",
+  "module": "Nœud flowgraph « File Vehicle Group » (once_p_duration). Charge un fichier .vehGroup.json (jsonReadFile). Si le fichier a un generator ou pas de data, le groupe est généré avec core_multiSpawn.createGroup(amount, generator) (amount par défaut 10). Sortie : group (vehicleGroupData) pour les nœuds de spawn de trafic.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Appelé à l'arrêt de l'exécution du projet flowgraph ; libère l'état interne.",
+          "internal": true
+        },
+        "init": {
+          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Appelé lors de la réinitialisation du nœud ; remet son état interne à zéro.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Appelé après la création des pins du nœud ; sert à ajuster les pins (modèles de valeurs, filtres de fichiers, clés dynamiques).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Au premier appel, résout le chemin, lit le fichier, génère les données si nécessaire et publie le groupe ; erreur de nœud si le fichier est introuvable.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

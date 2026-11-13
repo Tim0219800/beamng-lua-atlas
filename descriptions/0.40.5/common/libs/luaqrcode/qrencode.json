@@ -1,0 +1,27 @@
+{
+  "path": "lua/common/libs/luaqrcode/qrencode.lua",
+  "module": "luaqrcode (Patrick Gundlach / speedata, licence BSD 3 clauses) : générateur de QR codes en Lua pur. Il choisit la plus petite version (1 à 40) et le mode (numérique, alphanumérique, binaire), encode les données, calcule la correction d'erreur Reed-Solomon, génère les 8 masques et garde celui dont la pénalité est la plus faible. Il ne dessine rien : il renvoie une matrice de modules que le moddeur affiche lui-même (par exemple en UI ou texture).",
+  "usage": "local qr = require('libs/luaqrcode/qrencode')\nlocal ok, matrix = qr.qrcode('https://beamng.com')\nif ok then\n  for x = 1, #matrix do for y = 1, #matrix do\n    local noir = matrix[x][y] > 0\n  end end\nend",
+  "notes": [
+    "Valeurs de la matrice : positif = module noir, négatif = module blanc (1/-1 pour les données, 2/-2 pour les motifs obligatoires). La matrice est indexée matrix[x][y], en base 1, taille carrée de 4 * version + 17 ; [1][1] est en haut à gauche.",
+    "qrcode renvoie (true, matrice) en cas de succès, (false, message) si les données arrangées ne sont pas un multiple de 8 bits ; les autres cas d'échec (texte trop long pour la version 40, etc.) peuvent lever une erreur (déduit du code).",
+    "Le paramètre mode n'est pas implémenté : le passer déclenche assert(false, 'not implemented') dans get_version_eclevel_mode_bistringlength. Le mode est choisi automatiquement : numérique si que des chiffres, alphanumérique pour [0-9A-Z $%*./:+-], sinon binaire.",
+    "Niveaux de correction ec_level : 1 à 4 (L, M, Q, H). Sans valeur, la fonction prend le niveau le plus élevé qui tient dans la plus petite version.",
+    "Le fichier contient un bloc 'if testing' qui exporte des fonctions internes si la globale testing est définie ; sinon seul qrcode est exporté.",
+    "Utilise le module 'bit' (LuaJIT BitOp)."
+  ],
+  "functions": {
+    "qrcode": {
+      "desc": "Génère le QR code d'une chaîne : détermine version, niveau de correction et mode, encode les données, ajoute la correction d'erreur, puis choisit le masque de moindre pénalité.",
+      "params": {
+        "str": {"type": "string", "desc": "Texte à encoder."},
+        "ec_level": {"type": "integer|nil", "desc": "Niveau de correction demandé, 1 à 4 (L, M, Q, H). Facultatif."},
+        "mode": {"type": "integer|nil", "desc": "Non implémenté : ne pas fournir (provoque une assertion)."}
+      },
+      "returns": [
+        {"type": "boolean", "desc": "true si la génération a réussi."},
+        {"type": "table<integer, table<integer, integer>>|string", "desc": "Matrice [x][y] des modules (positif = noir), ou message d'erreur si le premier retour est false."}
+      ]
+    }
+  }
+}

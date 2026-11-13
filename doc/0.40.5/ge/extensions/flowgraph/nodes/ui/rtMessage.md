@@ -4,13 +4,17 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/ui/rtMessage")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « RT Message » (catégorie repeat_instant, tags ui/text) : affiche un message en temps réel (hook 'ScenarioRealtimeDisplay'). Entrées : « message » (any ou table translationObject {txt, context}), « clear » (impulsion). Le message doit être effacé manuellement ; il est aussi effacé à l'arrêt du graphe.
+
 ## Classe `C`
+
+Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:_executionStopped()` |  | 25 |
-| `C:init()` |  | 22 |
-| `C:work()` |  | 30 |
+| `C:_executionStopped()` | Efface le message temps réel. | 25 |
+| `C:init()` | Vide. | 22 |
+| `C:work()` | Efface ou affiche le message selon 'clear' et le flux d'entrée. | 30 |
 
 **Évènements UI (guihooks.trigger) :** `ScenarioRealtimeDisplay`
 

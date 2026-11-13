@@ -4,18 +4,124 @@
 
 **Accès :** extension `editor_toolUtilities_splineInput` : `extensions.load("editor_toolUtilities_splineInput")`, puis la globale `editor_toolUtilities_splineInput`
 
+Gestion partagée de la souris et du clavier pour tous les outils d'édition de splines de l'éditeur (une spline est une polyligne éditable le long d'une ligne centrale de largeur variable : routes, chemins). Gère la sélection et le glissement de nœuds, de poignées de largeur (ribs) et de hauteur (bars), le gizmo, l'ajout et l'insertion de nœuds, les jonctions et boucles, le copier-coller de profil (Ctrl+C / Ctrl+V), la suppression, l'annulation (via editor.history ou un remplacement fourni par l'outil) et la sélection entre outils. Les outils s'enregistrent avec registerSplineTool, ce qui permet de sélectionner une spline d'un autre outil en cliquant dessus.
+
+## Exemple
+
+```lua
+local si = require('editor/toolUtilities/splineInput')
+si.registerSplineTool(prefix, getSplines, getEditModeKey, deepCopy, deepCopyState, 'editor_meshSpline')
+-- chaque frame, dans onEditorGui : si.handleSplineEvents(splines, out, ...)
+```
+
+## Remarques
+
+- Constantes : largeur de spline de 3 à 200 m, hauteur de 0 à 70 m, vitesse par défaut d'un nœud 13.5 m/s (limite 70 m/s), distance max de jonction ou boucle 15 m, sensibilité de hauteur 1 m par pixel, délai d'apparition du texte d'aide 1 s.
+- Les jonctions et boucles ne modifient la topologie que si Ctrl est maintenu au relâchement du glisser ; l'aperçu s'affiche dès qu'un candidat existe.
+- Alt bascule le gizmo (out.isGizmoActive).
+- eventOptions de handleSplineEvents : commitHistoryOverride(name, data, undoFn, redoFn, dontCallRedoNow), preserveNodeZ (glisser un nœud sur un plan horizontal à sa propre altitude), suppressAddNode (masque l'ajout de nœud pour la frame), midJoinRefusalFn, maxWidth (largeur max d'un glisser de rib), gizmoAnchorFn(spline, node) (point d'affichage du gizmo).
+- Champs de `out` lus ou écrits : spline, node (indices sélectionnés), isGizmoActive, entre autres.
+- Un outil hébergé dans un autre mode d'édition (onglets réseau du City Builder) doit se déclarer avec setHostedTool(prefix) tant que son onglet est ouvert.
+- cancelDrag est exporté comme alias de clearDragState (efface tout l'état de glisser).
+
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `editor_toolUtilities_splineInput.cancelDrag()` |  | 77 |
-| `editor_toolUtilities_splineInput.getBestHitTarget(selSpline, mousePos, useRibs, useBars)` | Optimized hit detection that prioritizes by distance to resolve selection conflicts.<br> Returns the best hit target based on closest distance to camera ray.<br> Always checks splines from all tools for cross-tool selection.<br> [SelSpline - The currently selected spline.]<br> [MousePos - The 3D mouse position.]<br> [UseRibs - Whether to check rib handles.]<br> [UseBars - Whether to check bar handles.] | 478 |
-| `editor_toolUtilities_splineInput.handleForeignNodeSelection(activePrefix)` | Cross-tool node selection for tools that DON'T run handleSplineEvents themselves (polygon tools such as the<br> forest zone editor). Each frame it hovers foreign-tool spline nodes (glow + 'select' markup) and, on click,<br> switches to that tool and selects the node - exactly the pickup the spline tools get internally. Pass the<br> calling tool's own prefix so its own splines are skipped (the caller selects those itself). Returns true when a<br> foreign node is under the cursor, so the caller can skip its own scene interaction for the frame. | 701 |
-| `editor_toolUtilities_splineInput.handleNavGraphEvents(selSpline, nodes, deepCopyFunct, undoFunct, redoFunct, isBarsLimit, useBars)` | Handles the user input events for spline-editing tools.<br> Splines are user-editable polylines along the centerline of a variable width. They can be used to create roads, paths, etc.<br> [SelSpline - The selected spline.]<br> [Nodes - The collection of navigation graph nodes to handle events for.]<br> [DeepCopyFunct - A function which deep copies a spline.]<br> [UndoFunct - The undo callback function for a single spline edit.]<br> [RedoFunct - The redo callback function for a single spline edit.]<br> [isBarsLimit - Whether to use velLimits (true) or vels (false) for bar heights.]<br> [useBars - Whether to allow bar interactions (defaults to true).] | 1171 |
-| `editor_toolUtilities_splineInput.handleSplineEvents(splines, out, isRotEnabled, isConformToTerrain, useRibs, useBars, isBarsLimits, useCopyPaste, useGizmo, isLockShape, defaultSplineWidth, deepCopyFunct, deepCopyStateFunct, copyProfileFunct, pasteProfileFunct, afterEndDragCallback, joinFunct, undoFunct, redoFunct, undoStateFunct, redoStateFunct, midJoinFunct, canJoinFunct, canJoinAuxFunct, eventOptions)` | Handles the user input events for spline-editing tools.<br> Splines are user-editable polylines along the centerline of a variable width. They can be used to create roads, paths, etc.<br> [Splines - The collection of splines to handle events for.]<br> [Out - A table which contains the following common fields (will be updated as the user interacts with the splines):]<br> [SelSplineIdx - The index of the selected spline.]<br> [SelNodeIdx - The index of the selected node.]<br> [SelLayerIdx - The index of the selected layer. NOTE: This is only used for the 'decal placement' case.]<br> [IsGizmoActive - A flag which indicates whether the gizmo is active.]<br> [IsRotEnabled - A flag which indicates whether the rotation gizmo is enabled.]<br> [IsConformToTerrain - A flag which indicates whether the spline should be conform to the surface below, or not. Used for vertical gizmo control.]<br> [UseRibs - A flag which indicates whether to use ribs (handles for width adjustment).]<br> [UseBars - A flag which indicates whether to use bars (handles for height adjustment).]<br> [IsBarsLimits - A flag which indicates whether the bars are limits (true) or velocities (false).]<br> [UseCopyPaste - A flag which indicates whether to use the copy/paste profile feature.]<br> [UseGizmo - A flag which indicates whether to use gizmo.]<br> [IsLockShape - A flag which indicates whether the shape of the spline is locked, or not.]<br> [DefaultSplineWidth - The default width for a spline when adding a new node, in meters.]<br> [DeepCopyFunct - A function which deep copies a spline.]<br> [DeepCopyStateFunct - A function which deep copies the state of a spline.]<br> [CopyProfileFunct - A function which copies a profile.]<br> [PasteProfileFunct - A function which pastes a profile.]<br> [RibStartDragCallback - A function which is called when the user starts dragging a rib.]<br> [AfterEndDragCallback - A function which is called when the user ends dragging.]<br> [JoinFunct - A function which is called when the user forms a join.]<br> [UndoFunct - The undo callback function for a single spline edit.]<br> [RedoFunct - The redo callback function for a single spline edit.]<br> [UndoStateFunct - The undo callback function for the full spline state edit.]<br> [RedoStateFunct - The redo callback function for the full spline state edit.] | 775 |
-| `editor_toolUtilities_splineInput.isDragging()` |  | 97 |
-| `editor_toolUtilities_splineInput.registerSplineTool(prefix, getSplinesFn, getEditModeKeyFn, deepCopyFn, deepCopyStateFn, uiModuleName, getAuxNodesFn, isNodeLockedFn)` | Registers a spline-editing tool for use with the shared spline input utilities.<br> [prefix]           - Tool display prefix (from splineMgr.getToolPrefixStr()).<br> [getSplinesFn]     - Function returning the tool's spline array.<br> [getEditModeKeyFn] - Function returning the editor editMode key for this tool.<br> [deepCopyFn]       - Function deep-copying a single spline.<br> [deepCopyStateFn]  - Function deep-copying the full spline tool state.<br> [uiModuleName]     - Name of the UI module (e.g. 'editor_meshSpline').<br> [getAuxNodesFn]    - Optional: returns extra selectable node positions (vec3 array), same hit rules as road nodes.<br> [isNodeLockedFn]   - Optional: isNodeLockedFn(spline, nodeIdx) → true to allow select but not drag/gizmo/delete. | 665 |
-| `editor_toolUtilities_splineInput.setHostedTool(prefix)` |  | 103 |
+| `editor_toolUtilities_splineInput.cancelDrag()` | Annule l'état de glisser en cours (alias de clearDragState) : efface spline, nœud, état avant, drapeaux rib, bar et aux. | 77 |
+| `editor_toolUtilities_splineInput.getBestHitTarget(selSpline, mousePos, useRibs, useBars)` | Détection de hit qui départage par distance à la caméra : renvoie la meilleure cible (nœud, rib ou bar) la plus proche du rayon caméra, en vérifiant toujours les splines de tous les outils pour la sélection inter-outils. Les nœuds ont la priorité. | 478 |
+| `editor_toolUtilities_splineInput.handleForeignNodeSelection(activePrefix)` | Sélection de nœuds d'un autre outil, pour les outils qui n'exécutent pas handleSplineEvents (outils polygones comme l'éditeur de zones de forêt). À chaque frame, survole les nœuds de splines d'autres outils (lueur et texte « select ») et, au clic, bascule vers cet outil et sélectionne le nœud, avec démarrage d'un glisser si l'outil cible le supporte. | 701 |
+| `editor_toolUtilities_splineInput.handleNavGraphEvents(selSpline, nodes, deepCopyFunct, undoFunct, redoFunct, isBarsLimit, useBars)` | Traite les événements d'entrée pour un chemin dans un graphe de navigation : clic sur un nœud du graphe pour l'ajouter ou le retirer du chemin (avec sa vitesse et sa limite par défaut 13.5 m/s), glisser des bars de vitesse (de 0 à 70 m/s), curseur et textes d'aide. | 1171 |
+| `editor_toolUtilities_splineInput.handleSplineEvents(splines, out, isRotEnabled, isConformToTerrain, useRibs, useBars, isBarsLimits, useCopyPaste, useGizmo, isLockShape, defaultSplineWidth, deepCopyFunct, deepCopyStateFunct, copyProfileFunct, pasteProfileFunct, afterEndDragCallback, joinFunct, undoFunct, redoFunct, undoStateFunct, redoStateFunct, midJoinFunct, canJoinFunct, canJoinAuxFunct, eventOptions)` | Traite les événements d'entrée des outils de splines pour une frame : survol, sélection, ajout et insertion de nœuds, glisser de nœuds, de ribs et de bars, gizmo, jonctions, copier-coller de profil, suppression, et validation des pas d'annulation. Met à jour la table `out` (spline et nœud sélectionnés, état du gizmo, etc.). | 775 |
+| `editor_toolUtilities_splineInput.isDragging()` | Vrai si un glisser est en cours (nœud, nœud auxiliaire ou gizmo). | 97 |
+| `editor_toolUtilities_splineInput.registerSplineTool(prefix, getSplinesFn, getEditModeKeyFn, deepCopyFn, deepCopyStateFn, uiModuleName, getAuxNodesFn, isNodeLockedFn)` | Enregistre un outil d'édition de splines pour les utilitaires d'entrée partagés. Rappelé avec le même préfixe (rechargement à chaud), il met à jour les callbacks de l'enregistrement existant ; ne fait rien si prefix est nil. Attention : à la mise à jour, getAuxNodesFn et isNodeLockedFn sont remplacés tels quels, même s'ils sont nil. | 665 |
+| `editor_toolUtilities_splineInput.setHostedTool(prefix)` | Déclare qu'un outil est hébergé dans un autre mode d'édition : son préfixe sert alors de nom d'outil actif à la place du displayName du mode d'édition. | 103 |
+
+### Détail des paramètres
+
+#### `editor_toolUtilities_splineInput.getBestHitTarget(selSpline, mousePos, useRibs, useBars)`
+
+Détection de hit qui départage par distance à la caméra : renvoie la meilleure cible (nœud, rib ou bar) la plus proche du rayon caméra, en vérifiant toujours les splines de tous les outils pour la sélection inter-outils. Les nœuds ont la priorité.
+
+- `selSpline` (*table|nil*) : Spline sélectionnée.
+- `mousePos` (*vec3*) : Position 3D de la souris.
+- `useRibs` (*boolean*) : Tester aussi les poignées de largeur.
+- `useBars` (*boolean*) : Tester aussi les poignées de hauteur.
+- **renvoie** : table|nil Cible : champs type ('node', 'rib', 'bar'), splineIdx, nodeIdx, toolName, entre autres ; nil si rien.
+
+#### `editor_toolUtilities_splineInput.handleForeignNodeSelection(activePrefix)`
+
+Sélection de nœuds d'un autre outil, pour les outils qui n'exécutent pas handleSplineEvents (outils polygones comme l'éditeur de zones de forêt). À chaque frame, survole les nœuds de splines d'autres outils (lueur et texte « select ») et, au clic, bascule vers cet outil et sélectionne le nœud, avec démarrage d'un glisser si l'outil cible le supporte.
+
+- `activePrefix` (*string*) : Préfixe de l'outil appelant, dont les splines sont ignorées.
+- **renvoie** : boolean Vrai si un nœud étranger est sous le curseur, pour que l'appelant saute sa propre interaction de scène.
+
+#### `editor_toolUtilities_splineInput.handleNavGraphEvents(selSpline, nodes, deepCopyFunct, undoFunct, redoFunct, isBarsLimit, useBars)`
+
+Traite les événements d'entrée pour un chemin dans un graphe de navigation : clic sur un nœud du graphe pour l'ajouter ou le retirer du chemin (avec sa vitesse et sa limite par défaut 13.5 m/s), glisser des bars de vitesse (de 0 à 70 m/s), curseur et textes d'aide.
+
+- `selSpline` (*table|nil*) : Spline sélectionnée (graphNodes, vels, velLimits, barPoints).
+- `nodes` (*table*) : Nœuds du graphe de navigation.
+- `deepCopyFunct` (*function*) : Copie profonde d'une spline.
+- `undoFunct` (*function*) : Callback d'annulation.
+- `redoFunct` (*function*) : Callback de rétablissement.
+- `isBarsLimit` (*boolean*) : Utiliser velLimits (vrai) ou vels (faux) pour la hauteur des bars.
+- `useBars` (*boolean|nil*) : Autoriser les bars (vrai par défaut).
+
+#### `editor_toolUtilities_splineInput.handleSplineEvents(splines, out, isRotEnabled, isConformToTerrain, useRibs, useBars, isBarsLimits, useCopyPaste, useGizmo, isLockShape, defaultSplineWidth, deepCopyFunct, deepCopyStateFunct, copyProfileFunct, pasteProfileFunct, afterEndDragCallback, joinFunct, undoFunct, redoFunct, undoStateFunct, redoStateFunct, midJoinFunct, canJoinFunct, canJoinAuxFunct, eventOptions)`
+
+Traite les événements d'entrée des outils de splines pour une frame : survol, sélection, ajout et insertion de nœuds, glisser de nœuds, de ribs et de bars, gizmo, jonctions, copier-coller de profil, suppression, et validation des pas d'annulation. Met à jour la table `out` (spline et nœud sélectionnés, état du gizmo, etc.).
+
+- `splines` (*table*) : Collection des splines à gérer.
+- `out` (*table*) : Table mise à jour pendant l'interaction : sélection (indice de spline, de nœud, de calque pour le cas « decal placement »), isGizmoActive, etc.
+- `isRotEnabled` (*boolean*) : Gizmo de rotation autorisé.
+- `isConformToTerrain` (*boolean*) : La spline doit épouser la surface dessous (commande verticale du gizmo).
+- `useRibs` (*boolean*) : Utiliser les ribs (poignées de largeur).
+- `useBars` (*boolean*) : Utiliser les bars (poignées de hauteur).
+- `isBarsLimits` (*boolean*) : Les bars sont des limites (vrai) ou des vitesses (faux).
+- `useCopyPaste` (*boolean*) : Activer le copier-coller de profil.
+- `useGizmo` (*boolean*) : Utiliser le gizmo.
+- `isLockShape` (*boolean*) : La forme de la spline est verrouillée.
+- `defaultSplineWidth` (*number*) : Largeur par défaut d'un nouveau nœud, en mètres.
+- `deepCopyFunct` (*function*) : Copie profonde d'une spline.
+- `deepCopyStateFunct` (*function*) : Copie profonde de l'état d'une spline.
+- `copyProfileFunct` (*function*) : Copie un profil.
+- `pasteProfileFunct` (*function*) : Colle un profil.
+- `afterEndDragCallback` (*function|nil*) : Appelée en fin de glisser avec (selSpline, wasAuxDrag, auxIdx, dragSplineIdx, dragNodeIdx).
+- `joinFunct` (*function|nil*) : Appelée quand l'utilisateur forme une jonction.
+- `undoFunct` (*function*) : Callback d'annulation d'une édition de spline.
+- `redoFunct` (*function*) : Callback de rétablissement d'une édition de spline.
+- `undoStateFunct` (*function|nil*) : Callback d'annulation de l'édition d'état complet.
+- `redoStateFunct` (*function|nil*) : Callback de rétablissement de l'édition d'état complet.
+- `midJoinFunct` (*function|nil*) : Appelée pour une jonction en milieu de spline.
+- `canJoinFunct` (*function|nil*) : Dit si une jonction est permise (déduit du code).
+- `canJoinAuxFunct` (*function|nil*) : Variante de canJoinFunct pour les nœuds auxiliaires (déduit du code).
+- `eventOptions` (*table|nil*) : Options : commitHistoryOverride, preserveNodeZ, suppressAddNode, midJoinRefusalFn, maxWidth, gizmoAnchorFn.
+
+#### `editor_toolUtilities_splineInput.isDragging()`
+
+Vrai si un glisser est en cours (nœud, nœud auxiliaire ou gizmo).
+
+- **renvoie** : boolean Glisser actif.
+
+#### `editor_toolUtilities_splineInput.registerSplineTool(prefix, getSplinesFn, getEditModeKeyFn, deepCopyFn, deepCopyStateFn, uiModuleName, getAuxNodesFn, isNodeLockedFn)`
+
+Enregistre un outil d'édition de splines pour les utilitaires d'entrée partagés. Rappelé avec le même préfixe (rechargement à chaud), il met à jour les callbacks de l'enregistrement existant ; ne fait rien si prefix est nil. Attention : à la mise à jour, getAuxNodesFn et isNodeLockedFn sont remplacés tels quels, même s'ils sont nil.
+
+- `prefix` (*string*) : Préfixe d'affichage de l'outil (de splineMgr.getToolPrefixStr()).
+- `getSplinesFn` (*function*) : Renvoie le tableau de splines de l'outil.
+- `getEditModeKeyFn` (*function*) : Renvoie la clé du mode d'édition de l'éditeur pour cet outil.
+- `deepCopyFn` (*function*) : Copie profonde d'une spline.
+- `deepCopyStateFn` (*function*) : Copie profonde de tout l'état de l'outil.
+- `uiModuleName` (*string*) : Nom du module d'UI (par ex. 'editor_meshSpline'), qui expose setSelectedSplineIdx et setSelectedNodeIdx.
+- `getAuxNodesFn` (*function|nil*) : Facultatif : renvoie des positions de nœuds sélectionnables supplémentaires (tableau de vec3), mêmes règles de hit que les nœuds de route.
+- `isNodeLockedFn` (*function|nil*) : Facultatif : isNodeLockedFn(spline, nodeIdx) renvoie vrai pour permettre la sélection mais pas le glissement, le gizmo ni la suppression.
+
+#### `editor_toolUtilities_splineInput.setHostedTool(prefix)`
+
+Déclare qu'un outil est hébergé dans un autre mode d'édition : son préfixe sert alors de nom d'outil actif à la place du displayName du mode d'édition.
+
+- `prefix` (*string|nil*) : Préfixe de l'outil hébergé, nil pour annuler.
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/splineInput.lua`.*

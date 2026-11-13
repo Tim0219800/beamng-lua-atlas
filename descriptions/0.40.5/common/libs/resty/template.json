@@ -1,0 +1,82 @@
+{
+  "path": "lua/common/libs/resty/template.lua",
+  "module": "Bibliothèque tierce lua-resty-template (version 1.9, conçue pour OpenResty/nginx mais utilisable en Lua pur) : moteur de gabarits qui convertit un texte à balises en code Lua compilé. Balises : `{{expr}}` (sortie échappée HTML), `{*expr*}` (sortie brute), `{% code %}` (code Lua), `{# commentaire #}`, `{(fichier)}` / `{(fichier, contexte)}` (inclusion), `{[expr]}` (inclusion dynamique), `{-bloc-}...{-bloc-}` (blocs de mise en page), `{-verbatim-}`/`{-raw-}` (texte non interprété). Un `\\` devant une balise l'échappe.",
+  "usage": "local template = require('libs/resty/template')\nlocal f = template.compile('Bonjour {{nom}} !')\nprint(f({nom = 'Tim'}))\nprint(template.renderReturn('{% for i = 1, 3 do %}{*i*} {% end %}', {}))",
+  "notes": [
+    "Hors nginx (ngx == nil), `template.load` lit le fichier du chemin donné ou, s'il n'existe pas, utilise la chaîne comme texte du gabarit ; `template.print` vaut io.write.",
+    "Bug : `template.new(view, layout)` utilise `template.render`, qui n'est défini nulle part dans ce fichier (seul `renderReturn` existe) ; l'appel de `:render()` sur un objet sans layout table (ou avec un layout chaîne) échoue donc (appel de nil).",
+    "Le code généré est chargé avec `load` dans un environnement qui retombe sur le contexte, puis `template`, puis les globales ; le gabarit peut donc lire les globales du jeu.",
+    "Les gabarits compilés sont mis en cache dans `template.cache` (clé = texte du gabarit ou `key`) tant que `caching` est actif ; la clé spéciale \"no-cache\" contourne le cache.",
+    "Les gabarits précompilés (bytecode, premier octet 27) sont acceptés par `parse` tels quels."
+  ],
+  "fields": {
+    "_VERSION": {"type": "string", "desc": "Version du module : \"1.9\"."},
+    "cache": {"type": "table<string, function>", "desc": "Cache des gabarits compilés."},
+    "print": {"type": "function", "desc": "Fonction d'écriture (io.write hors nginx)."},
+    "load": {"type": "function", "desc": "Chargeur de gabarit : lit un fichier ou renvoie la chaîne telle quelle."}
+  },
+  "functions": {
+    "caching": {
+      "desc": "Active/désactive le cache de compilation si `enable` est donné, et renvoie l'état courant.",
+      "params": {"enable": {"type": "boolean|nil", "desc": "true pour activer, false pour désactiver ; nil laisse inchangé."}},
+      "returns": [{"type": "boolean", "desc": "État du cache."}]
+    },
+    "output": {
+      "desc": "Convertit une valeur en texte de sortie : nil (ou ngx.null) -> \"\", fonction -> résultat de son appel, sinon tostring.",
+      "params": {"s": {"type": "any", "desc": "Valeur à afficher."}},
+      "returns": [{"type": "string", "desc": "Texte."}]
+    },
+    "escape": {
+      "desc": "Échappe le HTML d'une chaîne (& < > \" ' /). Si `c` est vrai, échappe aussi { et } (mode code). Les valeurs non chaînes passent par `output`.",
+      "params": {
+        "s": {"type": "any", "desc": "Valeur."},
+        "c": {"type": "boolean|nil", "desc": "Échapper aussi les accolades."}
+      },
+      "returns": [{"type": "string", "desc": "Texte échappé (la version chaîne renvoie aussi le nombre de remplacements)."}]
+    },
+    "new": {
+      "desc": "Crée un objet gabarit avec `render(context)` et `tostring`, avec une mise en page (layout) facultative, table ou texte.",
+      "params": {
+        "view": {"type": "string", "desc": "Gabarit (texte ou chemin)."},
+        "layout": {"type": "string|table|nil", "desc": "Gabarit de mise en page ; reçoit `view` rendu dans context.view."}
+      },
+      "returns": [{"type": "table", "desc": "Objet {render} avec __tostring."}]
+    },
+    "precompile": {
+      "desc": "Compile le gabarit et renvoie son bytecode (string.dump) ; l'écrit dans `path` si fourni.",
+      "params": {
+        "view": {"type": "string", "desc": "Gabarit."},
+        "path": {"type": "string|nil", "desc": "Fichier de sortie (io.open, mode wb)."},
+        "strip": {"type": "boolean|nil", "desc": "Retirer les infos de debug (défaut true)."}
+      },
+      "returns": [{"type": "string", "desc": "Bytecode."}]
+    },
+    "compile": {
+      "desc": "Analyse et compile un gabarit en fonction `f(context)`. Met le résultat en cache sous `key` (par défaut le texte du gabarit).",
+      "params": {
+        "view": {"type": "string", "desc": "Gabarit ou chemin."},
+        "key": {"type": "string|nil", "desc": "Clé de cache ; \"no-cache\" désactive le cache pour cet appel."},
+        "plain": {"type": "boolean|nil", "desc": "Si true, `view` est du texte brut (pas de chargement de fichier)."}
+      },
+      "returns": [{"type": "function", "desc": "Fonction de rendu."}, {"type": "boolean", "desc": "true si elle vient du cache."}]
+    },
+    "parse": {
+      "desc": "Traduit le gabarit en code source Lua (chaîne) prêt pour load.",
+      "params": {
+        "view": {"type": "string", "desc": "Gabarit ou chemin."},
+        "plain": {"type": "boolean|nil", "desc": "Si true, ne passe pas par template.load."}
+      },
+      "returns": [{"type": "string", "desc": "Code Lua (ou bytecode si le gabarit en est déjà)."}]
+    },
+    "renderReturn": {
+      "desc": "Compile (avec cache) puis exécute le gabarit avec `context` et renvoie le texte produit.",
+      "params": {
+        "view": {"type": "string", "desc": "Gabarit."},
+        "context": {"type": "table", "desc": "Variables disponibles dans le gabarit."},
+        "key": {"type": "string|nil", "desc": "Clé de cache."},
+        "plain": {"type": "boolean|nil", "desc": "Gabarit en texte brut."}
+      },
+      "returns": [{"type": "string", "desc": "Texte rendu."}]
+    }
+  }
+}

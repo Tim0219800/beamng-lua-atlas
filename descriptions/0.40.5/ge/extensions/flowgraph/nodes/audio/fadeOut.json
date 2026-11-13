@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/audio/fadeOut.lua",
+  "module": "Nœud flowgraph « Audio Fade Out » (catégorie once_f_duration, tags sound/audio/volume). Fait descendre le volume global jusqu'au silence : fixe g_FadeTimeMS (= duration en ms) et g_GameLoading = 1 via SFXSystem.setGlobalParameter, puis attend la durée pour signaler la fin. Entrée : duration (s, défaut 1).",
+  "notes": ["Miroir de Audio Fade In (g_GameLoading = 0 là-bas). À l'arrêt ou au reset du nœud, les deux paramètres sont remis à 0, ce qui annule le fondu."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Met le minuteur à 0.", "internal": true},
+        "_executionStopped": {"desc": "Appelle reset() à l'arrêt du graphe.", "internal": true},
+        "onNodeReset": {"desc": "Appelle reset() quand le nœud est réinitialisé.", "internal": true},
+        "reset": {"desc": "Remet le minuteur à 0, l'état de durée à 'inactive' et g_FadeTimeMS / g_GameLoading à 0.", "internal": true},
+        "workOnce": {"desc": "Au premier flux : g_FadeTimeMS = duration*1000, g_GameLoading = 1, état 'started'."},
+        "work": {"desc": "Chaque frame : fait avancer le minuteur (mgr.dtReal) et passe l'état à 'finished' une fois duration atteinte."}
+      }
+    }
+  }
+}

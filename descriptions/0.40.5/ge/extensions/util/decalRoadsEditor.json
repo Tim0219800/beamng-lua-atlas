@@ -1,0 +1,25 @@
+{
+  "path": "lua/ge/extensions/util/decalRoadsEditor.lua",
+  "module": "Visualisation de débogage, chargée dynamiquement par le moteur ou l'éditeur de monde : à chaque frame, elle dessine les objets AIPath de la scène (chemins de circulation) à proximité de la caméra : sphères rouges aux nœuds, prismes bleus entre nœuds, et des décalques de flèches par voie (cyan pour la voie gauche, rouge pour la droite, inversés si flipDirection). Seuls les AIPath avec drivability > 0 sont affichés.",
+  "notes": [
+    "Distance d'affichage : visibilité décroissante de 400 m à 500 m de la caméra (fadeStart 200 et fadeEnd 250, doublés dans le calcul) ; au-delà d'environ 500 m rien n'est dessiné.",
+    "Le nombre de voies vient de lanesLeft et lanesRight de chaque AIPath ; les flèches sont ajoutées via Engine.Render.DynamicDecalMgr.addDecal avec la texture art/arrow_waypoint_1.dds.",
+    "Malgré son nom de fichier (decalRoads), l'outil traite la classe AIPath, et ses logs portent l'étiquette 'AIPathEditor'.",
+    "Coût : tous les AIPath et leurs nœuds sont parcourus à chaque frame, avec des décalques recréés chaque fois : outil de développement, pas de production."
+  ],
+  "functions": {
+    "onPreRender": {
+      "desc": "Hook appelé avant chaque rendu : dessine les AIPath proches de la caméra (nœuds, segments, flèches de voies).",
+      "params": {"dt": {"type": "number", "desc": "Durée de la frame (s) ; non utilisée."}},
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook de chargement : log « module loaded ».",
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook de déchargement : log « module unloaded ».",
+      "internal": true
+    }
+  }
+}

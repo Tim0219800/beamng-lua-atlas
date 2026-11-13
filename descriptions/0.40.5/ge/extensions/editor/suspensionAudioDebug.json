@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/editor/suspensionAudioDebug.lua",
+  "module": "Petite fenêtre de débogage de l'éditeur (menu Audio) qui trace les sons de suspension du véhicule joueur. À chaque frame elle demande au véhicule (queueLuaCommand) de renvoyer sounds.getBeamSounds() vers la GE dans editor_suspensionAudioDebug.beamSounds, puis affiche, pour chaque roue (avant/arrière, gauche/droite), des courbes sur 200 échantillons de l'impulsion, du pitch et du volume. La position de la roue est déduite de la position du noeud id1 de la poutre.",
+  "notes": [
+    "La position est déduite du signe de pos.y (<0 = Front, sinon Rear) et pos.x (<0 = Right, sinon Left), d'après les coordonnées jbeam du véhicule.",
+    "Le commentaire du code précise que l'impulsion affichée n'est pas vraiment du stress : le nommage est approximatif dans sounds.lua.",
+    "Rien n'est affiché sans véhicule joueur ni vdata.",
+    "Le fichier est présenté dans le code comme une petite application d'exemple à copier avant modification."
+  ],
+  "functions": {
+    "onEditorGui": {"desc": "Hook de dessin appelé chaque frame : récupère les sons de poutres du véhicule, met à jour les historiques et dessine les courbes par roue.", "params": {}, "returns": [], "internal": true},
+    "open": {"desc": "Affiche la fenêtre 'Suspension Audio Debug'.", "params": {}, "returns": [], "internal": false},
+    "onExtensionLoaded": {"desc": "Hook de chargement de l'extension ; vide.", "params": {}, "returns": [], "internal": true},
+    "onExtensionUnloaded": {"desc": "Hook de déchargement de l'extension ; vide.", "params": {}, "returns": [], "internal": true},
+    "onEditorInitialized": {"desc": "Hook d'initialisation de l'éditeur : enregistre la fenêtre (500x200) et l'entrée de menu dans le groupe Audio.", "params": {}, "returns": [], "internal": true},
+    "onVehicleSwitched": {"desc": "Hook appelé au changement de véhicule : vide les historiques et remet le compteur à 1.", "params": {"oldVehicle": {"type": "any", "desc": "Ancien véhicule."}, "newVehicle": {"type": "any", "desc": "Nouveau véhicule."}, "player": {"type": "any", "desc": "Joueur concerné."}}, "returns": [], "internal": true}
+  }
+}

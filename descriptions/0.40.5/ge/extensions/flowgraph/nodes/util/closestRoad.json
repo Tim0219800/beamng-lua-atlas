@@ -1,0 +1,38 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/closestRoad.lua",
+  "module": "Nœud « Closest Road » (repeat_instant). Trouve la route du navgraph la plus proche d'une position (map.findClosestRoad) et renvoie les deux nœuds de segment (le plus proche en premier), la distance, la largeur de route et le point projeté. Entrée : pos (vec3). Sorties : name_a, pos_a, name_b, pos_b, dist, et pins cachés roadId/roadIdx a/b, exists, width, projectedPoint. Ne recalcule que si pos change.",
+  "notes": [
+    "Bug dans findDecalroad : le test « if not idId » utilise une variable inexistante (idId au lieu de rdId), donc la recherche par nom est toujours tentée même quand le nombre a été lu.",
+    "findDecalroad ne renvoie rien (nil) quand le nom ne commence pas par « DecalRoad » : roadId/roadIdx valent alors nil.",
+    "Si le nom existe dans scenetree, il renvoie -1,-1 (le test de la branche est inversé par rapport au commentaire)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Ne fait rien.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Oublie la dernière position (oldPos=nil).",
+          "internal": true
+        },
+        "findDecalroad": {
+          "desc": "Pour un nom de nœud composé « DecalRoad<id>_<index> », renvoie l'id de la DecalRoad et l'index du point ; renvoie -1,-1 si un objet de ce nom existe dans scenetree ; nil sinon.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Nom de nœud du navgraph."
+            }
+          },
+          "internal": false
+        },
+        "work": {
+          "desc": "Si pos a changé, cherche la route la plus proche, ordonne les nœuds selon la proximité, remplit les pins (positions, ids de DecalRoad, distance, point projeté, largeur = 2 × rayon interpolé) et exists. Met exists à false si rien n'est trouvé.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/idByName.lua",
+  "module": "Noeud flowgraph « ID by Name » (categorie simple). Retrouve l'id du premier objet de la scene portant un nom (scenetree.findObject). Entree : name (string, cache ; sinon le nom est dans self.data.name). Sorties : objID (number) et exist (bool, cache). L'id trouve est memorise jusqu'au debut/fin de mission ou au demarrage du graphe.",
+  "notes": [
+    "Une fois l'id trouve, il est conserve meme si le nom du pin change ensuite et que l'objet n'est plus trouve."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Nom vide et objID nil.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Utilise le pin name s'il est branche, cherche l'objet et ecrit objID et exist.",
+          "internal": false
+        },
+        "onClientEndMission": {
+          "desc": "Hook de fin de mission : oublie l'id memorise.",
+          "internal": true
+        },
+        "onClientStartMission": {
+          "desc": "Hook de debut de mission : oublie l'id memorise.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Oublie l'id memorise au demarrage du graphe.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche le nom et l'id courants au milieu du noeud.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

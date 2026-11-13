@@ -1,0 +1,21 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imColor.lua",
+  "module": "Nœud flowgraph « im Color » (catégorie repeat_instant, tag imgui) : sélecteur de couleur imgui (ColorEdit4 sans entrées numériques, avec barre alpha). Entrées : « text », « colorIn » (couleur initiale, caché ; blanc par défaut). Sortie « colorOut » ({r,g,b,a}).",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Initialise la couleur depuis colorIn.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Dessine le sélecteur et écrit colorOut.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

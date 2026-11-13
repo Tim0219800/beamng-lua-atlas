@@ -4,15 +4,23 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/states/stateExit")` (fichier sous extensions/ mais pas une extension classique)
 
+Noeud d'état « State Exit » (créé par _flowgraph_createStateNode). Point de sortie du graphe d'états : un pin d'entrée 'flow' de type state (pins manuels de type state autorisés), caché dans les menus. Le champ transitionName désigne la transition (pin de sortie du noeud état parent) à emprunter ; choisie dans l'éditeur parmi celles du noeud cible.
+
+## Remarques
+
+- Le choix « (None) » met transitionName à nil alors que la valeur initiale est '' ; drawMiddle affiche « No Transition! » pour nil.
+
 ## Classe `C`
+
+Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:_onDeserialized(data)` |  | 69 |
-| `C:_onSerialize(res)` |  | 65 |
-| `C:drawCustomProperties()` |  | 30 |
-| `C:drawMiddle(builder, style)` |  | 59 |
-| `C:init(mgr)` | This gets called when the node has been created for the first time. Init field here | 24 |
+| `C:_onDeserialized(data)` | Restaure transitionName ('' par défaut). | 69 |
+| `C:_onSerialize(res)` | Sauvegarde transitionName. | 65 |
+| `C:drawCustomProperties()` | Liste déroulante « Transition Name » construite à partir des noms de transition du noeud état parent qui cible ce graphe. | 30 |
+| `C:drawMiddle(builder, style)` | Dessine le contenu central du noeud dans l'éditeur. | 59 |
+| `C:init(mgr)` | autoStart = false, savePins = true, transitionName = ''. | 24 |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/states/stateExit.lua`.*

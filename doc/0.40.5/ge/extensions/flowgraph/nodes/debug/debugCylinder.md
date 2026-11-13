@@ -4,12 +4,16 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/debug/debugCylinder")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Debug Cylinder » (catégorie repeat_instant, tags util/draw). Dessine chaque frame un cylindre de débogage (debugDrawer:drawCylinder) entre posA et posB. Entrées : radius (number, 1 par défaut), posA et posB (vec3, requis), color (caché, {r,g,b,a} 0-1, rose {0.91,0.05,0.48,0.5} par défaut).
+
 ## Classe `C`
+
+Classe du nœud.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:init()` |  | 24 |
-| `C:work()` |  | 31 |
+| `C:init()` | Vide. | 24 |
+| `C:work()` | Si posA et posB sont définis, convertit la couleur (alpha 0.5 si absent) et dessine le cylindre. | 31 |
 
 ## Appels vers le moteur (C++)
 

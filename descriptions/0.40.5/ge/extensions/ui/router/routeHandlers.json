@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/ui/router/routeHandlers.lua",
+  "module": "Registre des gestionnaires de retour/sortie nommés des routes. Une route dont le retour est en mode « handler » désigne un nom (par exemple garageExitHandler) ; router.back() le récupère via getHandler et l'appelle. La plupart des gestionnaires sont définis dans routeHandlers/*ExitHandlers.lua ou délèguent à des modules de gameplay (carrière, inventaire, achat de véhicules, garde de configuration de véhicule).",
+  "notes": [
+    "Gestionnaires enregistrés : firstDriveLockedHandler (échec first_drive_locked), previousRouteBackHandler (retour à l'entrée précédente avec restoreLastScope, sinon « menu »), garageExitHandler, mainmenuExitHandler, missionDetailsExitHandler, pauseExitHandler, vehicleConfigurationBackHandler, missionVehicleSelectorBackHandler, careerProfilesExitHandler, careerBranchPageBackHandler, radialBackHandler, partShoppingExitHandler, partInventoryExitHandler, vehicleShoppingExitHandler, vehicleShoppingVehicleListExitHandler, vehiclePurchaseExitHandler, negotiationExitHandler, vehicleInventoryExitHandler.",
+    "Les gestionnaires qui délèguent à un module (vehicleConfigurationBackHandler, part/vehicle Shopping, partInventory, vehicleInventory) sont des fonctions enveloppes qui résolvent le module au moment de l'appel ; les autres sont lus dans extensions.ui_router_routeHandlers_* au chargement du fichier.",
+    "Ce module n'exporte que getHandler ; la table de gestionnaires est locale."
+  ],
+  "functions": {
+    "getHandler": {
+      "desc": "Renvoie le gestionnaire enregistré sous ce nom.",
+      "params": {"handlerName": {"type": "string", "desc": "Nom du gestionnaire déclaré dans la route (back.handler)."}},
+      "returns": [{"type": "function|nil", "desc": "Gestionnaire, ou nil si le nom est inconnu."}],
+      "internal": false
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "path": "lua/common/libs/LuLPeg/lulpeg.lua",
+  "module": "LuLPeg : bibliothèque tierce (Pierre-Yves Gérardy, licence « Romantic WTF »), portage en Lua pur de LPeg (Parsing Expression Grammars de Roberto Ierusalimschy). Le fichier est un bundle de plusieurs sous-modules internes (util, compiler, datastructures, re, charsets, evaluator, printers, analyzer, locale, match, factorizer, API, constructors, init, compat, optimizer) et se termine par `return require\"init\"` : require(\"libs/LuLPeg/lulpeg\") renvoie directement l'objet LL (équivalent du module lpeg) avec le sous-module `re`. Sert à écrire des analyseurs de texte (grammaires, motifs, captures).",
+  "usage": "local lpeg = require(\"libs/LuLPeg/lulpeg\")\nlocal P, C, R = lpeg.P, lpeg.C, lpeg.R\nlocal nombre = C(R\"09\"^1)\nprint(nombre:match(\"123abc\")) --> \"123\"",
+  "notes": [
+    "Le fichier ne déclare aucune fonction globale à documenter : l'API publique est celle de l'objet renvoyé (LL), construite par les sous-modules.",
+    "API principale de LL (lue dans le code) : P, S, R, V, B, L (constructeurs de motifs) ; C, Cs, Ct, Cc, Cg, Cb, Cf, Cmt, Cp, Carg (captures) ; match, dmatch (exécution), ispattern, type, locale, pprint, cprint, evaluate, compile, resetptcache ; version() renvoie \"0.12\", luversion() \"0.1.0\" ; setmaxstack est un stub sans effet ; new(options) crée une instance indépendante ; global(env) et register(env) installent lpeg/re dans un environnement ; sous-module LL.re (grammaires textuelles).",
+    "Les opérateurs Lua sont surchargés sur les motifs : p1 * p2 (séquence), p1 + p2 (choix), p1 - p2 (différence), p^n (répétition), -p (négation), #p (prédicat « et »), p / x (capture de remplacement).",
+    "La table renvoyée a un champ `__index` sur elle-même, donc les motifs ont aussi les méthodes (ex. pattern:match(s))."
+  ],
+  "fields": {
+    "P": {"type": "function", "desc": "Construit un motif (chaîne littérale, nombre de caractères, booléen, table de grammaire, fonction)."},
+    "S": {"type": "function", "desc": "Motif ensemble de caractères (un caractère parmi ceux de la chaîne)."},
+    "R": {"type": "function", "desc": "Motif intervalles de caractères (ex. R\"az\", R\"09\")."},
+    "V": {"type": "function", "desc": "Référence à une règle de grammaire (variable non terminale)."},
+    "C": {"type": "function", "desc": "Capture simple : renvoie la sous-chaîne qui correspond au motif."},
+    "Cs": {"type": "function", "desc": "Capture de chaîne substituée (les captures internes remplacent le texte correspondant)."},
+    "Ct": {"type": "function", "desc": "Capture dans une table : regroupe les captures du motif dans une table."},
+    "Cc": {"type": "function", "desc": "Capture constante : produit les valeurs données sans consommer de texte."},
+    "Cp": {"type": "function", "desc": "Capture de position : renvoie la position courante dans le sujet."},
+    "Cg": {"type": "function", "desc": "Groupe de captures (nommé ou non)."},
+    "Cb": {"type": "function", "desc": "Capture arrière : renvoie la valeur d'un groupe nommé précédent."},
+    "Cf": {"type": "function", "desc": "Capture de pliage (fold) : applique une fonction cumulative sur les captures ; la fonction est obligatoire (assert)."},
+    "Cmt": {"type": "function", "desc": "Capture à la volée (match-time) : une fonction décide à l'exécution si le motif réussit ; la fonction est obligatoire (assert)."},
+    "Carg": {"type": "function", "desc": "Capture de l'argument supplémentaire n de match (n entre 1 et 200)."},
+    "match": {"type": "function", "desc": "match(pattern, subject, init, ...) : applique le motif au sujet et renvoie les captures (ou la position de fin), nil si échec."},
+    "dmatch": {"type": "function", "desc": "Comme match mais en mode débogage (affiche des traces)."},
+    "re": {"type": "table", "desc": "Sous-module re : motifs écrits en syntaxe textuelle (re.compile, re.match, re.find, re.gsub…)."}
+  }
+}

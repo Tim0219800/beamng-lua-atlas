@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/setLightbar.lua",
+  "module": "Nœud « Set Lightbar » (catégorie `repeat_instant`). Règle le mode de la barre lumineuse : `core_vehicleBridge.executeAction(veh,'setLightbarMode', mode)`. `mode` : 0 éteint, 1 allumé, 2 sirène. Pins d'entrée : `vehId`, `mode`.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur vide.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Définit les modèles de `mode` (Off, On, Siren).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Envoie `setLightbarMode` au véhicule.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

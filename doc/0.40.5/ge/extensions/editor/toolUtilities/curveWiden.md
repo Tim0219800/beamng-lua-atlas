@@ -4,23 +4,91 @@
 
 **Accès :** extension `editor_toolUtilities_curveWiden` : `extensions.load("editor_toolUtilities_curveWiden")`, puis la globale `editor_toolUtilities_curveWiden`
 
+Élargissement de chaussée dans les virages pour les routes « engineered » des outils de route de l'éditeur. Calcule, par station de la ligne centrale (group.divPoints), un élargissement automatique selon la courbure soutenue (plus le virage est serré par rapport au rayon de conception group.engRadiusM, plus la route s'élargit, jusqu'à curveWidenMaxM) auquel s'ajoutent les extraWidenM par virage. Tout est lissé sur une distance physique (longueur d'arc), pas sur un nombre de stations.
+
+## Remarques
+
+- Actif uniquement si group.geometryMode == 'engineered' ; les routes lisses (Catmull-Rom) ne s'élargissent pas.
+- Champs lus du groupe : curveWidenMaxM (défaut 2.5 m, total des deux côtés), curveWidenRunoffM (défaut 20 m, longueur d'entrée/sortie), engRadiusM (défaut 40 m), divCurv (courbure exacte si de longueur n), discMap, corners[i].extraWidenM, divWidths.
+- Début d'élargissement au rayon de conception, plein élargissement à 0.35 x ce rayon (plancher 6 m) ; rampe en smoothstep.
+- edgeWiden : véhicule de conception de 6 m (offtrackLenM), seuil minimal par voie 0.3 m.
+- smoothByDistance modifie le tableau en place.
+
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `editor_toolUtilities_curveWiden.applyDivWidthWiden(group)` | Bakes the per-station curve widening into group.divWidths in place (call once per dirty pass, right after the base widths are<br> sampled). For tools whose mesh is built symmetrically from divWidths this widens the tarmac itself; heroRoad widens its mesh<br> carriageway separately and uses this only to move markings/ribbon out to the widened edge. No-op when nothing widens. | 161 |
-| `editor_toolUtilities_curveWiden.arcLengths(div, n)` | Cumulative arc-length along the divPoints (s[1] = 0). Used so runoff is a real distance, not a station count<br> (Catmull-Rom clusters stations at corners, so an index-space window physically collapses exactly at the node). | 44 |
-| `editor_toolUtilities_curveWiden.edgeWiden(group, div, s, n, lanesL, lanesR, divided)` | Real-world corner widening (m) per station on each edge, travel-left and travel-right: every lane takes the design<br> vehicle's offtracking on the bend's sustained radius, R - sqrt(R^2 - L^2), dropped under minLaneWidenM, the whole capped<br> at the road's Corner Widening. It goes on the inside edge of the bend; a divided road widens each carriageway on its outer<br> edge, the median having no room for it. Engineered roads only (their curvature is exact). | 175 |
-| `editor_toolUtilities_curveWiden.signedCurvatureAt(div, i, n)` | Signed horizontal curvature at station i (0 at endpoints / degenerate). +ve = left turn, -ve = right turn. | 28 |
-| `editor_toolUtilities_curveWiden.smoothByDistance(arr, s, n, hw)` | Box-smooths a signed array in place over a PHYSICAL half-window hw (meters), using the arc-length table s.<br> Each sample is weighted by the arc length it stands for, never counted. The window was already made physical so it<br> couldn't collapse at a node, but an unweighted mean over it is still whatever the DENSE side says: the engineered<br> sampler steps curves at R*MAX_CURVE_STEP_RAD (sub-metre, ~0.2 m round a hairpin) and straights at up to 5 m, so a<br> window straddling a tangent point holds tens of corner stations against one or two straight ones and hands the<br> corner ~95% of the average. The runoff that is supposed to ease the width in over curveWidenRunoffM then collapses<br> into a step at the corner boundary -- a lateral kink where the straight meets the arc. Weighting by run length is<br> what engineeredGeom's grade smoothers already do for the same reason. | 62 |
-| `editor_toolUtilities_curveWiden.stationWiden(group, div, s, n)` | Per-station TOTAL curve widening (m, split both sides): the auto curvature widening plus any engineered per-corner extraWidenM,<br> arc-length smoothed. Zero on straights / when curveWidenMaxM = 0 with no corner overrides, and zero unless engineered mode. | 125 |
+| `editor_toolUtilities_curveWiden.applyDivWidthWiden(group)` | Ajoute l'élargissement par station à group.divWidths en place (à appeler une fois par passe 'dirty', juste après l'échantillonnage des largeurs de base). Pour les outils dont le mesh est symétrique selon divWidths, cela élargit le bitume lui-même ; heroRoad élargit son mesh séparément et ne s'en sert que pour déplacer marquages/ruban. Sans effet si rien ne s'élargit. | 161 |
+| `editor_toolUtilities_curveWiden.arcLengths(div, n)` | Longueur d'arc cumulée le long des divPoints (s[1] = 0), en 3D. Sert à exprimer le runoff en vraie distance. | 44 |
+| `editor_toolUtilities_curveWiden.edgeWiden(group, div, s, n, lanesL, lanesR, divided)` | Élargissement réel par station sur chaque bord (gauche et droit par rapport au sens de marche) : chaque voie prend le « offtracking » du véhicule de conception sur le rayon soutenu, R - sqrt(R^2 - L^2) avec L = 6 m, supprimé sous 0.3 m, le tout plafonné à curveWidenMaxM. Va sur le bord intérieur du virage ; une route à chaussées séparées élargit chaque chaussée sur son bord extérieur (le terre-plein n'a pas de place). | 175 |
+| `editor_toolUtilities_curveWiden.signedCurvatureAt(div, i, n)` | Courbure horizontale signée à la station i (0 aux extrémités ou si dégénérée). Positif = virage à gauche, négatif = à droite. | 28 |
+| `editor_toolUtilities_curveWiden.smoothByDistance(arr, s, n, hw)` | Lisse en place un tableau signé par moyenne en boîte sur une demi-fenêtre physique hw (m), chaque échantillon étant pondéré par la longueur d'arc qu'il représente. Évite que la zone dense d'un virage domine la moyenne et crée un décrochement latéral à la jonction droite/arc. | 62 |
+| `editor_toolUtilities_curveWiden.stationWiden(group, div, s, n)` | Élargissement TOTAL par station (m, réparti sur les deux côtés) : élargissement automatique de courbure plus extraWidenM par virage, lissé en longueur d'arc. Zéro en ligne droite, si curveWidenMaxM = 0 sans surcharge de virage, et hors mode engineered. | 125 |
+
+### Détail des paramètres
+
+#### `editor_toolUtilities_curveWiden.applyDivWidthWiden(group)`
+
+Ajoute l'élargissement par station à group.divWidths en place (à appeler une fois par passe 'dirty', juste après l'échantillonnage des largeurs de base). Pour les outils dont le mesh est symétrique selon divWidths, cela élargit le bitume lui-même ; heroRoad élargit son mesh séparément et ne s'en sert que pour déplacer marquages/ruban. Sans effet si rien ne s'élargit.
+
+- `group` (*table*) : Groupe avec divPoints et divWidths.
+
+#### `editor_toolUtilities_curveWiden.arcLengths(div, n)`
+
+Longueur d'arc cumulée le long des divPoints (s[1] = 0), en 3D. Sert à exprimer le runoff en vraie distance.
+
+- `div` (*table*) : Points {x,y,z}
+- `n` (*integer*) : Nombre de points
+- **renvoie** : number[] Tableau s des longueurs cumulées (m).
+
+#### `editor_toolUtilities_curveWiden.edgeWiden(group, div, s, n, lanesL, lanesR, divided)`
+
+Élargissement réel par station sur chaque bord (gauche et droit par rapport au sens de marche) : chaque voie prend le « offtracking » du véhicule de conception sur le rayon soutenu, R - sqrt(R^2 - L^2) avec L = 6 m, supprimé sous 0.3 m, le tout plafonné à curveWidenMaxM. Va sur le bord intérieur du virage ; une route à chaussées séparées élargit chaque chaussée sur son bord extérieur (le terre-plein n'a pas de place).
+
+- `group` (*table*) : Groupe/route.
+- `div` (*table*) : divPoints
+- `s` (*number[]*) : Longueurs d'arc
+- `n` (*integer*) : Nombre de stations
+- `lanesL` (*number*) : Nombre de voies à gauche
+- `lanesR` (*number*) : Nombre de voies à droite
+- `divided` (*boolean*) : true si chaussées séparées
+- **renvoie** : number[] Élargissement du bord gauche par station (m)
+- **renvoie** : number[] Élargissement du bord droit par station (m)
+
+#### `editor_toolUtilities_curveWiden.signedCurvatureAt(div, i, n)`
+
+Courbure horizontale signée à la station i (0 aux extrémités ou si dégénérée). Positif = virage à gauche, négatif = à droite.
+
+- `div` (*table*) : Points de la ligne centrale {x,y,z}
+- `i` (*integer*) : Indice de station
+- `n` (*integer*) : Nombre de stations
+- **renvoie** : number Courbure en 1/m.
+
+#### `editor_toolUtilities_curveWiden.smoothByDistance(arr, s, n, hw)`
+
+Lisse en place un tableau signé par moyenne en boîte sur une demi-fenêtre physique hw (m), chaque échantillon étant pondéré par la longueur d'arc qu'il représente. Évite que la zone dense d'un virage domine la moyenne et crée un décrochement latéral à la jonction droite/arc.
+
+- `arr` (*number[]*) : Valeurs à lisser (modifié en place)
+- `s` (*number[]*) : Table de longueurs d'arc
+- `n` (*integer*) : Nombre d'échantillons
+- `hw` (*number*) : Demi-fenêtre en mètres ; sans effet si <= 0 ou n < 3
+
+#### `editor_toolUtilities_curveWiden.stationWiden(group, div, s, n)`
+
+Élargissement TOTAL par station (m, réparti sur les deux côtés) : élargissement automatique de courbure plus extraWidenM par virage, lissé en longueur d'arc. Zéro en ligne droite, si curveWidenMaxM = 0 sans surcharge de virage, et hors mode engineered.
+
+- `group` (*table*) : Groupe/route (geometryMode, curveWidenMaxM, curveWidenRunoffM, engRadiusM, divCurv, discMap, corners).
+- `div` (*table*) : divPoints
+- `s` (*number[]*) : Résultat de arcLengths
+- `n` (*integer*) : Nombre de stations
+- **renvoie** : number[] Élargissement par station (m).
 
 ## Champs
 
 | Champ | Type | Description |
 |---|---|---|
-| `DEFAULT_MAX` | number | Public interface. |
-| `DEFAULT_RUNOFF` | number |  |
+| `DEFAULT_MAX` | number | Élargissement maximal par défaut (2.5 m au total, répartis sur les deux côtés). |
+| `DEFAULT_RUNOFF` | number | Longueur par défaut (20 m) sur laquelle l'élargissement entre/sort. |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/curveWiden.lua`.*

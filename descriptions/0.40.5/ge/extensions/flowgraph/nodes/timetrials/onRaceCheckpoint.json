@@ -1,0 +1,52 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/timetrials/onRaceCheckpoint.lua",
+  "module": "Noeud « Race CP Reached » (repeat_instant). Laisse passer une impulsion quand le joueur franchit un checkpoint de course. Sorties : checked (impulsion), vehId (caché), index (checkpoint), lap (tour courant, compté avec data.lapDiff). Reçoit le hook onRaceWaypointReached.",
+  "notes": [
+    "Ancien nom de pin : vehicleID -> vehId (legacyPins)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Initialise enterFlag, lap = 1 et clearOutPinsOnStart = false.",
+          "params": {
+            "mgr": {
+              "type": "any",
+              "desc": "gestionnaire flowgraph"
+            }
+          },
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Remet lap = 1 et enterFlag = false.",
+          "internal": true
+        },
+        "onRaceWaypointReached": {
+          "desc": "Hook : mémorise vehId, index (data.cur) et met à jour le tour (data.lapDiff).",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "table {vehId, cur, lapDiff}"
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Écrit checked = enterFlag puis le remet à false.",
+          "params": {
+            "args": {
+              "type": "any",
+              "desc": "non utilisé"
+            }
+          },
+          "internal": false
+        },
+        "onScenarioRestarted": {
+          "desc": "Hook de redémarrage du scénario : réinitialise le noeud.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

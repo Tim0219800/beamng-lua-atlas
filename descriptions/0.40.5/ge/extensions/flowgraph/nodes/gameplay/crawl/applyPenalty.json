@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/crawl/applyPenalty.lua",
+  "module": "Nœud flowgraph « Apply Penalty » (catégorie impulse, crawl). Applique manuellement des points de pénalité au crawl actif, en choisissant un type dans la liste du bridge (gameplay/crawl/flowgraphBridge). Pins d'entrée : flow (impulsion) et penaltyType (string).",
+  "notes": ["work écrit self.pinOut.success et failed, mais pinSchema ne déclare aucun pin de sortie : ces accès plantent si penaltyType est vide.", "Si penaltyType est valide, le résultat de bridge.applyPenalty n'est pas exposé."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Charge le bridge du crawl.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
+        "postInit": {"desc": "Remplit les modèles du pin penaltyType avec bridge.getPenaltyTypes().", "internal": true},
+        "work": {"desc": "Appelle bridge.applyPenalty(penaltyType) si le type est renseigné."}
+      }
+    }
+  }
+}

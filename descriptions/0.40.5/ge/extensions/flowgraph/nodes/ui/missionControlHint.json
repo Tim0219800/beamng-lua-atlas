@@ -1,0 +1,66 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/missionControlHint.lua",
+  "module": "Nœud flowgraph « Mission Control Hints » (catégorie repeat_instant, auteur BeamNG, durée) : affiche des indications de commandes (passer vitesse, embrayage, klaxon, etc.) dans l'app HUD Mission Controls (ui_apps_missionControls). Entrée « reset » (impulsion qui efface tout). Pour chaque indication i (« Hint Count ») : « action_i » (action d'entrée avec modèles shiftUp, shiftDown, clutch, throttle, brake, parkingbrake, horn), « uiEvent_i » (événement de navigation UI, caché), « label_i » (texte ou clé de traduction).",
+  "notes": [
+    "Sans action ni uiEvent, l'indication est effacée (catégorie flowgraph_<id>_<i>)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_onDeserialized": {
+          "desc": "Restaure count.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde du nœud à remplir."
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde count.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde du nœud à remplir."
+            }
+          },
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Champ « Hint Count ».",
+          "internal": true
+        },
+        "init": {
+          "desc": "count = 1.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Crée les pins et charge l'extension ui_apps_missionControls.",
+          "internal": true
+        },
+        "updatePins": {
+          "desc": "Ajuste le nombre de trios de pins (action, uiEvent, label).",
+          "params": {
+            "old": {
+              "type": "integer",
+              "desc": "Ancien nombre d'éléments."
+            },
+            "new": {
+              "type": "integer",
+              "desc": "Nouveau nombre d'éléments."
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Charge l'extension si besoin, efface si reset, sinon envoie ou efface chaque indication via setControl.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

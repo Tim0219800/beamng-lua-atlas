@@ -4,6 +4,8 @@
 
 **Accès :** `require("client/lighting/advanced/shadowViz")`
 
+Déclare, s'ils n'existent pas, le ShaderData « AL_ShadowVisualizeShader » (dbgShadowVisualizeP.hlsl) et le CustomMaterial « AL_ShadowVisualizeMaterial » qui affiche la shadow map d'une lumière (échantillonneur shadowMap = #AL_ShadowVizTexture). Le reste du fichier, des fonctions TorqueScript de bascule (toggleShadowViz, showShadowVizForLight, lockShadowViz…), est entièrement commenté et donc inactif. Aucune fonction exportée.
+
 ## Appels vers le moteur (C++)
 
 - `scenetree.` `findObject`

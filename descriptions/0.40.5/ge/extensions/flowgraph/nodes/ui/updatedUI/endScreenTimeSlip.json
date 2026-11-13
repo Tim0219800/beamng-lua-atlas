@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenTimeSlip.lua",
+  "module": "Nœud « EndScreen Drag Time Slip » (repeat_instant, couleur ui). Affiche dans l'écran de fin le ticket de chronométrage (time slip) d'une course de dragster. Entrée flow, sortie flow (chainFlow).",
+  "notes": [
+    "Le log d'avertissement utilise la variable logTag qui n'est pas définie dans ce fichier (valeur nil)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Prépare le panneau {type='dragTimeSlip', header='Timeslip', pages={timeslip=true}}.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Récupère gameplay_drag_dragBridge.createTimeslipData() et l'ajoute au panneau via modules.ui:addUIElement ; sans données, ajoute le panneau vide et logue un avertissement.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

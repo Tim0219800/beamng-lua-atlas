@@ -1,0 +1,91 @@
+{
+  "path": "lua/common/libs/lustach/src/lustache/renderer.lua",
+  "module": "Bibliothèque tierce lustache : cœur du moteur Mustache. Le renderer analyse un gabarit (`parse`) en arbre de jetons (texte, variables, sections `#`, sections inversées `^`, partiels `>`, accolades triples `{`/`&`, changement de délimiteurs `=`), le compile en fonction (`compile`) et le rend avec une vue (`render`). Les gabarits compilés sont mis en cache. Les valeurs `{{x}}` sont échappées en HTML ; `{{{x}}}` et `{{&x}}` ne le sont pas.",
+  "usage": "local renderer = require('common/libs/lustach/src/lustache/renderer'):new()\nprint(renderer:render('{{#items}}<{{.}}>{{/items}}', {items = {1, 2, 3}}))  -- <1><2><3>",
+  "notes": [
+    "Le fichier renvoie la table `renderer` (variable locale) ; la page auto indique « globale renderer » mais le code n'en crée pas de globale. On obtient une instance par `renderer:new()` (champs cache, partial_cache, tags = {\"{{\",\"}}\"}).",
+    "Sections : une table tableau (indices 1..n contigus) est itérée ; une autre table devient le contexte ; une fonction reçoit (texte_brut_de_la_section, fonction_de_rendu) ; toute autre valeur truthy rend la section telle quelle.",
+    "Bug : dans nest_tokens, le test `not section.value == token.value` est évalué comme `(not section.value) == token.value` ; une fermeture de section ne correspondant pas à l'ouverture n'est donc pas détectée (seuls les cas « Unopened section » et « Unclosed section » le sont).",
+    "Échappement HTML : & < > \" ' / sont remplacés par &amp; &lt; &gt; &quot; &#39; &#x2F;.",
+    "`_partial` lit `self.partials[name]` et compile le partiel ; les partiels sont mémorisés par nom dans partial_cache (le cache n'est pas invalidé si on change la table partials sans appeler clear_cache).",
+    "Les méthodes se préfixent par `_` (_section, _inverted, _partial, _name) sont internes, appelées par le code compilé."
+  ],
+  "functions": {
+    "new": {
+      "desc": "Crée une instance de renderer (caches vides, délimiteurs {{ }}).",
+      "params": {"self": {"type": "table", "desc": "Classe renderer (appel avec les deux-points)."}},
+      "returns": [{"type": "table", "desc": "Instance."}]
+    },
+    "render": {
+      "desc": "Rend le gabarit `template` avec `view`. Compile et met en cache le gabarit au premier appel. Si `partials` est fourni, il est mémorisé comme table de partiels. Renvoie \"\" si `template` est nil. Erreur si appelé avec un point (`self` est une chaîne).",
+      "params": {
+        "template": {"type": "string|nil", "desc": "Texte du gabarit."},
+        "view": {"type": "table|Context|nil", "desc": "Données ; une table est enveloppée dans un Context."},
+        "partials": {"type": "table<string, string>|nil", "desc": "Partiels : nom -> texte du gabarit."}
+      },
+      "returns": [{"type": "string", "desc": "Texte rendu."}]
+    },
+    "compile": {
+      "desc": "Compile un gabarit (chaîne) ou une liste de jetons en fonction `function(view) -> string`.",
+      "params": {
+        "tokens": {"type": "string|table", "desc": "Gabarit brut (analysé par parse) ou arbre de jetons."},
+        "tags": {"type": "string[]|nil", "desc": "Délimiteurs {ouvrant, fermant} ; défaut self.tags."},
+        "originalTemplate": {"type": "string|nil", "desc": "Texte d'origine, nécessaire pour extraire le texte brut des sections-fonctions."}
+      },
+      "returns": [{"type": "function", "desc": "Fonction de rendu prenant la vue."}]
+    },
+    "parse": {
+      "desc": "Découpe le gabarit en arbre de jetons. `tags` est un tableau de deux chaînes (délimiteur ouvrant et fermant, par défaut mustaches). Lève une erreur « Unclosed tag at <pos> », « Unopened section » ou « Unclosed section ».",
+      "params": {
+        "template": {"type": "string", "desc": "Texte du gabarit."},
+        "tags": {"type": "string[]|nil", "desc": "Délimiteurs personnalisés."}
+      },
+      "returns": [{"type": "table", "desc": "Arbre de jetons {type, value, startIndex, endIndex, tokens?}."}]
+    },
+    "clear_cache": {
+      "desc": "Vide le cache des gabarits compilés et celui des partiels.",
+      "params": {}
+    },
+    "_section": {
+      "desc": "Rend une section `{{#nom}}...{{/nom}}` selon la valeur du nom (tableau : itération ; table : sous-contexte ; fonction : appel avec le texte brut ; sinon valeur truthy). Interne.",
+      "params": {
+        "token": {"type": "table", "desc": "Jeton de section."},
+        "context": {"type": "table", "desc": "Contexte courant."},
+        "callback": {"type": "function", "desc": "Rendu du contenu de la section."},
+        "originalTemplate": {"type": "string", "desc": "Gabarit d'origine."}
+      },
+      "returns": [{"type": "string", "desc": "Texte rendu."}],
+      "internal": true
+    },
+    "_inverted": {
+      "desc": "Rend une section inversée `{{^nom}}` seulement si la valeur est nil, false ou un tableau vide. Interne.",
+      "params": {
+        "name": {"type": "string", "desc": "Nom testé."},
+        "context": {"type": "table", "desc": "Contexte courant."},
+        "callback": {"type": "function", "desc": "Rendu du contenu."}
+      },
+      "returns": [{"type": "string", "desc": "Texte rendu ou \"\"."}],
+      "internal": true
+    },
+    "_partial": {
+      "desc": "Rend le partiel `{{>nom}}` à partir de self.partials (compilé puis mis en cache) ; \"\" si le partiel est absent. Interne.",
+      "params": {
+        "name": {"type": "string", "desc": "Nom du partiel."},
+        "context": {"type": "table", "desc": "Contexte courant."},
+        "originalTemplate": {"type": "string", "desc": "Gabarit d'origine."}
+      },
+      "returns": [{"type": "string", "desc": "Texte rendu."}],
+      "internal": true
+    },
+    "_name": {
+      "desc": "Rend une variable : résout le nom (appelle la valeur si c'est une fonction, avec la vue), convertit en chaîne (nil devient \"\") et échappe le HTML si `escape` est vrai. Interne.",
+      "params": {
+        "name": {"type": "string", "desc": "Nom de la variable."},
+        "context": {"type": "table", "desc": "Contexte courant."},
+        "escape": {"type": "boolean", "desc": "true pour {{x}}, false pour {{{x}}} et {{&x}}."}
+      },
+      "returns": [{"type": "string", "desc": "Texte (avec, quand escape est vrai, un second retour : le nombre de remplacements de gsub)."}],
+      "internal": true
+    }
+  }
+}

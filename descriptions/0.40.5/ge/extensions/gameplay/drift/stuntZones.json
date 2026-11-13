@@ -1,0 +1,113 @@
+{
+  "path": "lua/ge/extensions/gameplay/drift/stuntZones.lua",
+  "module": "Gestionnaire des zones de cascade (stunt zones) du mode drift/Gymkhana. setStuntZones(zones) crée un objet par zone en chargeant le sous-module du type demandé (donut, driftThrough, hitPole, nearPole, dans gameplay/drift/stuntZones/<type>) ; ensuite, à chaque frame, tant que le joueur drifte, il appelle detectStunt() des zones disponibles où il se trouve. Quand une zone est réussie, elle émet onAnyStuntZoneAccomplished, que ce module relaie vers le stallingSystem et vers un sous-hook (onDonutDriftAccomplished, onDriftThroughAccomplished, onHitPoleAccomplished, onNearPoleAccomplished) pris en charge par gameplay_drift_scoring. Chargé par gameplay_drift_general en contexte inChallenge ; les zones viennent de gameplay_drift_saveLoad.loadDriftData.",
+  "usage": "gameplay_drift_stuntZones.setStuntZones({\n  {type = \"donut\", cooldown = 8, pos = vec3(0, 0, 0), scl = 10},\n  {type = \"hitPole\", pos = vec3(-10, 0, 0)}\n})",
+  "notes": [
+    "Format d'une zone : {type, pos = vec3, scl, rot = quat, cooldown, score?}. donut : scl = rayon en m (nombre) ; driftThrough : scl = vec3 de demi-dimensions et rot = quat ; hitPole/nearPole : seulement pos (un poteau « delineator » est spawné).",
+    "Distance « near » pour le hook onNearStuntZoneFirst(stuntZone) : scl + 6 si scl est un nombre, max(scl.x, y, z) + 4 si c'est un vec3, 6 sinon ; émis une seule fois par type de zone (aide à l'écran).",
+    "Si la zone n'a pas de champ score, il est rempli avec scoreOptions.defaultPoints[type] ; mais le score réellement attribué vient de gameplay_drift_scoring.getStuntZoneBasePoints(type) (les sous-modules n'utilisent pas zoneData.score).",
+    "Les zones ne sont évaluées que si le drift n'est ni en pause ni gelé, et si le joueur a un véhicule (doesPlHaveVeh).",
+    "onSerialize appelle clear() : les poteaux spawnés sont supprimés avant un rechargement Lua. onExtensionUnloaded fait de même.",
+    "Quand le joueur arrête de drifter, le compteur d'angle des donuts est remis à zéro (onDriftStatusChanged).",
+    "increaseDecalPool utilise une variable globale decals qui n'est pas déclarée dans ce fichier : à n'appeler que si elle existe ailleurs (elle n'est pas appelée dans ce fichier).",
+    "getDecalColor contient des conditions du type ((t * 100) or (100 - t * 100)) toujours vraies sur le premier opérande : la seconde branche n'est jamais utilisée."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "gameplay_drift_general, chargé avant."}
+  },
+  "functions": {
+    "setStuntZones": {
+      "desc": "Remplace toutes les zones par la liste donnée : vide les zones existantes (clear), calcule la distance « near », le score par défaut et les données de dessin, puis instancie chaque zone via require(\"gameplay/drift/stuntZones/<type>\"). Les ids sont attribués de 1 à n.",
+      "params": {"zones": {"type": "table[]", "desc": "Liste de {type, pos, scl, rot, cooldown, score}."}}
+    },
+    "getStuntZones": {
+      "desc": "Renvoie la liste des objets de zone instanciés (chaque objet a data = {id, zoneData, nearDist, drawData}, activeData et les méthodes du type).",
+      "returns": [{"type": "table[]", "desc": "Zones actives."}]
+    },
+    "clear": {
+      "desc": "Supprime toutes les zones (poteaux et marqueurs inclus) et oublie les types de zones déjà approchés."
+    },
+    "reset": {
+      "desc": "Appelle reset() sur chaque zone (cooldowns, compteurs, poteaux remis en place)."
+    },
+    "clearStuntZone": {
+      "desc": "INTERNE : supprime une zone par id (appelle son clear s'il existe, puis la retire de la liste). Utilisé par les poteaux détruits.",
+      "params": {"id": {"type": "integer", "desc": "Id de la zone."}},
+      "internal": true
+    },
+    "increaseDecalPool": {
+      "desc": "Agrandit le pool global de decals jusqu'à max éléments (flèche rouge, fade 100 à 150). Dépend d'une variable globale decals non définie ici.",
+      "params": {"max": {"type": "integer", "desc": "Taille minimale voulue du pool."}}
+    },
+    "getDecalColor": {
+      "desc": "Choisit la couleur d'un segment du cercle d'un donut : bleu (portion remplie), vert (prête), rouge/blanc (pendant le cooldown).",
+      "params": {
+        "cooldownPerc": {"type": "number|nil", "desc": "Pourcentage de cooldown écoulé (100 = prêt)."},
+        "filledPerc": {"type": "number|nil", "desc": "Pourcentage du tour déjà effectué."},
+        "t": {"type": "number", "desc": "Position du segment sur le cercle, de 0 à 1."}
+      },
+      "returns": [{"type": "ColorF", "desc": "Couleur du segment."}]
+    },
+    "getLineThickness": {
+      "desc": "Épaisseur de ligne de debug en fonction de la distance à la caméra (250 / distance).",
+      "params": {"linePos": {"type": "vec3", "desc": "Position du point de la ligne."}},
+      "returns": [{"type": "number", "desc": "Épaisseur."}]
+    },
+    "getDrawLines": {
+      "desc": "TEST : indique si le tracé des zones est activé (case imgui « Draw lines », vrai par défaut).",
+      "returns": [{"type": "boolean", "desc": "true si on dessine."}]
+    },
+    "getGreenColor": {
+      "desc": "Couleur verte (zone prête).",
+      "returns": [{"type": "ColorF", "desc": "Vert."}]
+    },
+    "getWhiteColor": {
+      "desc": "Couleur blanche (cooldown).",
+      "returns": [{"type": "ColorF", "desc": "Blanc."}]
+    },
+    "getRedColor": {
+      "desc": "Couleur rouge (cooldown).",
+      "returns": [{"type": "ColorF", "desc": "Rouge."}]
+    },
+    "getDriftDebugInfo": {
+      "desc": "Renvoie {default=true, canBeChanged=true} pour la fenêtre de debug drift.",
+      "returns": [{"type": "table", "desc": "{default = true, canBeChanged = true}"}]
+    },
+    "onUpdate": {
+      "desc": "Appelé à chaque frame : fenêtre de debug, puis (hors pause/gel) pour chaque zone disponible détecte l'approche (onNearStuntZoneFirst), appelle detectStunt() si le joueur drifte dans la zone, puis onUpdate de la zone et gestion du cooldown.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulé (cooldowns)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (inutilisé)."}
+      },
+      "internal": true
+    },
+    "onDriftStatusChanged": {
+      "desc": "Hook : quand le drift s'arrête, remet à zéro l'angle cumulé des zones donut.",
+      "params": {"isDrifting": {"type": "boolean", "desc": "Nouvel état de drift."}},
+      "internal": true
+    },
+    "onAnyStuntZoneAccomplished": {
+      "desc": "Hook : une zone est réussie ; informe le stallingSystem (processStuntZone) puis relaie le sous-hook demandé avec ses données.",
+      "params": {"data": {"type": "table", "desc": "{stuntZoneId, subHookName, subHookData}."}},
+      "internal": true
+    },
+    "onDriftDebugChanged": {
+      "desc": "Hook : réactive le dessin des zones quand le debug change.",
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook : relaie la destruction d'un véhicule aux zones (les poteaux détruits se retirent).",
+      "params": {"vehId": {"type": "integer", "desc": "Véhicule détruit."}},
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook : supprime toutes les zones au déchargement.",
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook : supprime toutes les zones avant un rechargement Lua (ne renvoie aucune donnée).",
+      "internal": true
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "path": "lua/common/libs/luamqtt/mqtt/ngxsocket.lua",
+  "module": "Connecteur réseau luamqtt pour OpenResty/nginx (ngx.socket.tcp). Inutilisable dans BeamNG : le fichier lit la globale ngx à son chargement, qui n'existe pas dans le jeu. Même interface que les autres connecteurs.",
+  "notes": ["Le chargement du module lève une erreur hors OpenResty (ngx est nil : ngx.socket.tcp).", "settimeout convertit les secondes en millisecondes ; sans délai, il utilise 0x7FFFFFFF."],
+  "functions": {
+    "connect": {"desc": "Ouvre un socket ngx, se connecte à conn.host:conn.port (timeout très long), fait sslhandshake si conn.secure, stocke dans conn.sock.", "params": {"conn": {"type": "table", "desc": "host, port, secure."}}, "returns": [{"type": "boolean", "desc": "Succès."}, {"type": "string|nil", "desc": "Erreur."}]},
+    "shutdown": {"desc": "Ferme le socket.", "params": {"conn": {"type": "table", "desc": "Connexion."}}},
+    "send": {"desc": "Envoie les données (sous-chaîne i..j si i est donné).", "params": {"conn": {"type": "table", "desc": "Connexion."}, "data": {"type": "string", "desc": "Données."}, "i": {"type": "integer|nil", "desc": "Début."}, "j": {"type": "integer|nil", "desc": "Fin."}}},
+    "receive": {"desc": "Reçoit size octets.", "params": {"conn": {"type": "table", "desc": "Connexion."}, "size": {"type": "integer", "desc": "Octets."}}},
+    "settimeout": {"desc": "Règle le délai du socket.", "params": {"conn": {"type": "table", "desc": "Connexion."}, "timeout": {"type": "number|nil", "desc": "Secondes."}}}
+  }
+}

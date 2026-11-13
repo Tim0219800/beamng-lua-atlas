@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/ui/router/routes/busRouteWizard.lua",
+  "module": "Assistant Vue de configuration d'une ligne de bus (portage de l'ancien module Angular busRoute, gardé à côté de « menu.busRoutes » derrière un drapeau de fonctionnalité). Même structure que quickraceWizard ; partage le backend oneshotRaceCore.lua et ne diffère que par le configurateur Lua (busroute_busrouteConfigurator). Racine = écran d'accueil, enfants = choix du niveau (avec sous-étape « middle » = choix de la ligne) et du véhicule.",
+  "notes": [
+    "Module de configuration de routes : il n'exporte aucune fonction. routeManager le lit (via l'extension ui_router_routes_<nom>) quand routes.lua l'inclut par `{ include = \"<nom>\" }`.",
+    "Les clés de `Children` forment les segments du nom pointé : « <module>.<enfant> ». `children` (minuscule) dans un nœud désigne ses sous-routes ; `include` y monte un autre module.",
+    "`ui` est hérité par les routes enfants (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause) : un enfant ne le redéfinit que pour ce qui change.",
+    "Les hooks onEnter sont des chaînes « extension.fonction » appelées par le routeur à l'entrée de la route."
+  ],
+  "fields": {
+    "Root": {
+      "type": "table",
+      "desc": "{screenId = \"busRouteWizard\", title = \"ui.playmodes.bus\", onEnter = \"busroute_busrouteConfigurator.onWizardRouteEnter\", scopeTree racine, Vue uniquement, infoBar et topBar masquées}"
+    },
+    "Children": {
+      "type": "table<string, table>",
+      "desc": "Enfants : level (onEnter onWizardLevelRouteEnter, sous-route mineure level.middle -> onWizardMiddleRouteEnter) et vehicle (onWizardVehicleRouteEnter). Ils utilisent un scopeTree de sélecteur en grille (grid-selector-grid / grid-selector-details avec retour vers la grille)."
+    },
+    "ModuleName": {
+      "type": "string",
+      "desc": "Nom du module de routes (premier segment du nom pointé)."
+    }
+  }
+}

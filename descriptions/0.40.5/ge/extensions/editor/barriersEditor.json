@@ -1,0 +1,37 @@
+{
+  "path": "lua/ge/extensions/editor/barriersEditor.lua",
+  "module": "Fenêtre « Barriers Selector » (menu Gameplay > Barriers Editor) pour choisir les prefabs de barrières d'un niveau. Elle cherche dans /levels/<niveau>/ les fichiers .prefab correspondant à un motif (défaut *barrier*), les instancie temporairement pour relever la position des TSStatic, puis les affiche en deux listes (non sélectionnés / sélectionnés) avec des sphères de debug dans la vue. Un mode d'édition « Barriers Selection » permet de cliquer dans la vue (clic = bascule, Maj = ajouter seulement, Alt = retirer seulement). Des entrées de menu synchronisent la sélection avec l'éditeur de courses (editor_raceEditor, champ path.prefabs).",
+  "notes": [
+    "Bug : dans le menu Prefabs > « Load Selected Prefabs », les variables filename et f ne sont pas définies dans cette portée (globales nil), donc spawnPrefab reçoit des arguments nil et l'entrée ne fonctionne pas correctement.",
+    "Bug : M.onExtensionLoaded = onExtensionLoaded référence une variable non définie (vaut nil) : le champ exporté est donc nil.",
+    "Dans « Add Selection to Race Editor » et « Set Selection exactly », path.prefabs est lu avant le test if path (erreur si getCurrentPath renvoie nil).",
+    "onSerialize et onDeserialized sont des fonctions vides.",
+    "Les prefabs sont indexés par chemin de fichier (prefabsIndex) : un fichier déjà chargé n'est pas rechargé tant que « Clear results » n'a pas été utilisé."
+  ],
+  "fields": {
+    "onExtensionLoaded": {"type": "nil", "desc": "Vaut nil : référence à une variable locale jamais définie."}
+  },
+  "functions": {
+    "show": {
+      "desc": "Désélectionne les objets de l'éditeur et affiche la fenêtre « Barriers Selector ».",
+      "internal": false
+    },
+    "onEditorGui": {
+      "desc": "Appelé chaque frame de l'éditeur : dessine la fenêtre (menus Load / Race Editor, deux listes de prefabs, boutons > et <) et les sphères de debug de chaque prefab.",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Enregistre la fenêtre (1500x700), l'entrée de menu « Barriers Editor » (groupe Gameplay) et le mode d'édition « Barriers Selection » avec ses raccourcis souris.",
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Fonction vide (ne renvoie rien).",
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Fonction vide.",
+      "params": {"data": {"type": "any", "desc": "Non utilisé."}},
+      "internal": true
+    }
+  }
+}

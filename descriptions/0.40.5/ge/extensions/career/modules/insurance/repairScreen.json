@@ -1,0 +1,57 @@
+{
+  "path": "lua/ge/extensions/career/modules/insurance/repairScreen.lua",
+  "module": "Prépare les données et gère l'ouverture/fermeture de l'écran de réparation (route UI career.computer.repair) accessible depuis l'ordinateur du garage en carrière. Il construit les options de réparation avec ou sans assurance (coût des dégâts, délais de réparation de instantané à 10 minutes, franchise, prime actuelle et future après réclamation, score de conducteur), ajoute la fonction « Réparer » aux fonctions de l'ordinateur et applique une laisse (tether) de 7 m autour de l'ordinateur.",
+  "notes": [
+    "Délais de réparation sans assurance (premiumInfluence = supplément en argent) : instantané 500, 2 min 350, 5 min 150, 10 min 50 ; prix total = supplément + coût des dégâts.",
+    "Avec assurance, seule l'option de délai incluse dans le contrat et l'option instantanée sont proposées ; l'option incluse ne coûte que la franchise, l'instantanée coûte franchise + 500 (sauf perk instantRepair gratuit).",
+    "futureDriverScore baisse de 1 après une réclamation, sauf s'il reste des 'accidentForgiveness' sur le contrat.",
+    "startRepairInGarage bloque les appels répétés (closeMenuAfterSaving) jusqu'à onVehicleSaveFinished : une réparation instantanée enregistre une nouvelle vignette de véhicule qui masque l'UI.",
+    "Le module n'a pas de fonction d'initialisation : l'état (véhicule, ordinateur d'origine, tether) est défini par openRepairMenu.",
+    "getRepairData suppose que openRepairMenu a été appelé avant (vehicleToRepairData non nil), sinon plante."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : valueCalculator, inventory, playerAttributes, payment, insurance_insurance, tether, etc."}
+  },
+  "functions": {
+    "openRepairMenu": {
+      "desc": "Ouvre l'écran de réparation d'un véhicule. Si un ordinateur d'origine est donné, démarre une laisse (porte ou sphère, 7 m) qui ferme les menus si le joueur s'éloigne.",
+      "params": {
+        "vehicle": {"type": "table", "desc": "Données du véhicule d'inventaire à réparer."},
+        "_originComputerId": {"type": "string|nil", "desc": "Identifiant de l'ordinateur du garage qui a ouvert l'écran."}
+      }
+    },
+    "closeRepairMenu": {
+      "desc": "Ferme l'écran : revient au menu de l'ordinateur d'origine, ou ferme tous les menus carrière."
+    },
+    "closeMenu": {
+      "desc": "Appelé par l'UI pour fermer l'écran ; ignoré tant qu'une sauvegarde de véhicule après réparation est en cours."
+    },
+    "getRepairData": {
+      "desc": "Construit les données de l'écran : repairOptions (noInsuranceRepairData, insuranceRepairData avec prime, franchise, renouvellement, tolérances), vehicleData (coût des dégâts, nom, valeur initiale, vignette, assuré), attributs du joueur, paliers et score de conducteur actuel et futur.",
+      "returns": [{"type": "table", "desc": "Données pour l'UI."}]
+    },
+    "startRepairInGarage": {
+      "desc": "Lance la réparation via career_modules_insurance_insurance.startRepairInGarage et attend la fin de la sauvegarde du véhicule avant de refermer l'écran.",
+      "params": {
+        "invVehId": {"type": "integer", "desc": "Identifiant du véhicule d'inventaire."},
+        "repairOptionData": {"type": "table", "desc": "Option de réparation choisie (assurance ou non, délai)."}
+      }
+    },
+    "onComputerAddFunctions": {
+      "desc": "Hook de l'ordinateur du garage : ajoute la fonction « repair » pour chaque véhicule du garage (désactivée avant l'achat du véhicule de départ ou si les permissions 'vehicleRepair' l'interdisent).",
+      "params": {
+        "menuData": {"type": "table", "desc": "Données du menu (computerFacility, vehiclesInGarage, hasBoughtStarterVehicle)."},
+        "computerFunctions": {"type": "table", "desc": "Fonctions à compléter (vehicleSpecific[inventoryId][id])."}
+      },
+      "internal": true
+    },
+    "onMenuClosed": {
+      "desc": "Hook de fermeture de menu : retire la laisse.",
+      "internal": true
+    },
+    "onVehicleSaveFinished": {
+      "desc": "Hook de fin de sauvegarde du véhicule : si une réparation attendait cette fin, referme l'écran.",
+      "internal": true
+    }
+  }
+}

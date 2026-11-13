@@ -1,0 +1,246 @@
+{
+  "path": "lua/ge/extensions/editor/terrainEditor.lua",
+  "module": "Éditeur de terrain du World Editor (mode d'édition « Terrain Tools », terrainToolsEditMode). Il gère les pinceaux de sculpture, de peinture de matériaux et de terraformage (via extensions/editor/terraformTool), le choix du TerrainBlock actif, la bibliothèque de matériaux de terrain du niveau (art/terrain/main.materials.json) sous forme de « proxies », la fenêtre d'import/export de terrain (heightmap, hole map, cartes de texture, meshes, presets) et la sauvegarde du terrain et des matériaux avant l'enregistrement du niveau. Un moddeur s'en sert surtout pour récupérer le TerrainBlock/l'objet TerrainEditor (getTerrainBlock, getTerrainEditor), marquer le terrain modifié (setTerrainDirty) ou manipuler les matériaux peints.",
+  "usage": "local te = extensions.editor_terrainEditor\nlocal tb = te.getTerrainBlock()\nif tb then\n  tb:setHeight(10, 10, 5.0)\n  tb:updateGrid(vec3(10,10), vec3(10,10))\n  te.setTerrainDirty()\nend",
+  "notes": [
+    "Les chemins de matériaux sont /art/terrain/main.materials.json (ou /art/terrains/... pour l'ancien format, détecté par checkForTerrainMaterialFileFormat) ; ils sont lus relatifs à var.levelPath.",
+    "Pinceau : taille 1 à 256 (changeBrushSize), pression/douceur/hauteur en pourcentage dans les préférences terrainEditor.general.* ; terraformage : préférences terrainEditor.terraform.* (DOI, marge, falloff, rugosité, échelle).",
+    "Les indices de matériaux de peinture côté Lua sont à base 1 (k) alors que le TerrainBlock/terrainEditor C++ attend k-1.",
+    "Hooks émis (extensions.hook) autour de la sauvegarde du terrain : onEditorBeforeSaveTerrain puis onEditorAfterSaveTerrain, pour les outils avec un overlay de peinture en direct.",
+    "Migration automatique : si un matériau n'a pas de groundmodelName, il est rempli depuis l'internalName en majuscules (ou 'ASPHALT' pour un matériau neuf), avec avertissement et marquage sale.",
+    "getTerrainBlock() renvoie nil s'il n'y a pas de TerrainBlock actif (ex. niveau smallgrid)."
+  ],
+  "functions": {
+    "getTerrainBlock": {
+      "desc": "Renvoie l'objet TerrainBlock actif (recherché par son id) ou nil s'il n'y en a pas.",
+      "returns": [{"type": "userdata|nil", "desc": "TerrainBlock"}]
+    },
+    "getTerrainEditor": {
+      "desc": "Renvoie l'objet TerrainEditor (C++) utilisé pour les conversions monde/grille, les pinceaux et les actions.",
+      "returns": [{"type": "userdata", "desc": "TerrainEditor"}]
+    },
+    "setActiveTerrainBlock": {
+      "desc": "Définit le TerrainBlock sur lequel travaillent les outils (jusqu'à ce que l'utilisateur en choisisse un autre) : l'attache au TerrainEditor, réinitialise le matériau de peinture sélectionné et sélectionne le premier. Sans effet si l'id est introuvable.",
+      "params": {"id": {"type": "integer", "desc": "Id de l'objet TerrainBlock"}}
+    },
+    "updateEditorTerrainBlocks": {
+      "desc": "Rescanne les TerrainBlock du niveau, détache les anciens et attache tous les nouveaux au TerrainEditor, puis réactive le bloc préféré (ou l'actif, ou le premier) ; vide l'état s'il n'y en a plus.",
+      "params": {"preferredId": {"type": "integer|nil", "desc": "Id du bloc à activer en priorité."}}
+    },
+    "updateTerrainBlockProxies": {
+      "desc": "Reconstruit la liste des TerrainBlock du niveau (proxies {selected, id} par nom) et la liste triée des noms pour le combo.",
+      "params": {}
+    },
+    "getTerrainBlockProxies": {
+      "desc": "Table des proxies de TerrainBlock indexée par nom d'objet.",
+      "returns": [{"type": "table<string, table>", "desc": "{ [nom] = { selected = boolean, id = integer } }"}]
+    },
+    "setTerrainDirty": {
+      "desc": "Marque le terrain comme modifié (editor.setDirty) et affiche la notification « unsaved terrain changes ». Le terrain sera enregistré à la sauvegarde du niveau. À appeler après toute modification directe de la heightmap.",
+      "params": {}
+    },
+    "setMaterialsDirty": {
+      "desc": "Marque les matériaux de terrain comme modifiés (editor.setDirty + notification) ; ils seront sauvegardés avec le niveau.",
+      "params": {}
+    },
+    "saveMaterials": {
+      "desc": "Enregistre les matériaux de terrain modifiés (terrEd_PersistMan:saveDirty).",
+      "params": {}
+    },
+    "saveTerrainAndMaterials": {
+      "desc": "Enregistre les matériaux puis le fichier terrain (.ter) du TerrainBlock actif, efface les notifications et affiche « Saved TerrainBlock ».",
+      "params": {}
+    },
+    "changeBrushSize": {
+      "desc": "Augmente (value == 1) ou diminue (value == 0) la taille du pinceau de `step`, bornée à 1-256, et l'applique au TerrainEditor. Toute autre valeur de value ne change rien.",
+      "params": {
+        "value": {"type": "integer", "desc": "1 pour agrandir, 0 pour réduire"},
+        "step": {"type": "number", "desc": "Incrément de taille"}
+      }
+    },
+    "beginChangeBrushSizeWithKeys": {
+      "desc": "Active l'auto-répétition du changement de taille de pinceau avec les touches [ et ].",
+      "params": {"direction": {"type": "integer", "desc": "Sens du changement (convention de changeBrushSize : 1 agrandir, 0 réduire, déduite du code)"}}
+    },
+    "endChangeBrushSizeWithKeys": {
+      "desc": "Arrête l'auto-répétition du changement de taille de pinceau.",
+      "params": {}
+    },
+    "setupVars": {
+      "desc": "Recalcule les variables d'interface (style imgui, taille de police, hauteurs de widgets, largeurs de combos) stockées dans var.",
+      "params": {}
+    },
+    "getVars": {
+      "desc": "Renvoie la table interne var (état de l'interface, levelPath, brosse courante…).",
+      "returns": [{"type": "table", "desc": "Table var"}]
+    },
+    "getLevelPath": {
+      "desc": "Chemin du niveau courant (var.levelPath).",
+      "returns": [{"type": "string|nil", "desc": ""}]
+    },
+    "getTerrainFolder": {
+      "desc": "Dossier des matériaux de terrain du niveau : '/art/terrain/' ou l'ancien '/art/terrains/'.",
+      "returns": [{"type": "string", "desc": ""}]
+    },
+    "getMatFilePath": {
+      "desc": "Chemin (relatif au niveau) du fichier des matériaux de terrain, normalement '/art/terrain/main.materials.json'.",
+      "returns": [{"type": "string", "desc": ""}]
+    },
+    "checkForTerrainMaterialFileFormat": {
+      "desc": "Détecte l'emplacement du fichier de matériaux (art/terrain ou ancien art/terrains) et signale le format obsolète (errors.deprecated_material_file).",
+      "params": {}
+    },
+    "getErrors": {
+      "desc": "Table des erreurs/avertissements de format détectés (clé -> true).",
+      "returns": [{"type": "table<string, boolean>", "desc": ""}]
+    },
+    "fixedFileFormat": {
+      "desc": "Efface l'erreur « deprecated_material_file » (à appeler une fois le fichier de matériaux mis à niveau).",
+      "params": {}
+    },
+    "updateMaterialLibrary": {
+      "desc": "Relit le fichier de matériaux JSON du niveau et reconstruit la bibliothèque (materialsInJson). (Un TODO du code indique que cela devrait migrer vers terrainMaterialsEditor.lua.)",
+      "params": {}
+    },
+    "getMaterialsInJson": {
+      "desc": "Bibliothèque de matériaux du niveau lue dans le JSON.",
+      "returns": [{"type": "table", "desc": "Matériaux indexés par id/persistentId, avec internalName, etc."}]
+    },
+    "deleteMaterialInJson": {
+      "desc": "Retire de la bibliothèque en mémoire le matériau dont l'internalName est donné (ne modifie pas le fichier).",
+      "params": {"name": {"type": "string", "desc": "internalName du matériau"}}
+    },
+    "getUniqueMtlName": {
+      "desc": "Renvoie un nom de matériau absent de la bibliothèque : initialName, puis initialName0, initialName1…",
+      "params": {
+        "initialName": {"type": "string|nil", "desc": "Nom de base (« NewMaterial » par défaut)."},
+        "counter": {"type": "integer|nil", "desc": "Suffixe de départ (récursif, interne)."}
+      },
+      "returns": [{"type": "string", "desc": "Nom unique."}]
+    },
+    "getMtlIdByName": {
+      "desc": "Cherche un matériau d'import par nom (exact, puis insensible à la casse). Renvoie son indice à base 0, son nom et si trouvé ; sinon 0 et le premier matériau avec found=false ; (0, 'unknown', false) s'il n'y en a aucun.",
+      "params": {"matName": {"type": "string", "desc": "Nom du matériau"}},
+      "returns": [
+        {"type": "integer", "desc": "Indice (base 0)"},
+        {"type": "string", "desc": "Nom retenu"},
+        {"type": "boolean", "desc": "true si trouvé"}
+      ]
+    },
+    "createMaterialProxy": {
+      "desc": "Construit un proxy Lua d'un matériau de terrain (cartes diffuse/normal/detail/macro, tailles, forces, distances, side projection, parallaxScale, groundmodelName, uniqueID = nom-persistentId). Appelle fixGroundmodelName ; si dirty est vrai, marque aussi le terrain modifié.",
+      "params": {
+        "index": {"type": "integer", "desc": "Indice (base 1)"},
+        "pid": {"type": "string|nil", "desc": "persistentId (créé si vide)"},
+        "mtlObject": {"type": "userdata", "desc": "Objet matériau de terrain"},
+        "name": {"type": "string", "desc": "internalName"},
+        "dirty": {"type": "boolean|nil", "desc": "true pour marquer sale"},
+        "isNew": {"type": "boolean|nil", "desc": "true si matériau nouvellement créé"}
+      },
+      "returns": [{"type": "table", "desc": "Proxy du matériau."}]
+    },
+    "copyMaterialProxyWithInputs": {
+      "desc": "Copie profonde d'un proxy de matériau en recréant les widgets imgui d'entrée (nom, taille, forces…). Remplit le groundmodelName depuis l'internalName en majuscules s'il est vide.",
+      "params": {"mtlProxy": {"type": "table", "desc": "Proxy source"}},
+      "returns": [{"type": "table", "desc": "Copie avec champs *Input."}]
+    },
+    "fixGroundmodelName": {
+      "desc": "Migration : auparavant le groundmodel était stocké dans l'internalName ; maintenant un champ groundmodel dédié existe. Si ce champ est vide, il est rempli depuis l'internalName en majuscules (ou « ASPHALT » pour un matériau neuf), le matériau est marqué sale et un avertissement est logué.",
+      "params": {
+        "name": {"type": "string", "desc": "internalName"},
+        "mtlObject": {"type": "userdata", "desc": "Matériau"},
+        "isNew": {"type": "boolean|nil", "desc": "true si nouveau"}
+      }
+    },
+    "updatePaintMaterialProxies": {
+      "desc": "Reconstruit les proxies des matériaux de peinture du TerrainBlock actif (noms, indices, inTerrainBlock), avertit si le nombre ne correspond pas et resélectionne le matériau précédent.",
+      "params": {}
+    },
+    "getPaintMaterialProxies": {
+      "desc": "Liste des proxies des matériaux de peinture du TerrainBlock actif.",
+      "returns": [{"type": "table[]", "desc": ""}]
+    },
+    "getSelectedPaintMaterialProxy": {
+      "desc": "Proxy du matériau de peinture sélectionné (ou nil).",
+      "returns": [{"type": "table|nil", "desc": ""}]
+    },
+    "selectPaintMaterial": {
+      "desc": "Sélectionne un matériau de peinture et règle l'indice de peinture du TerrainEditor (index - 1).",
+      "params": {"matProxy": {"type": "table", "desc": "Proxy de matériau (avec .index à base 1)"}}
+    },
+    "getTerrainBlockMaterialIndex": {
+      "desc": "Indice (base 1) du matériau de peinture portant cet internalName, ou -1 s'il n'est pas dans le bloc.",
+      "params": {"name": {"type": "string", "desc": "internalName"}},
+      "returns": [{"type": "integer", "desc": "Indice ou -1"}]
+    },
+    "updateMap": {
+      "desc": "Affecte un chemin de texture à une carte d'un proxy ('diffuse', 'macro', 'detail', 'normal') ou aux champs de l'importeur/exporteur ('heightMap', 'holeMap', 'textureMap', 'mesh', ou table {meshIndex=…}).",
+      "params": {
+        "mtlProxy": {"type": "table", "desc": "Proxy de matériau (ignoré pour les cartes d'import)"},
+        "map": {"type": "string|table", "desc": "Type de carte"},
+        "path": {"type": "string", "desc": "Chemin du fichier"}
+      }
+    },
+    "removeMap": {
+      "desc": "Vide une carte d'un proxy (updateMap avec un chemin vide). Un TODO du code s'interroge sur l'origine de mtlProxy.",
+      "params": {
+        "mtlProxy": {"type": "table", "desc": "Proxy de matériau"},
+        "mapType": {"type": "string", "desc": "Type de carte"}
+      }
+    },
+    "dragDropTarget": {
+      "desc": "Cible de glisser-déposer imgui pour un asset (payload ASSETDRAGDROP de 2048 octets) : appelle updateMap avec le chemin déposé. À appeler juste après un widget imgui.",
+      "params": {
+        "mtlProxy": {"type": "table", "desc": "Proxy de matériau"},
+        "map": {"type": "string|table", "desc": "Carte visée"},
+        "cbData": {"type": "any", "desc": "Non utilisé (déduit du code)"}
+      }
+    },
+    "setupVars": {
+      "desc": "Voir plus haut : recalcule les variables d'interface.",
+      "params": {}
+    },
+    "onEditorGui": {
+      "desc": "Hook de rendu : dessine le dialogue d'import, celui d'export, la fenêtre de peinture, la courbe de douceur et la barre d'outils du terrain.",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook d'initialisation de l'éditeur : enregistre les fenêtres (terrainPainter, import, export, courbe de douceur, modale autoPaint) et le mode d'édition « Terrain Tools », puis appelle initialize().",
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Hook appelé quand l'éditeur est désactivé ; ne fait rien dans cette version.",
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook appelé à la fin de la mission : vide la bibliothèque de matériaux en mémoire.",
+      "internal": true
+    },
+    "onEditorBeforeSaveLevel": {
+      "desc": "Hook appelé avant l'enregistrement du niveau : sauvegarde les matériaux de terrain modifiés puis le fichier terrain (en émettant onEditorBeforeSaveTerrain / onEditorAfterSaveTerrain) si des modifications sont en attente.",
+      "internal": true
+    },
+    "onEditorObjectAdded": {
+      "desc": "Hook appelé à l'ajout d'un objet dans l'éditeur : si c'est un TerrainBlock, rescanne les blocs (updateEditorTerrainBlocks).",
+      "params": {"id": {"type": "integer", "desc": "Id de l'objet ajouté"}},
+      "internal": true
+    },
+    "onEditorDeleteSelection": {
+      "desc": "Hook appelé avant la suppression de la sélection : détache les TerrainBlock sélectionnés du TerrainEditor et vide l'état si c'était le bloc actif, pour éviter des plantages.",
+      "internal": true
+    },
+    "onEditorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change : répercute terrainEditor.general.* (taille, pression, douceur, hauteur, pentes, filtre de sélection douce) et terrainEditor.terraform.* (DOI, marge, falloff, rugosité, échelle) sur le pinceau/terraformeur.",
+      "params": {
+        "path": {"type": "string", "desc": "Chemin de la préférence"},
+        "value": {"type": "any", "desc": "Nouvelle valeur"}
+      },
+      "internal": true
+    },
+    "onEditorRegisterPreferences": {
+      "desc": "Hook d'enregistrement des préférences : crée la catégorie terrainEditor (general, import, terrainMaterialLibrary, terraform) avec leurs valeurs par défaut et bornes.",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur"}},
+      "internal": true
+    }
+  }
+}

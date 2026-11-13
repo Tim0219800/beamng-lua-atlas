@@ -1,0 +1,100 @@
+{
+  "path": "lua/common/libs/binaryheap/binaryheap.lua",
+  "module": "binaryheap : bibliothèque tierce (Lua binary heap, utilisée notamment par copas pour ses minuteries) implémentant un tas binaire (file de priorité). Deux familles : « plain heap » (minHeap/maxHeap, gérés par position, valeurs dans heap.values) et « unique heap » (minUnique/maxUnique, chaque élément a une charge `payload` unique retrouvée en O(1) via heap.reverse). Le module renvoie la table M.",
+  "usage": "local bh = require(\"libs/binaryheap/binaryheap\")\nlocal h = bh.minUnique()\nh:insert(5, \"b\")\nh:insert(2, \"a\")\nprint(h:pop()) --> \"a\", 2",
+  "notes": [
+    "Dans un unique heap, le payload doit être unique et non nil (insert lève « duplicate payload » sinon) ; update/remove prennent le payload, pas la position.",
+    "pop renvoie d'abord le payload puis la valeur (unique heap) ; sur un plain heap, pop renvoie la valeur.",
+    "La fonction de comparaison par défaut est a < b (min) ou a > b (max)."
+  ],
+  "functions": {
+    "binaryHeap": {
+      "desc": "Cœur de toutes les files : construit un tas à partir de fonctions de swap, d'effacement et de comparaison. Renvoie une table avec les méthodes bubbleUp(pos) et sinkDown(pos) et les listes values et payloads.",
+      "params": {
+        "swap": {"type": "function", "desc": "swap(heap, idx1, idx2) échange deux éléments"},
+        "erase": {"type": "function", "desc": "erase(heap, position) suppression brute"},
+        "lt": {"type": "function", "desc": "lt(a, b) vrai quand a doit être au-dessus de b"}
+      },
+      "returns": [{"type": "table", "desc": "Tas de base"}]
+    },
+    "minHeap": {
+      "desc": "Crée un tas simple dont la plus petite valeur est au sommet.",
+      "params": {"lt": {"type": "function|nil", "desc": "Comparaison « inférieur à » (défaut a < b)"}},
+      "returns": [{"type": "table", "desc": "Le tas"}]
+    },
+    "maxHeap": {
+      "desc": "Crée un tas simple dont la plus grande valeur est au sommet.",
+      "params": {"gt": {"type": "function|nil", "desc": "Comparaison « supérieur à » (défaut a > b)"}},
+      "returns": [{"type": "table", "desc": "Le tas"}]
+    },
+    "minUnique": {
+      "desc": "Crée un tas à payloads uniques, plus petite valeur au sommet.",
+      "params": {"lt": {"type": "function|nil", "desc": "Comparaison (défaut a < b)"}},
+      "returns": [{"type": "table", "desc": "Le tas"}]
+    },
+    "maxUnique": {
+      "desc": "Crée un tas à payloads uniques, plus grande valeur au sommet.",
+      "params": {"gt": {"type": "function|nil", "desc": "Comparaison (défaut a > b)"}},
+      "returns": [{"type": "table", "desc": "Le tas"}]
+    }
+  },
+  "classes": {
+    "h": {
+      "desc": "Méthodes des tas créés par minHeap/maxHeap (par position) et minUnique/maxUnique (par payload). Pour un unique heap, les paramètres désignés payload remplacent les positions.",
+      "functions": {
+        "insert": {
+          "desc": "Insère un élément. Sur un unique heap, lève une erreur si le payload existe déjà.",
+          "params": {
+            "value": {"type": "any", "desc": "Valeur de tri"},
+            "payload": {"type": "any", "desc": "Charge associée (unique heap)"}
+          }
+        },
+        "update": {
+          "desc": "Change la valeur d'un élément et le replace dans le tas.",
+          "params": {
+            "payload": {"type": "any", "desc": "Payload (unique heap) ou position (plain heap)"},
+            "newValue": {"type": "any", "desc": "Nouvelle valeur"}
+          }
+        },
+        "remove": {
+          "desc": "Retire un élément du tas.",
+          "params": {"payload": {"type": "any", "desc": "Payload (unique heap) ou position (plain heap)"}},
+          "returns": [{"type": "any", "desc": "Valeur retirée, puis payload (unique) ; nil si introuvable"}]
+        },
+        "pop": {
+          "desc": "Retire et renvoie le sommet du tas.",
+          "returns": [{"type": "any", "desc": "Payload (unique heap), puis valeur ; nil si vide"}]
+        },
+        "peek": {
+          "desc": "Renvoie le sommet sans le retirer.",
+          "returns": [{"type": "any", "desc": "Payload (unique heap), puis valeur ; nil si vide"}]
+        },
+        "peekValue": {
+          "desc": "Renvoie la valeur du sommet sans le retirer (unique heap).",
+          "returns": [{"type": "any", "desc": "Valeur du sommet ou nil"}]
+        },
+        "size": {"desc": "Nombre d'éléments du tas.", "returns": [{"type": "integer", "desc": "Taille"}]},
+        "valueByPayload": {
+          "desc": "Renvoie la valeur associée à un payload (unique heap).",
+          "params": {"payload": {"type": "any", "desc": "Payload recherché"}},
+          "returns": [{"type": "any", "desc": "Valeur ou nil"}]
+        }
+      }
+    },
+    "heap": {
+      "desc": "Méthodes de bas niveau du tas de base (déduit du code : swap et erase passés à binaryHeap).",
+      "functions": {
+        "swap": {
+          "desc": "Échange les éléments aux positions a et b.",
+          "params": {"a": {"type": "integer", "desc": "Position"}, "b": {"type": "integer", "desc": "Position"}},
+          "internal": true
+        },
+        "erase": {
+          "desc": "Efface brutalement l'élément à la position pos.",
+          "params": {"pos": {"type": "integer", "desc": "Position"}},
+          "internal": true
+        }
+      }
+    }
+  }
+}

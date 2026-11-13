@@ -1,0 +1,88 @@
+{
+  "path": "lua/ge/extensions/gameplay/traffic/roles/standard.lua",
+  "module": "Rôle de trafic « standard » : le conducteur civil par défaut. Il réagit aux collisions, accidents et événements vus (quasi-accident, collision d'un tiers) selon sa personnalité (bravoure, patience) : se ranger, suivre ou fuir l'autre véhicule, klaxonner, ou échanger les assurances. Il désactive aussi le véhicule trop endommagé.",
+  "notes": [
+    "Types d'événements dans driver.eventType : 'none', 'selfCrash', 'otherCrash', 'selfCollision', 'otherCollision', 'nearMiss' (ou autre type reçu par onOtherEvent).",
+    "damageAction est choisi dans onRefresh : bravoure >= 0,56 -> 'followPostCrash', <= 0,44 -> 'fleePostCrash', sinon 'stop' (uniquement pour les IA).",
+    "collisionThreshold = ceil(random()^2 * 6) : nombre minimal de collisions qui déclenche l'action post-crash.",
+    "minActionTime vaut 5 s ; les durées d'action dépendent de la bravoure ou de la patience.",
+    "Dans askInsurance, le drapeau askInsurance est remis à nil et l'IA passe en mode 'stop' ; un message UI 'ui.traffic.interactions.insuranceExchanged' est affiché hors carrière si le joueur est la cible.",
+    "Une vitesse >= 1,2 fois la limite lors d'une collision attribue la faute au véhicule lui-même (veh.collisions[otherId].fault = true).",
+    "L'action 'pullOver' utilisée ici est fournie par baseRole (non définie dans ce fichier)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du rôle standard, complétée par baseRole (self.veh, self.driver, self.flags, self.state, setAction, resetAction, setTarget, checkTargetVisible…).",
+      "functions": {
+        "init": {
+          "desc": "Définit les actions fleePostCrash (fuite IA, agressivité aléatoire >= 0,5), followPostCrash (suivi ou poursuite 'road rage' du responsable), askInsurance (arrêt de l'IA) et disabled (arrêt, état 'disabled'), puis fusionne les baseActions.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "onRefresh": {
+          "desc": "Réinitialise cible, timers et état du conducteur (driver.eventType, damageAction, collisionThreshold, compteurs de collisions). Pour une IA, choisit damageAction selon la bravoure et tire le seuil de collisions.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "onCrashDamage": {
+          "desc": "Appelé quand le véhicule subit un dégât de crash. Si aucune collision n'est en cours, marque l'événement 'selfCrash' et, pour une IA, émet le hook onTrafficAction(vehId, 'crashDamage', {targetId}).",
+          "params": {"data": {"type": "table", "desc": "Données de dégâts (non utilisées)."}},
+          "returns": [],
+          "internal": true
+        },
+        "onOtherCrashDamage": {
+          "desc": "Appelé quand un autre véhicule subit un crash. Si ce véhicule est proche (< 60 m d'après la distance interactive), devant et visible, marque l'événement 'otherCrash' et le cible.",
+          "params": {
+            "otherId": {"type": "integer", "desc": "Id du véhicule accidenté."},
+            "data": {"type": "table", "desc": "Données de dégâts (non utilisées)."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "onCollision": {
+          "desc": "Appelé quand ce véhicule est en collision avec un autre. Impute la faute si la vitesse dépasse 1,2 fois la limite, marque 'selfCollision', cible l'autre véhicule, émet onTrafficAction(vehId, 'collision', …), prévoit un coup de klaxon (selon bravoure et nombre de coups) et mémorise selfHitCount.",
+          "params": {
+            "otherId": {"type": "integer", "desc": "Id du véhicule percuté."},
+            "data": {"type": "table", "desc": "Données de collision ; data.count = nombre de collisions."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "onOtherCollision": {
+          "desc": "Appelé quand deux autres véhicules de trafic se percutent. Cible le plus lent des deux s'il est visible, proche et devant ; enregistre otherHitCount.",
+          "params": {
+            "id1": {"type": "integer", "desc": "Premier véhicule."},
+            "id2": {"type": "integer", "desc": "Second véhicule."},
+            "data": {"type": "table", "desc": "Données de collision ; data.count = nombre de collisions."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "onOtherEvent": {
+          "desc": "Appelé pour un événement signalé par un autre véhicule (ex. quasi-accident). Ignoré si un crash est déjà actif ; sinon, si le véhicule est visible, enregistre le type d'événement et le cible.",
+          "params": {
+            "eventType": {"type": "string", "desc": "Type d'événement (ex. 'nearMiss')."},
+            "otherId": {"type": "integer", "desc": "Id du véhicule concerné."},
+            "data": {"type": "table", "desc": "Données de l'événement (non utilisées)."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "onTrafficTick": {
+          "desc": "Appelé à chaque tick du trafic. Désactive le véhicule IA trop endommagé, évalue visibilité et proximité de la cible, puis choisit une réaction (klaxon, rangement 'pullOver', suivi, fuite, passage en poursuite) selon l'événement et la personnalité. Gère aussi le klaxon différé et le gel des feux si une rampe lumineuse est allumée.",
+          "params": {"tickTime": {"type": "number", "desc": "Durée du tick en secondes (non utilisée dans le corps)."}},
+          "returns": [],
+          "internal": true
+        },
+        "onUpdate": {
+          "desc": "Appelé chaque frame. Fait décroître actionTimer et termine les actions : échange d'assurance quand les deux véhicules sont arrêtés à moins de 20 m, fin du suivi/de la fuite, fin du rangement ; réinitialise l'action si la cible a disparu du trafic.",
+          "params": {"dt": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps de simulation (s), utilisé pour actionTimer."}},
+          "returns": [],
+          "internal": true
+        }
+      }
+    }
+  }
+}

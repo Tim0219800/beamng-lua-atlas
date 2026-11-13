@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/editor/newsMessage.lua",
+  "module": "Extension d'éditeur qui affiche une fenêtre modale « World Editor News » avec les notes de version importantes, une seule fois par version de message (EditorNewsMessageVersion = 5), avec des liens vers le support et le forum BeamNG. Elle mémorise l'affichage dans deux préférences cachées (newsMessage.general.newsMessageShown et newsMessageVersion).",
+  "notes": [
+    "Dans 0.40.5, newsText est vide : onEditorGui retourne tout de suite et la fenêtre ne s'affiche jamais.",
+    "Pour que le message s'affiche de nouveau, il faut augmenter EditorNewsMessageVersion et remplir newsText."
+  ],
+  "functions": {
+    "onEditorGui": {
+      "desc": "Hook d'éditeur appelé à chaque frame : ouvre la fenêtre modale si le message n'a pas encore été vu pour cette version, puis la dessine (texte, liens, bouton Close).",
+      "internal": true
+    },
+    "onEditorRegisterPreferences": {
+      "desc": "Hook d'enregistrement des préférences : crée la catégorie newsMessage avec les préférences cachées newsMessageShown (bool) et newsMessageVersion (int).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre modale « newsModalDlg ».",
+      "internal": true
+    }
+  }
+}

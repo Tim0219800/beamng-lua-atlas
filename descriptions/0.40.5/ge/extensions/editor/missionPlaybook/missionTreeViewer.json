@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/editor/missionPlaybook/missionTreeViewer.lua",
+  "module": "Fenêtre « Playbook Mission Tree Viewer » associée à editor_missionPlaybook. Elle dessine, avec l'éditeur de nœuds du flowgraph (ui_flowgraph_editor), l'arbre de déblocage des missions de carrière : un nœud par mission (showInCareer), placé selon la profondeur forwardInfo.depth, relié aux missions qu'elle débloque (forwardIds). La couleur indique l'état (vert démarrable, jaune visible, rouge sinon) et des icônes d'étoiles montrent les étoiles débloquées à l'étape courante du playbook (étoile pleine, vide, ou « stars » pour débloquée à cette étape).",
+  "notes": [
+    "Il faut cliquer sur « Generate » pour créer les nœuds (generateNodes) ; sans cela M.nodes reste vide.",
+    "La fenêtre n'est dessinée que si « Mission Playbook » est visible et que book.results[book.page] existe.",
+    "Bug : M.onEditorRegisterPreferences est assigné à une variable globale non définie (nil).",
+    "Du code de débogage (dump) reste actif dans onEditorGui et onPlaybookLogAfterStep.",
+    "createRect.is_empty référence w et h globaux (non définis) ; fonction inutilisée."
+  ],
+  "fields": {
+    "nodes": {"type": "table[]", "desc": "Nœuds générés : {id, name, missionId, pos}."},
+    "nodesByMId": {"type": "table<string, table>", "desc": "Nœuds indexés par id de mission."}
+  },
+  "functions": {
+    "show": {
+      "desc": "Affiche les fenêtres « Mission Playbook » et « Playbook Mission Tree Viewer »."
+    },
+    "onEditorGui": {
+      "desc": "Hook d'éditeur appelé à chaque frame : crée (une fois) un contexte d'éditeur de nœuds dédié, dessine les nœuds et les liens puis restaure le contexte précédent.",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre (500x500) et l'entrée de menu « Missions ».",
+      "internal": true
+    },
+    "onPlaybookLogAfterStep": {
+      "desc": "Hook émis après chaque instruction du playbook : ajoute à resultData les étoiles débloquées par mission (unlockedStars) et celles débloquées à cette étape (unlockedThisStep).",
+      "params": {"resultData": {"type": "table", "desc": "Résultat de l'étape, modifié sur place."}},
+      "internal": true
+    }
+  }
+}

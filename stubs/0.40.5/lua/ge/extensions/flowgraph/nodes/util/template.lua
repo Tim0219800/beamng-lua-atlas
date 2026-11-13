@@ -2,62 +2,69 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/util/template.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe locale `C` de lua/ge/extensions/flowgraph/nodes/util/template.lua
+--- Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
 ---@class flowgraph_nodes_util_template_C
 local flowgraph_nodes_util_template_C = {}
 
---- gets called when the project of this node starts execution (before any work)
+--- Appelé au démarrage du projet, avant tout work.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/flowgraph/nodes/util/template.lua:121
 function flowgraph_nodes_util_template_C:_executionStarted() end
 
---- gets called when the project of this node stops execution.
+--- Appelé à l'arrêt du projet.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/flowgraph/nodes/util/template.lua:130
 function flowgraph_nodes_util_template_C:_executionStopped() end
 
---- gets called when the node needs to be cleared. usually before serialization, before starting etc. by default, calls the _executionStopped function.
+--- Appelé quand le nœud doit être nettoyé (avant sérialisation, avant démarrage...) ; par défaut appelle _executionStopped.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/flowgraph/nodes/util/template.lua:135
 function flowgraph_nodes_util_template_C:_onClear() end
 
---- Deserialize (loading) custo fields from data here.
----  self.data will be restored automatically.
+--- Restaure les champs personnalisés (self.data est restauré automatiquement).
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/flowgraph/nodes/util/template.lua:189
----@param data any
+---@param data table Données sauvegardées.
 function flowgraph_nodes_util_template_C:_onDeserialized(data) end
 
---- Serialize (saving) custom fields into res here.
----  You dont need to serialize fields in self.data
+--- Sauvegarde les champs personnalisés dans res (self.data est sauvegardé automatiquement).
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/flowgraph/nodes/util/template.lua:182
----@param res any
+---@param res table Table de sauvegarde.
 function flowgraph_nodes_util_template_C:_onSerialize(res) end
 
---- This gets called when the node has been deleted.
+--- Appelé quand le nœud est supprimé.
 ---Source : lua/ge/extensions/flowgraph/nodes/util/template.lua:195
 function flowgraph_nodes_util_template_C:destroy() end
 
+--- Code imgui affiché dans la fenêtre de propriétés (champ texte et curseur) ; renvoyer une chaîne crée un point d'historique (annuler/rétablir).
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/flowgraph/nodes/util/template.lua:148
 function flowgraph_nodes_util_template_C:drawCustomProperties() end
 
---- write custom imgui code here that gets displayed within the node.
----  always start with builder:Middle()
+--- Code imgui affiché dans le nœud ; doit commencer par builder:Middle().
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/flowgraph/nodes/util/template.lua:166
----@param builder any
----@param style any
+---@param builder table Constructeur de nœud.
+---@param style table Style du nœud.
 function flowgraph_nodes_util_template_C:drawMiddle(builder, style) end
 
---- called when the properties are no longer shown
+--- Appelé quand les propriétés ne sont plus affichées.
 ---Source : lua/ge/extensions/flowgraph/nodes/util/template.lua:160
 function flowgraph_nodes_util_template_C:hideProperties() end
 
---- This gets called when the node has been created for the first time. Init field here
+--- Appelé à la première création du nœud ; initialise myField, la table data et le curseur sliderWidth.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/flowgraph/nodes/util/template.lua:109
----@param mgr any
+---@param mgr table Gestionnaire flowgraph.
 function flowgraph_nodes_util_template_C:init(mgr) end
 
---- called when the properties are shown
+--- Appelé quand les propriétés du nœud sont affichées.
 ---Source : lua/ge/extensions/flowgraph/nodes/util/template.lua:141
 function flowgraph_nodes_util_template_C:showProperties() end
 
---- This gets called when the node should execute it's actual function in the flowgraph.
+--- Appelé quand le nœud doit exécuter sa fonction.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/flowgraph/nodes/util/template.lua:125
 function flowgraph_nodes_util_template_C:work() end
 

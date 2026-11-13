@@ -4,18 +4,25 @@
 
 **Accès :** extension `career_modules_debug_vehicleDebug` : `extensions.load("career_modules_debug_vehicleDebug")`, puis la globale `career_modules_debug_vehicleDebug`
 
+Onglet de debug carrière « Vehicles ». Permet d'ajouter le véhicule joueur à l'inventaire, de le réapparaître (career_modules_inventory.debugRespawnCurrentVehicle), de basculer sur un véhicule possédé (enterVehicle) ou de le vendre (sellVehicleFromInventory).
+
+## Remarques
+
+- Outil de développement ; debugOrder = 2.
+- La vente se fait après la boucle d'affichage pour ne pas modifier la table pendant son parcours.
+
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `career_modules_debug_vehicleDebug.drawDebugMenu()` |  | 9 |
+| `career_modules_debug_vehicleDebug.drawDebugMenu()` | Dessine les boutons d'ajout/réapparition du véhicule courant, le véhicule actuel de l'inventaire et la liste des véhicules possédés avec boutons d'entrée et de vente. *(interne)* | 9 |
 
 ## Champs
 
 | Champ | Type | Description |
 |---|---|---|
-| `debugName` | string |  |
-| `debugOrder` | number |  |
+| `debugName` | string | 'Vehicles'. |
+| `debugOrder` | number | Ordre de tri (2). |
 
 ## Appels vers le moteur (C++)
 

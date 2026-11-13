@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/telemetry/trackers/gameplay/firstDrive.lua",
+  "module": "Suiveur de télémétrie du didacticiel « First Drive » : la session (activité « firstDriveActive »), ses leçons (démarrées, arrêtées, terminées, avec durée) et les récupérations de véhicule faites pendant la session. Hors session, seul un instantané « firstDriveProgress » (leçons terminées, lu dans settings/firstDriveLearning.json) est envoyé, au plus une fois par intervalle de sondage ou quand la progression change.",
+  "notes": [
+    "Les changements de véhicule (vehicleUsed) et les resets (vehicleReset) viennent du suiveur véhicule et ne sont pas répétés ici ; une récupération déclenche aussi trackVehReset donc apparaît aussi comme vehicleReset.",
+    "Raisons de fin de session (onFirstDriveEnded) : completed, skipToFreeroam, mainMenu, startFailed, clientEndMission ; en interne aussi restarted (redémarrage depuis le menu pause) et trackerUnloaded.",
+    "Raisons d'arrêt de leçon : pauseMenu quand le joueur l'arrête, sinon leftArea, leftStartArea, sessionEnded, completionFailed ou une raison propre à la leçon (par ex. vehicleChanged).",
+    "Intervalle de sondage par défaut : 7 jours (24*7 h) via telemetry_configManager.getSurveyIntervalHours ; la dernière enquête envoyée est mémorisée dans surveys/firstDriveSurvey.json du dossier de données de télémétrie.",
+    "Extension en déchargement manuel : le cœur décharge les suiveurs avant leur onExit, donc la fin de session est faite dans onExtensionUnloaded."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "telemetry_core."}
+  },
+  "functions": {
+    "onExtensionLoaded": {"desc": "Hook appelé au chargement : déchargement manuel, puis envoi éventuel de l'instantané de progression.", "params": {}, "returns": [], "internal": true},
+    "onExtensionUnloaded": {"desc": "Hook appelé au déchargement (fermeture du jeu, rechargement Lua ou suiveur désactivé) : termine la session avec la raison trackerUnloaded.", "params": {}, "returns": [], "internal": true},
+    "onFirstDriveStarted": {"desc": "Hook appelé au démarrage de First Drive (aussi lors d'un redémarrage depuis le menu pause, qui ferme la session précédente) : démarre l'activité firstDriveActive avec leçons terminées.", "params": {"startAtLookout": {"type": "boolean", "desc": "true si le départ se fait au belvédère."}}, "returns": [], "internal": true},
+    "onFirstDriveEnded": {"desc": "Hook appelé à la fin de First Drive : termine l'activité ; si reason vaut completed, émet aussi firstDriveCompleted avec la durée.", "params": {"reason": {"type": "string", "desc": "completed, skipToFreeroam, mainMenu, startFailed ou clientEndMission."}}, "returns": [], "internal": true},
+    "onFirstDriveLessonStarted": {"desc": "Hook appelé au début d'une leçon : émet firstDriveLessonStarted (ignoré hors session).", "params": {"id": {"type": "string", "desc": "Identifiant de leçon."}}, "returns": [], "internal": true},
+    "onFirstDriveLessonStopped": {"desc": "Hook appelé quand une leçon est interrompue : émet firstDriveLessonStopped avec raison et durée.", "params": {"id": {"type": "string", "desc": "Identifiant de leçon."}, "reason": {"type": "string", "desc": "Raison de l'arrêt."}}, "returns": [], "internal": true},
+    "onFirstDriveLessonCompleted": {"desc": "Hook appelé quand une leçon est réussie : émet firstDriveLessonCompleted avec durée.", "params": {"id": {"type": "string", "desc": "Identifiant de leçon."}}, "returns": [], "internal": true},
+    "onStopRecovering": {"desc": "Hook appelé quand la récupération de véhicule s'arrête : émet firstDriveVehicleRecovered avec la durée de maintien, la phase et la leçon (ignoré pendant l'aperçu de récupération).", "params": {"timer": {"type": "number", "desc": "Durée de maintien en secondes."}}, "returns": [], "internal": true}
+  }
+}

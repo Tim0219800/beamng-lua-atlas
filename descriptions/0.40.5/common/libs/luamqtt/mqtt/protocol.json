@@ -1,0 +1,45 @@
+{
+  "path": "lua/common/libs/luamqtt/mqtt/protocol.lua",
+  "module": "Briques génériques du protocole MQTT (communes aux versions 3.1.1 et 5.0) de luamqtt : création et lecture d'entiers, chaînes UTF-8 et champs de longueur variable, en-tête fixe, constantes de types de paquets et codes CONNACK, identifiants de paquet, paquets combinés. Utilisé par protocol4.lua et protocol5.lua. Convention des fonctions parse_* : elles reçoivent read_func(n) qui lit n octets et renvoie la chaîne, ou false/nil et un message d'erreur.",
+  "notes": ["Uniquement utile pour écrire ou analyser des paquets MQTT à la main ; un moddeur utilise normalement client.lua."],
+  "fields": {
+    "packet_type": {"type": "table", "desc": "Types de paquets MQTT : CONNECT=1, CONNACK=2, PUBLISH=3, PUBACK=4, PUBREC=5, PUBREL=6, PUBCOMP=7, SUBSCRIBE=8, SUBACK=9, UNSUBSCRIBE=10, UNSUBACK=11, PINGREQ=12, PINGRESP=13, DISCONNECT=14, AUTH=15 (MQTT 5). Table aussi indexée dans l'autre sens (1 -> 'CONNECT')."},
+    "connack_rc": {"type": "table", "desc": "Table des codes de retour CONNACK."},
+    "packet_mt": {"type": "table", "desc": "Métatable des paquets analysés (fournit notamment __tostring)."},
+    "connack_packet_mt": {"type": "table", "desc": "Métatable des paquets CONNACK analysés."}
+  },
+  "functions": {
+    "make_uint8": {"desc": "Crée les données d'un entier 8 bits.", "params": {"val": {"type": "integer", "desc": "Valeur."}}, "returns": [{"type": "string", "desc": "1 octet."}]},
+    "make_uint16": {"desc": "Crée les données d'un entier 16 bits.", "params": {"val": {"type": "integer", "desc": "Valeur."}}, "returns": [{"type": "string", "desc": "2 octets."}]},
+    "make_uint32": {"desc": "Crée les données d'un entier 32 bits.", "params": {"val": {"type": "integer", "desc": "Valeur."}}, "returns": [{"type": "string", "desc": "4 octets."}]},
+    "make_string": {"desc": "Crée une chaîne UTF-8 préfixée par sa longueur sur 2 octets.", "params": {"str": {"type": "string", "desc": "Texte."}}, "returns": [{"type": "string", "desc": "Données."}]},
+    "make_var_length": {"desc": "Encode un entier en champ de longueur variable (Remaining Length).", "params": {"len": {"type": "integer", "desc": "Valeur."}}, "returns": [{"type": "string", "desc": "Octets encodés."}]},
+    "make_uint8_0_or_1": {"desc": "Données d'une propriété 1 octet qui ne peut valoir que 0 ou 1.", "params": {"value": {"type": "integer", "desc": "0 ou 1."}}},
+    "make_uint16_nonzero": {"desc": "Données d'une propriété 2 octets avec contrôle de valeur non nulle.", "params": {"value": {"type": "integer", "desc": "Valeur non nulle."}}},
+    "make_var_length_nonzero": {"desc": "Données d'une propriété de longueur variable avec contrôle de valeur non nulle.", "params": {"value": {"type": "integer", "desc": "Valeur non nulle."}}},
+    "make_header": {"desc": "Crée l'en-tête fixe d'un paquet.", "params": {"ptype": {"type": "integer", "desc": "Type de paquet (packet_type)."}, "flags": {"type": "integer", "desc": "Drapeaux."}, "len": {"type": "integer", "desc": "Longueur restante."}}, "returns": [{"type": "string", "desc": "En-tête."}]},
+    "check_qos": {"desc": "Vrai si la valeur est un QoS valide.", "params": {"val": {"type": "any", "desc": "Valeur testée."}}, "returns": [{"type": "boolean", "desc": "Validité."}]},
+    "check_packet_id": {"desc": "Vrai si la valeur est un identifiant de paquet valide.", "params": {"val": {"type": "any", "desc": "Valeur testée."}}, "returns": [{"type": "boolean", "desc": "Validité."}]},
+    "next_packet_id": {"desc": "Renvoie l'identifiant de paquet suivant celui donné.", "params": {"curr": {"type": "integer|nil", "desc": "Identifiant courant."}}, "returns": [{"type": "integer", "desc": "Identifiant suivant."}]},
+    "packet_id_required": {"desc": "Vrai si le paquet décrit par args (champ type, et qos pour PUBLISH) exige un identifiant de paquet. Lève une exception si args n'est pas une table ou si args.type n'est pas un nombre.", "params": {"args": {"type": "table", "desc": "Arguments de création de paquet."}}, "returns": [{"type": "boolean", "desc": "Résultat."}]},
+    "parse_uint8": {"desc": "Lit un entier 8 bits avec read_func.", "params": {"read_func": {"type": "function", "desc": "Fonction de lecture."}}, "returns": [{"type": "integer|boolean", "desc": "Valeur, ou false et message."}]},
+    "parse_uint8_0_or_1": {"desc": "Lit un octet qui doit valoir 0 ou 1.", "params": {"read_func": {"type": "function", "desc": "Fonction de lecture."}}},
+    "parse_uint16": {"desc": "Lit un entier 16 bits.", "params": {"read_func": {"type": "function", "desc": "Fonction de lecture."}}},
+    "parse_uint16_nonzero": {"desc": "Lit un entier 16 bits non nul.", "params": {"read_func": {"type": "function", "desc": "Fonction de lecture."}}},
+    "parse_uint32": {"desc": "Lit un entier 32 bits.", "params": {"read_func": {"type": "function", "desc": "Fonction de lecture."}}},
+    "parse_string": {"desc": "Lit une chaîne UTF-8 préfixée par sa longueur. Renvoie false et un message en cas d'échec.", "params": {"read_func": {"type": "function", "desc": "Fonction de lecture."}}, "returns": [{"type": "string|boolean", "desc": "Texte, ou false."}]},
+    "parse_var_length": {"desc": "Lit un champ de longueur variable (Remaining Length).", "params": {"read_func": {"type": "function", "desc": "Fonction de lecture."}}},
+    "parse_var_length_nonzero": {"desc": "Lit un entier de longueur variable qui doit être non nul.", "params": {"read_func": {"type": "function", "desc": "Fonction de lecture."}}},
+    "start_parse_packet": {"desc": "Commence l'analyse d'un nouveau paquet : lit l'en-tête fixe et prépare un flux d'entrée (table avec read_func et available) pour le contenu. Renvoie le type, les drapeaux, le flux, etc.", "params": {"read_func": {"type": "function", "desc": "Fonction de lecture de la connexion."}}},
+    "combine": {"desc": "Combine plusieurs morceaux de données en un paquet combiné (se comporte comme une chaîne : tostring, len, append).", "params": {"...": {"type": "any", "desc": "Morceaux."}}, "returns": [{"type": "table", "desc": "Paquet combiné."}]},
+    "packet_tostring": {"desc": "Convertit un paquet analysé en texte lisible.", "params": {"packet": {"type": "table", "desc": "Paquet."}}, "returns": [{"type": "string", "desc": "Représentation."}]}
+  },
+  "classes": {
+    "combined_packet_mt": {
+      "desc": "Métatable des données combinées créées par combine.",
+      "functions": {
+        "__index": {"desc": "Fait fonctionner la table comme une classe (accès aux méthodes tostring, len, append).", "params": {"_": {"type": "table", "desc": "Instance."}, "key": {"type": "string", "desc": "Clé demandée."}}, "internal": true}
+      }
+    }
+  }
+}

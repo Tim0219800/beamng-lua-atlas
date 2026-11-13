@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/editor/ezObjectSelect/selectionLabelOverlay.lua",
+  "module": "Dessine les étiquettes (panneaux sombres à bordure colorée) de l'outil Easy Select avec la drawList imgui. Les étiquettes « followMouse » sont empilées près du curseur (décalage 18 px, côté gauche si elles sortent du viewport) ; les autres sont ancrées au-dessus de leur position écran. Les étiquettes prioritaires (label.priority == true) passent en premier.",
+  "functions": {
+    "draw": {
+      "desc": "Dessine toutes les étiquettes de la liste.",
+      "params": {
+        "drawList": {"type": "ImDrawList*", "desc": "Liste de dessin imgui"},
+        "labels": {"type": "table", "desc": "Liste d'étiquettes {text, color (U32), followMouse, priority, position (ImVec2, si non followMouse)}"},
+        "mouse": {"type": "ImVec2", "desc": "Position de la souris"},
+        "viewport": {"type": "ImGuiViewport", "desc": "Viewport (Pos et Size) servant à garder les étiquettes visibles"}
+      }
+    }
+  }
+}

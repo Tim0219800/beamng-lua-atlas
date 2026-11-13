@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/worldEditorOpen.lua",
+  "module": "Nœud « World Editor Open » (repeat_instant). Indique si l'éditeur de monde est ouvert (editor.active). Entrée : reset (impulsion). Sorties : open, close (flow), onOpened et onClosed (impulsions cachées), openOrClosed (bool caché).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "reset": {
+          "desc": "Remet l'état précédent à « none ».",
+          "internal": false
+        },
+        "_executionStarted": {
+          "desc": "Appelle reset.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Écrit open/close/openOrClosed selon editor.active et émet une impulsion onOpened ou onClosed quand l'état change par rapport à la frame précédente.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

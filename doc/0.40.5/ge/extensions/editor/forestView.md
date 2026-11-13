@@ -4,13 +4,20 @@
 
 **Accès :** extension `editor_forestView` : `extensions.load("editor_forestView")`, puis la globale `editor_forestView`
 
+Fenêtre « Forest View » de l'éditeur, destinée à lister les ForestItemData de la forêt (« theForest ») sous forme de boutons triés par nom. Le module est en grande partie inachevé : les hooks d'activation/désactivation du mode d'édition sont commentés à l'export, donc la liste n'est jamais remplie et la fenêtre reste vide.
+
+## Remarques
+
+- Bug : forestItemDataTreeNode appelle selectForestItemData, dont la définition est entièrement commentée ; cliquer sur un bouton lèverait une erreur si la liste contenait des éléments.
+- populateForestItems, onEditorEditModeActivated et onEditorEditModeDeactivated sont définis mais jamais appelés (les exports M.onEditorEditModeActivated/Deactivated sont commentés) : forestItemsInfo reste vide.
+
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `editor_forestView.onEditorActivated()` | *(hook)* | 15 |
-| `editor_forestView.onEditorGui()` | *(hook)* | 86 |
-| `editor_forestView.onEditorInitialized()` | *(hook)* | 11 |
+| `editor_forestView.onEditorActivated()` | Hook appelé à l'activation de l'éditeur ; corps vide. *(interne)* *(hook)* | 15 |
+| `editor_forestView.onEditorGui()` | Hook appelé chaque frame par l'éditeur : dessine la fenêtre « Forest View » avec un bouton par entrée de forestItemsInfo. *(interne)* *(hook)* | 86 |
+| `editor_forestView.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre « forestEditorView » (220x320). *(interne)* *(hook)* | 11 |
 
 ## Appels vers le moteur (C++)
 

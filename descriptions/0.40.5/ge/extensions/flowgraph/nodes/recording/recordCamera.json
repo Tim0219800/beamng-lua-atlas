@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/recording/recordCamera.lua",
+  "module": "Noeud flowgraph 'Record Camera' (categorie repeat_f_duration). Enregistre un trajet de camera par images cles : la premiere impulsion 'snap' demarre l'enregistrement, chaque 'snap' suivant ajoute une cle (pos, rot, temps os.clock). L'impulsion 'stop' termine et cree dans MissionGroup un objet SimPath avec un Marker par cle (position, rotation, timeToNext). Sortie 'filename' : nom genere (prefix + os.time()).",
+  "notes": [
+    "Le premier snap demarre l'enregistrement et ajoute aussi la premiere cle (les deux tests sont evalues dans la meme frame).",
+    "Les noms de marqueurs sont 'maker_N' (faute de frappe pour marker)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Etat de duree 'inactive' et trajet vide.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Remet l'etat inactif, vide le trajet et memorise l'heure de depart.",
+          "internal": true
+        },
+        "finishUp": {
+          "desc": "Cree le SimPath et les Marker (maker_N) depuis le trajet enregistre, renseigne timeToNext et ecrit filename.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Etat inactive : snap demarre l'enregistrement. Etat started : snap ajoute une cle ; stop passe a 'finished' et appelle finishUp.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche l'etat et le nombre de cles.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

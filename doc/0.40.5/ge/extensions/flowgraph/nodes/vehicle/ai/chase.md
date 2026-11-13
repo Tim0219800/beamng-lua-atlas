@@ -4,11 +4,19 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/vehicle/ai/chase")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud « AI Chase » (couleur ai, once_p_duration). Met un véhicule en mode IA « chase » pour poursuivre un autre véhicule, avec contact intentionnel. Entrées : aiVehId (sans valeur = véhicule du joueur), targetId (par défaut le véhicule du joueur).
+
+## Remarques
+
+- Si aiVehId n'est pas fourni, le véhicule du joueur est à la fois poursuivant et cible par défaut.
+
 ## Classe `C`
+
+Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:workOnce()` |  | 22 |
+| `C:workOnce()` | Envoie au véhicule ai.setMode("chase") puis ai.setTargetObjectID(targetId). | 22 |
 
 ## Appels vers le moteur (C++)
 

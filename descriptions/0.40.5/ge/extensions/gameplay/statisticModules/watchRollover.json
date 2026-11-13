@@ -1,0 +1,34 @@
+{
+  "path": "lua/ge/extensions/gameplay/statisticModules/watchRollover.lua",
+  "module": "Module de statistiques qui détecte les tonneaux (véhicule retourné sur le toit puis remis sur ses roues) et incrémente la métrique « vehicle/rollover » via gameplay_statistic.metricAdd. Il est appelé par gameplay_statistic avec la fonction workload.",
+  "notes": [
+    "Le toit est détecté quand l'axe haut du véhicule a une composante z < -0,7 et que le véhicule glisse plus latéralement que longitudinalement. Le retour sur roues (z > 0,7) valide le tonneau si le toit a été vu depuis moins de 4 s et la dernière position sur roues depuis moins de 8 s.",
+    "La fonction onPreRender (debug) est commentée à l'export et référence une variable vpos non définie."
+  ],
+  "functions": {
+    "workload": {
+      "desc": "Analyse un véhicule à chaque appel (axes haut/avant, vitesse) et compte un tonneau quand la séquence toit puis roues est détectée.",
+      "params": {
+        "v": {"type": "userdata", "desc": "Objet véhicule."},
+        "vid": {"type": "integer", "desc": "Identifiant du véhicule ; un changement annule la détection."},
+        "dtSim": {"type": "number", "desc": "Temps simulé écoulé en secondes."}
+      },
+      "internal": true
+    },
+    "onVehicleResetted": {
+      "desc": "Hook appelé quand un véhicule est réinitialisé : annule la détection s'il s'agit du véhicule suivi.",
+      "params": {"vid": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "internal": true
+    },
+    "onExtensionLoaded": {"desc": "Hook appelé au chargement de l'extension ; ne fait rien.", "internal": true},
+    "onVehicleSwitched": {
+      "desc": "Hook appelé au changement de véhicule contrôlé : annule la détection.",
+      "params": {
+        "oldid": {"type": "integer", "desc": "Ancien véhicule."},
+        "newid": {"type": "integer", "desc": "Nouveau véhicule."},
+        "player": {"type": "integer", "desc": "Indice du joueur."}
+      },
+      "internal": true
+    }
+  }
+}

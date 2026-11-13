@@ -1,0 +1,308 @@
+{
+  "path": "lua/ge/extensions/ui/freeroamSelector/general.lua",
+  "module": "Backend « freeroamSelector » du sélecteur en grille (gridSelector) : l'écran où l'on choisit un niveau et un point d'apparition pour le mode libre. Il collecte les tuiles via le hook onGameplaySelectorGetTiles (en gardant celles dont validBackends contient freeroamSelector), gère filtres (source, taille de carte, région), recherche, favoris, récents et options d'affichage (sauvegardées dans /settings/freeroamSelectorData.json), construit les détails des tuiles via onGameplaySelectorGetDetails et renvoie des instantanés à l'interface par guihooks. Il connaît aussi les routes de l'assistant freeroam (niveau, véhicule, options, multijoueur) en menu et en pause.",
+  "usage": "-- ouvrir le sélecteur pour choisir un point d'apparition et recevoir le choix\nui_freeroamSelector_general.openFreeroamSelectorForFreeroamConfigurator(function(levelName, spawnPointName)\n  log('I', 'mod', levelName .. ' / ' .. tostring(spawnPointName))\nend)",
+  "notes": [
+    "Les tuiles et filtres sont recalculés au prochain accès quand gameplayDataChanged est vrai : cela arrive sur onModActivated, onModDeactivated, onModManagerReady, onModManagerStateChanged, onSettingsChanged et onLanguageChanged.",
+    "Filtres définis : source (official, mod), mapSize (paliers 0, 1024², 2048², 4096², 8192², 16384² ; l'aire du niveau est comparée aux paliers) et region. La recherche texte porte sur le nom, le niveau, les valeurs de propriétés traduites et le hook de filtre éventuel de la tuile (item.filterHook).",
+    "Options d'affichage : groupMode, clusterMode, displaySize (list, tiny, small, medium, large, huge ; sauvegardée), showAuxContent (sauvegardée), sorting, showRecentMode, showFavouritesMode et defaultFreeroamAction (« startFreeroam » ou « configureFreeroam », défaut « configureFreeroam », sauvegardée). La version des données est 13.",
+    "Plusieurs fonctions acceptent un requestId optionnel : s'il est fourni, un instantané est émis par freeroamSelectorDisplayDataSnapshot pour que l'interface Vue ignore les réponses périmées.",
+    "Le chemin racine par défaut est { keys = {\"allFreeroam\"} }, alors que les fils d'Ariane utilisent « allGameplay » : tiles.getTiles traite tout chemin inconnu comme allGameplay, donc le résultat est identique.",
+    "getDisplayDataOptions, setDisplayDataOption, resetDisplayDataToDefaults et updateFilterData n'appellent pas ensureInstances : ils supposent que les instances ont déjà été créées (par getGameplayData, getDisplayData…), sinon erreur sur nil.",
+    "exploreFolder et goToMod ne font que journaliser (TODO) ; getManagementDetails renvoie toujours { buttons = {} } et profilerFinish ne fait rien.",
+    "Dans getScreenHeaderTitleAndPath, string.format(\"%s\", clusterKey, groupKey, groupName) reçoit des arguments en trop (ignorés).",
+    "Le champ M.displayDataInstance est aussi exposé après la première initialisation."
+  ],
+  "fields": {
+    "backendName": {"type": "string", "desc": "Nom du backend : « freeroamSelector »."},
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant celle-ci : ui_gameplaySelector_tiles et core_locales."}
+  },
+  "functions": {
+    "getUiData": {
+      "desc": "Renvoie les données du sélecteur : items, displayData, filterList, activeFilters, lockedFiltersByProp et backendName. Charge les tuiles si nécessaire.",
+      "returns": [{"type": "table", "desc": "Table de données d'interface."}],
+      "internal": false
+    },
+    "getGameplayData": {
+      "desc": "Renvoie les données du sélecteur (tuiles filtrées par validBackends, filtres, options d'affichage), les recalcule si les mods, les réglages ou la langue ont changé, et les crée à la première demande.",
+      "returns": [{"type": "table", "desc": "Table items, filterList, activeFilters, lockedFiltersByProp, displayData."}],
+      "internal": false
+    },
+    "getTiles": {
+      "desc": "Renvoie les groupes de tuiles pour un chemin, via ui_gameplaySelector_tiles.getTiles. Efface le libellé du premier groupe s'il vaut « freeroam ».",
+      "params": {"path": {"type": "table", "desc": "Chemin de navigation { keys = {...} }."}},
+      "returns": [{"type": "table[]", "desc": "Groupes de tuiles."}],
+      "internal": false
+    },
+    "passesFilters": {
+      "desc": "Indique si une tuile passe les filtres, la recherche et l'option showAuxContent ; une tuile isCareerOnly est refusée tant que displayData.showCareerContent est faux.",
+      "params": {"item": {"type": "table", "desc": "Tuile testée."}},
+      "returns": [{"type": "boolean", "desc": "true si la tuile est affichée."}],
+      "internal": false
+    },
+    "getDisplayData": {
+      "desc": "Renvoie les options d'affichage courantes (crée les instances si besoin).",
+      "returns": [{"type": "table", "desc": "Valeurs d'options par clé."}],
+      "internal": false
+    },
+    "updateDisplayData": {
+      "desc": "Modifie une option d'affichage (displayDataInstance.setDisplayDataOption).",
+      "params": {
+        "key": {"type": "string", "desc": "Clé de l'option."},
+        "value": {"type": "any", "desc": "Nouvelle valeur."}
+      },
+      "internal": false
+    },
+    "updateFilterData": {
+      "desc": "Met à jour une donnée interne du module de filtres (filterInstance.updateData).",
+      "params": {
+        "key": {"type": "string", "desc": "Clé de donnée."},
+        "value": {"type": "any", "desc": "Valeur."}
+      },
+      "internal": false
+    },
+    "clearAllFilters": {
+      "desc": "Efface tous les filtres. Émet un instantané si requestId est fourni.",
+      "params": {"requestId": {"type": "any|nil", "desc": "Identifiant de requête de l'interface."}},
+      "internal": false
+    },
+    "isFavourite": {
+      "desc": "Indique si une tuile est en favori.",
+      "params": {"itemKey": {"type": "string", "desc": "Clé de la tuile."}},
+      "returns": [{"type": "boolean", "desc": "true si favori."}],
+      "internal": false
+    },
+    "toggleFavourite": {
+      "desc": "Bascule le statut de favori d'une tuile et renvoie le nouvel état.",
+      "params": {"itemDetails": {"type": "table", "desc": "Table avec le champ key."}},
+      "returns": [{"type": "boolean", "desc": "Nouvel état de favori."}],
+      "internal": false
+    },
+    "isRecent": {
+      "desc": "Indique si une tuile fait partie des éléments récents.",
+      "params": {"itemKey": {"type": "string", "desc": "Clé de la tuile."}},
+      "returns": [{"type": "boolean", "desc": "true si récente."}],
+      "internal": false
+    },
+    "trackRecent": {
+      "desc": "Enregistre une tuile comme récemment utilisée.",
+      "params": {"itemKey": {"type": "string", "desc": "Clé de la tuile."}},
+      "internal": false
+    },
+    "getFilters": {
+      "desc": "Renvoie la définition des filtres (liste, filtres verrouillés) après avoir chargé les données.",
+      "returns": [{"type": "table", "desc": "Résultat de filterInstance.getFilters()."}],
+      "internal": false
+    },
+    "getActiveFilters": {
+      "desc": "Renvoie les filtres actifs.",
+      "returns": [{"type": "table", "desc": "Filtres actifs."}],
+      "internal": false
+    },
+    "updateFilters": {
+      "desc": "Applique directement une table complète filterByProp, par exemple pour restaurer l'état sauvegardé de l'assistant sans rejouer les clics. Les filtres verrouillés sont conservés.",
+      "params": {"newFilters": {"type": "table", "desc": "Forme filterByProp."}},
+      "returns": [{"type": "any", "desc": "Résultat de filterInstance.updateFilters."}],
+      "internal": false
+    },
+    "toggleFilter": {
+      "desc": "Active ou désactive une valeur de filtre. Émet un instantané si requestId est fourni.",
+      "params": {
+        "filterKey": {"type": "string", "desc": "Nom du filtre."},
+        "value": {"type": "any", "desc": "Valeur de l'option."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant de requête."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat de filterInstance.toggleFilter."}],
+      "internal": false
+    },
+    "updateRangeFilter": {
+      "desc": "Fixe les bornes d'un filtre de plage. Émet un instantané si requestId est fourni.",
+      "params": {
+        "filterKey": {"type": "string", "desc": "Nom du filtre."},
+        "min": {"type": "number", "desc": "Borne basse."},
+        "max": {"type": "number", "desc": "Borne haute."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant de requête."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat de filterInstance.updateRangeFilter."}],
+      "internal": false
+    },
+    "resetRangeFilter": {
+      "desc": "Réinitialise un filtre de plage. Émet un instantané si requestId est fourni.",
+      "params": {
+        "filterKey": {"type": "string", "desc": "Nom du filtre."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant de requête."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat de filterInstance.resetRangeFilter."}],
+      "internal": false
+    },
+    "resetSetFilter": {
+      "desc": "Réinitialise un filtre à choix multiples. Émet un instantané si requestId est fourni.",
+      "params": {
+        "filterKey": {"type": "string", "desc": "Nom du filtre."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant de requête."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat de filterInstance.resetSetFilter."}],
+      "internal": false
+    },
+    "getSearchText": {
+      "desc": "Renvoie le texte de recherche courant.",
+      "returns": [{"type": "string|nil", "desc": "Texte saisi."}],
+      "internal": false
+    },
+    "setSearchText": {
+      "desc": "Définit le texte de recherche. Émet un instantané si requestId est fourni.",
+      "params": {
+        "text": {"type": "string", "desc": "Texte de recherche."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant de requête."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat de filterInstance.setSearchText."}],
+      "internal": false
+    },
+    "getDisplayDataOptions": {
+      "desc": "Renvoie la définition des options d'affichage. Les instances doivent déjà exister.",
+      "returns": [{"type": "table", "desc": "Options d'affichage."}],
+      "internal": false
+    },
+    "setDisplayDataOption": {
+      "desc": "Définit une option d'affichage et renvoie les données d'affichage à jour. Émet un instantané si requestId est fourni. Utilisé par exemple par levelTiles.setAlwaysShowDialogue.",
+      "params": {
+        "key": {"type": "string", "desc": "Clé de l'option."},
+        "value": {"type": "any", "desc": "Valeur."},
+        "requestId": {"type": "any|nil", "desc": "Identifiant de requête."}
+      },
+      "returns": [{"type": "table", "desc": "Données d'affichage."}],
+      "internal": false
+    },
+    "resetDisplayDataToDefaults": {
+      "desc": "Remet les options d'affichage à leurs valeurs par défaut. Émet un instantané si requestId est fourni.",
+      "params": {"requestId": {"type": "any|nil", "desc": "Identifiant de requête."}},
+      "returns": [{"type": "table", "desc": "Données d'affichage."}],
+      "internal": false
+    },
+    "getScreenHeaderTitleAndPath": {
+      "desc": "Construit le titre de l'écran et le fil d'Ariane (menu, sélecteur freeroam, éventuel segment de filtres ou recherche, niveau ou groupe courant). Utilise customRootPath s'il a été défini par openFreeroamSelectorForFreeroamConfigurator.",
+      "params": {"path": {"type": "table", "desc": "Chemin courant { keys = {...} }."}},
+      "returns": [{"type": "table", "desc": "Table title, isFiltered, pathSegments."}],
+      "internal": false
+    },
+    "profilerFinish": {
+      "desc": "Ne fait rien (TODO dans le code).",
+      "internal": true
+    },
+    "closedFromUI": {
+      "desc": "Appelé quand l'interface ferme le sélecteur : vide les boutons de détails personnalisés et le chemin racine personnalisé, puis émet le hook onFreeroamSelectorClosed.",
+      "internal": true
+    },
+    "getDetails": {
+      "desc": "Construit les détails d'une tuile en émettant le hook onGameplaySelectorGetDetails (les générateurs de tuiles y ajoutent leur bloc) et renvoie le premier bloc.",
+      "params": {"item": {"type": "table", "desc": "Données showDetails de la tuile."}},
+      "returns": [{"type": "table|nil", "desc": "Bloc de détails, nil si aucun générateur n'a répondu."}],
+      "internal": false
+    },
+    "requestDetails": {
+      "desc": "Construit les détails d'une tuile et les envoie à l'interface par l'évènement freeroamSelectorDetails, avec backendName, requestId, item et details.",
+      "params": {
+        "item": {"type": "table", "desc": "Données showDetails de la tuile."},
+        "requestId": {"type": "any", "desc": "Identifiant de requête de l'interface."}
+      },
+      "returns": [{"type": "table", "desc": "Le payload envoyé."}],
+      "internal": false
+    },
+    "setCurrentSelectorPath": {
+      "desc": "Mémorise le chemin de la vue visible, pour que emitDisplayDataSnapshot reconstruise l'instantané sur le bon chemin. Un chemin invalide est ignoré ; nil revient au chemin racine.",
+      "params": {"path": {"type": "table|nil", "desc": "Chemin { keys = {...} } (clés chaînes non vides)."}},
+      "internal": false
+    },
+    "resolveCurrentSelectorPath": {
+      "desc": "Renvoie le chemin de la vue courante, ou le chemin racine par défaut { keys = {\"allFreeroam\"} } si aucun n'a été mémorisé.",
+      "returns": [{"type": "table", "desc": "Copie du chemin."}],
+      "internal": false
+    },
+    "emitDisplayDataSnapshot": {
+      "desc": "Reconstruit l'instantané de la vue courante (ui_gridSelector.getSelectorSnapshot, sous pcall) et l'envoie à l'interface par l'évènement freeroamSelectorDisplayDataSnapshot avec le requestId. Journalise une erreur et renvoie false en cas d'échec.",
+      "params": {"requestId": {"type": "any", "desc": "Identifiant de requête de l'interface."}},
+      "returns": [{"type": "boolean", "desc": "true si l'évènement a été envoyé."}],
+      "internal": false
+    },
+    "setCustomDetailsButtons": {
+      "desc": "Remplace les boutons de détails par une liste personnalisée (nil la vide). Chaque bouton a callback(levelName, spawnPointName, key) et meta (label, icon, primary, isDoubleClickAction, trackRecent).",
+      "params": {"buttons": {"type": "table|nil", "desc": "Liste de boutons."}},
+      "internal": false
+    },
+    "getCustomDetailsButtons": {
+      "desc": "Renvoie les boutons de détails personnalisés (utilisé par levelTiles).",
+      "returns": [{"type": "table", "desc": "Liste de boutons, vide par défaut."}],
+      "internal": false
+    },
+    "executeButton": {
+      "desc": "Exécute le bouton de détails d'identifiant donné via le buttonModule.",
+      "params": {
+        "buttonId": {"type": "any", "desc": "Identifiant du bouton."},
+        "additionalData": {"type": "any", "desc": "Données supplémentaires passées au callback."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat de buttonInstance.executeButton."}],
+      "internal": false
+    },
+    "getManagementDetails": {
+      "desc": "Renvoie toujours { buttons = {} } (TODO dans le code).",
+      "returns": [{"type": "table", "desc": "Table avec buttons vide."}],
+      "internal": false
+    },
+    "exitCallback": {
+      "desc": "Ne fait rien.",
+      "internal": true
+    },
+    "executeDoubleClick": {
+      "desc": "Exécute le bouton marqué isDoubleClickAction des détails d'une tuile (ou l'unique bouton s'il n'y en a qu'un).",
+      "params": {"item": {"type": "table", "desc": "Données showDetails de la tuile."}},
+      "internal": false
+    },
+    "exploreFolder": {
+      "desc": "Journalise seulement le chemin (non implémenté).",
+      "params": {"path": {"type": "string", "desc": "Chemin de dossier."}},
+      "internal": false
+    },
+    "goToMod": {
+      "desc": "Journalise seulement l'id du mod (non implémenté).",
+      "params": {"modId": {"type": "string", "desc": "Identifiant du mod."}},
+      "internal": false
+    },
+    "openFreeroamSelector": {
+      "desc": "Efface les filtres, règle groupMode sur « system » et clusterMode sur « automatic », active le filtre système « freeroam » et navigue vers la route « menu.gameplay ».",
+      "internal": false
+    },
+    "openFromPause": {
+      "desc": "Ouvre l'assistant freeroam depuis le menu pause, sur l'étape configurée dans le réglage freeroamSetupDefaultStep (level par défaut ; level, vehicle, options ou multiplayer), avec returnRoute = « pause ».",
+      "internal": false
+    },
+    "openFreeroamSelectorForFreeroamConfigurator": {
+      "desc": "Ouvre le sélecteur pour choisir un point d'apparition : installe un bouton « Select spawnpoint » dont le callback reçoit (levelName, spawnPointName), définit un fil d'Ariane propre, navigue vers « menu.freeroamselector » et émet le hook onFreeroamSelectorOpen.",
+      "params": {"callback": {"type": "function", "desc": "Fonction appelée avec levelName et spawnPointName lors du choix."}},
+      "internal": false
+    },
+    "onModDeactivated": {
+      "desc": "Hook appelé quand un mod est désactivé : marque les données comme à recalculer.",
+      "internal": true
+    },
+    "onModActivated": {
+      "desc": "Hook appelé quand un mod est activé : marque les données comme à recalculer.",
+      "internal": true
+    },
+    "onModManagerReady": {
+      "desc": "Hook appelé quand le gestionnaire de mods est prêt : marque les données comme à recalculer.",
+      "internal": true
+    },
+    "onModManagerStateChanged": {
+      "desc": "Hook appelé quand l'état du gestionnaire de mods change : marque les données comme à recalculer.",
+      "internal": true
+    },
+    "onSettingsChanged": {
+      "desc": "Hook appelé quand les réglages changent : marque les données comme à recalculer.",
+      "internal": true
+    },
+    "onLanguageChanged": {
+      "desc": "Hook appelé quand la langue change : marque les données comme à recalculer.",
+      "internal": true
+    }
+  }
+}

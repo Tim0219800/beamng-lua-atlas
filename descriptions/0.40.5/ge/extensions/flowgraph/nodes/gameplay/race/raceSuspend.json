@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/raceSuspend.lua",
+  "module": "Nœud flowgraph « Race Suspend » (tag scenario, pas de catégorie définie). Suspend ou reprend une course : un flux sur la pin suspend appelle raceData:doSuspend(true), un flux sur resume appelle doSuspend(false) (suspend est prioritaire). La sortie flow vaut toujours true.",
+  "notes": ["Les trois pins d'entrée flow, suspend et resume ont la même description « Inflow for this node. »."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Vide.", "internal": true},
+        "work": {"desc": "Suspend ou reprend la course selon les pins suspend/resume.", "internal": true}
+      }
+    }
+  }
+}

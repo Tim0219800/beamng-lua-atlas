@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/environment/randomTimeOfDay.lua",
+  "module": "Nœud flowgraph « Random Time of Day » (catégorie repeat_instant, tags environment/tod/random). Tire une heure aléatoire entre deux heures (0-23) et la sort au format du jeu et en texte. Entrées : fromHour (défaut 9), toHour (défaut 17), use24Hour (défaut false : format 12 h AM/PM). Sorties : time (0 à 1, où 0.5 = minuit, 0 = midi) et timeString (« HH:MM » ou « H:MM AM/PM »). Gère l'intervalle qui passe minuit (ex. 22 à 2).",
+  "notes": ["Un nouveau tirage est fait à chaque frame où le nœud reçoit du flux (catégorie repeat_instant) ; pour une valeur stable, le déclencher une seule fois.", "Conversion : time = (heure/24 + 0.5) mod 1."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "postInit": {"desc": "Configure les curseurs entiers 0-23 de fromHour et toHour dans l'éditeur.", "internal": true},
+        "work": {"desc": "Borne les heures, tire un temps aléatoire (en gérant le passage de minuit), calcule heure/minute et écrit time et timeString."}
+      }
+    }
+  }
+}

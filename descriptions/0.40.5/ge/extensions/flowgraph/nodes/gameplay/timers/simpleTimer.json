@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/timers/simpleTimer.lua",
+  "module": "Nœud flowgraph « Simple Timer » (catégorie once_f_duration). Timer tout-en-un : crée un timer (duration, ref dtSim/dtReal/dtRaw) au déclenchement puis publie chaque frame elapsed, remaining, duration, elapsedPercent (0 à 1) ; capTime borne ces valeurs une fois terminé. Passe en état de durée 'started' puis 'finished' quand le timer est complet. Les valeurs ne peuvent pas être modifiées après création.",
+  "notes": [
+    "onNodeReset contient des print de débogage (message « setting timer back »).",
+    "elapsedPercent divise par la durée : durée 0 donne inf/NaN."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Met l'état de durée à 'inactive'.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Remet le temps écoulé du timer à 0 et l'état de durée à 'inactive'.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Définit les valeurs prédéfinies du pin ref (dtSim, dtReal, dtRaw).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Met à jour elapsed/remaining/duration/elapsedPercent, passe à 'finished' quand le timer est complet.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Crée le timer via self.mgr.modules.timer:addTimer, publie timerId et passe l'état de durée à 'started'.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

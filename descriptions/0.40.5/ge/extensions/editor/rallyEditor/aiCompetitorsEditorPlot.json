@@ -1,0 +1,32 @@
+{
+  "path": "lua/ge/extensions/editor/rallyEditor/aiCompetitorsEditorPlot.lua",
+  "module": "Tracé ImGui (via la draw list) de l'aperçu de la distribution des temps d'arrivée dans l'onglet « AI Competitors » de l'éditeur de rallye. drawFinishTimeChart dessine la grille, les axes, une courbe par résultat (4 premiers résultats pondérés) et la courbe du mélange en surbrillance ; drawOutcomeShareRow affiche en colonnes la part (%) de chaque résultat. Les données viennent de aiCompetitorsEditorPreview.computeVisualization.",
+  "notes": [
+    "La courbe du résultat 5 (DNF) n'est pas tracée : seuls les résultats 1 à 4 ont une courbe de densité (le DNF n'a pas de temps d'arrivée).",
+    "Le graphique fait 300 px de haut, 20 divisions horizontales et 10 verticales ; si la zone de tracé fait moins de 48 px, le texte chartCopy.plotTooSmall est affiché à la place.",
+    "Couleurs : bleu 58a6ff, orange ffa657, vert 3fb950, rouge f85149, gris 8b949e ; le mélange est en blanc bleuté f0f6fc."
+  ],
+  "fields": {
+    "outcomeLineColors": {"type": "table<integer, ImVec4>", "desc": "Couleurs des 5 résultats (Safe, Push, Minor, Major, DNF), réutilisables pour les libellés."}
+  },
+  "functions": {
+    "drawOutcomeShareRow": {
+      "desc": "Affiche sur une ligne à numOutcomes colonnes le libellé coloré de chaque résultat et son pourcentage (100 × visualization.weights[i], 2 décimales).",
+      "params": {
+        "im": {"type": "table", "desc": "Module ui_imgui."},
+        "visualization": {"type": "table", "desc": "Résultat de computeVisualization (champ weights)."},
+        "outcomeLabels": {"type": "table<integer, string>", "desc": "Libellés ; sinon ceux de modelModule.outcomeLabels."},
+        "outcomeColors": {"type": "table<integer, ImVec4>", "desc": "Couleur de texte de chaque résultat."},
+        "modelModule": {"type": "table", "desc": "Module aiCompetitorsEditorModel (numOutcomes, outcomeLabels)."}
+      }
+    },
+    "drawFinishTimeChart": {
+      "desc": "Réserve une zone (largeur disponible x 300 px), dessine grille, axes gradués en secondes (densité en ordonnée), les courbes pondérées des résultats 1 à 4 (trait 1.2) et la courbe du mélange (trait 2.4), le tout rogné à la zone de tracé.",
+      "params": {
+        "im": {"type": "table", "desc": "Module ui_imgui."},
+        "visualization": {"type": "table", "desc": "Résultat de computeVisualization : density.mixture, weightedComponents, yMax, timeLo, timeHi."},
+        "chartCopy": {"type": "table", "desc": "Textes (aiCompetitorsEditorTexts.chart) : axisLabel et plotTooSmall."}
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/loop/stagedCountdownTest.lua",
+  "module": "Simulation de test pour le compte à rebours de départ de spéciale (staged countdown). Reproduit une horloge murale à partir de l'heure du jour de l'environnement et planifie l'évènement de départ à la prochaine minute pleine (ou la suivante s'il reste moins de 15 s). Utilisé en mode test par le nœud de compte à rebours ; l'époque (epoch) est avancée par l'appelant.",
+  "notes": [
+    "Le module renvoie un constructeur : require('gameplay_rally_loop_stagedCountdownTest')().",
+    "L'heure de départ en secondes = ((tod.time * 24 + 12) % 24) * 3600 (tod.time = 0 correspond à midi) ; si core_environment est absent, minuit (0).",
+    "Dans calculateScheduledEventTime la variable minutesToAdd est calculée mais jamais utilisée (le décalage de 60 s est appliqué séparément)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance de test. Champs : epoch (secondes écoulées depuis le début), environmentStartTimeSecs (heure murale de départ en secondes), scheduledEventTime (époque de l'évènement planifié).",
+      "functions": {
+        "init": {"desc": "Lit l'heure de l'environnement, initialise epoch = 0 et planifie l'évènement.", "internal": true},
+        "calculateScheduledEventTime": {"desc": "Planifie scheduledEventTime à la prochaine minute pleine de l'horloge murale ; s'il reste moins de 15 s avant, utilise la minute suivante. Le résultat est exprimé en époque (relative au démarrage)."},
+        "reschedule": {
+          "desc": "Replanifie l'évènement : minute pleine suivant l'ancienne heure plus slotSizeMinutes minutes. Marque comme déjà déclenchés les avertissements dont le délai restant est déjà passé.",
+          "params": {
+            "slotSizeMinutes": {"type": "number", "desc": "Taille du créneau ajouté, en minutes."},
+            "rescheduleCount": {"type": "integer", "desc": "Nombre de replanifications déjà faites (sert seulement au log)."},
+            "maxReschedules": {"type": "integer", "desc": "Nombre maximal de replanifications (log)."},
+            "defaultWarningTimes": {"type": "number[]", "desc": "Délais d'avertissement en secondes avant l'évènement."},
+            "warningsTriggered": {"type": "table<number, boolean>", "desc": "Table modifiée sur place : warningsTriggered[délai] = true si le délai est dépassé."}
+          },
+          "returns": [
+            {"type": "boolean", "desc": "Toujours true."},
+            {"type": "number", "desc": "Nouvelle époque de l'évènement planifié."}
+          ]
+        },
+        "getWallClockTime": {
+          "desc": "Heure murale simulée = (environmentStartTimeSecs + epoch) modulo 86400.",
+          "returns": [{"type": "number|nil", "desc": "Secondes depuis minuit."}]
+        }
+      }
+    }
+  }
+}

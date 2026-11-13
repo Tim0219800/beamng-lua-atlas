@@ -1,0 +1,111 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/missionEndScreen.lua",
+  "module": "Nœud flowgraph « Mission End Screen » (catégorie once_instant, singleActive) : écran de fin de mission avec boutons par défaut et personnalisés (navigation UI 'scenario.end'). Entrées : « text » (string ou table), « failed », « change », « progressKey », « customBtnsFirst » (boutons perso avant ceux par défaut). Sorties : « retry », « contStart » (continuer au début de la mission), « contHere » (continuer ici ; en carrière seulement avec son véhicule), plus un pin d'entrée (libellé), un pin « <nom>_active » (bool caché) et un pin de sortie flux par bouton personnalisé. Boutons par défaut : missions suivantes, Retry, Continuer au début (ou Scénarios), Continuer ici.",
+  "notes": [
+    "Showing two of these at the same time will break everything (todo du code).",
+    "openDialogue lit career_career.isActive() sans vérifier que career_career existe (isTutorial) : erreur si l'extension carrière n'est pas chargée.",
+    "En tutoriel de carrière, seuls les boutons « Continuer ici » restent.",
+    "Au retry, onResetGameplay met « retry » à true avant de fermer."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_afterTrigger": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Sorties à false, open = false.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Ferme l'écran.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure options.",
+          "params": {
+            "nodeData": {
+              "type": "table",
+              "desc": "Données sauvegardées du nœud."
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde options.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde du nœud à remplir."
+            }
+          },
+          "internal": true
+        },
+        "buttonPushed": {
+          "desc": "Met à true le pin de sortie du bouton cliqué (sans remettre les autres à false) et ferme l'écran.",
+          "params": {
+            "action": {
+              "type": "string",
+              "desc": "Nom du bouton ou du pin de sortie activé."
+            }
+          },
+          "internal": false
+        },
+        "closeDialogue": {
+          "desc": "Si ouvert, navigue vers 'play'.",
+          "internal": false
+        },
+        "drawCustomProperties": {
+          "desc": "Édition de la liste des boutons personnalisés.",
+          "internal": true
+        },
+        "getCmd": {
+          "desc": "Renvoie la commande Lua qui rappelle buttonPushed(action).",
+          "params": {
+            "action": {
+              "type": "string",
+              "desc": "Nom du bouton ou du pin de sortie activé."
+            }
+          },
+          "internal": false
+        },
+        "init": {
+          "desc": "Options vides et includeRetryButton = true.",
+          "internal": true
+        },
+        "onClientEndMission": {
+          "desc": "Hook : ferme l'écran.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Ferme l'écran et remet les sorties à false.",
+          "internal": true
+        },
+        "onResetGameplay": {
+          "desc": "Hook : met retry à true et ferme l'écran si Retry est activé.",
+          "internal": true
+        },
+        "openDialogue": {
+          "desc": "Construit la liste de boutons et les données de mission, puis navigue vers 'scenario.end'.",
+          "internal": false
+        },
+        "postInit": {
+          "desc": "Crée les pins des options.",
+          "internal": true
+        },
+        "updateButtons": {
+          "desc": "Recrée les pins (texte, actif, sortie) par option en rétablissant les liens.",
+          "internal": false
+        },
+        "workOnce": {
+          "desc": "Ouvre l'écran de fin.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

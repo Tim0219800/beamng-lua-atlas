@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/telemetry/reporters/jsonFileReporter.lua",
+  "module": "Envoyeur de télémétrie : au chargement, une tâche du jobsystem attend 5 s puis envoie au serveur (appel core_online s11/v2/telemetryReports) les fichiers de session /telemetry/sessions/*.jsonl écrits par telemetry_core, groupés en un seul envoi. L'envoi n'a lieu que si la plus ancienne session en attente date de plus de l'intervalle configuré (reportIntervalHours, 12 h par défaut, avec jitter aléatoire de 1x à 2x). Le fichier de la session en cours est ignoré.",
+  "notes": [
+    "En cas de succès (response.result == 'ok'), les fichiers envoyés sont supprimés. En cas d'échec, ils restent pour le prochain démarrage ; au-delà de 20 fichiers en attente, les plus anciens sont supprimés.",
+    "Un fichier de session illisible ou sans évènement valide est supprimé sans être envoyé.",
+    "Les données envoyées : userID anonyme (telemetry_userIdentity), version de télémétrie, et la liste des sessions (tableaux d'évènements).",
+    "L'extension se déclare en déchargement manuel (setExtensionUnloadMode manual).",
+    "Attention : trimPendingFiles est appelée avec la liste des fichiers qui viennent d'être envoyés, pas avec tous les fichiers en attente."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "telemetry_core et telemetry_configManager."}
+  },
+  "functions": {
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement : passe l'extension en déchargement manuel et lance la tâche d'envoi (jobsystem, priorité 0,5).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

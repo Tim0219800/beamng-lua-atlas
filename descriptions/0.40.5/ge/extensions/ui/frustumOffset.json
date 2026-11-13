@@ -1,0 +1,25 @@
+{
+  "path": "lua/ge/extensions/ui/frustumOffset.lua",
+  "module": "Décale le centre du frustum de la caméra (scenetree.OnlyGui:setFrustumCameraCenterOffset) pour que la vue 3D soit recentrée quand des panneaux UI recouvrent une partie de l'écran (voir BngFrustumMover.js). Accepte un décalage brut en unités moteur et/ou un décalage en fraction de demi-écran, converti en tenant compte du ratio d'écran et du FoV.",
+  "notes": [
+    "Le décalage moteur est une pente en espace caméra : décalage écran = offset / (aspect * tan(vFov/2)).",
+    "Le FoV utilisé est borné à 10 degrés minimum, comme le moteur.",
+    "Les décalages écran sont recalculés dans onUpdate dès que le FoV change.",
+    "Signes : une valeur positive de screenX/screenY déplace le centre de la vue vers la droite/le haut."
+  ],
+  "functions": {
+    "set": {
+      "desc": "Définit les décalages et les applique immédiatement. Toute valeur absente vaut 0.",
+      "params": {
+        "newRawX": {"type": "number|nil", "desc": "Décalage horizontal brut (unités moteur), transmis tel quel."},
+        "newRawY": {"type": "number|nil", "desc": "Décalage vertical brut (unités moteur), transmis tel quel."},
+        "newScreenX": {"type": "number|nil", "desc": "Décalage horizontal en fraction de la demi-largeur d'écran."},
+        "newScreenY": {"type": "number|nil", "desc": "Décalage vertical en fraction de la demi-hauteur d'écran."}
+      }
+    },
+    "onUpdate": {
+      "desc": "Hook par frame : si un décalage écran est actif et que le FoV a changé depuis la dernière application, réapplique le décalage.",
+      "internal": true
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "path": "lua/ge/extensions/debug/vehicleDebug.lua",
+  "module": "Affichage de debug au-dessus de chaque véhicule actif : quand il est activé, onUpdate dessine avec debugDrawer l'id du véhicule, sa position et la rotation (quaternion) de son nœud de référence, au-dessus de sa boîte englobante. Le changement d'état est signalé à l'UI par le guihook vehicleDebugInfoEnabledChanged. L'état est conservé lors d'un rechargement Lua.",
+  "usage": "debug_vehicleDebug.setDebugEnabled(true)",
+  "notes": [
+    "Les trois lignes de texte sont dessinées à la même position (textPos) avec drawTextAdvanced : elles peuvent se superposer selon l'implémentation du moteur (déduit du code, aucun décalage vertical n'est appliqué).",
+    "bdebugRequestViewportSize envoie la taille de la fenêtre principale ImGui au module bdebug côté véhicule."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{'ui_imgui'}."}
+  },
+  "functions": {
+    "toggleDebugEnabled": {"desc": "Inverse l'état d'affichage et notifie l'UI (vehicleDebugInfoEnabledChanged).", "internal": false},
+    "getDebugEnabled": {"desc": "Retourne l'état d'affichage.", "returns": [{"type": "boolean", "desc": "true si activé."}], "internal": false},
+    "setDebugEnabled": {
+      "desc": "Active ou désactive l'affichage et notifie l'UI.",
+      "params": {"value": {"type": "boolean", "desc": "Nouvel état."}},
+      "internal": false
+    },
+    "bdebugRequestViewportSize": {
+      "desc": "Envoie au véhicule la taille de la fenêtre principale (bdebug.receiveViewportSize(largeur, hauteur)). Sans effet si le véhicule n'existe pas.",
+      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "internal": false
+    },
+    "onUpdate": {
+      "desc": "Hook de mise à jour : dessine les informations de debug de chaque véhicule actif si l'affichage est activé.",
+      "params": {"dt": {"type": "number", "desc": "Delta temps (s)."}},
+      "internal": true
+    },
+    "onSerialize": {"desc": "Hook de rechargement Lua : retourne {debugEnabled}.", "returns": [{"type": "table", "desc": "État à conserver."}], "internal": true},
+    "onDeserialized": {
+      "desc": "Hook de rechargement Lua : restaure debugEnabled.",
+      "params": {"serializedData": {"type": "table|nil", "desc": "État retourné par onSerialize."}},
+      "internal": true
+    }
+  }
+}

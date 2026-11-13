@@ -1,0 +1,117 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/types/getVariable.lua",
+  "module": "Noeud « Get Variable » (provider, caché des menus : créé depuis l'éditeur de variables). Expose une variable du graphe ou du projet (case « Use Project as Source ») sur un pin de sortie portant son nom et son type. Gère le renommage et le changement de type en conservant les liens compatibles.",
+  "notes": [
+    "Bug : globalColor = im.ImVec4(1,0.6,0,8,0.75) a 5 arguments (« 0,8 » au lieu de « 0.8 ») : le dernier est ignoré, alpha = 8.",
+    "work échoue si varName est nil (aucune variable choisie)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "varName = nil, global = false, target = variables du graphe.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Case de portée, liste des variables et éditeur de variable.",
+          "internal": true
+        },
+        "setGlobal": {
+          "desc": "Change la portée (projet/graphe), la couleur du noeud et retire le pin courant.",
+          "params": {
+            "global": {
+              "type": "any",
+              "desc": "boolean : variables du projet"
+            }
+          },
+          "internal": true
+        },
+        "setVar": {
+          "desc": "Choisit la variable : recrée le pin de sortie avec le bon type et refait les liens compatibles.",
+          "params": {
+            "name": {
+              "type": "any",
+              "desc": "nom de la variable"
+            }
+          },
+          "internal": true
+        },
+        "renameVariable": {
+          "desc": "Hook : met à jour nom du noeud et du pin si la variable suivie est renommée.",
+          "params": {
+            "source": {
+              "type": "any",
+              "desc": "table de variables concernée"
+            },
+            "name": {
+              "type": "any",
+              "desc": "ancien nom"
+            },
+            "newName": {
+              "type": "any",
+              "desc": "nouveau nom"
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Écrit target:get(varName) sur le pin.",
+          "internal": false
+        },
+        "typeUpdated": {
+          "desc": "Hook : recrée le pin quand le type de la variable change.",
+          "params": {
+            "source": {
+              "type": "any",
+              "desc": "table de variables concernée"
+            },
+            "name": {
+              "type": "any",
+              "desc": "nom"
+            },
+            "newType": {
+              "type": "any",
+              "desc": "nouveau type"
+            }
+          },
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde l'état du noeud dans la table donnée.",
+          "params": {
+            "res": {
+              "type": "any",
+              "desc": "table de sauvegarde"
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure portée et variable.",
+          "params": {
+            "nodeData": {
+              "type": "any",
+              "desc": "données sauvegardées"
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

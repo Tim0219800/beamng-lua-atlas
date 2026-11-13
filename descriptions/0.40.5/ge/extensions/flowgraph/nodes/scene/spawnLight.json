@@ -1,0 +1,55 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/spawnLight.lua",
+  "module": "Noeud flowgraph « SpotLight » (repeat_instant, auteur BeamNG). Crée un objet SpotLight (worldEditorCppApi.createObject) et le met à jour. Entrées : update (flow), clear (impulsion), position, rotation, range (20), innerAngle (15), outerAngle (45), color, brightness (1). Sorties : created (impulsion), lastId. data.maxObjectCount (1) limite le nombre d'objets.",
+  "notes": [
+    "Le nom construit dans createObject n'est jamais utilisé (pas de registerObject).",
+    "Le pin de couleur doit contenir 4 composantes, sinon la concaténation échoue."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Initialise la liste d'objets et data.maxObjectCount = 1.",
+          "params": {
+            "mgr": {
+              "type": "any",
+              "desc": "gestionnaire flowgraph"
+            }
+          },
+          "internal": true
+        },
+        "createObject": {
+          "desc": "Crée la lumière avec les valeurs des pins (canSave = false), l'ajoute à la liste, écrit lastId et notifie l'éditeur.",
+          "params": {
+            "objectName": {
+              "type": "any",
+              "desc": "non utilisé (le nom calculé n'est pas appliqué)"
+            }
+          },
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Supprime les lumières à l'arrêt.",
+          "internal": true
+        },
+        "clearObjects": {
+          "desc": "Supprime toutes les lumières créées.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Sur clear, supprime ; sinon crée la lumière si le maximum n'est pas atteint (created = true) et, avec update, la met à jour (position, rotation, angles, luminosité, portée, couleur).",
+          "internal": false
+        },
+        "onClientEndMission": {
+          "desc": "Hook de fin de mission : nettoie les objets créés par le noeud.",
+          "internal": true
+        },
+        "destroy": {
+          "desc": "Appelé à la destruction du noeud : nettoie les objets créés.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

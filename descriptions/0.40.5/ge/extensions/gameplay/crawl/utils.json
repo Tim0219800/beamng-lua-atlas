@@ -1,0 +1,288 @@
+{
+  "path": "lua/ge/extensions/gameplay/crawl/utils.lua",
+  "module": "Moteur d'exécution du mode crawl (franchissement lent d'un parcours à points de passage). Il garde l'état de chaque crawler (crawlStates, indexé par id de véhicule) : noeud courant, noeuds franchis ou sautés, chrono, points de pénalité, évènements, point de récupération, disqualification. À chaque image, updateCrawl avance le chrono, lit la position du véhicule, détecte les noeuds atteints (test 2D sur le centre de la boîte englobante, avec contrôle de direction si le noeud a une rotation), vérifie la zone limite (gameplay_crawl_boundary), les infractions (marche arrière, touche de portes dynamiques) et le seuil de DNF. Il gère aussi les marqueurs 3D des portes (partagés ou par joueur en écran partagé), le tracé en pointillés d'aperçu, le chargement des prefabs du parcours, l'intégration à core_lapTimes et les réinitialisations de véhicule. Le barème est dans infractionPoints.",
+  "usage": "gameplay_crawl_utils.setDebugDraw(true)  -- affiche chemin, zone et départ du parcours actif",
+  "notes": [
+    "Barème par défaut (points, plus bas = meilleur) : drivingBackwards 1, vehicleFlippedUpright 5, gateTouch 10, vehicleReset 10, boundaryViolation 10, wrongDirection 10, skippedCheckpoint 10, dnf 50, gateCleared -2, bonusGateCleared -15. Le total ne descend jamais sous 0.",
+    "DNF : atteint quand points >= trail.rules.dnfPointLimit (si > 0) sinon 50. trail.rules.penalties == false désactive toutes les pénalités (hasPenalties).",
+    "Cooldowns (s) : drivingBackwards 5, boundaryViolation 3. Marche arrière : produit scalaire vitesse/direction (2D) < -0.5 ; pénalité après distance cumulée > 2.",
+    "Franchissement d'un noeud : le centre de la boîte englobante (bbCenter) doit être dans le rayon (4.0 m par défaut) en XY ; si le noeud a une rotation, le véhicule doit regarder et (au-dessus de 1 m/s) rouler dans la direction (produit scalaire > 0.5). Seuls les noeuds courant-1 à courant+1 sont testés ; sauter un noeud (hors bonus) coûte skippedCheckpoint par noeud sauté. Sans pénalités, on ne peut avancer que dans l'ordre (sauf bonus).",
+    "Un crawl terminé (dernier noeud) déclenche onCrawlResultsShown, débloque le succès CHALLENGE_CRAWL, et le crawler est retiré 3 s plus tard (completionDelay) sauf s'il vient d'une mission.",
+    "Réinitialisation du véhicule : avec trail.rules.recovery.mode == 'lastGate', la touche de reset renvoie au dernier noeud franchi (ou au départ) avec la pénalité vehicleReset (recoverToLastGate) ; sinon, un téléport détecté (> 1 m) hors mission entraîne un DNF immédiat, et en mission une pénalité vehicleFlippedUpright.",
+    "L'extension remplace commands.dropPlayerAtCameraNoReset pour compter une réinitialisation ; la fonction d'origine est restaurée dans onExtensionUnloaded.",
+    "Modes des marqueurs : inactive, final, skipped, current, bonus, recovery, finished (priorité d'agrégation pour une caméra partagée : finished > bonus = recovery > current > skipped > final > inactive).",
+    "Bug probable : calculatePathStats ne tient pas compte de pathReversed (la boucle réassigne l'indice local i sans effet) et le cache est indexé par pathId seul ; gain et perte d'altitude ne sont donc pas échangés pour un parcours inversé.",
+    "Incohérence : si core_lapTimes n'est pas encore chargé quand ce fichier est lu, la variable locale core_lapTimes reste nil pour toute la session.",
+    "drawMarkers lit la globale photoModeOpen, supposée définie ailleurs.",
+    "Hooks émis : onCrawlPenaltyScoreChanged({crawlerId, penaltyScore, oldPenaltyScore}), onCrawlPathnodeReached({crawlerId, pathnodeId, pathnodeIndex, time, pathnodeTimings}), onCrawlResultsShown({crawlerId, time, points}), onCrawlDisqualified({crawlerId}), showDisqualifiedMessage({crawlerId, time}), onCrawlCleared()."
+  ],
+  "fields": {
+    "infractionPoints": {"type": "table<string, number>", "desc": "Points par type d'infraction (voir notes). Valeurs négatives = bonus."},
+    "infractionCooldowns": {"type": "table<string, number>", "desc": "Délais de répétition en secondes : drivingBackwards = 5, boundaryViolation = 3."},
+    "drivingBackwardsSettings": {"type": "table<string, number>", "desc": "Réglages de détection de marche arrière : velocityDotThreshold = -0.5, distanceThreshold = 2."}
+  },
+  "functions": {
+    "startCrawl": {
+      "desc": "Crée l'état du crawler (noeud 1, chrono 0, points conservés dans crawlerData), prépare les marqueurs de portes du chemin actif, affiche les messages de début et de points, et configure core_lapTimes (un seul tour, un segment par noeud). Nécessite gameplay_crawl_general.activeTrail avec un chemin non vide.",
+      "params": {
+        "crawlerId": {"type": "integer", "desc": "Id du véhicule."},
+        "trail": {"type": "table", "desc": "Parcours (rules, etc.)."},
+        "crawlerData": {"type": "table", "desc": "Données du crawler créées par setupCrawlerData."},
+        "isFromMission": {"type": "boolean|nil", "desc": "Vrai si lancé par une mission : le crawler n'est alors pas retiré automatiquement à la fin."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si paramètres invalides ou chemin vide."}],
+      "internal": false
+    },
+    "stopCrawl": {
+      "desc": "Arrête le suivi des temps (core_lapTimes.onRaceStop), efface les points de sortie de zone et appelle clear. Sans force, ne fait rien si un crawl actif vient d'une mission.",
+      "params": {"force": {"type": "boolean|nil", "desc": "Vrai pour arrêter même un crawl de mission."}},
+      "internal": false
+    },
+    "resetCrawlData": {
+      "desc": "Remet à zéro l'état du crawler (noeud 1, chrono, points, infractions, évènements ; crawlStarted devient false), efface les messages et le suivi des temps.",
+      "params": {
+        "crawlerId": {"type": "integer", "desc": "Id du véhicule."},
+        "force": {"type": "boolean|nil", "desc": "Nécessaire pour réinitialiser un crawl de mission."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si le crawler est inconnu, inactif, ou protégé (mission sans force)."}],
+      "internal": false
+    },
+    "resumeCrawlTimer": {
+      "desc": "Fait démarrer le chrono d'un crawler préparé mais pas encore lancé (crawlStarted devient true) et affiche les messages de début et de points.",
+      "params": {"crawlerId": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [{"type": "boolean", "desc": "true si le chrono tourne (déjà démarré ou démarré maintenant)."}],
+      "internal": false
+    },
+    "updateCrawl": {
+      "desc": "Mise à jour par image de tous les crawlers actifs : animations de la zone limite, chrono, position, noeuds atteints, zone, infractions, évènements, flux de temps vers core_lapTimes, messages de points, DNF et retrait des crawlers terminés.",
+      "params": {"dtSim": {"type": "number", "desc": "Delta temps simulation (s)."}},
+      "internal": true
+    },
+    "setupCrawlerData": {
+      "desc": "Crée les données dynamiques d'un crawler pour un véhicule : id, points, boîte englobante (getSpawnWorldOOBB), décalages des roues (coins de référence), valeurs d'infraction ; enregistre aussi la notification de accZSmooth.",
+      "params": {"veh": {"type": "userdata", "desc": "Objet véhicule."}},
+      "returns": [{"type": "table|nil", "desc": "Données du crawler, nil si veh est nil."}],
+      "internal": false
+    },
+    "applyPenalty": {
+      "desc": "Ajoute des points au crawler (négatifs = bonus ; total borné à 0), émet onCrawlPenaltyScoreChanged et consigne l'évènement. Sans effet si le crawler est inactif ou si les pénalités sont désactivées.",
+      "params": {
+        "crawlerId": {"type": "integer", "desc": "Id du véhicule."},
+        "penaltyType": {"type": "string", "desc": "Clé de infractionPoints (ex. 'boundaryViolation', 'dnf')."},
+        "points": {"type": "number|nil", "desc": "Points à ajouter ; sinon la valeur de infractionPoints[penaltyType]."}
+      },
+      "internal": false
+    },
+    "hasPenalties": {
+      "desc": "Indique si le parcours du crawler applique des pénalités (vrai sauf si trail.rules.penalties == false).",
+      "params": {"crawlerId": {"type": "integer|nil", "desc": "Id du véhicule."}},
+      "returns": [{"type": "boolean", "desc": "true si les pénalités sont actives."}],
+      "internal": false
+    },
+    "onBoundaryViolation": {
+      "desc": "Applique la pénalité boundaryViolation et affiche le message, sauf pendant le délai de 3 s. Appelée par gameplay_crawl_boundary.checkBoundary.",
+      "params": {"crawlerId": {"type": "integer", "desc": "Id du véhicule."}},
+      "internal": true
+    },
+    "onVehicleFlippedUpright": {
+      "desc": "Applique la pénalité vehicleFlippedUpright et affiche le message.",
+      "params": {"crawlerId": {"type": "integer", "desc": "Id du véhicule."}},
+      "internal": true
+    },
+    "onVehicleReset": {
+      "desc": "Compte une récupération du véhicule. Avec isGateRecovery : pénalité vehicleReset et délai de 5 s sans pénalité de marche arrière ; sinon, en mission : pénalité vehicleFlippedUpright ; hors mission : pénalité dnf (seuil du parcours), donc disqualification.",
+      "params": {
+        "crawlerId": {"type": "integer", "desc": "Id du véhicule."},
+        "isGateRecovery": {"type": "boolean|nil", "desc": "Vrai si la récupération vient de recoverToLastGate."}
+      },
+      "internal": false
+    },
+    "recoverToLastGate": {
+      "desc": "Téléporte le véhicule au dernier noeud franchi (ou à la position de départ), avec la rotation du noeud ou une direction déduite du noeud voisin, répare le véhicule sauf si recovery.repairVehicle == false, et applique la pénalité de récupération. Exige trail.rules.recovery.mode == 'lastGate'.",
+      "params": {"crawlerId": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [{"type": "boolean", "desc": "true si la téléportation a eu lieu."}],
+      "internal": false
+    },
+    "trackVehReset": {
+      "desc": "Appelée quand le joueur réinitialise son véhicule : avec la règle de récupération au dernier noeud, annule l'aperçu de récupération puis demande recoverToLastGate ; sinon, mémorise la position pour détecter à l'image suivante un téléport réel (> 1 m) et appliquer onVehicleReset.",
+      "params": {"vehId": {"type": "integer|string|nil", "desc": "Id du véhicule ; si nil, le crawler du joueur ayant utilisé un périphérique en dernier, ou tous les crawlers actifs."}},
+      "internal": false
+    },
+    "getCrawlState": {
+      "desc": "Retourne l'état complet d'un crawler : active, trail, crawlerData, currentPathnodeIndex, completedPathnodes, skippedPathnodes, pathnodeTimings, eventLog, currentTime, isCompleted, completionStartTime, events, crawlStarted, lastRecoveryCheckpoint, lastRecoveryCheckpointIndex, lastReachedPathnodeIndex, isDisqualified, recoveryCount, isFromMission, raceData.",
+      "params": {"crawlerId": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [{"type": "table|nil", "desc": "État, ou nil."}],
+      "internal": false
+    },
+    "setCrawlState": {
+      "desc": "Remplace l'état d'un crawler.",
+      "params": {
+        "crawlerId": {"type": "integer", "desc": "Id du véhicule."},
+        "state": {"type": "table", "desc": "Nouvel état."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si un paramètre manque."}],
+      "internal": false
+    },
+    "getAllCrawlStates": {
+      "desc": "Retourne la table interne de tous les états (indexés par id de véhicule), sans copie.",
+      "returns": [{"type": "table<integer, table>", "desc": "États."}],
+      "internal": false
+    },
+    "getActiveCrawlerId": {
+      "desc": "Retourne l'id du premier crawler actif trouvé.",
+      "returns": [{"type": "integer|nil", "desc": "Id du véhicule."}],
+      "internal": false
+    },
+    "getCrawlerPosition": {
+      "desc": "Retourne la dernière position connue d'un crawler (référence vers un vec3 mis à jour en continu).",
+      "params": {"crawlerId": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [{"type": "vec3|nil", "desc": "Position."}],
+      "internal": false
+    },
+    "getCrawlerDirection": {
+      "desc": "Retourne l'orientation du véhicule réduite à son lacet (rotation autour de Z).",
+      "params": {"crawlerId": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [{"type": "quat", "desc": "Quaternion de lacet ; identité si inconnu."}],
+      "internal": false
+    },
+    "getLastRecoveryCheckpoint": {
+      "desc": "Retourne le dernier point de récupération franchi par un crawler actif.",
+      "params": {"crawlerId": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [{"type": "table|nil", "desc": "{position, rotation, index, time}."}],
+      "internal": false
+    },
+    "getLastRecoveryCheckpointIndex": {
+      "desc": "Retourne l'indice du dernier point de récupération d'un crawler actif.",
+      "params": {"crawlerId": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [{"type": "integer", "desc": "Indice ; 0 si aucun ou crawler inactif."}],
+      "internal": false
+    },
+    "setRecoveryCheckpoint": {
+      "desc": "Impose le point de récupération d'un crawler actif et active le délai de 5 s sans pénalité de marche arrière.",
+      "params": {
+        "crawlerId": {"type": "integer", "desc": "Id du véhicule."},
+        "checkpoint": {"type": "table", "desc": "{position, rotation, index, time}."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si paramètres manquants ou crawler inactif."}],
+      "internal": false
+    },
+    "clear": {
+      "desc": "Efface les marqueurs, décharge les prefabs, supprime tous les états de crawlers, remet gameplay_crawl_general.activeTrail à nil, émet onCrawlCleared et efface les messages. Sans force, ne fait rien si un crawl de mission est actif.",
+      "params": {"force": {"type": "boolean|nil", "desc": "Vrai pour tout effacer même en mission."}},
+      "internal": false
+    },
+    "clearCrawler": {
+      "desc": "Retire un crawler (ses marqueurs par joueur et son état).",
+      "params": {"crawlerId": {"type": "integer|nil", "desc": "Id du véhicule."}},
+      "internal": false
+    },
+    "clearMarkers": {
+      "desc": "Supprime tous les marqueurs de portes et quitte le mode aperçu.",
+      "internal": false
+    },
+    "setupCrawlMarkers": {
+      "desc": "Crée les marqueurs de portes d'un chemin (tous cachés, le dernier en 'final'), construit le tracé en pointillés depuis la position du joueur et passe en mode aperçu. Sans effet si les marqueurs de ce chemin existent déjà.",
+      "params": {"path": {"type": "table", "desc": "Chemin avec nodes (pos, rotation, radius)."}},
+      "internal": false
+    },
+    "activateCrawlMarkers": {
+      "desc": "Active le premier marqueur ('current') du chemin actif et quitte le mode aperçu.",
+      "internal": false
+    },
+    "drawMarkers": {
+      "desc": "Met à jour et affiche les marqueurs de portes (masqués en mode photo). Appelée par onPreRender.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+      },
+      "internal": true
+    },
+    "loadPrefabs": {
+      "desc": "Fait apparaître les prefabs du parcours (canSave = false, ajoutés à MissionGroup), empêche l'entrée automatique dans les véhicules, repère les objets portant le champ dynamique 'crawlDynamic' (portes qui coûtent gateTouch si touchées), recharge les collisions puis crée les drapeaux de la zone limite (espacement 5 m).",
+      "params": {"prefabFileList": {"type": "string[]|nil", "desc": "Chemins de fichiers prefab."}},
+      "internal": false
+    },
+    "unloadPrefabs": {
+      "desc": "Supprime les prefabs créés, recharge les collisions, vide les objets dynamiques et les marqueurs de zone.",
+      "internal": false
+    },
+    "getDynamicObjectsFromPrefab": {
+      "desc": "Liste les ids des enfants d'un prefab dont un champ dynamique a pour valeur dynamicName.",
+      "params": {
+        "prefabId": {"type": "integer", "desc": "Id du prefab."},
+        "dynamicName": {"type": "string", "desc": "Valeur recherchée."}
+      },
+      "returns": [{"type": "integer[]", "desc": "Ids des objets trouvés ; vide si absent."}],
+      "internal": false
+    },
+    "calculatePathStats": {
+      "desc": "Calcule distance totale et dénivelé d'un chemin (par pas de 5 m) et met le résultat en cache.",
+      "params": {
+        "pathId": {"type": "string", "desc": "Id (fichier) du chemin."},
+        "pathReversed": {"type": "boolean|nil", "desc": "Sans effet réel (voir notes)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "{totalDistance (m), totalElevationChange (m), elevationGain, elevationLoss} ; nil si le chemin a moins de 2 positions."}],
+      "internal": false
+    },
+    "setDebugDraw": {
+      "desc": "Active ou désactive l'overlay de debug (chemin, zone limite, position de départ).",
+      "params": {"enabled": {"type": "boolean", "desc": "true pour activer."}},
+      "returns": [{"type": "boolean", "desc": "Nouvel état."}],
+      "internal": false
+    },
+    "toggleDebugDraw": {
+      "desc": "Bascule l'overlay de debug.",
+      "returns": [{"type": "boolean", "desc": "Nouvel état."}],
+      "internal": false
+    },
+    "isDebugDrawEnabled": {
+      "desc": "Indique si l'overlay de debug est actif.",
+      "returns": [{"type": "boolean", "desc": "État."}],
+      "internal": false
+    },
+    "isPreviewMode": {
+      "desc": "Indique si les marqueurs sont en mode aperçu (avant le démarrage du crawl).",
+      "returns": [{"type": "boolean", "desc": "État."}],
+      "internal": false
+    },
+    "getDottedPath": {
+      "desc": "Retourne les points du tracé en pointillés d'aperçu.",
+      "returns": [{"type": "table[]", "desc": "Liste de {pos, distanceFromStart}."}],
+      "internal": false
+    },
+    "onPreRender": {
+      "desc": "Hook appelé avant le rendu : affiche les marqueurs, l'aperçu en pointillés (en mode aperçu), le guidage en pause et l'overlay de debug.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+      },
+      "internal": true
+    },
+    "onDrawOnMinimap": {
+      "desc": "Hook de dessin de la minimap : dessine les marqueurs de portes (ceux du joueur 0 en écran partagé).",
+      "params": {"td": {"type": "table", "desc": "Objet de dessin de la minimap."}},
+      "internal": true
+    },
+    "onSplitScreenChanged": {
+      "desc": "Hook appelé au changement d'écran partagé : reconstruit les marqueurs (par joueur en mode 'split', sinon partagés).",
+      "params": {
+        "enabled": {"type": "boolean", "desc": "Écran partagé activé."},
+        "_playerCount": {"type": "integer", "desc": "Nombre de joueurs (non utilisé)."},
+        "_layoutId": {"type": "any", "desc": "Identifiant de disposition (non utilisé)."},
+        "layoutMode": {"type": "string|nil", "desc": "Mode de disposition ('split' pour des vues séparées)."}
+      },
+      "internal": true
+    },
+    "onSpawnCCallback": {
+      "desc": "Hook appelé quand un objet est créé : pendant le chargement des prefabs, désactive l'entrée automatique dans le véhicule créé.",
+      "params": {"objId": {"type": "integer", "desc": "Id de l'objet créé."}},
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook appelé au déchargement : restaure commands.dropPlayerAtCameraNoReset.",
+      "internal": true
+    }
+  }
+}

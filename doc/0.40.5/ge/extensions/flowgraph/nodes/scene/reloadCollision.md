@@ -4,11 +4,15 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/scene/reloadCollision")` (fichier sous extensions/ mais pas une extension classique)
 
+Noeud flowgraph « Reload Collision » (once_instant). Recharge les données de collision du niveau une seule fois via be:reloadCollision(). Aucun pin.
+
 ## Classe `C`
+
+Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:workOnce()` |  | 19 |
+| `C:workOnce()` | Appelle be:reloadCollision(). | 19 |
 
 ## Appels vers le moteur (C++)
 

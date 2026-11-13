@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/getVehicle.lua",
+  "module": "Nœud flowgraph « Get Vehicle Id From Table » (repeat_instant). Lit l'élément d'indice `index` d'un tableau d'ids de véhicules (vehicleIds) et le sort sur vehId s'il s'agit d'un nombre, sinon nil.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "work": {
+          "desc": "Écrit vehicleIds[index] sur vehId si c'est un nombre ; sinon nil.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

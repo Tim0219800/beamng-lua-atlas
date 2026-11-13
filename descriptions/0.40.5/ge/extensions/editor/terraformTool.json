@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/editor/terraformTool.lua",
+  "module": "Façade de l'outil Terraform de l'éditeur de monde. Elle stocke cinq réglages (domaine d'influence, marge, falloff, rugosité, échelle de bruit) comme préférences de l'éditeur, gère le polygone dessiné par l'utilisateur et déclenche le terraformage du terrain (editor/terraform/terraform) à partir de sources récupérées par editor/terraform/fetchSources (routes, etc.) dans un polygone ou dans la sélection. Un moddeur l'utilise pour terraformer par script ou pour lire/modifier les réglages.",
+  "usage": "local t = extensions.editor_terraformTool\nt.setDOI(150)\nt.setMargin(6)\nt.terraformSelection()",
+  "notes": [
+    "Valeurs par défaut du code : DOI 100 m, margin 5.0 m, falloff 1.5 m, roughness 0.4, scale 0.5 (les deux derniers dans [0, 1]).",
+    "Bornes des curseurs : DOI 1 à 500 m, margin 0 à 20 m, falloff 1 à 5 m.",
+    "Les réglages sont lus avec editor.getPreference('terraformTool.general.<nom>') et valent la valeur par défaut si la préférence est absente (nil ou false).",
+    "Les fonctions de terraformage modifient le terrain réellement ; elles supposent que l'éditeur est initialisé."
+  ],
+  "functions": {
+    "getDOI": {"desc": "Renvoie le domaine d'influence (en mètres) du terraformage, lu dans la préférence terraformTool.general.domainOfInfluence (défaut 100).", "params": {}, "returns": [{"type": "number", "desc": "Domaine d'influence en mètres."}], "internal": false},
+    "getMargin": {"desc": "Renvoie la marge latérale (en mètres) autour des sources, préférence terraformTool.general.margin (défaut 5.0).", "params": {}, "returns": [{"type": "number", "desc": "Marge en mètres."}], "internal": false},
+    "getFalloff": {"desc": "Renvoie la distance de décroissance (falloff, en mètres), préférence terraformTool.general.falloff (défaut 1.5).", "params": {}, "returns": [{"type": "number", "desc": "Falloff en mètres."}], "internal": false},
+    "getRoughness": {"desc": "Renvoie la rugosité du bruit, préférence terraformTool.general.roughness (défaut 0.4, plage [0, 1]).", "params": {}, "returns": [{"type": "number", "desc": "Rugosité."}], "internal": false},
+    "getScale": {"desc": "Renvoie l'échelle du bruit, préférence terraformTool.general.scale (défaut 0.5, plage [0, 1]).", "params": {}, "returns": [{"type": "number", "desc": "Échelle du bruit."}], "internal": false},
+    "setDOI": {"desc": "Enregistre le domaine d'influence dans les préférences de l'éditeur.", "params": {"value": {"type": "number", "desc": "Domaine d'influence en mètres."}}, "returns": [], "internal": false},
+    "setMargin": {"desc": "Enregistre la marge latérale dans les préférences de l'éditeur.", "params": {"value": {"type": "number", "desc": "Marge en mètres."}}, "returns": [], "internal": false},
+    "setFalloff": {"desc": "Enregistre la distance de décroissance dans les préférences de l'éditeur.", "params": {"value": {"type": "number", "desc": "Falloff en mètres."}}, "returns": [], "internal": false},
+    "setRoughness": {"desc": "Enregistre la rugosité du bruit dans les préférences de l'éditeur.", "params": {"value": {"type": "number", "desc": "Rugosité dans [0, 1]."}}, "returns": [], "internal": false},
+    "setScale": {"desc": "Enregistre l'échelle du bruit dans les préférences de l'éditeur.", "params": {"value": {"type": "number", "desc": "Échelle dans [0, 1]."}}, "returns": [], "internal": false},
+    "getPolygon": {"desc": "Renvoie le polygone courant (délègue à editor/toolUtilities/polygon).", "params": {}, "returns": [{"type": "table", "desc": "Polygone courant (structure définie par le module polygon)."}], "internal": false},
+    "isPolygonExist": {"desc": "Indique si un polygone valide existe (poly.isPolygonValid).", "params": {}, "returns": [{"type": "boolean", "desc": "true si le polygone est valide."}], "internal": false},
+    "clearPolygon": {"desc": "Efface le polygone courant.", "params": {}, "returns": [], "internal": false},
+    "handleTerraformingPolygon": {"desc": "À appeler à chaque frame de l'UI : gère le dessin du polygone par l'utilisateur et lance terraformPolygon quand il valide.", "params": {}, "returns": [], "internal": false},
+    "terraformPolygon": {"desc": "Récupère toutes les sources supportées dans le polygone (fetchSources.getAllSourcesInPolygon) puis appelle terraformToSources avec les réglages courants (DOI, marge, falloff, rugosité, échelle).", "params": {"polygon": {"type": "table", "desc": "Polygone dans lequel chercher les sources (déduit du code)."}}, "returns": [], "internal": false},
+    "terraformSelection": {"desc": "Récupère les objets supportés de la sélection de l'éditeur (fetchSources.getAllSourcesInSelection) et terraforme le terrain autour d'eux avec les réglages courants.", "params": {}, "returns": [], "internal": false},
+    "onEditorRegisterPreferences": {"desc": "Hook de l'éditeur : enregistre la catégorie de préférences terraformTool et sa sous-catégorie general (domainOfInfluence en int, margin, falloff, roughness, scale en float) avec leurs bornes.", "params": {"prefs": {"type": "table", "desc": "Registre de préférences de l'éditeur."}}, "returns": [], "internal": true}
+  }
+}

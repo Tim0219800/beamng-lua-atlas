@@ -1,0 +1,39 @@
+{
+  "path": "lua/ge/extensions/editor/rallyEditor/missionTab.lua",
+  "module": "Onglet « Mission » de l'éditeur de rallye. Il affiche en lecture seule le nom, l'identifiant et le dossier de la mission courante (avec un bouton qui ouvre le dossier dans l'explorateur), puis liste les voicepacks locaux à la mission trouvés dans <missionDir>/rally/voicepacks/<nom>/ : dossier, nombre de fichiers pacenote_*.ogg et carnets associés. Le voicepack actuellement choisi est marqué d'une étoile verte. Le module renvoie un constructeur (classe C).",
+  "notes": [
+    "Ne modifie aucune donnée : onglet purement informatif.",
+    "Si l'entrée info.json n'existe pas, le bouton ouvre le dossier rally/ puis à défaut le dossier de la mission.",
+    "Sans mission chargée, affiche un message invitant à ouvrir l'éditeur depuis le Mission Editor."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet onglet renvoyé par le constructeur (new(rallyEditor)). Champs : rallyEditor, path, windowDescription = 'Mission'.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur interne : mémorise l'éditeur.",
+          "params": {"rallyEditor": {"type": "table", "desc": "Instance de l'éditeur (getCurrentMissionDir/Name/Id, getCurrentVoicepackPick)."}},
+          "internal": true
+        },
+        "setPath": {
+          "desc": "Mémorise le carnet courant (appelé par l'éditeur).",
+          "params": {"path": {"type": "table", "desc": "Carnet courant."}},
+          "internal": true
+        },
+        "selected": {
+          "desc": "Appelée quand l'onglet est sélectionné : émet le hook onEditorEditModeChanged(nil, nil) pour quitter tout mode d'édition.",
+          "internal": true
+        },
+        "unselect": {
+          "desc": "Appelée quand l'onglet est quitté : émet le hook onEditorEditModeChanged(nil, nil).",
+          "internal": true
+        },
+        "draw": {
+          "desc": "Dessine l'interface imgui de l'onglet (infos mission, liste des voicepacks locaux).",
+          "params": {"mouseInfo": {"type": "table", "desc": "Informations souris (non utilisées ici)."}},
+          "internal": true
+        }
+      }
+    }
+  }
+}

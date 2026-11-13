@@ -1,0 +1,62 @@
+{
+  "path": "lua/ge/extensions/telemetry/hardwareChanges.lua",
+  "module": "Module utilitaire de la télémétrie matérielle (chargé par require) : compare deux instantanés de manettes pour produire des événements de connexion/déconnexion, et dit quelles transitions d'affichage (fenêtre/plein écran) sont suivies. S'appuie sur telemetry/hardwareInput.",
+  "functions": {
+    "controllerSnapshot": {
+      "desc": "Construit un instantané indexé par nom de périphérique, limité aux types gamepad, joystick, wheel et xinput (clavier, souris, openxr, vinput ignorés). Chaque entrée contient device, deviceType, productName, vidpid et forceFeedback ; pour un volant, le nom anglais officiel est cherché via hardwareInput.officialEnglishName.",
+      "params": {
+        "controllerInfo": {
+          "type": "table[]|nil",
+          "desc": "Liste des contrôleurs (name, type, productName, vidpid, ffbAxes…)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "Instantané par nom de périphérique."
+        }
+      ],
+      "internal": false
+    },
+    "connectionChanges": {
+      "desc": "Compare deux instantanés et renvoie la liste des événements {…champs du périphérique, connected = true|false}. Les connexions viennent d'abord, triées par nom, puis les déconnexions. Si un même nom change de vidpid ou de productName, il produit une connexion (nouvel appareil) et une déconnexion (ancien).",
+      "params": {
+        "previous": {
+          "type": "table<string, table>",
+          "desc": "Instantané précédent."
+        },
+        "current": {
+          "type": "table<string, table>",
+          "desc": "Instantané actuel."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Événements de changement."
+        }
+      ],
+      "internal": false
+    },
+    "isTrackedDisplayTransition": {
+      "desc": "Vrai seulement pour les passages directs 'Window' vers 'Fullscreen' et 'Fullscreen' vers 'Window'.",
+      "params": {
+        "from": {
+          "type": "string",
+          "desc": "Ancien mode d'affichage."
+        },
+        "to": {
+          "type": "string",
+          "desc": "Nouveau mode d'affichage."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true si la transition est suivie."
+        }
+      ],
+      "internal": false
+    }
+  }
+}

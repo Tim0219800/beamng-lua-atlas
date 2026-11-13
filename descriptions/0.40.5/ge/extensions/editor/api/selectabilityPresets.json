@@ -1,0 +1,76 @@
+{
+  "path": "lua/ge/extensions/editor/api/selectabilityPresets.lua",
+  "module": "Gère des préréglages (presets) de « sélectionnabilité » des types d'objets dans l'éditeur du monde : quelles classes d'objets (TSStatic, Prefab, BeamNGVehicle…) peuvent être cliquées/sélectionnées. Préréglages : current, all, staticsAndProps (BeamNGVehicle, Prefab, PrefabInstance, TSStatic), default (masque capturé à la première initialisation). Il lit/écrit via editor.getObjectTypeSelectable / setObjectTypeSelectable et la préférence gizmos.visualization.selectable. Un outil peut prendre temporairement le contrôle du masque avec beginScope/endScope.",
+  "usage": "local sp = extensions.editor_api_selectabilityPresets\nlocal owner = {}\nif sp.beginScope(owner, 'staticsAndProps', 'Mon outil') then\n  -- ... travail ...\n  sp.endScope(owner)\nend",
+  "notes": [
+    "Le module utilise la globale editor (non déclarée localement) et worldEditorCppApi.getObjectClassNames() pour la liste des classes.",
+    "Le preset 'current' n'est pas applicable : applyPreset et beginScope renvoient false pour lui.",
+    "Pendant un scope, applyPreset avec un autre owner est refusé, markCurrent et syncActivePresetFromMask renvoient false, et les boutons de drawControls sont désactivés.",
+    "Le preset 'default' est le masque capturé au premier appel de initialize (donc l'état au moment de la première utilisation, pas une valeur fixe)."
+  ],
+  "functions": {
+    "initialize": {
+      "desc": "Capture le masque de sélectionnabilité actuel comme masque « default » s'il n'est pas déjà capturé. Appelé automatiquement par les autres fonctions.",
+      "params": {},
+      "returns": []
+    },
+    "applyPreset": {
+      "desc": "Applique un préréglage (all, staticsAndProps ou default) au masque de sélectionnabilité. Si persist est vrai et qu'aucun scope n'est actif, enregistre aussi le masque dans les préférences.",
+      "params": {
+        "presetId": {"type": "string", "desc": "'all', 'staticsAndProps' ou 'default' ('current' est refusé)."},
+        "persist": {"type": "boolean|nil", "desc": "Sauvegarder dans la préférence gizmos.visualization.selectable (et sur disque si saveVisualizationSettings est actif)."},
+        "owner": {"type": "table|nil", "desc": "Propriétaire du scope : doit correspondre au propriétaire courant si un scope est actif."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si appliqué, false si preset inconnu/'current' ou scope détenu par un autre."}]
+    },
+    "beginScope": {
+      "desc": "Prend temporairement le contrôle du masque : sauvegarde le masque et les préférences actuels puis applique le preset, sans le persister. Si le scope existe déjà, renvoie si l'owner est le même.",
+      "params": {
+        "owner": {"type": "table", "desc": "Table identifiant l'appelant (comparée par identité)."},
+        "presetId": {"type": "string", "desc": "'all', 'staticsAndProps' ou 'default'."},
+        "ownerLabel": {"type": "string|nil", "desc": "Nom affiché dans drawControls (« X is temporarily controlling this mask »)."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si le scope est actif pour cet owner."}]
+    },
+    "endScope": {
+      "desc": "Termine le scope : restaure le masque, les préférences et le preset actif sauvegardés, puis sauvegarde les préférences si saveVisualizationSettings est actif.",
+      "params": {"owner": {"type": "table", "desc": "Doit être le propriétaire du scope."}},
+      "returns": [{"type": "boolean", "desc": "true si restauré, false s'il n'y a pas de scope ou autre owner."}]
+    },
+    "getScopeOwner": {
+      "desc": "Renvoie le propriétaire du scope actif, ou nil.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "owner du scope."}]
+    },
+    "isScoped": {
+      "desc": "Indique si un scope temporaire est actif.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si scope actif."}]
+    },
+    "markCurrent": {
+      "desc": "Marque le preset actif comme 'current' (masque modifié à la main). Sans effet pendant un scope.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "false si un scope est actif, sinon true."}]
+    },
+    "syncActivePresetFromMask": {
+      "desc": "Compare le masque réel aux presets all, staticsAndProps, default et met activePresetId sur le premier qui correspond, sinon 'current'.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "false si un scope est actif, sinon true."}]
+    },
+    "getActivePresetId": {
+      "desc": "Renvoie l'id du preset actif.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "'current', 'all', 'staticsAndProps' ou 'default'."}]
+    },
+    "getActivePresetLabel": {
+      "desc": "Renvoie le libellé affichable du preset actif.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "Ex. 'Statics and Props'."}]
+    },
+    "drawControls": {
+      "desc": "Dessine en ImGui la ligne de boutons « Presets » : All, Statics and Props, Restore Default (avec persistance). Désactivés pendant un scope, avec un texte indiquant qui contrôle le masque. À appeler depuis une fenêtre d'éditeur.",
+      "params": {},
+      "returns": []
+    }
+  }
+}

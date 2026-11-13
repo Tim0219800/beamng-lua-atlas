@@ -1,0 +1,243 @@
+{
+  "path": "lua/ge/extensions/gameplay/missions/missionScreen.lua",
+  "module": "Pont entre le système de missions et l'interface (UI Vue) : prépare les données de l'écran de mission (missions au marqueur courant, mission en cours, tuiles de la liste, étoiles actives selon les réglages, options de démarrage, frais d'entrée, réparation, classe de véhicule exigée), lance ou arrête une mission depuis l'UI, gère la navigation vers une mission sur la grande carte et les sons de l'écran de fin. Presque toutes ses fonctions sont appelées par l'interface via des commandes Lua (par ex. gameplay_missions_missionScreen.startMissionById) ; les résultats repartent par guihooks.trigger.",
+  "usage": "-- lancer une mission comme le fait l'UI\nlocal settings = {{key='setupModuleTraffic', value=false}}\ngameplay_missions_missionScreen.startMissionById('gridmap_v2/timeTrial/x', settings, {})",
+  "notes": [
+    "Les réglages utilisateur venant de l'UI sont une liste {{key, value, ...}} ; startMissionById, startFromWithinMission les aplatit en table clé -> valeur avant de les passer au missionManager.",
+    "startMissionById refuse (erreur loguée) une mission non démarrable (gameplay_missions_unlocks.isMissionStartable) sauf si startingOptions.skipUnlockCheck est vrai ; startingOptions.startedFrom vaut « missionScreen » par défaut. Elle ne renvoie rien.",
+    "Les coûts de réparation au départ sont fixes : 1000 (argent) ou 1 bon (voucher).",
+    "Bug : dans formatMission, `m.missionTypeLabel or mission.missionType` utilise la globale `mission` (nil) au lieu de `m` ; si missionTypeLabel est absent, une erreur est levée.",
+    "Bug : dans openVehicleSelectorForMissionBySetting, `settingIdx = i` utilise une variable `i` non définie (la boucle utilise `_`) : settingIdx vaut toujours nil.",
+    "Bug : dans getMissionScreenData, le hook onAvailableMissionsSentToUi est émis avec `context`, une variable non définie à cet endroit (nil).",
+    "openAPMChallenges remplit openMenuWithCustomMissionList avec {mode='leagues'} puis y ajoute des ids : la table mélange clé « mode » et éléments séquentiels (seuls les éléments séquentiels sont lus ensuite).",
+    "enableDebug(true) remplace M.onUpdate par debugOnUpdate (fenêtre imgui « Mission Start Screen History » avec les 20 dernières mises en page) ; M.onUpdate est nil sinon.",
+    "Les champs savedLayouts et testLayout valent nil par défaut : savedLayouts est rempli par discoverLayouts, testLayout est un champ de test jamais assigné dans ce fichier.",
+    "activateSoundBlur appelle core_sounds.setAudioBlur(1 ou 0) ; le code de son 3D précédent est commenté. activateSound crée trois sources AudioGui (money, xp, vouchers) et ne les détruit jamais (tryDeleteSoundObject est vide)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : gameplay_missions_missions, gameplay_markerInteraction, gameplay_playmodeMarkers."},
+    "uiLayoutHistory": {"type": "table[]", "desc": "Les 20 dernières mises en page d'écran de mission reçues par onMissionScreenReady (avec recordedAt et recordedAtFormatted)."},
+    "savedLayouts": {"type": "table[]|nil", "desc": "Mises en page de test lues dans /gameplay/testing/*.json par discoverLayouts ; nil avant le premier appel."},
+    "testLayout": {"type": "table|nil", "desc": "Mise en page de test renvoyée par onRequestMissionScreenData quand le mode contient « test » ; nil par défaut."}
+  },
+  "functions": {
+    "getRepairCostForStartingRepairType": {
+      "desc": "Coût de la réparation proposée au départ d'une mission en carrière : « moneyRepair » -> {money=1000}, « voucherRepair » -> {vouchers=1}, sinon nil.",
+      "params": {"type": {"type": "string", "desc": "moneyRepair ou voucherRepair."}},
+      "returns": [{"type": "table<string, number>|nil", "desc": "Coût par attribut."}]
+    },
+    "resolvePlayerVehicleClass": {
+      "desc": "Classe de performance du véhicule du joueur sous forme {class={name, description, minPI}, performanceIndex} : véhicule d'inventaire actif en carrière, sinon véhicule joueur actuel via gameplay_vehiclePerformance.getClassFromVehId.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Données de classe, ou nil si indisponible."}]
+    },
+    "resolveDefaultMissionVehicleClass": {
+      "desc": "Classe du véhicule que la mission utiliserait par défaut (option présélectionnée dans ses réglages). Les règles de choix sont dans gameplay_vehiclePerformance.getDefaultMissionVehicleSpec ; pour un véhicule imposé (preset) la classe vient de getClassFromConfig, sinon on retombe sur celle du joueur.",
+      "params": {"m": {"type": "table", "desc": "Mission construite."}},
+      "returns": [{"type": "table|nil", "desc": "Données de classe."}]
+    },
+    "resolveRequirementState": {
+      "desc": "Compare la classe courante et la classe exigée par noms : « met » si identiques, « unmet » si différentes, « unknown » si l'une manque.",
+      "params": {
+        "currentClass": {"type": "table|nil", "desc": "Classe actuelle {class={name}}."},
+        "requiredClass": {"type": "table|nil", "desc": "Classe exigée."}
+      },
+      "returns": [{"type": "string", "desc": "met, unmet ou unknown."}]
+    },
+    "resolveMissionVehicleClassRequirement": {
+      "desc": "Renvoie la classe de véhicule exigée par la mission (missionTypeData.vehicleGroupByClassActive et vehicleGroupByClass), construite avec gameplay_vehiclePerformance.buildClassRequirement ; « auto » prend la classe du joueur (B par défaut), « userSetting » donne nil (choix dans les réglages).",
+      "params": {"m": {"type": "table", "desc": "Mission construite."}},
+      "returns": [{"type": "table|nil", "desc": "Exigence de classe, ou nil s'il n'y en a pas."}]
+    },
+    "formatMission": {
+      "desc": "Met une mission au format attendu par l'UI (id, nom traduit, icône, description, aperçu, libellé de type, étoiles, réglages, classe exigée, ligues en carrière, etc.).",
+      "params": {"m": {"type": "table", "desc": "Mission construite."}},
+      "returns": [{"type": "table", "desc": "Données formatées pour l'interface."}]
+    },
+    "getMissionsAtCurrentLocationFormatted": {
+      "desc": "Liste des missions du marqueur où se trouve le joueur, déjà formatées et triées par profondeur de déblocage ; nil si l'état de jeu n'a pas de marqueurs de playmode.",
+      "params": {},
+      "returns": [{"type": "table[]|nil", "desc": "Missions formatées."}]
+    },
+    "getMissionScreenData": {
+      "desc": "Données de l'écran de mission : si une mission est en cours, renvoie le contexte « ongoingMission » (mission en cours, options de récupération, boutons masqués pendant le tutoriel ou le rallye en boucle) ; sinon contexte « availableMissions » (missions du marqueur ou liste personnalisée, tuiles, mission/page présélectionnées, avertissement de livraison en cours) ou « empty ».",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Table avec le champ context et les données associées."}]
+    },
+    "requestStartingOptionsForUserSettings": {
+      "desc": "Calcule les options de démarrage pour les réglages donnés et les envoie à l'UI par guihooks « missionStartingOptionsForUserSettingsReady » ({missionId, options, entryFee}). Vérifie : mission démarrable, véhicule perso choisi, démarrage à pied impossible, frais d'entrée payables, classe de véhicule, et propose la réparation payante en carrière si le véhicule est endommagé.",
+      "params": {
+        "id": {"type": "string", "desc": "Id de la mission."},
+        "userSettings": {"type": "table[]", "desc": "Liste de réglages {key, value}."}
+      },
+      "returns": []
+    },
+    "getActiveStarsForUserSettings": {
+      "desc": "Détermine quelles étoiles sont actives, visibles et activées pour des réglages donnés (après recalcul des récompenses dynamiques, en ignorant les clés de ignoreUserSettingsKeyForActiveStars). Mémorise les réglages dans m._lastUserSettingsOutsideOfMission.",
+      "params": {
+        "id": {"type": "string", "desc": "Id de la mission."},
+        "userSettings": {"type": "table", "desc": "Liste {key, value} ou table à plat clé -> valeur."}
+      },
+      "returns": [{"type": "table", "desc": "Table contenant notamment starInfo par clé d'étoile ; table vide si la mission n'existe pas."}]
+    },
+    "getPauseMissionObjectivesData": {
+      "desc": "Données du menu pause (composant Vue MissionObjectives) : fusionne les étoiles débloquées avec les règles d'étoiles actives pour les réglages de la mission en cours.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{stars, message, showMessage} ; stars est vide s'il n'y a pas de mission ou d'étoiles."}]
+    },
+    "startMissionById": {
+      "desc": "Démarre une mission avec fondu (gameplay_missions_missionManager.startWithFade) après avoir aplati les réglages. Logue une erreur si l'id est invalide ou si la mission n'est pas démarrable.",
+      "params": {
+        "id": {"type": "string", "desc": "Id de la mission."},
+        "userSettings": {"type": "table[]|nil", "desc": "Liste {key, value}."},
+        "startingOptions": {"type": "table|nil", "desc": "Options (startedFrom, skipUnlockCheck, skipPartConditionSnapshot...)."}
+      },
+      "returns": []
+    },
+    "stopMissionById": {
+      "desc": "Demande l'abandon (avec fondu) de la mission d'id donné, ou de la mission de premier plan si id est nil.",
+      "params": {
+        "id": {"type": "string|nil", "desc": "Id de la mission."},
+        "force": {"type": "boolean|nil", "desc": "Transmis à attemptAbandonMissionWithFade (non utilisé là)."},
+        "abandonButtonPressed": {"type": "boolean|nil", "desc": "true si c'est le joueur qui abandonne."}
+      },
+      "returns": []
+    },
+    "abandonCurrentMission": {
+      "desc": "Abandonne la mission en cours comme si le joueur avait appuyé sur le bouton d'abandon.",
+      "params": {},
+      "returns": []
+    },
+    "startFromWithinMission": {
+      "desc": "Redémarre/reconfigure une mission depuis une mission en cours (aplatit les réglages puis appelle missionManager.startFromWithinMission).",
+      "params": {
+        "id": {"type": "string", "desc": "Id de la mission à démarrer."},
+        "settings": {"type": "table[]|nil", "desc": "Liste {key, value}."}
+      },
+      "returns": []
+    },
+    "changeUserSettings": {
+      "desc": "Appelée quand le joueur change un réglage : détermine la clé de progression correspondante (mission:getProgressKeyForUserSetting) et envoie à l'UI, par guihooks « missionProgressKeyChanged », {progressKey, translation, progress} avec les agrégats reformatés. Utilise la mission parente si missionIdForAttempt est défini. Malgré son nom, elle ne modifie aucun réglage.",
+      "params": {
+        "id": {"type": "string", "desc": "Id de la mission."},
+        "settings": {"type": "table[]", "desc": "Liste {key, value}."}
+      },
+      "returns": []
+    },
+    "setPreselectedPage": {
+      "desc": "Définit la page de l'écran de mission à ouvrir (utilisée une seule fois par getMissionScreenData).",
+      "params": {"page": {"type": "string|nil", "desc": "Nom de la page, par ex. « settings »."}},
+      "returns": []
+    },
+    "setPreselectedMissionId": {
+      "desc": "Définit la mission présélectionnée à l'ouverture de l'écran de mission.",
+      "params": {"mId": {"type": "string|nil", "desc": "Id de mission."}},
+      "returns": []
+    },
+    "activateSoundBlur": {
+      "desc": "Active ou désactive le flou audio (core_sounds.setAudioBlur) pendant l'écran de mission.",
+      "params": {"active": {"type": "boolean", "desc": "true pour activer."}},
+      "returns": []
+    },
+    "activateSound": {
+      "desc": "Joue (avec la hauteur donnée) ou arrête les sons de comptage de l'écran de fin (money, xp, vouchers).",
+      "params": {
+        "soundLabel": {"type": "string", "desc": "money, xp ou vouchers."},
+        "active": {"type": "boolean", "desc": "true pour jouer ; false arrête tous les sons de comptage."},
+        "pitch": {"type": "number|nil", "desc": "Paramètre « pitch » (1 par défaut)."}
+      },
+      "returns": []
+    },
+    "openAPMChallenges": {
+      "desc": "Ouvre l'écran des défis de la carrière (missions de départ « league » du niveau courant, filtrées par branche et compétence) via ui_router.navigate (« mission.details » par défaut).",
+      "params": {
+        "branch": {"type": "string|nil", "desc": "Branche ; « undefined » = nil."},
+        "skill": {"type": "string|nil", "desc": "Compétence ; « undefined » ou « all » = nil."},
+        "routeTarget": {"type": "string|nil", "desc": "Route cible de l'UI."},
+        "routeParams": {"type": "table|nil", "desc": "Paramètres de route (pathId = branch par défaut)."}
+      },
+      "returns": []
+    },
+    "navigateToMission": {
+      "desc": "Ouvre la grande carte centrée sur une mission (freeroam_bigMapMode.enterBigMap, instantané) ; la sélection du POI et la navigation sont faites ensuite par onBigMapActivated.",
+      "params": {
+        "id": {"type": "string", "desc": "Id de la mission."},
+        "routeTarget": {"type": "string|nil", "desc": "Route cible de l'UI."},
+        "routeParams": {"type": "table|nil", "desc": "Paramètres de route (autoSelectPoiId = id par défaut)."}
+      },
+      "returns": []
+    },
+    "onBigMapActivated": {
+      "desc": "Hook appelé à l'ouverture de la grande carte : si une navigation vers une mission est en attente (et vieille de plus de 3 s), sélectionne le POI et lance la navigation.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "openVehicleSelectorForMissionBySetting": {
+      "desc": "Ouvre le sélecteur de véhicule pour le réglage « véhicule personnalisé » d'une mission, puis revient à la page « settings » de la mission avec le modèle et la config choisis.",
+      "params": {
+        "mId": {"type": "string", "desc": "Id de la mission."},
+        "settingKey": {"type": "string", "desc": "Clé du réglage de sélection de véhicule."}
+      },
+      "returns": []
+    },
+    "getMissionTiles": {
+      "desc": "Construit les tuiles de la liste des missions du niveau courant (filtres, groupes par difficulté et « all », tris). Sans ids, ne garde que les missions visibles en freeroam ; avec ids, seulement celles-ci.",
+      "params": {"ids": {"type": "table<string, boolean>|nil", "desc": "Ensemble d'ids à inclure."}},
+      "returns": [{"type": "table", "desc": "Table dont tilesById, et les groupes triés (détail dans le code)."}]
+    },
+    "discoverLayouts": {
+      "desc": "Outil de debug : lit les mises en page JSON de /gameplay/testing dans M.savedLayouts.",
+      "params": {},
+      "returns": []
+    },
+    "enableDebug": {
+      "desc": "Outil de debug : active/désactive la fenêtre imgui de l'historique des mises en page (affecte M.onUpdate).",
+      "params": {"enable": {"type": "boolean", "desc": "true pour activer."}},
+      "returns": []
+    },
+    "debugOnUpdate": {
+      "desc": "Fenêtre imgui de debug, utilisée comme onUpdate quand enableDebug(true).",
+      "params": {"dt": {"type": "number", "desc": "Temps écoulé (s)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook à la décharge de l'extension ; ne fait rien (code commenté).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook à la fin du niveau ; ne fait rien (code commenté).",
+      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}},
+      "returns": [],
+      "internal": true
+    },
+    "onMissionScreenReady": {
+      "desc": "Hook envoyé quand l'écran de mission est affiché : mémorise la mise en page UI reçue (20 dernières).",
+      "params": {
+        "mode": {"type": "string", "desc": "Mode de l'écran."},
+        "uiLayout": {"type": "table", "desc": "Mise en page envoyée par l'UI (reçoit recordedAt)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onRequestMissionScreenData": {
+      "desc": "Test (« Todo: Remove ») : si le mode contient « test », renvoie à l'UI une copie de M.testLayout par guihooks « onRequestMissionScreenDataReady ».",
+      "params": {"mode": {"type": "string", "desc": "Mode demandé."}},
+      "returns": [],
+      "internal": true
+    },
+    "isAnyMissionActive": {
+      "desc": "Indique si une mission de premier plan est en cours.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si une mission est active."}]
+    },
+    "isMissionStartOrEndScreenActive": {
+      "desc": "Diffuse le hook onGetIsMissionStartOrEndScreenActive ; un module qui affiche l'écran de début/fin de mission y répond en ajoutant une valeur.",
+      "params": {},
+      "returns": [{"type": "any", "desc": "Première valeur ajoutée par un écouteur, ou false."}]
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/polyOffset.lua",
+  "module": "Décalage latéral d'une polyligne 2D dont chaque arête porte une normale sortante. Gère les coins par jonction en onglet (miter), en chanfrein ou par intersection de droites, avec une limite d'onglet pour les angles aigus. run construit un ruban fermé entre la ligne et son décalage.",
+  "notes": [
+    "Travaille en 2D (x, y) uniquement.",
+    "nrm doit contenir une normale par arête (#nrm >= #pts - 1) ; nrm[i] est la normale de l'arête entre pts[i] et pts[i+1].",
+    "Une polyligne fermée (premier et dernier point confondus, plus de 3 points) voit sa couture traitée comme un coin ordinaire.",
+    "MITER_LIMIT = 4 : un onglet ne dépasse jamais 4 fois la distance de décalage."
+  ],
+  "fields": {
+    "MITER_LIMIT": {"type": "number", "desc": "Facteur maximal (4.0) de longueur d'onglet par rapport à |d|."}
+  },
+  "functions": {
+    "lineIntersect": {
+      "desc": "Intersection de deux droites P + t*D et Q + s*E en 2D. Renvoie nil si elles sont parallèles (déterminant < 1e-9).",
+      "params": {
+        "px": {"type": "number", "desc": "x du point de la première droite."},
+        "py": {"type": "number", "desc": "y du point de la première droite."},
+        "dx": {"type": "number", "desc": "x de la direction de la première droite."},
+        "dy": {"type": "number", "desc": "y de la direction de la première droite."},
+        "qx": {"type": "number", "desc": "x du point de la seconde droite."},
+        "qy": {"type": "number", "desc": "y du point de la seconde droite."},
+        "ex": {"type": "number", "desc": "x de la direction de la seconde droite."},
+        "ey": {"type": "number", "desc": "y de la direction de la seconde droite."}
+      },
+      "returns": [{"type": "number|nil", "desc": "x de l'intersection."}, {"type": "number|nil", "desc": "y de l'intersection."}],
+      "internal": false
+    },
+    "mitrePt": {
+      "desc": "Point décalé d'un sommet entre deux normales d'arêtes : l'onglet, ramené le long de sa bissectrice quand l'angle est trop aigu (limite MITER_LIMIT * |d|).",
+      "params": {
+        "cx": {"type": "number", "desc": "x du sommet."},
+        "cy": {"type": "number", "desc": "y du sommet."},
+        "n1": {"type": "table", "desc": "Normale {x,y} de l'arête entrante."},
+        "n2": {"type": "table", "desc": "Normale {x,y} de l'arête sortante."},
+        "d": {"type": "number", "desc": "Distance de décalage signée."}
+      },
+      "returns": [{"type": "number", "desc": "x du point décalé."}, {"type": "number", "desc": "y du point décalé."}],
+      "internal": false
+    },
+    "polyline": {
+      "desc": "Décale une polyligne latéralement de la distance signée d. Le type de jonction aux coins est choisi par join : 'chamfer' (deux points), 'miter' (un point par sommet) ou autre/nil (intersection des arêtes décalées, repli en deux points si trop loin).",
+      "params": {
+        "pts": {"type": "table", "desc": "Liste de points {x,y}."},
+        "nrm": {"type": "table", "desc": "Normales {x,y} unitaires, une par arête."},
+        "d": {"type": "number", "desc": "Distance de décalage signée, en mètres."},
+        "join": {"type": "string|nil", "desc": "'chamfer', 'miter' ou nil pour la jonction par intersection."}
+      },
+      "returns": [{"type": "table", "desc": "Liste de points {x,y} décalés."}],
+      "internal": false
+    },
+    "run": {
+      "desc": "Construit un anneau fermé allant de la ligne à son décalage : la base est enfoncée de overlap dans la masse derrière (côté opposé), puis le bord extérieur est parcouru en sens inverse.",
+      "params": {
+        "pts": {"type": "table", "desc": "Liste de points {x,y}."},
+        "nrm": {"type": "table", "desc": "Normales par arête."},
+        "d": {"type": "number", "desc": "Distance de décalage signée."},
+        "join": {"type": "string|nil", "desc": "Type de jonction, voir polyline."},
+        "overlap": {"type": "number|nil", "desc": "Enfoncement de la base (défaut 0.05 m)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Anneau de points {x,y}, ou nil si moins de 2 points ou |d| < 1e-4."}],
+      "internal": false
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "path": "lua/ge/extensions/editor/sitesEditor.lua",
+  "module": "Éditeur des fichiers de 'sites' (*.sites.json) : lieux (locations), zones et places de parking (parkingSpots), avec leurs tags. Il ouvre la fenêtre 'Sites: Locations and Zones Editor' avec un menu File (New, Load, Save, Save as, Sites in Manager) et un menu Tools (tri par nom, numérotation des places, nommage par zone), et un onglet par sous-éditeur (editor/sitesEditor/*). Il crée le mode d'édition 'Edit Sites'. Un moddeur de cartes s'en sert pour placer des lieux et des places de parking.",
+  "notes": [
+    "Fichiers par défaut : dossier de la mission courante ou /gameplay/sites/, nom newSite.sites.json.",
+    "Menu Tools : 'Enumerate Parking Spots' suffixe les noms en doublon par un compteur (1 à 4 chiffres selon le nombre) ; 'Parkingspot Names by Zone Containment' renomme chaque place avec le nom de la dernière zone qui la contient (peut être long).",
+    "BUG : M.onExtensionLoaded = onExtensionLoaded référence une variable locale jamais définie, donc M.onExtensionLoaded vaut nil.",
+    "Fenêtres internes : Locations, Zones, Parking Spots, Location Tags, Zone Tags, Parking Spot Tags."
+  ],
+  "fields": {
+    "onExtensionLoaded": {"type": "nil", "desc": "Champ exporté mais toujours nil (variable locale non définie dans le fichier)."}
+  },
+  "functions": {
+    "saveSites": {"desc": "Sérialise un objet sites et l'écrit en JSON au chemin donné ; met à jour sites.dir et sites.name et mémorise le dossier comme dernier chemin.", "params": {"sites": {"type": "table", "desc": "Objet sites (gameplay/sites/sites)."}, "savePath": {"type": "string", "desc": "Chemin complet du fichier .sites.json."}}, "returns": [], "internal": false},
+    "loadSites": {"desc": "Charge un fichier de sites via gameplay_sites_sitesManager.loadSites, le rend courant, le transmet à tous les sous-éditeurs et réinitialise leur sélection.", "params": {"loadPath": {"type": "string", "desc": "Chemin du fichier .sites.json."}}, "returns": [{"type": "table", "desc": "Les sites courants (l'ancien objet si le chargement a échoué)."}], "internal": false},
+    "managerSites": {"desc": "Dessine le sous-menu 'Sites in Manager...' : liste des sites par niveau et ceux de /gameplay, avec Refresh, et charge celui choisi.", "params": {}, "returns": [], "internal": false},
+    "show": {"desc": "Efface la sélection d'objets, affiche la fenêtre de l'outil et active le mode d'édition sitesEditMode.", "params": {}, "returns": [], "internal": false},
+    "allowGizmo": {"desc": "Indique si le mode d'édition actif est 'Edit Sites' (donc si les gizmos et clics sont permis).", "params": {}, "returns": [{"type": "boolean", "desc": "true si le mode Edit Sites est actif."}], "internal": false},
+    "getCurrentSites": {"desc": "Renvoie l'objet sites en cours d'édition.", "params": {}, "returns": [{"type": "table", "desc": "Sites courants."}], "internal": false},
+    "getCurrentLocation": {"desc": "Renvoie le lieu sélectionné dans l'onglet Locations.", "params": {}, "returns": [{"type": "table|nil", "desc": "Lieu sélectionné ou nil."}], "internal": false},
+    "getCurrentZone": {"desc": "Renvoie la zone sélectionnée dans l'onglet Zones.", "params": {}, "returns": [{"type": "table|nil", "desc": "Zone sélectionnée ou nil."}], "internal": false},
+    "getCurrentParkingSpot": {"desc": "Renvoie la place de parking sélectionnée dans l'onglet Parking Spots.", "params": {}, "returns": [{"type": "table|nil", "desc": "Place sélectionnée ou nil."}], "internal": false},
+    "selectZone": {"desc": "Sélectionne une zone dans l'onglet Zones (utilisé par le clic dans le monde).", "params": {"elem": {"type": "integer", "desc": "Id de la zone (déduit du code)."}, "mode": {"type": "string|nil", "desc": "'toggle' pour basculer, nil pour remplacer la sélection."}}, "returns": [], "internal": false},
+    "onEditorGui": {"desc": "Hook appelé chaque frame de l'UI de l'éditeur : dessine la fenêtre, les menus, les onglets, met à jour les infos souris (rayon caméra) et dessine les sites en debug.", "params": {}, "returns": [], "internal": true},
+    "onEditorInitialized": {"desc": "Hook d'initialisation de l'éditeur : enregistre la fenêtre, le mode d'édition sitesEditMode, l'entrée de menu (groupe Gameplay) et crée les six sous-éditeurs.", "params": {}, "returns": [], "internal": true},
+    "onEditorToolWindowHide": {"desc": "Hook : si la fenêtre de l'outil est masquée, revient au mode objectSelect.", "params": {"windowName": {"type": "string", "desc": "Nom de la fenêtre masquée."}}, "returns": [], "internal": true},
+    "onEditorToolWindowGotFocus": {"desc": "Hook : si la fenêtre de l'outil prend le focus, active le mode d'édition sitesEditMode.", "params": {"windowName": {"type": "string", "desc": "Nom de la fenêtre."}}, "returns": [], "internal": true},
+    "onSerialize": {"desc": "Hook de sérialisation (rechargement Lua) : renvoie {path = sérialisation des sites courants}.", "params": {}, "returns": [{"type": "table", "desc": "Données à restaurer."}], "internal": true},
+    "onDeserialized": {"desc": "Hook de restauration après rechargement Lua : réinjecte data.path dans les sites courants.", "params": {"data": {"type": "table", "desc": "Données renvoyées par onSerialize."}}, "returns": [], "internal": true}
+  }
+}

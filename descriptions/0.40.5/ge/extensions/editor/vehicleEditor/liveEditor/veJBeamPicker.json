@@ -1,0 +1,47 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/veJBeamPicker.lua",
+  "module": "Fenêtre 'JBeam Picker' du Vehicle Editor live : permet de choisir des nœuds et des poutres du véhicule (à la souris, ou par saisie d'ID/nom avec suggestions) et d'en suivre des données en direct. Onglet 'Nodes' / 'Beams' : arbre des éléments choisis, choix des données à afficher (nœud : vitesse, vitesse relative, force ; poutre : longueur, vitesse, force, stress, damping), filtre par type de poutre (NORMALTYPE, BEAM_ANISOTROPIC, BEAM_BOUNDED, BEAM_PRESSURED, BEAM_LBEAM, BEAM_BROKEN, BEAM_HYDRO, BEAM_SUPPORT) et graphes (1000 points). Le picking utilise les modes debug Nœud/Poutre du jeu (Ctrl+M / Ctrl+B).",
+  "notes": [
+    "Les valeurs de type de poutre (0 à 7) correspondent aux constantes du moteur C++ et ne doivent pas être changées.",
+    "Les données dynamiques (force, vitesse, stress…) sont demandées au VM véhicule via be:queueObjectFastLua et renvoyées dans les tables M.nodeDataFromVELua[id][nom] et M.beamDataFromVELua[id][nom] par obj:queueGameEngineLua ; elles arrivent donc avec un frame de retard et valent 0 avant la première réponse.",
+    "Les graphes avancent d'un échantillon par frame seulement quand la simulation tourne (be:getEnabled()).",
+    "Unités : m, m/s, N."
+  ],
+  "fields": {
+    "menuEntry": {"type": "string", "desc": "'JBeam Picker'."},
+    "nodeDataFromVELua": {"type": "table<integer, table<string, any>>", "desc": "Données de nœuds renvoyées par le VM véhicule, indexées par ID de nœud puis nom de donnée (ex. force)."},
+    "beamDataFromVELua": {"type": "table<integer, table<string, any>>", "desc": "Données de poutres renvoyées par le VM véhicule, indexées par ID de poutre puis nom de donnée (speed, force, stress, damping)."}
+  },
+  "functions": {
+    "requestDrawnNodesCallback": {
+      "desc": "Callback de la demande de nœuds dessinés : mémorise la liste des nœuds disponibles pour le picking et leur échelle d'affichage (rayon de sélection = 2 x échelle).",
+      "params": {
+        "nodes": {"type": "table", "desc": "Nœuds disponibles pour le picking."},
+        "scale": {"type": "number", "desc": "Échelle de dessin des nœuds."}
+      },
+      "internal": true
+    },
+    "requestDrawnBeamsCallback": {
+      "desc": "Callback de la demande de poutres dessinées : mémorise les poutres disponibles et leur échelle (rayon de sélection = 5 x échelle).",
+      "params": {
+        "beams": {"type": "table", "desc": "Poutres disponibles pour le picking."},
+        "scale": {"type": "number", "desc": "Échelle de dessin des poutres."}
+      },
+      "internal": true
+    },
+    "onVehicleEditorRenderJBeams": {
+      "desc": "Hook de rendu émis par editor_veMain : dessine les éléments choisis et exécute le picking de nœuds ou de poutres selon l'état.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+      },
+      "internal": true
+    },
+    "onUpdate": {"desc": "Appelé chaque frame : dessine la fenêtre à onglets Nodes/Beams et avance l'offset des graphes.", "params": {"dt": {"type": "number", "desc": "Delta temps."}}, "internal": true},
+    "open": {"desc": "Ouvre la fenêtre.", "internal": false},
+    "onEditorInitialized": {"desc": "Appelé à l'initialisation de l'éditeur : crée les cases à cocher de types de poutres.", "internal": true},
+    "onSerialize": {"desc": "Renvoie {windowOpen}.", "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}], "internal": true},
+    "onDeserialized": {"desc": "Restaure l'état d'ouverture.", "params": {"data": {"type": "table", "desc": "Table de onSerialize."}}, "internal": true}
+  }
+}

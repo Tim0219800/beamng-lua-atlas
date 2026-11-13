@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyClock.lua",
+  "module": "Nœud flowgraph « Rally Clock » (catégorie repeat_instant, tag rally). Fournit l'heure courante de l'époque rally (currentEpochTime, secondes, rm:getEpochTime()) et l'heure planifiée d'un évènement (scheduledEventTime, rm:getScheduledEventTime(eventName)) pour le nom d'évènement donné (nom de position, ex. « SS_start_line »). L'heure planifiée est mise en cache et recalculée seulement quand eventName ou la mission courante change.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise le cache (nom d'évènement, id de mission, heure planifiée) à nil.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
+        "_executionStarted": {"desc": "Vide le cache au démarrage du graphe.", "internal": true},
+        "work": {"desc": "Chaque frame : met à jour currentEpochTime et scheduledEventTime (avec cache).", "internal": true}
+      }
+    }
+  }
+}

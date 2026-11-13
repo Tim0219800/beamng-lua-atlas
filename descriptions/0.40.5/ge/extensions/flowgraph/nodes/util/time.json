@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/time.lua",
+  "module": "Nœud « Time » (catégorie provider, sans flow). Fournit le temps courant. Sorties : time (os.clockhp(), horloge haute précision), dtReal (temps réel entre frames en s, ignore la pause), dtSim (temps simulé en s, 0 en pause, réduit au ralenti).",
+  "notes": [
+    "La description du pin time dit « Time since start of project » mais la valeur est l'horloge absolue os.clockhp(), pas le temps depuis le démarrage."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Ne fait rien.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Écrit os.clockhp() dans time et mgr.dtReal / mgr.dtSim dans les deux autres sorties.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Corps vide.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "Constructeur de nœud."
+            },
+            "style": {
+              "type": "table",
+              "desc": "Style du nœud."
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

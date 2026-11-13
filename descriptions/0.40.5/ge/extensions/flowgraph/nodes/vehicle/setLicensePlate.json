@@ -1,0 +1,26 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/setLicensePlate.lua",
+  "module": "Nœud « Set License Plate » (comportement `once`). Change le texte de plaque d'un véhicule avec `core_vehicles.setPlateText(text, vehId)`. Pins d'entrée : `flow`, `reset` (impulsions), `vehId` (défaut : joueur), `text` (string). Sortie : `flow` (impulsion). Ne s'exécute qu'une fois jusqu'à un `reset`.",
+  "notes": [
+    "Un texte vide (`''`) ne change rien, mais le flux de sortie est quand même émis."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Remet `ready = true`.",
+          "internal": true
+        },
+        "init": {
+          "desc": "Constructeur ; `ready = true` (paramètres `mgr, ...` ignorés).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Gère `reset`, puis, si `ready` et `flow`, applique le texte et émet le flux de sortie une seule fois.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

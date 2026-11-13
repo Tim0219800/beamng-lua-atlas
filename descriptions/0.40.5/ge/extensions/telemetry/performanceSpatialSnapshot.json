@@ -1,0 +1,43 @@
+{
+  "path": "lua/ge/extensions/telemetry/performanceSpatialSnapshot.lua",
+  "module": "Module utilitaire (chargé par require) qui construit l'instantané de performance envoyé par le tracker performanceSpatial : FPS (instantané, moyenne, min, p99), temps de frame, CPU/GPU, cause du plafond de FPS, position et réglages de la caméra, état du monde (échelle de temps, nombre de véhicules, écran partagé, trafic) et, sur option, répartition du temps par phase de frame et statistiques de rendu. Les valeurs sont arrondies.",
+  "notes": [
+    "framePhases n'est ajouté que si options.renderTimingTrackingEnabled ; renderStats que si options.sceneComplexityTrackingEnabled.",
+    "Les phases viennent de Engine.Debug.getLastPerformanceMetrics ; gpuWaitMs retombe sur la phase FramePresent s'il est absent.",
+    "Position de la caméra arrondie à 0,1 m, angles à 0,1 degré."
+  ],
+  "functions": {
+    "capture": {
+      "desc": "Renvoie une table d'événement : level, fpsInstant, fpsAvg, fpsMin, fpsP99, frameMs, cpuMs, gpuMs, gpuWaitMs, limitedBy, activeGpu, position, camera, textureStreaming, worldReadyState, simTimeScale, vehicleCount, splitScreenPlayers, trafficCount, et facultativement framePhases et renderStats.",
+      "params": {
+        "level": {
+          "type": "string",
+          "desc": "Nom du niveau courant."
+        },
+        "fpsInstant": {
+          "type": "number",
+          "desc": "FPS instantanés."
+        },
+        "frameMs": {
+          "type": "number",
+          "desc": "Durée de frame en ms."
+        },
+        "activeGpu": {
+          "type": "any",
+          "desc": "Description du GPU actif, recopiée telle quelle."
+        },
+        "options": {
+          "type": "table|nil",
+          "desc": "renderTimingTrackingEnabled, sceneComplexityTrackingEnabled."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Événement de performance."
+        }
+      ],
+      "internal": false
+    }
+  }
+}

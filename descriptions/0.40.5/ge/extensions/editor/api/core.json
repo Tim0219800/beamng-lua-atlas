@@ -1,0 +1,82 @@
+{
+  "path": "lua/ge/extensions/editor/api/core.lua",
+  "module": "Noyau de l'objet editor du World Editor : initialize(editor) y installe les constantes (FloatMin/Max, IntMin/Max, AuxControl_*), l'état (history, levelPath, dirty, editModes, selection) et les fonctions de base : création/ouverture/sauvegarde de niveaux, état « modifié » (dirty) du niveau et des outils, annuler/refaire, types de visualisation, visibilité/sélectionnabilité des classes d'objets, modes d'édition et actions copier/coller/supprimer routées vers le mode courant. Un moddeur d'outil d'éditeur s'en sert via editor.xxx.",
+  "usage": "editor.registerVisualizationType({name = \"$Lua.myFlag\", displayName = \"Mon overlay\", type = editor.varTypes.LuaVar})\neditor.selectEditMode({displayName = \"Mon mode\", onActivate = function() end, onDeactivate = function() end})\neditor.setDirty()",
+  "notes": [
+    "Le module n'exporte que initialize ; tout est posé sur l'objet editor.",
+    "Les actions cut/copy/paste/duplicate/selectAll/deselect/deleteSelection appellent d'abord le callback du mode d'édition courant (onCut, onCopy…), puis émettent le hook global correspondant (onEditorCut…).",
+    "Types de visualisation (editor.varTypes) : ConVar=1 (VariableRegistry), LuaVar=2 (variable globale Lua évaluée par loadstring), Custom=3 (getter/setter), Setting=4 (settings). Un callback optionnel de typeData est appelé après setVisualizationType.",
+    "saveLevel écrit d'abord dans <level>/__main puis remplace <level>/main ; en cas d'échec de sérialisation, un log FATAL est émis mais les hooks onEditorAfterSaveLevel et resetDirty s'exécutent quand même.",
+    "copyDirectory/copyLevelFolder utilisent gsub avec les chemins comme motifs Lua (les caractères spéciaux comme '-' ou '.' ne sont pas échappés).",
+    "checkDirtyAndSave : l'expression « editor.dirty or anyToolDirty() and editor.initialized » est évaluée avec la priorité Lua (and avant or) : editor.initialized ne conditionne que anyToolDirty."
+  ],
+  "functions": {
+    "initialize": {
+      "desc": "Installe constantes, variables d'état et fonctions sur l'objet editor.",
+      "params": {"editorInstance": {"type": "table", "desc": "Objet editor"}},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {
+    "editor": {
+      "desc": "Fonctions ajoutées à l'objet editor par initialize.",
+      "functions": {
+        "copyDirectory": {"desc": "Copie récursivement les fichiers de srcPath vers dstPath (FS:findFiles + FS:copyFile) et le logue.", "params": {"srcPath": {"type": "string", "desc": "Dossier source"}, "dstPath": {"type": "string", "desc": "Dossier destination"}}, "returns": []},
+        "copyLevelFolder": {"desc": "Copie un dossier de niveau (défaut levels/template/) vers un nouveau, remplace le nom de l'ancien niveau par le nouveau dans les .json/.cs et renomme les fichiers contenant l'ancien nom. Peut être long.", "params": {"srcPath": {"type": "string|nil", "desc": "Niveau source, levels/template/ si vide"}, "dstPath": {"type": "string", "desc": "Niveau destination"}}, "returns": []},
+        "newLevel": {"desc": "Remet l'éditeur à zéro pour un nouveau niveau : hooks onEditorExitLevel puis onEditorBeforeNewLevel, vide l'historique, levelPath = \"\", compteur d'autosave à 1, puis onEditorAfterNewLevel et resetDirty. Ne détruit pas le scenetree.", "params": {}, "returns": []},
+        "openLevel": {"desc": "Ouvre un niveau existant : désactive les signaux Sim, hook onEditorBeforeOpenLevel, newLevel(), shutdown de l'éditeur puis core_levels.startLevel(path), puis hook onEditorAfterOpenLevel. Les modifications non sauvées sont perdues.", "params": {"path": {"type": "string", "desc": "Dossier du niveau, relatif à la racine du jeu"}}, "returns": []},
+        "saveLevel": {"desc": "Sauvegarde le MissionGroup dans <levelPath>main (via __main), avec hooks onEditorBeforeSaveLevel/onEditorAfterSaveLevel, resetDirty, notification, et copie de sauvegarde si la préférence files.autoSave.saveBackupCopy est active (hooks onEditorBefore/AfterSaveLevelBackup).", "params": {}, "returns": []},
+        "saveLevelAs": {"desc": "Change editor.levelPath et le nom de mission (info.json) puis sauvegarde le niveau à cet emplacement.", "params": {"levelPath": {"type": "string", "desc": "Dossier cible"}}, "returns": []},
+        "autoSaveLevel": {"desc": "Sauvegarde une copie du niveau dans /temp/level_autosaves/<niveau>/<compteur>/ en tournant sur files.autoSave.maxAutoSaveCountPerSession, puis restaure levelPath et l'état dirty.", "params": {}, "returns": []},
+        "saveDirtyToolsUi": {"desc": "Dessine la fenêtre modale « Save Tool Windows Data » listant les outils modifiés (Save All, Save Selected, Don't Save Any, Cancel).", "params": {}, "returns": [], "internal": true},
+        "setDirty": {"desc": "Marque le niveau comme modifié et enregistre l'info d'arrêt non propre (préférences general.internal.cleanExit/lastLevel).", "params": {}, "returns": []},
+        "resetDirty": {"desc": "Marque le niveau comme propre, efface le flag de scène du moteur et remet cleanExit à true.", "params": {}, "returns": []},
+        "setDirtyTool": {"desc": "Déclare un outil comme ayant des données non sauvées, avec sa fonction de sauvegarde.", "params": {"name": {"type": "string", "desc": "Nom de l'outil"}, "saveFn": {"type": "function", "desc": "Fonction appelée pour sauver les données"}}, "returns": []},
+        "resetDirtyTool": {"desc": "Retire un outil de la liste des outils modifiés.", "params": {"name": {"type": "string", "desc": "Nom de l'outil"}}, "returns": []},
+        "resetAllDirtyTools": {"desc": "Vide la liste des outils modifiés et remet cleanExit à true.", "params": {}, "returns": []},
+        "anyToolDirty": {"desc": "Si des outils sont modifiés, ouvre la fenêtre modale saveDirtyTools et renvoie true.", "params": {}, "returns": [{"type": "boolean", "desc": "true si au moins un outil est modifié"}]},
+        "checkDirtyAndSave": {"desc": "Si le niveau/les outils sont modifiés, affiche une boîte de dialogue : Oui sauvegarde, Annuler appelle Engine.cancelShutdown(), Non remet tout à propre.", "params": {"noCancelButton": {"type": "boolean|nil", "desc": "Si vrai, pas de bouton Annuler"}}, "returns": []},
+        "quitEditor": {"desc": "Cache et désactive l'éditeur.", "params": {}, "returns": []},
+        "quitGame": {"desc": "Quitte le jeu (quit()).", "params": {}, "returns": []},
+        "deleteObject": {"desc": "Supprime un objet par id s'il existe et n'est pas verrouillé, puis marque l'éditeur modifié.", "params": {"objectId": {"type": "integer", "desc": "ID de l'objet"}}, "returns": [{"type": "boolean", "desc": "true si supprimé"}]},
+        "undo": {"desc": "Annule la ou les dernières opérations de l'historique courant.", "params": {"steps": {"type": "integer|nil", "desc": "Nombre d'étapes, 1 par défaut"}}, "returns": []},
+        "redo": {"desc": "Refait la ou les dernières opérations annulées.", "params": {"steps": {"type": "integer|nil", "desc": "Nombre d'étapes, 1 par défaut"}}, "returns": []},
+        "setUndoHistory": {"desc": "Change l'instance d'historique utilisée (utile pour un undo par fenêtre/panneau). nil rétablit l'historique par défaut.", "params": {"history": {"type": "table|nil", "desc": "Instance d'historique"}}, "returns": []},
+        "clearUndoHistory": {"desc": "Vide l'historique d'annulation et de refaire ; les actions passées deviennent irréversibles.", "params": {}, "returns": []},
+        "setVisualizationType": {"desc": "Active/désactive un type de visualisation enregistré (selon son type ConVar/LuaVar/Custom/Setting) puis appelle son callback éventuel. Ignore un nom inconnu.", "params": {"name": {"type": "string", "desc": "Nom du type"}, "on": {"type": "boolean", "desc": "true pour activer"}}, "returns": []},
+        "getVisualizationType": {"desc": "Valeur courante d'un type de visualisation ; nil si le nom est inconnu.", "params": {"name": {"type": "string", "desc": "Nom du type"}}, "returns": [{"type": "boolean|nil", "desc": "true si actif"}]},
+        "getVisualizationTypes": {"desc": "Liste des types de visualisation, triée par displayName si besoin.", "params": {}, "returns": [{"type": "table[]", "desc": "Types enregistrés"}]},
+        "registerVisualizationType": {"desc": "Enregistre un type de visualisation personnalisé.", "params": {"typeData": {"type": "table", "desc": "name, displayName, type (editor.varTypes), getter/setter si Custom, callback optionnel"}}, "returns": []},
+        "clearVisualizationTypes": {"desc": "Supprime tous les types de visualisation enregistrés.", "params": {}, "returns": []},
+        "setObjectTypeVisible": {"desc": "Rend visible/invisible une classe d'objets C++ dans l'éditeur.", "params": {"typeName": {"type": "string", "desc": "Nom de la classe"}, "visible": {"type": "boolean", "desc": "Visibilité"}}, "returns": []},
+        "getObjectTypeVisible": {"desc": "Indique si une classe d'objets est rendue.", "params": {"typeName": {"type": "string", "desc": "Nom de la classe"}}, "returns": [{"type": "boolean", "desc": "true si visible"}]},
+        "setObjectTypeSelectable": {"desc": "Autorise ou interdit la sélection d'une classe d'objets.", "params": {"typeName": {"type": "string", "desc": "Nom de la classe"}, "selectable": {"type": "boolean", "desc": "Sélectionnable"}}, "returns": []},
+        "getObjectTypeSelectable": {"desc": "Indique si une classe d'objets est sélectionnable.", "params": {"typeName": {"type": "string", "desc": "Nom de la classe"}}, "returns": [{"type": "boolean", "desc": "true si sélectionnable"}]},
+        "selectEditMode": {
+          "desc": "Active un mode d'édition : désactive l'ancien (onDeactivate, hook onEditorEditModeDeactivated, pop de son actionMap), active le nouveau (onActivate, hook onEditorEditModeActivated, push de son actionMap en priorité maximale) puis émet onEditorEditModeChanged(old, new). Champs du mode : displayName, onActivate, onDeactivate, onUpdate, onCut, onCopy, onPaste, onDuplicate, onSelectAll, onDeselect, onDeleteSelection, onToolbar, actionMap, icon, iconTooltip, hideObjectIcons.",
+          "params": {"newEditMode": {"type": "table|nil", "desc": "Table du mode d'édition (nil pour aucun)"}},
+          "returns": []
+        },
+        "getCurrentEditModeName": {"desc": "Clé du mode courant dans editor.editModes, \"\" si aucun.", "params": {}, "returns": [{"type": "string", "desc": "Nom"}]},
+        "cut": {"desc": "Couper : appelle onCut du mode d'édition courant puis le hook onEditorCut.", "params": {}, "returns": []},
+        "copy": {"desc": "Copier : appelle onCopy du mode courant puis le hook onEditorCopy.", "params": {}, "returns": []},
+        "paste": {"desc": "Coller : appelle onPaste du mode courant puis le hook onEditorPaste.", "params": {}, "returns": []},
+        "duplicate": {"desc": "Dupliquer : appelle onDuplicate du mode courant puis le hook onEditorDuplicate.", "params": {}, "returns": []},
+        "selectAll": {"desc": "Tout sélectionner : appelle onSelectAll du mode courant puis le hook onEditorSelectAll.", "params": {}, "returns": []},
+        "deselect": {"desc": "Désélectionner : appelle onDeselect du mode courant puis le hook onEditorDeselect.", "params": {}, "returns": []},
+        "deleteSelection": {"desc": "Supprimer la sélection : appelle onDeleteSelection du mode courant, émet onEditorDeleteSelection et vide editor.selection.", "params": {}, "returns": []},
+        "getLevelName": {"desc": "Nom du niveau courant (dernier dossier du chemin de mission).", "params": {}, "returns": [{"type": "string|nil", "desc": "Nom du niveau"}]},
+        "getLevelPath": {"desc": "Chemin du dossier du niveau courant, \"\" si inconnu.", "params": {}, "returns": [{"type": "string", "desc": "Chemin"}]},
+        "doNewLevel": {"desc": "Pour l'UI : propose de sauver, ouvre un sélecteur de dossier sous /levels, copie le niveau template vers le nouveau dossier, puis newLevel() et openLevel().", "params": {}, "returns": []},
+        "doOpenLevel": {"desc": "Pour l'UI : propose de sauver, ouvre un sélecteur de dossier sous /levels et ouvre le niveau choisi.", "params": {}, "returns": []},
+        "doSaveLevel": {"desc": "Pour l'UI : sauvegarde le niveau, ou appelle doSaveLevelAs si levelPath est vide.", "params": {}, "returns": []},
+        "doSaveLevelAs": {"desc": "Pour l'UI : sélecteur de dossier, copie le dossier du niveau vers le nouveau puis saveLevelAs. Refuse /levels directement (il faut un sous-dossier).", "params": {}, "returns": []},
+        "enableHeadless": {"desc": "Active/désactive le mode headless d'un outil : sauvegarde et charge les dispositions de fenêtres, renseigne editor.headless/headlessToolName et émet onEditorHeadlessChange(enabled, toolName).", "params": {"enabled": {"type": "boolean", "desc": "Activer ou non"}, "toolName": {"type": "string", "desc": "Nom de l'outil"}}, "returns": []},
+        "isHeadlessToolActive": {"desc": "Indique si cet outil est actuellement en mode headless.", "params": {"toolName": {"type": "string", "desc": "Nom de l'outil"}}, "returns": [{"type": "boolean", "desc": "true si actif"}]},
+        "muteAudio": {"desc": "Coupe le canal audio maître (mémorise le volume) ou le rétablit.", "params": {"muteIt": {"type": "boolean|nil", "desc": "true ou nil pour couper, false pour rétablir"}}, "returns": []},
+        "linkifyPath": {"desc": "Crée dans le dossier du niveau un fichier .link (JSON {path = targetPath}) qui pointe vers targetPath, et renvoie le chemin du lien (sans .link). Renvoie targetPath tel quel si aucun niveau n'est ouvert, \"\" si targetPath est vide.", "params": {"targetPath": {"type": "string", "desc": "Chemin de la ressource cible"}}, "returns": [{"type": "string", "desc": "Chemin dans le niveau"}]}
+      }
+    }
+  }
+}

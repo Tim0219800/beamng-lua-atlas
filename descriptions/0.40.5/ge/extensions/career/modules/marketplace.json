@@ -1,0 +1,159 @@
+{
+  "path": "lua/ge/extensions/career/modules/marketplace.lua",
+  "module": "Place de marché de véhicules de la carrière, dans deux sens. (1) Le joueur met en vente des véhicules de son inventaire (listVehicles) ; des acheteurs virtuels génèrent des offres au fil du temps (offre de base = valeur de marché, avec bruit et plafonds selon le rapport prix demandé / valeur de marché), qui expirent après environ 500 s. Le joueur accepte, refuse ou négocie. (2) Le joueur négocie le prix d'un véhicule en vente chez un vendeur (concession ou particulier). Le moteur de négociation simule la patience, les contre-offres et les insultes d'une personnalité (fichier levels/west_coast_usa/facilities/negotiationPersonalities.json) et informe l'UI via guihooks negotiationData. Sauvegarde dans career/marketplace.json.",
+  "usage": "career_modules_marketplace.listVehicles({{inventoryId = 3}})\nlocal listings = career_modules_marketplace.getListings()",
+  "notes": [
+    "Nommage trompeur : startNegotiateBuyingOffer = le joueur VEND (offre d'un acheteur, amISelling = true) ; startNegotiateSellingOffer = le joueur ACHÈTE chez un vendeur (amISelling = false).",
+    "Constantes : intervalle moyen entre offres 95 s (multiplié par offerTimeMultiplier selon le prix demandé : 1 entre 0,98 et 1,1 de la valeur de marché, jusqu'à 0,4 si moins cher, jusqu'à 4 si plus cher), durée de vie d'une offre 500 s ± 50 %, maximum de 10 offres expirées conservées par annonce.",
+    "Une annonce est désactivée dans getListings si la valeur actuelle du véhicule tombe sous 95 % de sa valeur de marché à la mise en vente (valueLossLimit).",
+    "Les offres sont arrondies au multiple de 50 le plus proche, minimum 50.",
+    "Générer des offres s'exécute toutes les 10 s de temps de simulation dans onUpdate, sauf si la liste est vide ou si le menu d'offres est ouvert (les offres expirées sont alors purgées à l'ouverture/fermeture, via menuOpened).",
+    "Dans la négociation, le statut passe par initial, thinking, typing puis accepted, refused, counterOffer, counterOfferLastChance ou failed. Un prix proposé n'est valide que s'il améliore la position de l'adversaire sans dépasser l'offre précédente du joueur (isOfferAllowed).",
+    "Le champ negotiationState.opponentName appelle _tr(opponentPersonality.name) : plante si getNegotiationState est appelé sans négociation préalable (opponentPersonality nil).",
+    "generatePersonality lit un fichier propre au niveau west_coast_usa ; renvoie nil si le fichier est absent. generateOffer(inventoryId) sans id choisit une annonce au hasard.",
+    "Une fenêtre de debug ImGui (Negotiation Buying) est affichée hors build shipping pendant une négociation ; ses boutons ne font que couper negotiationActive."
+  ],
+  "fields": {
+    "firstNames": {"type": "string[]", "desc": "Liste de prénoms pour générer les noms d'acheteurs/vendeurs particuliers."},
+    "firstNameCount": {"type": "integer", "desc": "Nombre de prénoms (#firstNames)."},
+    "initialProbabilities": {"type": "table<string, number>", "desc": "Fréquence relative de chaque initiale (A-Z) pour les noms de famille."},
+    "initials": {"type": "string[]", "desc": "Liste d'initiales pondérée par initialProbabilities (math.ceil(p*100) copies chacune)."},
+    "initialCount": {"type": "integer", "desc": "Nombre d'entrées de initials."},
+    "privateSellerQuotes": {"type": "string[]", "desc": "50 clés de traduction de phrases de vendeurs particuliers (ui.career.negotiation.privateSellerQuotes.01..50)."},
+    "dealershipBuyerQuotes": {"type": "string[]", "desc": "25 clés de traduction de phrases d'acheteurs de concession (ui.career.negotiation.dealershipBuyerQuotes.01..25)."}
+  },
+  "functions": {
+    "findVehicleListing": {
+      "desc": "Cherche l'annonce d'un véhicule de l'inventaire.",
+      "params": {"inventoryId": {"type": "integer", "desc": "Id d'inventaire."}},
+      "returns": [{"type": "table|nil", "desc": "Annonce (id, value, marketValue, offers...)."}],
+      "internal": false
+    },
+    "listVehicles": {
+      "desc": "Met en vente des véhicules (ignore les véhicules inconnus ou déjà en vente). Prix = entry.value ou valeur calculée ; fixe marketRatio et offerTimeMultiplier.",
+      "params": {"vehicles": {"type": "{inventoryId: integer, value: number|nil}[]", "desc": "Véhicules à lister, avec prix demandé facultatif."}},
+      "internal": false
+    },
+    "removeVehicleListing": {
+      "desc": "Retire l'annonce du véhicule.",
+      "params": {"inventoryId": {"type": "integer", "desc": "Id d'inventaire."}},
+      "internal": false
+    },
+    "getListings": {
+      "desc": "Renvoie une copie des annonces pour l'UI : nom traduit, annonce désactivée si la valeur a trop baissé, offres expirées marquées disabled, offres triées (actives d'abord, les plus récentes en premier).",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Annonces."}],
+      "internal": false
+    },
+    "generatePersonality": {
+      "desc": "Tire au hasard un archétype de négociation (acheteur ou vendeur) dans negotiationPersonalities.json et construit la personnalité : nom, patience, seuils d'acceptation/insulte, multiplicateur de prix (1 - m pour un acheteur, 1 + m pour un vendeur), délais, citations.",
+      "params": {
+        "buyer": {"type": "boolean|nil", "desc": "true pour un acheteur."},
+        "_archetypes": {"type": "string[]|nil", "desc": "Liste d'archétypes imposée (sinon randomBuyerArchetypes / randomSellerArchetypes)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Personnalité, nil si fichier absent ou liste vide."}],
+      "internal": false
+    },
+    "generateOffer": {
+      "desc": "Crée une offre d'un acheteur aléatoire pour une annonce (celle donnée ou une annonce au hasard) : valeur = valeur de marché * multiplicateur * bruit, plafonnée selon le rapport de prix, arrondie à 50.",
+      "params": {"inventoryId": {"type": "integer|nil", "desc": "Id d'inventaire de l'annonce."}},
+      "returns": [{"type": "table", "desc": "Offre {id, timestamp, value, ttl, negotiationPossible, buyerPersonality}."}],
+      "internal": false
+    },
+    "acceptOffer": {
+      "desc": "Accepte une offre : la retire de l'annonce et vend le véhicule à la valeur de l'offre (career_modules_inventory.sellVehicle).",
+      "params": {
+        "inventoryId": {"type": "integer", "desc": "Id d'inventaire."},
+        "offerId": {"type": "integer", "desc": "Id de l'offre."}
+      },
+      "internal": false
+    },
+    "declineOffer": {
+      "desc": "Refuse (supprime) une offre de l'annonce.",
+      "params": {
+        "inventoryId": {"type": "integer", "desc": "Id d'inventaire."},
+        "offerId": {"type": "integer", "desc": "Id de l'offre."}
+      },
+      "internal": false
+    },
+    "startNegotiateBuyingOffer": {
+      "desc": "Démarre une négociation où le joueur vend : initialise la personnalité de l'acheteur, la citation, les prix (le joueur demande listing.value, l'acheteur offre offer.value), l'historique, et navigue vers career.computer.vehicleShopping.negotiation.",
+      "params": {
+        "inventoryId": {"type": "integer", "desc": "Id d'inventaire du véhicule en vente."},
+        "offerId": {"type": "integer", "desc": "Id de l'offre de départ."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat de ui_router.navigate."}],
+      "internal": false
+    },
+    "startNegotiateSellingOffer": {
+      "desc": "Démarre une négociation où le joueur achète un véhicule de la boutique. Refusée (toast d'avertissement) si le véhicule est en promotion ou non négociable. Initialise patience, prix de départ (remisé si discountPercentage) et navigue vers l'écran d'achat.",
+      "params": {"_shopId": {"type": "string|integer", "desc": "Id du véhicule dans la boutique (career_modules_vehicleShopping)."}},
+      "returns": [{"type": "any", "desc": "Résultat de ui_router.navigate, ou nil si refusée."}],
+      "internal": false
+    },
+    "getNegotiationState": {
+      "desc": "Renvoie l'état de la négociation pour l'UI : active, sens (amISelling), prix de départ, patience, offres (myOffer/theirOffer), statut, nom et citation de l'adversaire, véhicule (nom, miniature, kilométrage, valeur réelle) et historique d'offres.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "État de négociation."}],
+      "internal": false
+    },
+    "makeNegotiationOffer": {
+      "desc": "Propose un prix (converti avec tonumber) : s'il est valide, lance en tâche de fond la réponse de l'adversaire (réflexion puis saisie simulées, baisse de patience, acceptation, contre-offre, refus ou échec) et envoie les états à l'UI.",
+      "params": {"price": {"type": "number|string", "desc": "Prix proposé."}},
+      "returns": [{"type": "boolean", "desc": "false si le prix n'est pas autorisé."}],
+      "internal": false
+    },
+    "takeTheirOffer": {
+      "desc": "Accepte l'offre de l'adversaire. En vente : fixe la valeur de l'offre et vend le véhicule. En achat : fixe le prix du véhicule de la boutique (originalSellValue si baisse) et bloque d'autres négociations.",
+      "params": {},
+      "internal": false
+    },
+    "cancelNegotiation": {
+      "desc": "Annule la négociation (statut failed) ; si le joueur avait déjà fait une offre, empêche de renégocier cette offre ou ce véhicule.",
+      "params": {},
+      "internal": false
+    },
+    "finalizeNegotiationExit": {
+      "desc": "À la sortie de l'écran : prend l'offre si le statut est accepted et non prise, sinon annule la négociation.",
+      "params": {},
+      "internal": false
+    },
+    "menuOpened": {
+      "desc": "Signale l'ouverture/fermeture du menu d'offres (la négociation compte comme menu ouvert) et met à jour les annonces : purge des offres expirées si ouvert, génération de nouvelles offres sinon.",
+      "params": {"open": {"type": "boolean", "desc": "Menu ouvert ou non."}},
+      "internal": false
+    },
+    "openMenu": {
+      "desc": "Ouvre la boutique de véhicules en mode « marketplace » depuis l'ordinateur donné.",
+      "params": {"computerId": {"type": "string", "desc": "Id de l'ordinateur."}},
+      "internal": false
+    },
+    "onUpdate": {
+      "desc": "Hook de frame : affiche la fenêtre de debug en négociation (hors shipping) et, toutes les 10 s de simulation, génère de nouvelles offres et fait expirer les anciennes.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Temps simulé (s)."},
+        "dtRaw": {"type": "number", "desc": "Temps brut (s)."}
+      },
+      "internal": true
+    },
+    "onVehicleRemoved": {
+      "desc": "Hook : retire l'annonce d'un véhicule supprimé de l'inventaire.",
+      "params": {"inventoryId": {"type": "integer", "desc": "Id d'inventaire."}},
+      "internal": true
+    },
+    "onSaveCurrentProfile": {
+      "desc": "Hook de sauvegarde : écrit listedVehicles dans <save>/career/marketplace.json.",
+      "params": {
+        "currentSavePath": {"type": "string", "desc": "Dossier de sauvegarde."},
+        "vehiclesThumbnailUpdate": {"type": "integer[]|nil", "desc": "Non utilisé."}
+      },
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook : charge marketplace.json si la carrière est active (renvoie false sinon).",
+      "params": {},
+      "internal": true
+    }
+  }
+}

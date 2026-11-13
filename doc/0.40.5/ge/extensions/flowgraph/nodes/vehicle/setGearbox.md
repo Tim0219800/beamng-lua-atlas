@@ -4,16 +4,20 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/vehicle/setGearbox")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud « Set Gearbox Mode » (catégorie `once_f_duration`). Change le mode de boîte (`arcade` ou `realistic`) via `core_vehicleBridge.executeAction(veh,'setGearboxMode', mode)`, puis envoie un `ping` pour savoir quand c'est reçu. Pins d'entrée : `vehId`, `mode` (string).
+
 ## Classe `C`
+
+Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:_executionStarted()` |  | 31 |
-| `C:init()` |  | 24 |
-| `C:onNodeReset()` |  | 35 |
-| `C:postInit()` |  | 27 |
-| `C:work()` |  | 55 |
-| `C:workOnce()` |  | 40 |
+| `C:_executionStarted()` | Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro. | 31 |
+| `C:init()` | Constructeur du nœud, appelé à sa création par l'éditeur/gestionnaire de flowgraph ; initialise l'état interne. | 24 |
+| `C:onNodeReset()` | Efface la réponse et passe en durée `inactive`. | 35 |
+| `C:postInit()` | Définit les valeurs proposées pour `mode` : arcade, realistic. | 27 |
+| `C:work()` | Quand le ping revient, passe en `finished`. | 55 |
+| `C:workOnce()` | Envoie l'action et un ping au véhicule, passe en `started`. | 40 |
 
 ## Appels vers le moteur (C++)
 

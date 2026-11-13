@@ -1,0 +1,87 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/followPath.lua",
+  "module": "Nœud « AI Follow Path from Data » (couleur ai). Fait suivre à un véhicule un chemin ScriptAI fourni par les nœuds « AI Path from File » ou « Stored AI Path » (ai.startFollowing). Entrées : flow, reset, path (type aiPath), vehId, loopCount. Sortie : flow, actif quand le chemin est terminé. Options de l'inspecteur : Timescale (min 0,25), mode de reset (neverReset, alwaysReset, startReset), bouton « Reset AI ». Données : handBrakeWhenFinished, straightenWheelsWhenFinished.",
+  "notes": [
+    "loopMode n'est pas sauvegardé : il revient à « neverReset » au rechargement du projet.",
+    "Si loopCount n'est pas donné, la valeur 0 est envoyée à ai.startFollowing."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Initialise started, complete, loopMode=« neverReset », timeScale=1 et les données.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine le champ Timescale (minimum 0,25), le choix du mode de reset et le bouton « Reset AI ».",
+          "internal": true
+        },
+        "getVeh": {
+          "desc": "Renvoie le véhicule dont l'id est donné en entrée, ou le véhicule du joueur (getPlayerVehicle(0)) sans entrée.",
+          "internal": false
+        },
+        "endAI": {
+          "desc": "Envoie au véhicule ai:scriptStop(handBrake, straightenWheels).",
+          "internal": false
+        },
+        "onVehicleSubmitInfo": {
+          "desc": "Hook appelé par la commande envoyée à chaque frame (ai.scriptState du véhicule) ; quand l'info est nil pour ce véhicule et ce nœud, marque le chemin comme terminé et arrête l'IA.",
+          "params": {
+            "id": {
+              "type": "string|number",
+              "desc": "Id du véhicule."
+            },
+            "info": {
+              "type": "table|nil",
+              "desc": "État du script IA, nil quand il est fini."
+            },
+            "nodeID": {
+              "type": "number|nil",
+              "desc": "Id du nœud demandeur."
+            }
+          },
+          "internal": false
+        },
+        "_executionStopped": {
+          "desc": "Arrête l'IA si le chemin était en cours puis remet started/complete à false.",
+          "internal": true
+        },
+        "loadPath": {
+          "desc": "Charge le chemin depuis le pin path dans self.path.",
+          "internal": false
+        },
+        "setupAI": {
+          "desc": "Prépare le chemin (temps divisés par timeScale, dir/up conservés) et envoie ai.startFollowing(chemin, nil, loopCount, mode de boucle).",
+          "internal": false
+        },
+        "work": {
+          "desc": "Gère reset ; au premier passage lance setupAI ; chaque frame demande via be:queueAllObjectLua l'état ai.scriptState() de chaque véhicule qui rappelle le hook onVehicleSubmitInfo ; active flow une fois complete.",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde timeScale.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure timeScale (1 par défaut).",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche les états Complete et Started.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "Constructeur de nœud."
+            },
+            "style": {
+              "type": "table",
+              "desc": "Style du nœud."
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

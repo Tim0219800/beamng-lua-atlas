@@ -1,0 +1,28 @@
+{
+  "path": "lua/ge/extensions/editor/flowgraph/main.lua",
+  "module": "Fenêtre principale (fg_main, « Main view ») de l'éditeur Flowgraph : barre de menus (File : nouveau projet, chargement via editor_fileDialog, fichiers récents, restauration, encodage du presse-papiers…), canevas de nœuds du graphe courant avec modes de dessin (default, simple, heatmap, geometry), bordures colorées selon l'état du projet (running, paused, stopped, macro), menus contextuels (nœuds, pins, liens, création de nœud, Quick Connect) et gestion du glisser-déposer de nœuds, macros et variables. Fichier très volumineux (≈1100 lignes) : seules les fonctions utiles sont détaillées.",
+  "notes": [
+    "Le glisser-déposer crée des nœuds via mgr.graph:createNode : « types/getVariable » ou « types/setVariable » pour les variables, « macro/integrated » pour les macros ; chaque création ajoute une entrée d'historique (fgEditor.addHistory).",
+    "La création de nœuds/macros n'est possible que si mgr.allowEditing est vrai ; sinon le menu affiche « Disabled. »."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe de la fenêtre principale Flowgraph (windowName = 'fg_main').",
+      "functions": {
+        "attach": {"desc": "Associe le manager, prépare les couleurs de bordure et définit focusGraph sur le graphe principal.", "params": {"mgr": {"type": "table", "desc": "Manager flowgraph."}}, "internal": false},
+        "init": {"desc": "Initialise les identifiants de contexte (nœud/pin/lien), tailles de colonnes, lissage de FPS, et enregistre la fenêtre 600x600.", "params": {}, "internal": true},
+        "drawMenu": {"desc": "Dessine la barre de menus de la fenêtre (File, etc.).", "params": {}, "internal": false},
+        "drawGraph": {"desc": "Dessine un graphe (nœuds et liens) avec un builder et un style donnés.", "params": {"graph": {"type": "table", "desc": "Graphe à dessiner."}, "builder": {"type": "table", "desc": "Builder créé par flowgraph/builder."}, "style": {"type": "table", "desc": "Style ImGui."}}, "internal": false},
+        "drawSelf": {"desc": "Corps principal du dessin : fenêtre, canevas, interactions, menus contextuels.", "params": {}, "internal": false},
+        "draw": {"desc": "Point d'entrée par frame ; appelle drawSelf.", "params": {}, "internal": false},
+        "showQuickAccessSubmenu": {"desc": "Affiche le sous-menu « Quick Connect » listant les pins compatibles (quickAccess, direction opposée) du graphe.", "params": {"menuPos": {"type": "ImVec2", "desc": "Position du menu."}, "pin": {"type": "table", "desc": "Pin source."}}, "internal": false},
+        "showNewNodeContextMenu": {"desc": "Affiche le menu de création de nœud (bibliothèque de nœuds) dans un enfant 300x300 (× échelle UI), ou « Disabled. » si l'édition est interdite.", "params": {"menuPos": {"type": "ImVec2", "desc": "Position du menu."}}, "internal": false},
+        "resolveDragDropPayload": {"desc": "Traite un glisser-déposer terminé : crée le nœud, la macro ou le nœud de variable à la position de la souris, aligné sur la grille.", "params": {}, "internal": false},
+        "isMouseHovering": {"desc": "Indique si la souris est dans le rectangle de la fenêtre.", "params": {}, "returns": [{"type": "boolean", "desc": "true si survolée."}], "internal": false},
+        "doContextMenus": {"desc": "Gère l'ouverture et le dessin des menus contextuels (nœud, pin, lien, fond) en suspendant l'éditeur de nœuds.", "params": {}, "internal": false},
+        "_onSerialize": {"desc": "Sérialisation de l'état de la fenêtre.", "params": {"data": {"type": "table", "desc": "Données."}}, "internal": true},
+        "_onDeserialized": {"desc": "Désérialisation de l'état de la fenêtre.", "params": {"data": {"type": "table", "desc": "Données."}}, "internal": true}
+      }
+    }
+  }
+}

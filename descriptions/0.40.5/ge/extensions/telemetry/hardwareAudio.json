@@ -1,0 +1,25 @@
+{
+  "path": "lua/ge/extensions/telemetry/hardwareAudio.lua",
+  "module": "Module utilitaire de la télémétrie matérielle (chargé par require) : transforme les informations brutes du périphérique de sortie audio en un résumé anonymisé. Le nom du périphérique est classé par mots-clés (virtual, headphones, display, speakers, unknown) puis supprimé : seuls la catégorie, la fréquence d'échantillonnage, le mode haut-parleurs et le nombre de canaux sont conservés.",
+  "notes": [
+    "Les mots-clés sont cherchés en minuscules dans le nom : virtual (virtual, voicemeeter, cable input, sonar, streaming speakers, wave link) prioritaire, puis headphones (headphone, headset, earphone, earbud, airpods), puis display (mot 'tv', hdmi, displayport, monitor, audio NVIDIA/AMD/Intel d'écran), puis speakers (speaker, soundbar)."
+  ],
+  "functions": {
+    "fromDeviceInfo": {
+      "desc": "Renvoie {category, sampleRateHz, speakerMode, channels} à partir des infos du périphérique audio ; le nom brut et les champs de diagnostic (provider, driverIndex, useHardware, maxBuffers, caps) ne sont jamais repris.",
+      "params": {
+        "info": {
+          "type": "table|nil",
+          "desc": "Infos du périphérique : name, sampleRateHz, speakerMode, channels…"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Résumé anonymisé, ou nil si info est absent ou vide."
+        }
+      ],
+      "internal": false
+    }
+  }
+}

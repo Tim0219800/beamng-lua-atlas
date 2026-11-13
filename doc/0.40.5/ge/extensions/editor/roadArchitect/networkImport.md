@@ -4,12 +4,48 @@
 
 **Accès :** extension `editor_roadArchitect_networkImport` : `extensions.load("editor_roadArchitect_networkImport")`, puis la globale `editor_roadArchitect_networkImport`
 
+Import partagé OpenStreetMap (.osm) et SUMO (.nod.xml/.edg.xml) vers Road Architect. Chaque way OSM ou arête SUMO devient une route Road Architect indépendante (profil d'import à deux voies 'driving', largeur déduite des tags ou du nombre de voies). Les extrémités qui partagent un même nœud source sont recalées sur une position commune, mais aucune vraie jonction Road Architect n'est créée. Le module sert d'implémentation à osmImport.lua (importFromFile) et peut être appelé sans interface (headless). L'import est enregistré dans l'historique de l'éditeur (undo/redo).
+
+## Exemple
+
+```lua
+local res = editor_roadArchitect_networkImport.importOsmFromFile('C:/data/ville.osm', {placeMode = 2, terraform = false})
+print(res.importedRoadCount, res.skippedRoadCount)
+```
+
+## Remarques
+
+- Options reconnues (table options) : placeMode (0 = position du fichier, 1 = placeX/placeY, 2 = XY de la caméra, 3 = XY du véhicule joueur ; erreur si aucun véhicule en mode 3), placeX, placeY, placeZ (décale le réseau pour que le début de la première route soit à cette hauteur), offsetToTerrain (true : conformer les routes au terrain), verticalOffset (décalage Z en m), terraform (true : terraformMultiRoads avec domainOfInfluence, défaut 30, et margin, défaut 1.0), plus les options lues par importFile.maybeFinalise (par exemple finalize).
+- Le résultat est une table { success, importedRoadCount, skippedRoadCount, warningCount, warnings, junctionCount, unsupported = {junctions}, finalized }. En cas d'erreur pendant la création, les routes déjà ajoutées sont supprimées puis l'erreur est relancée (error).
+- OSM : les exports générés par BeamNG (generator="BeamNG") sont décodés avec lat/lon = monde/1e7 + 45 (axes x = latitude, y = longitude). Les autres fichiers sont projetés en mètres à partir du coin (minlat, minlon). Pour un fichier non BeamNG, seules les ways avec un tag highway sont importées (footway, path, cycleway, pedestrian, steps, bridleway ignorés).
+- OSM : largeur = tag width, sinon lanes x 3.5 m, sinon 7.0 m. Altitude par défaut des nœuds 0.1 m si ele absent.
+- SUMO : lit le fichier .nod.xml et le fichier .edg.xml de même préfixe (le chemin donné peut se terminer par .nod.xml, .edg.xml, .xml ou n'avoir aucune extension). Largeur = numLanes (défaut 2) x laneWidth (défaut 3.5). Les arêtes inverses ou dupliquées entre deux mêmes nœuds sont fusionnées en gardant celle qui a la forme (shape) la plus riche.
+- Les routes importées ont l'affichage du contour, de la surface et des sphères de nœuds désactivé.
+
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `editor_roadArchitect_networkImport.importOsmFromFile(filePath, options)` |  | 342 |
-| `editor_roadArchitect_networkImport.importSumoFromFile(filePath, options)` |  | 535 |
+| `editor_roadArchitect_networkImport.importOsmFromFile(filePath, options)` | Lit un fichier OpenStreetMap, convertit les ways routières en routes Road Architect, applique le placement/hauteur demandés, recale les extrémités partagées, éventuellement terraforme, puis finalise et enregistre l'action dans l'historique. Lance une erreur si le fichier est illisible ou ne contient aucun nœud utilisable. | 342 |
+| `editor_roadArchitect_networkImport.importSumoFromFile(filePath, options)` | Lit les fichiers SUMO .nod.xml et .edg.xml partageant le préfixe de filePath et crée une route Road Architect par arête (en dédoublonnant les sens inverses). Mêmes options et même résultat que importOsmFromFile. Lance une erreur si l'un des deux fichiers est illisible. | 535 |
+
+### Détail des paramètres
+
+#### `editor_roadArchitect_networkImport.importOsmFromFile(filePath, options)`
+
+Lit un fichier OpenStreetMap, convertit les ways routières en routes Road Architect, applique le placement/hauteur demandés, recale les extrémités partagées, éventuellement terraforme, puis finalise et enregistre l'action dans l'historique. Lance une erreur si le fichier est illisible ou ne contient aucun nœud utilisable.
+
+- `filePath` (*string*) : Chemin du fichier .osm.
+- `options` (*table|nil*) : Options d'import (placeMode, placeX, placeY, placeZ, offsetToTerrain, verticalOffset, terraform, domainOfInfluence, margin, finalize…).
+- **renvoie** : table Résumé { success, importedRoadCount, skippedRoadCount, warningCount, warnings, junctionCount, unsupported, finalized }.
+
+#### `editor_roadArchitect_networkImport.importSumoFromFile(filePath, options)`
+
+Lit les fichiers SUMO .nod.xml et .edg.xml partageant le préfixe de filePath et crée une route Road Architect par arête (en dédoublonnant les sens inverses). Mêmes options et même résultat que importOsmFromFile. Lance une erreur si l'un des deux fichiers est illisible.
+
+- `filePath` (*string*) : Chemin du fichier SUMO (.nod.xml, .edg.xml, .xml ou préfixe sans extension).
+- `options` (*table|nil*) : Mêmes options que importOsmFromFile.
+- **renvoie** : table Résumé { success, importedRoadCount, skippedRoadCount, warningCount, warnings, junctionCount, unsupported, finalized }.
 
 ## Appels vers le moteur (C++)
 

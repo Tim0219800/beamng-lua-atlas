@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/audio/fade.lua",
+  "module": "Nœud flowgraph « Audio Channel Fade » (tags sound/audio/volume, icône audiotrack). Fait un fondu du volume d'un canal audio FMOD (par défaut 'AudioChannelMaster') vers le silence ou vers le volume précédent, avec plus de contrôle que les nœuds Fade In/Out. Entrées : flow, fadeDown (descend vers volumeMin), fadeUp (remonte vers volumeMax), duration (s, défaut 1), channel, volumeMin (défaut 0) et volumeMax (défaut 1) cachés. Sorties : fadeDone (flow) et volume (volume courant). S'exécute à chaque frame (work). Utilise un minuteur interne (mgr.dtReal) pour des raisons de compatibilité.",
+  "notes": [
+    "Anciens pins renommés (legacyPins) : fadeTime -> duration, fadeIn -> fadeDown, fadeOut -> fadeUp (le mappage fadeIn/fadeOut semble inversé par rapport au sens, mais c'est ce que fait le code).",
+    "Si fadeDown et fadeUp sont actifs en même temps, le mode est 0 (aucun fondu).",
+    "À l'arrêt du graphe, le volume du canal est remis à sa valeur de base (getChannelVolume(canal, false)).",
+    "Si volumeMax n'est pas fourni, la cible de remontée est le volume « non fondu » du canal."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "reset": {"desc": "Remet à zéro minuteur, mode, volumes et canal.", "internal": true},
+        "init": {"desc": "Appelle reset().", "internal": true},
+        "_executionStopped": {"desc": "À l'arrêt du graphe : restaure le volume de base du canal puis reset().", "internal": true},
+        "work": {"desc": "Chaque frame, si flow est actif : lit le volume du canal, détecte un changement de mode (descente/montée), avance le minuteur et applique Engine.Audio.setChannelVolume par interpolation linéaire ; met fadeDone à vrai à la fin."}
+      }
+    }
+  }
+}

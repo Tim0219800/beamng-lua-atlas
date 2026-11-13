@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceState.lua",
+  "module": "Nœud flowgraph « Predict Signal State » (once_instant). Prédit l'état futur d'une instance de feu après `seconds` secondes (positives uniquement) via instance:getStateAfterTime. Sorties : stateName, stateAction.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "workOnce": {
+          "desc": "Calcule l'état prédit et écrit stateName / stateAction.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

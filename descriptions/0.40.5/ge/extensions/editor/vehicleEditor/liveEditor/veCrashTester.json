@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/veCrashTester.lua",
+  "module": "Outil 'Other/Crash Tester' du Vehicle Editor live. On choisit un point de départ sur le terrain (molette = rotation par pas de 5°), un nombre de véhicules (1 à 15) et une vitesse cible (10 à 200 km/h). 'Run Test!' fait apparaître des voitures/camions tirés au hasard (core_vehicles.getVehicleList, Type Car ou Truck), espacés de 10 m, frein à main relâché et lancés à la vitesse cible via applyClusterVelocityScaleAdd. 'Stop Test!' supprime les véhicules.",
+  "notes": [
+    "Vitesse de départ = targetSpeed / 3.6 (km/h vers m/s) dans la direction startDir * (0,1,0).",
+    "Bug mineur : `hit = cameraMouseRayCast(...)` est affecté sans `local`, donc une globale `hit` est créée.",
+    "vehsData.done n'est jamais mis à jour : seule la suppression via Stop Test! retire les véhicules."
+  ],
+  "fields": {
+    "menuEntry": {"type": "string", "desc": "'Other/Crash Tester' (sous-menu 'Other')."}
+  },
+  "functions": {
+    "onUpdate": {"desc": "Appelé chaque frame : dessine la fenêtre (curseurs, boutons) et les repères de départ (triangles rouges via debugDrawer:drawTriSolid).", "internal": true},
+    "open": {"desc": "Ouvre la fenêtre.", "internal": false},
+    "onSerialize": {"desc": "Renvoie {windowOpen}.", "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}], "internal": true},
+    "onDeserialized": {"desc": "Restaure l'état d'ouverture.", "params": {"data": {"type": "table", "desc": "Table de onSerialize."}}, "internal": true}
+  }
+}

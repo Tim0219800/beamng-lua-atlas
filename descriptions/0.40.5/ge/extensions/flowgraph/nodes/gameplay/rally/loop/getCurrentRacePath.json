@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getCurrentRacePath.lua",
+  "module": "Nœud flowgraph « Rally Get Current Race Path » (catégorie once_instant, tag rally). Lit rm:getCurrentRacePath() du gestionnaire de la boucle rally et le place dans la pin racePath (string) : chemin du fichier de course de la mission courante du planning, ou chaîne vide si indisponible.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "workOnce": {"desc": "Écrit le chemin de course courant (ou '') dans racePath.", "internal": true}
+      }
+    }
+  }
+}

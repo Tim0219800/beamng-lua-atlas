@@ -4,12 +4,19 @@
 
 **Accès :** `require("test")`
 
+Fichier de test principal de la console : il charge lua/console/benchphysics et définit deux fonctions globales de test, loadOneVehicle (spawn du pickup) et benchJSON (chargement et fusion des fichiers .jbeam du pickup). Aucun appel automatique, ils sont à lancer à la main.
+
+## Remarques
+
+- benchJSON utilise des globales (directory, dir) faute de local.
+- benchJSON retourne nil dès qu'un fichier jbeam n'est pas décodable ; sinon ne retourne rien.
+
 ## Fonctions globales définies ici
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `benchJSON()` |  | 18 |
-| `loadOneVehicle()` |  | 13 |
+| `benchJSON()` | Liste les fichiers .jbeam (hors .jbeamc) de vehicles/pickup, les lit, les décode avec json.decode et fusionne les parties avec tableMerge. Journalise le nombre de parties de chaque fichier. | 18 |
+| `loadOneVehicle()` | Supprime tous les objets puis fait apparaître vehicles/pickup à l'origine. | 13 |
 
 ## Appels vers le moteur (C++)
 

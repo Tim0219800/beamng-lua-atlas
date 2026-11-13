@@ -1,0 +1,53 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/types/number.lua",
+  "module": "Noeud « Number » (provider). Fournit un nombre (data.value, 0 par défaut) sur le pin value.",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "data.value = 0 et clearOutPinsOnStart = false.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Écrit data.value sur la sortie.",
+          "internal": false
+        },
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        },
+        "onSerialize": {
+          "desc": "Vide (nom sans underscore, contrairement à _onSerialize utilisé par les autres noeuds).",
+          "params": {
+            "res": {
+              "type": "any",
+              "desc": "table de sauvegarde"
+            }
+          },
+          "internal": true
+        },
+        "onDeserialized": {
+          "desc": "Vide (nom sans underscore, contrairement à _onSerialize utilisé par les autres noeuds).",
+          "params": {
+            "nodeData": {
+              "type": "any",
+              "desc": "données sauvegardées"
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

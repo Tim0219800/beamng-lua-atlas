@@ -1,0 +1,82 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/customLua.lua",
+  "module": "Nœud « Custom Lua » (catégorie repeat_instant, couleur debug). Permet d'écrire du code Lua directement dans l'éditeur flowgraph, avec pins d'entrée/sortie personnalisés (sauvegardés). Quatre blocs de code : work (chaque frame si un flow d'entrée est actif), _executionStarted, _executionStopped et onPreRender. Le code est compilé avec load dans un environnement restreint (buildBaseEnv) et exécuté sous pcall ; les erreurs sont journalisées sur le nœud. L'éditeur permet de nommer le nœud et de le sauvegarder dans une bibliothèque (préférence flowgraph.general.customLuaNodes).",
+  "notes": [
+    "Le code est exécuté sans argument utile : pcall reçoit debug.traceback comme argument du chunk.",
+    "L'environnement expose require, dofile, loadfile, load, io et os : le code n'est pas sandboxé.",
+    "Le tag du log d'erreur dans exec contient un guillemet parasite : 'Custom Lua Node: \" .. code'."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Crée les quatre blocs de code vides et autorise les pins d'entrée et de sortie personnalisés (savePins=true).",
+          "internal": true
+        },
+        "compile": {
+          "desc": "Compile le bloc de code donné avec l'environnement de base ; enregistre le message d'erreur dans self.status, sinon la fonction dans self.compiled (nop en cas d'erreur).",
+          "params": {
+            "code": {
+              "type": "string",
+              "desc": "Nom du bloc : work, _executionStarted, _executionStopped ou onPreRender."
+            }
+          },
+          "internal": false
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine l'éditeur : chargement depuis la bibliothèque, nom, bouton de sauvegarde, et un champ multiligne par bloc avec indicateur d'erreur de compilation. Renvoie la description du changement ou false.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Compile les quatre blocs puis exécute _executionStarted.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Exécute _executionStopped puis libère l'environnement.",
+          "internal": true
+        },
+        "onPreRender": {
+          "desc": "Exécute le bloc onPreRender (avant le rendu).",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Delta temps réel."
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "Delta temps simulé."
+            }
+          },
+          "internal": true
+        },
+        "exec": {
+          "desc": "Exécute le bloc compilé sous pcall ; en cas d'erreur, logue, marque le nœud en erreur et ajoute un évènement au gestionnaire.",
+          "params": {
+            "code": {
+              "type": "string",
+              "desc": "Nom du bloc."
+            }
+          },
+          "internal": false
+        },
+        "work": {
+          "desc": "Exécute le bloc work.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure nom et code puis recompile.",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde nom et code.",
+          "internal": true
+        },
+        "buildBaseEnv": {
+          "desc": "Construit (une fois) et renvoie la table d'environnement du code utilisateur : self, map, be, FS, scenetree, extensions, vec3/quat, outils JSON et math, toutes les extensions chargées, etc. Fournit aussi refreshExtensions, loadExtension, unloadExtension, log (journalise aussi dans le gestionnaire).",
+          "internal": false
+        }
+      }
+    }
+  }
+}

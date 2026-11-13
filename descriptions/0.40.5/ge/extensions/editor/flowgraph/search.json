@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/editor/flowgraph/search.lua",
+  "module": "Fenêtre « Search » (fg_search) de l'éditeur Flowgraph : recherche floue dans le projet courant des nœuds, des graphes et des pins, via editor/util/searchUtil avec un score de « frecency » mémorisé dans mgr.frecency. Le préfixe 'node:', 'graph:' ou 'pin:' restreint le type de résultat. Un clic (ou Entrée via l'action map NodeLibrary) sélectionne le graphe et le nœud et recentre la vue. Ouverte par le raccourci uiFindShortcut de flowgraphEditor.",
+  "notes": [
+    "Les résultats sont mis en cache par manager (searchResultsByMgr[mgr.id]) et recalculés seulement quand le texte change (searchChanged).",
+    "Navigation clavier : handleActionMap pousse l'action map 'NodeLibrary' quand la fenêtre a le focus, et fgEditor.arrowControllableWindow pointe sur elle.",
+    "Incohérences : findGraphs référence une variable globale `score` inexistante (nil) ; le paramètre `match` de findNodes/findGraphs n'est pas utilisé ; la fonction de tri sortFun compare typeOrder quand les types sont identiques (donc toujours égal), le tri réel retombe sur le score ; le texte d'info d'un pin contient un guillemet en trop (\"''\")."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe de la fenêtre (windowName 'fg_search', windowDescription 'Search', arrowControllable = true).",
+      "functions": {
+        "attach": {"desc": "Mémorise le manager, force une nouvelle recherche et crée la table de résultats du manager.", "params": {"mgr": {"type": "table", "desc": "Manager flowgraph."}}, "internal": true},
+        "init": {"desc": "Enregistre la fenêtre, crée le champ de texte (128 car.) et l'objet de recherche searchUtil.", "internal": true},
+        "createNode": {"desc": "Appelé par l'éditeur quand l'utilisateur valide (Entrée) : demande le clic sur l'entrée sélectionnée au prochain dessin.", "internal": true},
+        "navigateList": {"desc": "Déplace la sélection clavier dans la liste de résultats.", "params": {"up": {"type": "boolean", "desc": "true pour monter, false pour descendre."}}, "internal": true},
+        "drawSearchInput": {"desc": "Dessine le champ « Find: », le bouton X et l'icône d'aide (syntaxe node:/graph:/pin:).", "internal": true},
+        "findNodes": {"desc": "Soumet à la recherche chaque nœud du manager (mgr:allNodes()) et chacun de leurs pins, avec leur localisation et un identifiant de frecency.", "params": {"match": {"type": "string", "desc": "Texte cherché (non utilisé dans la fonction)."}}},
+        "findGraphs": {"desc": "Soumet à la recherche chaque graphe de type 'graph' du manager.", "params": {"match": {"type": "string", "desc": "Texte cherché (non utilisé)."}}},
+        "findStuff": {"desc": "Si le texte a changé, relance la recherche complète (nœuds + graphes) et stocke les résultats pour le manager courant.", "internal": true},
+        "highlightText": {"desc": "Écrit un libellé en colorant (orange) jusqu'à 6 occurrences du texte cherché, insensible à la casse.", "params": {"label": {"type": "string", "desc": "Texte à afficher."}, "highlightText": {"type": "string", "desc": "Sous-chaîne à surligner."}}},
+        "getFilterType": {"desc": "Extrait le préfixe de type ('node', 'graph', 'pin') du texte saisi.", "returns": [{"type": "string|nil", "desc": "Type filtré ou nil."}, {"type": "string", "desc": "Texte restant en minuscules."}]},
+        "displayResults": {"desc": "Affiche la liste des résultats (type, nom surligné, localisation, score en mode debug) ou « No Results! »."},
+        "manageClick": {"desc": "Gère le clic sur un résultat : met à jour la frecency, sélectionne le graphe, désélectionne tout puis sélectionne le nœud/graphe et demande le recentrage (focusSelection/focusContent).", "params": {"result": {"type": "table", "desc": "Résultat de recherche (type 'node', 'graph' ou 'pin')."}}},
+        "draw": {"desc": "Dessine la fenêtre « Search » si elle est visible.", "internal": true},
+        "handleActionMap": {"desc": "Quand la fenêtre a le focus, pousse l'action map 'NodeLibrary' et s'enregistre comme fenêtre contrôlable aux flèches.", "internal": true},
+        "arrowHelper": {"desc": "Compte les boutons de la liste, dessine le cadre de l'élément sélectionné/survolé et fait défiler pour le garder visible.", "params": {"cursor": {"type": "ImVec2", "desc": "Position du curseur avant l'élément."}, "itemSize": {"type": "ImVec2", "desc": "Taille de l'élément."}, "doHover": {"type": "boolean", "desc": "Non utilisé."}}},
+        "_onSerialize": {"desc": "Hook de sérialisation : vide.", "params": {"data": {"type": "table", "desc": "Table de sauvegarde."}}, "internal": true},
+        "_onDeserialized": {"desc": "Hook de désérialisation : vide.", "params": {"data": {"type": "table", "desc": "Données restaurées."}}, "internal": true}
+      }
+    }
+  }
+}

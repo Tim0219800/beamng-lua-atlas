@@ -1,0 +1,38 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/math/ease.lua",
+  "module": "Noeud flowgraph 'Ease' (categorie simple). Applique une fonction d'easing a la valeur d'entree (normalement entre 0 et 1) : linear, in/out/inOut pour Quad, Cubic, Quart, Quint, Sin, Exp et Circ. La fonction se choisit dans les proprietes du noeud.",
+  "notes": [
+    "La liste de l'UI (easeFuncNameList) n'inclut pas inCubic, outCubic, inOutCubic, bien que definies dans easeFunctions."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Fonction par defaut : linear.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Liste deroulante des fonctions d'easing.",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde easeFuncName.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Relit easeFuncName et la fonction associee.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Si l'entree n'est pas nil/false, ecrit easeFunc(value) sur la sortie.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche le nom de la fonction.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

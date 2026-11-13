@@ -1,0 +1,56 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/sites/locationByName.lua",
+  "module": "Nœud flowgraph « Location by Name ». Cherche une location par nom dans sitesData.locations.byName. Entrées : flow, sitesData, locationName ; sorties : flow (vrai si trouvée), exists (caché), location (locationData). L'éditeur permet de coder en dur le nom de la location sélectionnée dans le Sites Editor.",
+  "notes": [
+    "Si le nom n'existe pas, self._location vaut nil et `self._location.missing` provoque une erreur Lua (pas de test de nil)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état interne du nœud.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui).",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du nœud dans l'éditeur flowgraph (ImGui).",
+          "internal": true,
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "constructeur de nœud de l'éditeur (builder:Middle())"
+            },
+            "style": {
+              "type": "table",
+              "desc": "style de dessin du nœud"
+            }
+          }
+        },
+        "init": {
+          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "internal": true,
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "gestionnaire flowgraph"
+            }
+          }
+        },
+        "work": {
+          "desc": "Quand le flux est actif et que le nom change, retrouve la location et active la sortie flow si elle existe (non missing).",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "arguments transmis par le moteur (non utilisés)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/style.lua",
+  "module": "Réglages de style des outils de splines de l'éditeur : couleurs 3D (curseur, nœuds, jonctions, splines, poignées, fils de prévisualisation) pour le dessin de debug, et palettes de couleurs ImGui par thème. Les thèmes disponibles sont blueRose, vapourStatic, canyonClay, terminalAurora, summerOfLove, deerPark, dreamMachine, headlights, crystal (défaut) et neoIndustrial.",
+  "usage": "local cols = require('editor/toolUtilities/style').getImguiCols('crystal')\nim.TextColored(cols.dullWhite, 'texte')",
+  "notes": [
+    "getStyle() construit une nouvelle table à chaque appel (color(r,g,b,a) 0-255 pour le rendu, ImVec4 0-1 pour ImGui).",
+    "getImguiCols renvoie la palette 'crystal' pour un thème inconnu ou nil."
+  ],
+  "functions": {
+    "getStyle": {
+      "desc": "Renvoie les propriétés de style de l'interface : couleurs de curseur, nœuds, jonctions, splines (sélectionnée, estompée, liée), poignées, fils de prévisualisation, et quelques ImVec4 (greenD, blueB, blueD, redB, yellowB).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Table de couleurs nommées."}]
+    },
+    "getImguiCols": {
+      "desc": "Renvoie la palette de couleurs ImGui du thème demandé.",
+      "params": {"theme": {"type": "string|nil", "desc": "Nom du thème (voir module) ; 'crystal' par défaut."}},
+      "returns": [{"type": "table", "desc": "Palette de couleurs nommées (ImVec4)."}]
+    }
+  }
+}

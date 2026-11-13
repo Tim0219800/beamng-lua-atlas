@@ -1,0 +1,28 @@
+{
+  "path": "lua/ge/extensions/career/modules/tutorial/step02moveOff.lua",
+  "module": "Étape 2 du tutoriel de carrière (« moveOff ») : apprendre à démarrer le véhicule selon le mode de boîte réglé à l'étape 1. Trois modes (déduits du réglage gearboxMode et de autoClutch) : arcade, realistic_clutch (passer la 1re puis accélérer) et realistic_no_clutch (embrayage manuel, avec récupération en cas de calage moteur). L'étape se termine quand le véhicule s'est déplacé d'au moins 3 m, puis active 03basicManeuvers après 1 s.",
+  "notes": [
+    "Seuils : déplacement 3 m, entrée d'accélérateur 0,2, 1re vitesse = gearIndex 1.",
+    "Le calage est détecté par un passage de ignitionLevel de 2 à 0 ou 1 (mode sans embrayage uniquement).",
+    "Les hooks sont appelés par le runtime du tutoriel."
+  ],
+  "functions": {
+    "setup": {
+      "desc": "Appelé à l'activation : réinitialise l'état, active la zone evalZone, enregistre les notifications throttle_input, clutch, gearIndex, ignitionLevel, lit le comportement de boîte (mainController/gearboxMode), choisit le mode, débloque les actions de changement de vitesse, dégèle le véhicule et construit la liste de tâches.",
+      "params": {"stepData": {"type": "any", "desc": "Données de l'étape (non utilisées)."}},
+      "internal": true
+    },
+    "onCareerTutorialLeftBounds": {"desc": "Hook de sortie de zone : lance le reset de sortie de zone de l'étape.", "internal": true},
+    "onUpdate": {
+      "desc": "Appelé chaque frame : lit les entrées du véhicule en cache, gère le calage, valide les objectifs et avance à l'étape 03 quand la distance de 3 m est atteinte.",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta simulation (s)."}, "dtRaw": {"type": "number", "desc": "Delta brut (s)."}},
+      "internal": true
+    },
+    "cleanup": {"desc": "Retire le gestionnaire de sortie de zone, désenregistre les notifications du véhicule et vide la liste de tâches.", "internal": true},
+    "onDebugMenu": {
+      "desc": "Affiche le mode courant et un bouton pour sauter l'étape (active 03basicManeuvers).",
+      "params": {"im": {"type": "table", "desc": "Table ui_imgui."}},
+      "internal": true
+    }
+  }
+}

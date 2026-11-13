@@ -4,6 +4,14 @@
 
 **Accès :** `require("client/lighting/basic/init")`
 
+Light manager « Basic Lighting ». Crée le state block BL_ProjectedShadowSBData, le shader BL_ProjectedShadowShaderData et le matériau BL_ProjectedShadowMaterial (ombres projetées), charge shadowFilter, puis publie la table globale BLMCallbacks. onActivate active AL_FormatToken et crée un RenderPassManager « BL_ProjectedShadowRPM » avec un RenderFastMgr, ajoutés à RootGroup ; onDeactivate désactive AL_FormatToken et supprime ce RenderPassManager.
+
+## Remarques
+
+- Les biais de profondeur (zBias/zSlopeBias) valent +1 si $Scene::useReversedDepthBuffer est vrai, sinon -5.
+- onDeactivate appelle renderPassManager:delete() sans tester que BL_ProjectedShadowRPM existe : erreur si désactivé sans activation préalable.
+- blendEnable est assigné deux fois de suite (doublon inoffensif).
+
 ## Appels vers le moteur (C++)
 
 - `scenetree.` `findObject`

@@ -1,0 +1,26 @@
+{
+  "path": "lua/ge/extensions/editor/flowgraph/garbageDebug.lua",
+  "module": "Fenêtre « Garbage Debug » (fg_garbage) de l'éditeur Flowgraph : analyse l'allocation mémoire (garbage) par graphe et par nœud d'un projet après exécution, à partir de mgr.garbageData. Elle calcule total, moyenne par frame active, maximum, quantiles (25/50/75/90 %), nombre de frames actives, trie selon la préférence flowgraph.debug.garbageSort et trace des courbes. Affiche « Info only shows after running. » tant qu'il n'y a pas de données.",
+  "notes": [
+    "Les statistiques de quantiles ne sont calculées que s'il y a plus de 10 entrées d'historique.",
+    "L'unité est « Bytes » sauf pour activeCount (« Frames »).",
+    "Case « Debug Garbage » : préférence flowgraph.debug.debugGarbage."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe de la fenêtre Garbage Debug (windowName = 'fg_garbage').",
+      "functions": {
+        "attach": {"desc": "Associe le manager flowgraph.", "params": {"mgr": {"type": "table", "desc": "Manager."}}, "internal": false},
+        "init": {"desc": "Enregistre la fenêtre et prépare une palette de couleurs par magnitude (20 niveaux).", "params": {}, "internal": true},
+        "computeStats": {"desc": "Complète et calcule les statistiques d'une entrée (historiques, moyenne, quantiles, min/max, pourcentage d'activité).", "params": {"entry": {"type": "table", "desc": "Entrée de garbageData (graphe, nœud ou somme) avec history, totalHistory, total."}}, "internal": false},
+        "setSortingValue": {"desc": "Définit entry.value (selon la clé de tri courante) et sa magnitude en puissance de 2.", "params": {"entry": {"type": "table", "desc": "Entrée."}}, "internal": false},
+        "computeAllStats": {"desc": "Calcule une fois les stats de tous les graphes/nœuds et leur somme, puis les trie par valeur décroissante.", "params": {}, "internal": false},
+        "drawStats": {"desc": "Dessine le bloc de statistiques et les courbes d'une entrée ; ignore les entrées sans valeur ou inactives.", "params": {"label": {"type": "string", "desc": "Libellé."}, "entry": {"type": "table|nil", "desc": "Entrée."}}, "internal": false},
+        "handleMeta": {"desc": "Affiche un bouton « View Node » ou « View Graph » qui sélectionne et centre l'élément.", "params": {"e": {"type": "table", "desc": "Entrée avec e.meta."}}, "internal": false},
+        "draw": {"desc": "Dessine la fenêtre : case Debug Garbage, tri, projet complet, graphes puis nœuds.", "params": {}, "internal": false},
+        "_onSerialize": {"desc": "Sérialisation (vide).", "params": {"data": {"type": "table", "desc": "Données."}}, "internal": true},
+        "_onDeserialized": {"desc": "Désérialisation (vide).", "params": {"data": {"type": "table", "desc": "Données."}}, "internal": true}
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/client/renderManager.lua",
+  "module": "Prépare le format de rendu hors écran : crée le RenderFormatToken « AL_FormatToken » (couleur R8G8B8A8, profondeur $GFXFormatDefaultDepth ou D24S8, aaLevel 0, désactivé au départ), le state block « AL_FormatTokenState » (hérite de PFX_DefaultStateBlock, échantillonneur SamplerClampPoint) et le PostEffect « AL_FormatCopy » (passthrough vers $backbuffer). Ce token est activé/désactivé par les light managers.",
+  "notes": ["Les objets AL_FormatTokenState et AL_FormatCopy sont créés à l'import du module, hors de initRenderManager ; AL_FormatToken est créé à chaque appel d'initRenderManager (pas de test d'existence)."],
+  "fields": {},
+  "functions": {
+    "initRenderManager": {
+      "desc": "Crée et enregistre l'objet RenderFormatToken « AL_FormatToken » (désactivé) avec AL_FormatCopy comme effet de copie et de résolution.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

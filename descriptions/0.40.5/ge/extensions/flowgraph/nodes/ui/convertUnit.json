@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/convertUnit.lua",
+  "module": "Nœud flowgraph « ConvertUnit » (catégorie repeat_instant) : convertit une valeur en SI vers l'unité préférée du joueur (réglage de l'UI) avec translateDistance ou translateVelocity. Entrées : « value », « velocity » (vitesse au lieu de distance), « big » (grande unité : km, mi, h), « format » (défaut '%0.2f%s'). Sorties : « value » (nombre converti), « unit » (chaîne) et « full » (valeur+unité formatées, calculée seulement si le pin est utilisé).",
+  "notes": [
+    "Le pin d'entrée et le pin de sortie s'appellent tous deux « value » (directions différentes)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "work": {
+          "desc": "Convertit pinIn.value et écrit value, unit et (si le pin est connecté) full via string.format.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "path": "lua/ge/extensions/telemetry/hardwareInput.lua",
+  "module": "Module utilitaire de la télémétrie matérielle (chargé par require) : transforme les informations des contrôleurs de jeu en données de télémétrie. Pour tous les périphériques : type, productName, vidpid, forceFeedback. Pour les volants (type 'wheel') s'ajoutent le nom anglais officiel, GUID, axes à retour de force, périodes d'échantillonnage FFB, révisions matérielle/firmware, contrôles et leur décompte par type.",
+  "notes": [
+    "Le nom anglais d'un volant ne vient que d'une table officielle /settings/inputmaps/<vidpid en minuscules>.json (isOfficialContentVPath) : une table de mod ne peut pas fournir le nom.",
+    "Un vidpid de 8 chiffres hexadécimaux est mis en majuscules (les deux premiers groupes de 4 donnent productId puis vendorId) ; un identifiant symbolique (ex. 'XIDevice') garde sa casse.",
+    "maxRawFfbUpdateRateHz = 1000000 / ff_sample_period ; si la période n'est pas un nombre positif, ffbSamplePeriodMicroseconds et le taux restent absents."
+  ],
+  "functions": {
+    "officialEnglishName": {
+      "desc": "Lit /settings/inputmaps/<pidVid>.json et renvoie displayName ou name, uniquement si ce fichier appartient au contenu officiel du jeu.",
+      "params": {
+        "pidVid": {
+          "type": "string|nil",
+          "desc": "Identifiant de 8 chiffres hexadécimaux."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Nom anglais officiel, ou nil."
+        }
+      ],
+      "internal": false
+    },
+    "fromControllerInfo": {
+      "desc": "Convertit les infos d'un contrôleur en table de télémétrie. Les non-volants ne gardent que type, productName, vidpid et forceFeedback ; les volants reçoivent en plus reportedName, deviceName, guid, hidSupported, ffbAxes, périodes FFB, révisions, controls, controlCounts, productId, vendorId et maxRawFfbUpdateRateHz.",
+      "params": {
+        "info": {
+          "type": "table",
+          "desc": "Infos du contrôleur (type, name, productName, vidpid, guid, ffbAxes, ff_sample_period, controls…)."
+        },
+        "englishName": {
+          "type": "string|nil",
+          "desc": "Nom anglais officiel du volant, s'il est connu."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Données de télémétrie du contrôleur."
+        }
+      ],
+      "internal": false
+    },
+    "collect": {
+      "desc": "Applique fromControllerInfo à chaque contrôleur (en cherchant le nom anglais officiel des volants).",
+      "params": {
+        "controllerInfo": {
+          "type": "table[]|nil",
+          "desc": "Liste des contrôleurs."
+        }
+      },
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Liste de tables de télémétrie."
+        }
+      ],
+      "internal": false
+    }
+  }
+}

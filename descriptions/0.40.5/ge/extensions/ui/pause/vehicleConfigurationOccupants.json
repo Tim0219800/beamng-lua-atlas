@@ -1,0 +1,100 @@
+{
+  "path": "lua/ge/extensions/ui/pause/vehicleConfigurationOccupants.lua",
+  "module": "Extension GE qui alimente l'onglet « Occupants » de l'écran de configuration du véhicule (menu pause). Elle liste les sièges du véhicule configuré (via gameplay_seatOccupants), les joueurs disponibles (core_multiseat / core_playerPersonas) et permet d'asseoir un joueur, un mannequin (« dummy ») ou personne sur chaque siège. Le véhicule visé est celui de la session (sessionVehicleId) ou, à défaut, celui résolu par core_vehicle_configTarget. Chaque changement déclenche le hook UI VehicleConfigOccupantsStateChanged.",
+  "usage": "extensions.load('ui_pause_vehicleConfigurationOccupants')\nlocal st = ui_pause_vehicleConfigurationOccupants.beginSession(true)\nui_pause_vehicleConfigurationOccupants.setSeatOccupant(st.seats[1].seatId, 'dummy')\nui_pause_vehicleConfigurationOccupants.endSession()",
+  "notes": [
+    "Le poids d'un occupant vaut seat.weight si présent, sinon defaultWeight = 89 (kg, valeur locale du fichier).",
+    "Format du paramètre occupant de setSeatOccupant : 'empty', 'dummy' ou 'player:<index>' (index de joueur, 0 pour le joueur solo).",
+    "Pendant une session, un override est posé sur le véhicule (setVehicleOccupantsEnabledOverride) : les occupants restent actifs si l'onglet Occupants est ouvert ou si enabledWhileConfiguring vaut true ; endSession retire l'override.",
+    "onVehicleReplaced et onVehicleResetted sont de simples alias de onVehicleSpawned."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant celle-ci : gameplay_seatOccupants, core_multiseat, core_playerPersonas, core_vehicle_configTarget, core_vehicle_manager."},
+    "onVehicleReplaced": {"type": "function", "desc": "Alias de onVehicleSpawned : réapplique l'override et notifie l'UI si le véhicule remplacé est celui de la session."},
+    "onVehicleResetted": {"type": "function", "desc": "Alias de onVehicleSpawned : même comportement après un reset du véhicule."}
+  },
+  "functions": {
+    "getState": {
+      "desc": "Renvoie l'état affiché par l'onglet : id du véhicule, sièges, joueurs, mode multi-siège, chemins des pièces (partPath) installées, et enabledWhileConfiguring. Si aucun véhicule valide n'est ciblé, renvoie {vehicleId=nil, seats={}, players={}}.",
+      "returns": [{"type": "table", "desc": "{vehicleId, seats, players, multiseatActive, vehiclePartPaths, enabledWhileConfiguring}. players : liste triée de {id, label, color '#RRGGBB', icon}."}],
+      "internal": false
+    },
+    "beginSession": {
+      "desc": "Démarre une session de configuration sur le véhicule ciblé. Retire l'override de l'ancien véhicule s'il a changé, mémorise le nouveau et applique l'override des occupants.",
+      "params": {"enabled": {"type": "boolean|nil", "desc": "false pour désactiver les occupants pendant la configuration ; toute autre valeur (y compris nil) active."}},
+      "returns": [{"type": "table", "desc": "Le résultat de getState()."}],
+      "internal": false
+    },
+    "endSession": {
+      "desc": "Termine la session : supprime l'override des occupants sur le véhicule de session et réinitialise l'état local (sessionVehicleId, onglet actif).",
+      "internal": false
+    },
+    "setEnabledWhileConfiguring": {
+      "desc": "Active ou coupe les occupants pendant la configuration et réapplique l'override.",
+      "params": {"enabled": {"type": "boolean|nil", "desc": "false pour désactiver, sinon activé."}},
+      "returns": [{"type": "boolean", "desc": "La valeur retenue."}],
+      "internal": false
+    },
+    "setOccupantTabActive": {
+      "desc": "Indique si l'onglet Occupants est affiché ; tant qu'il l'est, les occupants restent actifs même si enabledWhileConfiguring vaut false.",
+      "params": {"active": {"type": "boolean", "desc": "true si l'onglet est ouvert."}},
+      "internal": false
+    },
+    "setSeatOccupant": {
+      "desc": "Définit l'occupant d'un siège : vide, mannequin ou joueur. Libère le siège au besoin avant de le réoccuper, puis notifie l'UI.",
+      "params": {
+        "seatId": {"type": "string", "desc": "Identifiant du siège (seat.seatId)."},
+        "occupant": {"type": "string", "desc": "'empty', 'dummy' ou 'player:<index>'."}
+      },
+      "returns": [{"type": "table", "desc": "{success=boolean, reason=string|nil}. Raisons : seatMissing, invalidOccupant, enterFailed, occupied, ou la raison renvoyée par setDummyOccupant."}],
+      "internal": false
+    },
+    "unseatAll": {
+      "desc": "Vide tous les sièges du véhicule ciblé et notifie l'UI.",
+      "returns": [{"type": "boolean", "desc": "false si aucun véhicule n'est ciblé, sinon true."}],
+      "internal": false
+    },
+    "fillEmptySeatsWithDummies": {
+      "desc": "Place un mannequin de 89 kg sur chaque siège libre du véhicule ciblé.",
+      "returns": [{"type": "integer", "desc": "Nombre de mannequins ajoutés (0 si aucun véhicule)."}],
+      "internal": false
+    },
+    "removeAllDummies": {
+      "desc": "Retire tous les mannequins du véhicule ciblé.",
+      "returns": [{"type": "integer", "desc": "Nombre retiré, tel que renvoyé par gameplay_seatOccupants.clearDummyOccupants (0 si aucun véhicule)."}],
+      "internal": false
+    },
+    "onSeatOccupantEnter": {
+      "desc": "Hook appelé quand un occupant s'assoit ; notifie l'UI si c'est le véhicule de session.",
+      "params": {"_": {"type": "any", "desc": "Ignoré (déduit du code)."}, "vehId": {"type": "integer", "desc": "Id du véhicule concerné."}},
+      "internal": true
+    },
+    "onSeatOccupantExit": {
+      "desc": "Hook appelé quand un occupant quitte un siège ; notifie l'UI si c'est le véhicule de session.",
+      "params": {"_": {"type": "any", "desc": "Ignoré (déduit du code)."}, "vehId": {"type": "integer", "desc": "Id du véhicule concerné."}},
+      "internal": true
+    },
+    "onLocalParticipantsChanged": {
+      "desc": "Hook appelé quand la liste des participants locaux (multi-siège) change ; notifie l'UI si une session est en cours.",
+      "internal": true
+    },
+    "onVehicleSpawned": {
+      "desc": "Hook appelé à l'apparition d'un véhicule ; si c'est celui de la session, réapplique l'override et notifie l'UI.",
+      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook appelé à la destruction d'un véhicule ; si c'est celui de la session, oublie la session et notifie l'UI.",
+      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "internal": true
+    },
+    "onVehicleConfigTargetChanged": {
+      "desc": "Hook appelé quand la cible de configuration change : retire l'override de l'ancien véhicule, bascule sur le nouveau et notifie l'UI.",
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook appelé au déchargement de l'extension ; appelle endSession.",
+      "internal": true
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/cameraPath.lua",
+  "module": "Noeud flowgraph 'Simple Cam Path' (categorie once_f_duration, fichier cameraPath). Lance une trajectoire de camera (fichier .camPath.json designe par 'pathName') via le module camera du gestionnaire, avec option 'loop'. Sorties : id de la trajectoire, impulsion 'activated' au demarrage, 'inactive' si la trajectoire n'est plus active, 'duration'. L'etat de duree passe a 'finished' quand la trajectoire est complete.",
+  "notes": [
+    "legacyPins renvoie vers 'complete' et 'flow', des pins qui n'existent pas dans le schema actuel."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Restreint le pin pathName aux fichiers '.camPath.json'.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Remet activatedFlag et l'etat de duree 'inactive'.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Meme remise a zero.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Trouve la trajectoire (camera:findPath), la demarre (startPath), ecrit id, activated=true et passe a l'etat 'started'.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Pendant l'etat started : gere l'impulsion activated, met inactive/duration selon que la trajectoire est active, passe a 'finished' quand isPathComplete.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine le milieu du noeud (vide).",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Migre l'ancien champ data.loop vers le pin code en dur 'loop'.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

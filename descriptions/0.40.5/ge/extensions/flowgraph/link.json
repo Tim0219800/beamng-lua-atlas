@@ -1,0 +1,40 @@
+{
+  "path": "lua/ge/extensions/flowgraph/link.lua",
+  "module": "Classe 'link' du flowgraph : un lien entre une pin de sortie (sourcePin) et une pin d'entrée (targetPin) de deux nœuds d'un graphe. À la création, il s'enregistre dans graph.links, écrit la pin source dans targetNode.pinIn, tient à jour la liste de flux multiples (_mInFlow) pour les pins de type flow, prévient pins et nœuds (_onLink) et choisit sa couleur d'après le type de pin. Il dessine aussi le lien dans l'éditeur (imgui / ui_flowgraph_editor). Le module renvoie un constructeur : require('/lua/ge/extensions/flowgraph/link')(graph, sourcePin, targetPin).",
+  "notes": [
+    "Un lien a deux ids : id et hiddenId (utilisé pour le surlignage), tous deux demandés à mgr:getNextFreePinLinkId().",
+    "Sérialisation compacte : {id nœud source, nom pin source, id nœud cible, nom pin cible, hidden}.",
+    "Un lien 'state' → 'state' est dessiné entre les pins de transition (N/S/E/W) selon la position relative des nœuds, avec une étiquette au nom de la pin source.",
+    "convertToQuickAccess remplace les liens issus d'une même pin source par un accès rapide (quickAccess + accessName unique, suffixe numérique si le nom existe) puis supprime la sélection."
+  ],
+  "fields": {
+    "id": {"type": "integer", "desc": "id du lien"},
+    "hiddenId": {"type": "integer", "desc": "id du lien de surlignage"},
+    "graph": {"type": "table", "desc": "graphe propriétaire"},
+    "sourcePin": {"type": "table", "desc": "pin de sortie"},
+    "targetPin": {"type": "table", "desc": "pin d'entrée"},
+    "sourceNode": {"type": "table", "desc": "nœud source"},
+    "targetNode": {"type": "table", "desc": "nœud cible"},
+    "hidden": {"type": "boolean", "desc": "lien dessiné comme raccourci (masqué)"},
+    "disabled": {"type": "boolean", "desc": "lien désactivé (initialisé à false)"},
+    "color": {"type": "ImVec4", "desc": "couleur du type de pin ; couleurs spéciales pour impulse et chainFlow"},
+    "data": {"type": "table", "desc": "table libre"}
+  },
+  "classes": {
+    "C": {
+      "desc": "Objet lien renvoyé par le constructeur.",
+      "functions": {
+        "init": {"desc": "Crée le lien, l'enregistre dans le graphe et notifie pins et nœuds.", "params": {"graph": {"type": "table", "desc": "graphe"}, "sourcePin": {"type": "table", "desc": "pin source"}, "targetPin": {"type": "table", "desc": "pin cible"}}, "internal": true},
+        "drawLinkTooltip": {"desc": "Affiche l'infobulle du lien survolé : icône et type de la pin source et sa valeur courante.", "params": {}},
+        "getDirPins": {"desc": "Pour les liens d'états : renvoie la paire de directions ('E','W' / 'W','E' / 'S','N' / 'N','S') selon la position des nœuds, ou nil,nil sans positions.", "returns": [{"type": "string|nil", "desc": "direction côté source"}, {"type": "string|nil", "desc": "direction côté cible"}]},
+        "draw": {"desc": "Dessine le lien dans l'éditeur avec animation de flux quand la pin source est active à la frame courante (jamais si le manager est arrêté, vitesse nulle en pause).", "internal": true},
+        "doFlow": {"desc": "Demande une animation de flux à la prochaine frame de dessin.", "params": {}},
+        "drawLabel": {"desc": "Dessine l'étiquette (nom de la pin source) au milieu d'un lien d'état.", "params": {"sPin": {"type": "table", "desc": "pin de transition source (imPos requis)"}, "tPin": {"type": "table", "desc": "pin de transition cible"}}, "internal": true},
+        "showContextMenu": {"desc": "Menu contextuel du lien : masquer / afficher, supprimer (si l'édition est autorisée) et, si la préférence flowgraph.debug.displayIds est active, ids.", "params": {"menuPos": {"type": "ImVec2", "desc": "position du menu (inutilisé dans le code)"}}, "internal": true},
+        "convertToQuickAccess": {"desc": "Transforme les liens partant de la pin source en accès rapide nommé (voir notes) puis supprime la sélection.", "params": {}},
+        "__onSerialize": {"desc": "Renvoie {sourceNode.id, sourcePin.name, targetNode.id, targetPin.name, hidden}.", "returns": [{"type": "table", "desc": "données du lien"}], "internal": true},
+        "__onDeserialized": {"desc": "Restaure l'état masqué depuis data[5].", "params": {"data": {"type": "table", "desc": "données sérialisées"}}, "internal": true}
+      }
+    }
+  }
+}

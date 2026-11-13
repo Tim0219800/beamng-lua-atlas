@@ -1,0 +1,31 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/math/smoothers/spring.lua",
+  "module": "Noeud flowgraph 'Spring Smoother' (categorie simple). Doit lisser un signal par ressort amorti (upSpring/downSpring, upDamp/downDamp selon le sens ; 'set' force l'etat). Sortie 'value'.",
+  "notes": [
+    "BUG : le noeud cree un lisseur sigmoide (newTemporalSigmoidSmoothing) alors que getWithSpringDamp n'existe que sur temporalSpring (newTemporalSpring dans common/filters.lua) : appeler le noeud avec une valeur provoque une erreur 'attempt to call a nil value'.",
+    "Le lisseur est partage entre instances (C.smoother)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Met C.oldSet=0 et C.smoother (classe) via newTemporalSigmoidSmoothing().",
+          "internal": true
+        },
+        "checkSetValue": {
+          "desc": "Si 'set' a change, force l'etat du lisseur.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Sans entree, sort l'etat ; sinon appelle smoother:getWithSpringDamp(sample, dt, spring, damp).",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche l'etat du lisseur.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "path": "lua/common/libs/xlsxlib/tests/TestManager.lua",
+  "module": "Gestionnaire de tests unitaires minimal (Thomas Fischer, 2024) propre aux tests de xlsxlib ; c'est l'ancêtre de testFramework/TestManager. Il collecte les fonctions dont le nom commence par \"test\" dans une table, les exécute dans l'ordre alphabétique, journalise PASSED/FAILED, et écrit un rapport XML JUnit si un fichier de sortie est donné. Un test dont le nom finit par `_shouldFail` doit échouer pour être considéré comme réussi.",
+  "usage": "local tm = require('libs/xlsxlib/tests/TestManager')\nlocal tests = {}\nfunction tests:testExemple(ctx) ctx:success('ok') end\ntm:run(tests, '/junit-results/exemple.xml')",
+  "notes": [
+    "`run` appelle chaque test avec `func(tests, ctx)` : il faut donc écrire les tests avec la syntaxe `function Tests:test_x(context)` (le contexte est le second argument). L'exemple du fichier (`function tests.testExampleSuccess(context)`) est incorrect : `context` y reçoit la table de tests.",
+    "Contexte fourni : `ctx:fail(message)` (lève une erreur), `ctx:success(message)` (message affiché si le test réussit).",
+    "Le fichier fait `require('socket')` pour `socket.gettime` (durées) et `require('json')`, `libs.xlsxlib.xlsxlib`.",
+    "Les compteurs (`__internal.testPassCount/testFailCount/testResults`) sont remis à zéro après chaque run."
+  ],
+  "fields": {
+    "LogAlways": {"type": "integer", "desc": "Niveau de log 1."},
+    "LogErrors": {"type": "integer", "desc": "Niveau de log 2."},
+    "LogFails": {"type": "integer", "desc": "Niveau de log 3."}
+  },
+  "functions": {
+    "setLogDefault": {
+      "desc": "Définit le niveau de log par défaut (champ interne LogDefault ; non utilisé ensuite par run).",
+      "params": {
+        "self": {"type": "table", "desc": "TestManager (appel avec les deux-points)."},
+        "logLevel": {"type": "integer", "desc": "LogAlways, LogErrors ou LogFails."}
+      },
+      "returns": []
+    },
+    "run": {
+      "desc": "Exécute les tests de la table `tests` (clés commençant par \"test\", triées), journalise le résultat de chacun, affiche les compteurs, puis écrit le XML JUnit si `outputFile` est donné.",
+      "params": {
+        "self": {"type": "table", "desc": "TestManager."},
+        "tests": {"type": "table<string, function>", "desc": "Fonctions de test ; les clés non \"test*\" provoquent un message d'erreur « Unknown test function »."},
+        "outputFile": {"type": "string|nil", "desc": "Chemin du rapport JUnit XML."}
+      },
+      "returns": []
+    }
+  }
+}

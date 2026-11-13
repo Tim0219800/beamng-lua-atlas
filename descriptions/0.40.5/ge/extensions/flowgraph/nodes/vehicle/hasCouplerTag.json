@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/hasCouplerTag.lua",
+  "module": "Nœud « Has Coupler Tag » (catégorie `repeat_instant`, tags event/attach/detach). Indique si un véhicule possède des attelages portant certains tags : `tow_hitch`, `fifthwheel`, `gooseneck_hitch`, `fifthwheel_v2`, `pintle` (liste dans le fichier). Pin d'entrée : `vehA`. Une sortie bool par tag (pins créés dynamiquement à partir de la liste).",
+  "notes": [
+    "Plante si `vehA` ne correspond à aucun véhicule connu du module vehicle (`getVehicle` renvoie nil) : pas de test."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Met toutes les sorties de tags à false.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Lit `couplerTags` du véhicule dans le module vehicle du manager et remplit chaque sortie.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

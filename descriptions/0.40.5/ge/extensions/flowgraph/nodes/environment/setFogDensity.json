@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/environment/setFogDensity.lua",
+  "module": "Nœud flowgraph « Set Fog » (catégorie dynamic_instant). Règle la densité du brouillard (density, 0 à 1) et la hauteur atmosphérique du brouillard (atmosphereHeight) via core_environment. Au démarrage du graphe il mémorise les valeurs actuelles et les restaure à l'arrêt (data.restoreTod).",
+  "notes": ["Ancien pin « fog » renommé en « density » (legacyPins).", "La clé de restauration s'appelle restoreTod (copiée du nœud Time of Day)."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Définit data.restoreTod = true.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
+        "postInit": {"desc": "Configure le pin density comme curseur 0 à 1.", "internal": true},
+        "_executionStarted": {"desc": "Mémorise la densité et la hauteur de brouillard actuelles.", "internal": true},
+        "_executionStopped": {"desc": "Restaure les valeurs mémorisées si data.restoreTod est vrai.", "internal": true},
+        "workOnce": {"desc": "Applique les paramètres une fois."},
+        "work": {"desc": "En mode repeat, applique les paramètres à chaque frame."},
+        "setFogParameters": {"desc": "Appelle core_environment.setFogDensity et setFogAtmosphereHeight avec les valeurs des pins."}
+      }
+    }
+  }
+}

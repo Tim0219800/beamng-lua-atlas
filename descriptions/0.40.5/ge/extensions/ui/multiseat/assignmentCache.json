@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/ui/multiseat/assignmentCache.lua",
+  "module": "Cache en mémoire des affectations multi-sièges (multiseat). Il garde une copie profonde de la valeur passée à set et en renvoie une copie à get, en journalisant la raison de chaque accès. Son mode de déchargement est « manual », donc le cache survit au déchargement automatique des extensions.",
+  "functions": {
+    "onInit": {
+      "desc": "Hook d'initialisation de l'extension ; passe le mode de déchargement à « manual » via setExtensionUnloadMode et journalise.",
+      "internal": true
+    },
+    "set": {
+      "desc": "Remplace les affectations mémorisées par une copie profonde de value et journalise la raison.",
+      "params": {
+        "value": {"type": "any", "desc": "Affectations à mémoriser (copiées avec deepcopy)."},
+        "reason": {"type": "string|nil", "desc": "Raison, utilisée seulement pour le log."}
+      }
+    },
+    "get": {
+      "desc": "Renvoie une copie profonde des affectations mémorisées et journalise la raison.",
+      "params": {"reason": {"type": "string|nil", "desc": "Raison, utilisée seulement pour le log."}},
+      "returns": [{"type": "any", "desc": "Copie des affectations, nil si rien n'a été défini."}]
+    }
+  }
+}

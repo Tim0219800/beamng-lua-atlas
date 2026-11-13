@@ -1,0 +1,89 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/buttons/simpleMultipleButtons.lua",
+  "module": "Nœud flowgraph « Simple Multiple Buttons » (catégorie once_instant) : version multi-boutons de Simple Button. Pour chaque i : entrées « hideWhenDone_i », « label_i », « order_i », « style_i » ; sorties « clicked_i » (impulsion), « complete_i », « incomplete_i » (cachées), « buttonId_i ». Le nombre de boutons se règle dans les propriétés.",
+  "notes": [
+    "Bug : workOnce lit self.pinIn.active (pin inexistant, erreur) pour chaque bouton.",
+    "Contrairement à Simple Button, les sorties s'appellent complete_i / incomplete_i (pas used/unused)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Initialise hiddenAfterDone/hiddenAfterReset à false pour chaque bouton.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure l'état du nœud depuis les données sauvegardées.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde du nœud à remplir."
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Écrit l'état du nœud dans la table de sauvegarde.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde du nœud à remplir."
+            }
+          },
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine le panneau de propriétés personnalisé de l'éditeur ; renvoie une chaîne décrivant la modification (pour l'historique d'annulation) ou nil.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Zone centrale vide.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "Constructeur de nœud de l'éditeur (builder:Middle() ouvre la zone centrale)."
+            },
+            "style": {
+              "type": "any",
+              "desc": "Style d'affichage du nœud fourni par l'éditeur."
+            }
+          },
+          "internal": true
+        },
+        "init": {
+          "desc": "count = 1.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Désactive chaque bouton une fois et remet hiddenAfterDone à false.",
+          "internal": true
+        },
+        "updatePins": {
+          "desc": "Ajuste le nombre de groupes de pins (4 entrées, 4 sorties par bouton).",
+          "params": {
+            "old": {
+              "type": "integer",
+              "desc": "Ancien nombre d'éléments."
+            },
+            "new": {
+              "type": "integer",
+              "desc": "Nouveau nombre d'éléments."
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Pour chaque bouton, met à jour clicked/complete/incomplete et le désactive si hideWhenDone et complété.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Crée tous les boutons et écrit leurs id (voir notes : bug).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

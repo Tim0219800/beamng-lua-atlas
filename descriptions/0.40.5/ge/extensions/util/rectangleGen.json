@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/util/rectangleGen.lua",
+  "module": "Générateur de graphe par découpage de rectangles, utilisé pour la génération procédurale de circuits (voir procTrack). À partir de rectangles de départ, il coupe successivement le plus grand rectangle découpable (verticalement ou horizontalement) jusqu'à obtenir le nombre de zones voulu, puis calcule les voisinages entre rectangles adjacents. Chaque rectangle devient un nœud (son centre arrondi) du graphe retourné.",
+  "notes": [
+    "Les paramètres lus : params.startingRects (x, y, width, height, force, noSplit, start, finish), params.rectModeParams (numNodes, minXDist, minYDist, vertSplitFunction(width, height), cutValueFunction()) et params.path.closed.",
+    "Les rectangles marqués noSplit ne sont jamais découpés et sont ajoutés après la phase de découpe ; start et finish ne sont conservés que pour eux (graph.start / graph.finish).",
+    "La découpe s'arrête quand plus aucun rectangle ne peut être coupé : le nombre de nœuds peut alors être inférieur à numNodes.",
+    "Les coordonnées des nœuds sont arrondies à l'entier inférieur (x - x%1).",
+    "Le test « un rectangle sans voisin » est présent mais son action (return graph) est commentée : aucun contrôle de validité n'est effectué."
+  ],
+  "functions": {
+    "getGraph": {
+      "desc": "Découpe récursivement les rectangles de départ, calcule les voisins (rectangles adjacents partageant un bord) et construit le graphe de nœuds.",
+      "params": {"params": {"type": "table", "desc": "Paramètres : startingRects, rectModeParams, path (voir notes)"}},
+      "returns": [{"type": "table", "desc": "{nodes = liste de {x, y, neighbours = liste de {index, dist}, name = 'rect_<i>', force, closestNeighbourDist}, start = nœud ou nil, finish = nœud ou nil}"}],
+      "internal": false
+    },
+    "dist": {
+      "desc": "Distance euclidienne 2D entre les points (a, b) et (x, y).",
+      "params": {
+        "a": {"type": "number", "desc": "X du premier point"},
+        "b": {"type": "number", "desc": "Y du premier point"},
+        "x": {"type": "number", "desc": "X du second point"},
+        "y": {"type": "number", "desc": "Y du second point"}
+      },
+      "returns": [{"type": "number", "desc": "Distance"}],
+      "internal": false
+    }
+  }
+}

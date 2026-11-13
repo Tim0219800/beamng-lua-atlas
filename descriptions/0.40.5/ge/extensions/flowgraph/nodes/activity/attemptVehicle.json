@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/activity/attemptVehicle.lua",
+  "module": "Nœud flowgraph « Activity Attempt Vehicle » (catégorie once_instant, tag activity). Ajoute à une tentative les informations d'un véhicule (modèle jbeam, configuration partConfig, isConfigFile si .pc) sous la clé donnée par « vehKey » (« vehicle » par défaut). Entrées : vehKey (string), vehId (number, sinon véhicule du joueur 0), attempt (attemptData). Sortie : attempt. En carrière, ajoute originId/originKey (inventaire du joueur ou véhicule fourni par le module de mise en place).",
+  "notes": [
+    "Si aucun véhicule n'est trouvé, le pin de sortie attempt n'est pas mis à jour.",
+    "En carrière, le code lit self.mgr.activity.setupModules sans test : plante sans activité associée.",
+    "originKey vaut 'careerInventory' (véhicule joueur) ou 'providedBySetupModule' (originId = _selectionIdx)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Vide.", "internal": true},
+        "workOnce": {"desc": "Cherche le véhicule (vehId ou joueur), construit {model, config, isConfigFile, originId, originKey} et l'écrit dans attempt[vehKey]."}
+      }
+    }
+  }
+}

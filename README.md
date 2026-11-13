@@ -21,19 +21,22 @@ Everything is generated from the Lua code shipped with the game (read-only) and 
 | `stubs/0.40.5/cpp/ge.lua`, `cpp/vehicle.lua` | Stubs for the C++ objects |
 | `descriptions/0.40.5/` | Hand-checked descriptions (JSON), merged by the generator |
 | `donnees-0.40.5.zip` (release asset) | Raw data: static extraction and in-game scans, needed to regenerate |
-| `outils/` | The tools: `extraire.py`, `generer.py`, `importer_releve.py`, `mod_releve/` |
+| `outils/` | The tools: `extraire.py`, `generer.py`, `importer_releve.py`, `mod_releve/`, `comparer.py`, `reporter_descriptions.py`, `verifier_mod.py`, `bissecter.py` (see below) |
+| [`NOUVELLE_VERSION.md`](NOUVELLE_VERSION.md) | Step-by-step procedure to move the atlas to a new game version (planned: 0.41), written in French |
 
 ### Coverage
 
 | Layer | Modules with written descriptions (✍) | Documented functions |
 |---|---|---|
-| Vehicle | 239 / 242 | 1664 / 1667 |
-| Common (GE + vehicle) | 87 / 188 | 412 / 869 |
-| GE | 234 / 2060 | 2394 / 11506 |
+| Vehicle | 242 / 242 | 1687 / 1688 |
+| Common (GE + vehicle) | 188 / 188 | 1220 / 1220 |
+| GE | 2060 / 2060 | 17627 / 17628 |
+| Console | 17 / 17 | 20 / 23 |
 
-Written GE coverage focuses on what modders use most: `utils`, `mathlib` (vec3, quat), `extensions`, `guihooks`, jbeam,
-`ge/main`, `map`, `spawn`, every `core_*`, `freeroam`, `scenario`, `render`, `mcp`.
-Every other module still has an automatic page: exported functions with parameters, fields, classes, hooks and original comments.
+All 2507 modules have a written description (✍): role, parameters, return values, pitfalls, and game bugs spotted while reading the code.
+Only a handful of functions (5 out of 20,559) keep just their original comment.
+Very large editor/UI files (groundCoverEditor, heroRoadEditor, layerStack…) are described from their exported API rather than line by line,
+and flowgraph nodes describe their generic methods (`work`, `init`…) in a standard way.
 
 C++ side (in-game scan): 103 instance classes in GE (including 76 scene object types such as `BeamNGVehicle` with 300 methods),
 39 C++ modules with sub-modules (`Engine.Render`, `Engine.Audio`, `Engine.imgui`…), and `obj` (`BeamObject`, 347 methods) in the vehicle VM.
@@ -82,11 +85,23 @@ It can be run again from the GE console with `tim19Atlas_dump.run()`. Remove the
 - **Game bugs**: several hundred inconsistencies found while reading the code are listed in each module's "Remarques" section,
   and 69 exports pointing to undefined functions are flagged with ⚠. Only a few were checked by hand.
 
+## Tools for modders
+
+```
+python -I outils/verifier_mod.py <mod.zip | folder> [...] [--version V]   # or: --mods-actifs
+python -I outils/bissecter.py debut        # game closed; then "bon"/"mauvais" after each launch, "fin" to restore
+python -I outils/comparer.py <old> <new>                                 # API diff between two game versions
+python -I outils/reporter_descriptions.py <old> <new>                    # carry descriptions over to the new version
+```
+
+- **`verifier_mod.py`**: file conflicts between mods, game files replaced, calls to unknown or removed functions, missing extensions, hooks never fired. Changes nothing.
+- **`bissecter.py`**: disables half of the active mods at each step to find the culprit; keeps a copy of `db.json` (`db.json.bak_bissection`).
+- **`comparer.py`**: produces `doc/<version>/changements.md` (breaking changes, additions, C++) and a JSON used by the checker.
+
 ## Roadmap
 
-1. API diff between game versions (re-run the extraction on each update and compare the `statique.json` files).
-2. Mod checker: file conflicts, calls to functions that no longer exist, bisection.
-3. Written descriptions for `gameplay` (traffic, police, missions).
+1. Move to 0.41: all the tooling is ready, see [`NOUVELLE_VERSION.md`](NOUVELLE_VERSION.md).
+2. Review and enrich descriptions of the very large editor files, and restore accents in part of the flowgraph nodes.
 
 ## License
 

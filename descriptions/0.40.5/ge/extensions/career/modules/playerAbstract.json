@@ -1,0 +1,59 @@
+{
+  "path": "lua/ge/extensions/career/modules/playerAbstract.lua",
+  "module": "Écran « résumé du conducteur » (driver abstract) accessible depuis l'ordinateur du garage en carrière. Il ajoute une entrée au menu de l'ordinateur et fournit à l'UI les données calculées par le module d'assurance (career_modules_insurance_insurance.getPlayerAbstractData).",
+  "notes": [
+    "La fonction de l'ordinateur est désactivée tant que le véhicule de départ n'est pas acheté (reasons.hasBoughtStarterVehicle).",
+    "Le menu ne s'ouvre via navigate que si un id d'ordinateur d'origine est fourni."
+  ],
+  "functions": {
+    "openPlayerAbstractMenu": {
+      "desc": "Mémorise l'ordinateur d'origine et, s'il existe, navigue vers career.computer.playerAbstract puis déclenche le hook onComputerPlayerAbstract.",
+      "params": {"_originComputerId": {"type": "string|nil", "desc": "Id de l'ordinateur du garage."}},
+      "internal": false
+    },
+    "closePlayerAbstractMenu": {
+      "desc": "Revient au menu de l'ordinateur d'origine, ou ferme tous les menus carrière s'il n'y en a pas.",
+      "params": {},
+      "internal": false
+    },
+    "getPlayerAbstractData": {
+      "desc": "Renvoie les données du résumé du conducteur fournies par le module d'assurance.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Données du résumé."}],
+      "internal": false
+    },
+    "sendPlayerAbstractDataToUI": {
+      "desc": "Pousse des données fraîches vers un écran déjà ouvert (guihooks playerAbstractData), par ex. après une remise à zéro du score.",
+      "params": {},
+      "internal": false
+    },
+    "onComputerAddFunctions": {
+      "desc": "Hook de l'ordinateur : ajoute la fonction playerAbstract (ordre 15, catégorie general) si l'installation l'autorise.",
+      "params": {
+        "menuData": {"type": "table", "desc": "Données du menu (computerFacility, hasBoughtStarterVehicle)."},
+        "computerFunctions": {"type": "table", "desc": "Tables de fonctions à compléter."}
+      },
+      "internal": true
+    },
+    "onRouteMount": {
+      "desc": "Cycle de vie du routeur UI : place les données du résumé dans data.playerAbstract.",
+      "params": {
+        "context": {"type": "any", "desc": "Contexte du routeur."},
+        "toRoute": {"type": "any", "desc": "Route cible."},
+        "fromRoute": {"type": "any", "desc": "Route précédente."},
+        "data": {"type": "table", "desc": "routeData à remplir."}
+      },
+      "internal": true
+    },
+    "onRouteLeave": {
+      "desc": "Cycle de vie du routeur UI : oublie l'ordinateur d'origine en quittant l'écran.",
+      "params": {
+        "context": {"type": "any", "desc": "Contexte du routeur."},
+        "toRoute": {"type": "any", "desc": "Route cible."},
+        "fromRoute": {"type": "any", "desc": "Route quittée."},
+        "data": {"type": "table", "desc": "routeData."}
+      },
+      "internal": true
+    }
+  }
+}

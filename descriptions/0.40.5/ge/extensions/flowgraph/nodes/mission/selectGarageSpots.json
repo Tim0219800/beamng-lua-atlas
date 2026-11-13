@@ -1,0 +1,52 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/mission/selectGarageSpots.lua",
+  "module": "Noeud flowgraph 'Select Garage Spots' (categorie once_p_duration, auteur BeamNG). Choisit une place de depart et une place d'arrivee parmi sitesData.parkingSpots : en mode isLocal, la place de depart doit appartenir a la zone 'zone' (zone de plus faible prio) ; la place d'arrivee est choisie au hasard entre minDist et maxDist de distance. Sorties : flow (une fois trouve), impulsion loaded, startSpot, endSpot, startLocation, endLocation. Les descriptions des pins d'entree sont vides dans le code.",
+  "notes": [
+    "Le message de journal parle de 'G2G Route' (reprise du noeud garage-to-garage).",
+    "Le reset (pin) n'est pas lu dans work ; seul resetData via workOnce/_executionStarted remet a zero.",
+    "Si possibleStartingSpots est vide (aucune place dans la zone), self.startSpot est nil et le noeud plante."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Initialise les listes, state=1 et les sorties.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Appelle resetData.",
+          "internal": true
+        },
+        "resetData": {
+          "desc": "Vide les places utilisees et remet tout a zero.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Appelle resetData.",
+          "internal": true
+        },
+        "findEndSpotForStartingSpot": {
+          "desc": "Choisit une place d'arrivee a distance acceptable de la place de depart (voir Select Garage Sites), sinon le meilleur candidat.",
+          "internal": true,
+          "params": {
+            "startSpot": {
+              "type": "table",
+              "desc": "place de depart"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "place d'arrivee"
+            }
+          ]
+        },
+        "work": {
+          "desc": "Si flow : state 1 selectionne depart et arrivee, ecrit les sorties, flow et loaded a true ; state 2 garde flow=true et loaded=false.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

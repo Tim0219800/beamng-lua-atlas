@@ -1,0 +1,37 @@
+{
+  "path": "lua/ge/client/postFx.lua",
+  "module": "Gestionnaire des post-effets (PostFX) du jeu. À l'import il crée les objets communs : state blocks PFX_DefaultStateBlock et PFX_DefaultBlitStateBlock, shaders PFX_PassthruShader et PFX_PassthruComputeShader, et les PostEffect AL_FormatBlit et AL_UpscaleBilinear (désactivés au départ). Il charge les effets de client/postFx/* (caustics, dof, edgeAA, fog, fxaa, glow, maskedScreenBlur, smaa, ssao, screenSpaceShadows) et sait ré-appliquer les valeurs par défaut de SSAO et du DOF.",
+  "notes": [
+    "initPostEffects et reloadPostEffects contiennent le même code (un require par effet) ; require met en cache, donc le rechargement n'exécute les modules qu'une fois sauf si le cache est vidé.",
+    "La table globale postEffectCallbacks est publiée via rawset sur _G ; son onEnabled retourne toujours true."
+  ],
+  "fields": {},
+  "functions": {
+    "initPostEffects": {
+      "desc": "Charge tous les modules de post-effets et conserve les références vers dof et ssao.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "reloadPostEffects": {
+      "desc": "Identique à initPostEffects (appelée par reloadClient).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "applyDefaults": {
+      "desc": "Réapplique les valeurs par défaut de ssao et dof (applyDefaults de chaque module), active ou désactive l'objet SSAOPostFx selon $SSAOPostFx::Enable, puis appelle dof.updateDOFSettings().",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  },
+  "classes": {
+    "postEffectCallbacks": {
+      "desc": "Table de callbacks globale (_G.postEffectCallbacks) utilisée par le moteur pour les PostEffect.",
+      "functions": {
+        "onEnabled": {"desc": "Appelée quand un PostEffect est activé ; retourne true (autorise l'activation).", "params": {}, "returns": [{"type": "boolean", "desc": "toujours true"}], "internal": true}
+      }
+    }
+  }
+}

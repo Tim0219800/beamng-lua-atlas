@@ -1,0 +1,52 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/thread/receiveMessage.lua",
+  "module": "Noeud « Receive Message » (thread). Reçoit un message envoyé par un autre projet flowgraph en cours (Send Message) et expose ses champs sur des pins de sortie personnalisés (nom des pins = clés du message). Pins : flow, reset, isNetwork, name (filtre), sorties flow, receiving (impulsion), received. Un seul message est consommé jusqu'au reset.",
+  "notes": [
+    "La description du noeud dit « Sends a message... » (copie de Send Message), alors qu'il reçoit.",
+    "Le pin name est seulement requis non nil : le code ne compare pas le nom du message (le filtre « matches exactly » n'est pas appliqué ici).",
+    "Le pin isNetwork n'est pas utilisé."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "savePins = true, allowCustomOutPins = true.",
+          "internal": true
+        },
+        "onThreadMessageProcess": {
+          "desc": "Hook : mémorise le message reçu s'il n'a pas déjà été traité (done = false).",
+          "params": {
+            "message": {
+              "type": "any",
+              "desc": "table du message"
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Sur reset, remet à zéro ; sinon, si un message est en attente et name est donné, copie ses champs sur les pins, active receiving et received.",
+          "internal": false
+        },
+        "_executionStarted": {
+          "desc": "done = false.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

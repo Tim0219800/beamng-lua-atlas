@@ -1,0 +1,49 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/onBigmapStateChange.lua",
+  "module": "Nœud flowgraph « On Bigmap State Change » (catégorie repeat_instant) : détecte l'ouverture et la fermeture de la grande carte. Sorties impulsions : « enteredStart », « enteredEnd », « exitedStart », « exitedEnd » (début/fin de transition).",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "init": {
+          "desc": "Initialise les drapeaux.",
+          "internal": true
+        },
+        "onActivateBigMapCallback": {
+          "desc": "Hook : fin de l'ouverture de la carte.",
+          "internal": true
+        },
+        "onBigmapStartTransition": {
+          "desc": "Hook : début de transition ; activate vrai = entrée, faux = sortie.",
+          "params": {
+            "activate": {
+              "type": "boolean",
+              "desc": "true si la grande carte s'ouvre, false si elle se ferme."
+            },
+            "esc": {
+              "type": "boolean",
+              "desc": "Fermeture par la touche Échap (déduit du code, non utilisé)."
+            }
+          },
+          "internal": true
+        },
+        "onDeactivateBigMapCallback": {
+          "desc": "Hook : fin de la fermeture de la carte.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Remet les impulsions à false et applique les drapeaux reçus.",
+          "params": {
+            "args": {
+              "type": "any",
+              "desc": "Argument éventuel (non utilisé)."
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

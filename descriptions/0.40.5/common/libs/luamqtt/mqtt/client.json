@@ -1,0 +1,56 @@
+{
+  "path": "lua/common/libs/luamqtt/mqtt/client.lua",
+  "module": "Client MQTT (3.1.1 ou 5.0) de la bibliothèque luamqtt. Gère la connexion à un broker via un connecteur (luasocket par défaut), l'envoi/réception de paquets, publish/subscribe/unsubscribe, les acquittements QoS 1 et 2, le keep_alive (PINGREQ), la reconnexion automatique et des événements utilisateur enregistrés avec on(). Le client est piloté soit par un ioloop (ioloop.lua), soit en synchrone (mqtt.run_sync).",
+  "usage": "local client = require('libs/luamqtt/mqtt/client')\nlocal cl = client.create({uri = 'broker.local:1883', clean = true, id = 'beamng'})\ncl:on('message', function(msg, c) print(msg.topic, msg.payload) end)\ncl:on('connect', function(pkt, c) c:subscribe({topic = 'test/#'}) end)\nrequire('libs/luamqtt/mqtt/ioloop').get():add(cl); cl:start_connecting()",
+  "notes": [
+    "Événements acceptés par on() : connect, subscribe, unsubscribe, message, acknowledge, error, close, auth. Un autre nom lève une erreur.",
+    "Signatures des handlers : connect(packet, client), subscribe(packet, client), unsubscribe(packet, client), message(packet, client), acknowledge(packet, client), auth(packet, client), error(err, client[, packet]), close(conn, client).",
+    "Arguments de création (clés autorisées uniquement) : uri, clean (obligatoires), version (4 ou 5), id, username, password, secure, will, keep_alive (défaut 60 s), properties, user_properties, reconnect, connector, ssl_module. Une clé inconnue lève une erreur.",
+    "Sans id fourni, un identifiant aléatoire 'luamqtt-v<version>-<hex>' est généré.",
+    "Les fonctions d'erreur réseau renvoient false et un message ; les arguments de mauvais type lèvent une exception.",
+    "Les méthodes préfixées par _ sont internes."
+  ],
+  "functions": {
+    "create": {
+      "desc": "Crée, initialise et renvoie une instance de client MQTT. Si un ioloop par défaut existe déjà et tourne, le client y est ajouté et la connexion démarre.",
+      "params": {"...": {"type": "table", "desc": "Table d'arguments de client_mt:__init."}},
+      "returns": [{"type": "table", "desc": "Instance client_mt."}]
+    }
+  },
+  "classes": {
+    "client_mt": {
+      "desc": "Instance de client MQTT renvoyée par create. Champs notables : args (arguments validés), handlers (callbacks par événement), connection (table de connexion, nil si déconnecté).",
+      "functions": {
+        "__init": {"desc": "Valide les arguments de création (uri 'hôte[:port]', clean, version 4/5, id, username, password, secure, will{topic,payload,qos,retain}, keep_alive, reconnect, connector, ssl_module, properties, user_properties) et initialise les handlers.", "params": {"args": {"type": "table", "desc": "Arguments de création."}}, "internal": true},
+        "on": {"desc": "Ajoute des handlers d'événements : on(nom, fonction) ou on({nom1 = f1, nom2 = f2}). Lève une erreur si le nom d'événement est invalide.", "params": {"...": {"type": "string|table, function|nil", "desc": "(event_name, function) ou table d'événements."}}},
+        "off": {"desc": "Retire un handler d'un événement.", "params": {"event": {"type": "string", "desc": "Nom de l'événement."}, "func": {"type": "function", "desc": "Handler à retirer."}}},
+        "subscribe": {"desc": "S'abonne à un topic. Renvoie l'identifiant de paquet SUBSCRIBE ; le callback est appelé quand l'abonnement est confirmé.", "params": {"args": {"type": "table", "desc": "topic, qos (défaut 0), no_local / retain_as_published / retain_handling / properties / user_properties (MQTT 5 seulement), callback."}}, "returns": [{"type": "integer|boolean", "desc": "Identifiant de paquet, ou false et message d'erreur."}]},
+        "unsubscribe": {"desc": "Se désabonne d'un topic ; callback appelé quand le broker confirme.", "params": {"args": {"type": "table", "desc": "topic, properties, user_properties, callback."}}, "returns": [{"type": "integer|boolean", "desc": "Identifiant de paquet, ou false et message."}]},
+        "publish": {"desc": "Publie un message.", "params": {"args": {"type": "table", "desc": "topic, payload, qos (défaut 0), retain (défaut false), dup (défaut false), properties, user_properties, callback (appelé à l'acquittement)."}}, "returns": [{"type": "boolean|integer", "desc": "true ou identifiant de paquet ; false et message en cas d'échec."}]},
+        "acknowledge": {"desc": "Acquitte un message PUBLISH reçu (PUBACK, ou PUBREC pour QoS 2).", "params": {"msg": {"type": "table", "desc": "Paquet PUBLISH reçu."}, "rc": {"type": "integer", "desc": "Code de raison (MQTT 5, défaut 0)."}, "properties": {"type": "table", "desc": "Propriétés."}, "user_properties": {"type": "table", "desc": "Propriétés utilisateur."}}, "returns": [{"type": "boolean", "desc": "true, ou false et message."}]},
+        "auth": {"desc": "Envoie un paquet AUTH (MQTT 5.0).", "params": {"rc": {"type": "integer", "desc": "Code de raison (défaut 0)."}, "properties": {"type": "table", "desc": "Propriétés."}, "user_properties": {"type": "table", "desc": "Propriétés utilisateur."}}, "returns": [{"type": "boolean", "desc": "true, ou false et message."}]},
+        "disconnect": {"desc": "Envoie DISCONNECT au broker puis ferme la connexion.", "params": {"rc": {"type": "integer", "desc": "Code de raison MQTT 5 (défaut 0)."}, "properties": {"type": "table", "desc": "Propriétés."}, "user_properties": {"type": "table", "desc": "Propriétés utilisateur."}}, "returns": [{"type": "boolean", "desc": "true, ou false et message."}]},
+        "close_connection": {"desc": "Ferme immédiatement la connexion réseau, sans DISCONNECT. Déclenche l'événement close ; peut programmer une reconnexion si reconnect est actif.", "params": {"reason": {"type": "string|nil", "desc": "Texte de la raison."}}},
+        "start_connecting": {"desc": "Démarre la connexion au broker (ouverture réseau puis CONNECT).", "returns": [{"type": "boolean", "desc": "true, ou false et message."}]},
+        "open_connection": {"desc": "Ouvre la connexion réseau vers le broker via le connecteur.", "returns": [{"type": "boolean", "desc": "true, ou false et message."}]},
+        "send_connect": {"desc": "Envoie le paquet CONNECT sur la connexion ouverte.", "returns": [{"type": "boolean", "desc": "true, ou false et message."}]},
+        "send_pingreq": {"desc": "Envoie un PINGREQ (keep_alive).", "returns": [{"type": "boolean", "desc": "true, ou false et message."}]},
+        "set_ioloop": {"desc": "Associe ou dissocie (nil) le client d'un ioloop ; appelé par ioloop:add/remove.", "params": {"loop": {"type": "table|nil", "desc": "Instance ioloop."}}},
+        "acknowledge_pubrel": {"desc": "Envoie PUBREL (deuxième phase d'un échange QoS 2).", "params": {"packet_id": {"type": "integer", "desc": "Identifiant de paquet."}}, "returns": [{"type": "boolean", "desc": "true, ou false et message."}]},
+        "acknowledge_pubcomp": {"desc": "Envoie PUBCOMP (dernière phase d'un échange QoS 2).", "params": {"packet_id": {"type": "integer", "desc": "Identifiant de paquet."}}, "returns": [{"type": "boolean", "desc": "true, ou false et message."}]},
+        "handle": {"desc": "Appelle les handlers enregistrés pour un événement.", "params": {"event": {"type": "string", "desc": "Nom de l'événement."}, "...": {"type": "any", "desc": "Arguments transmis aux handlers."}}, "internal": true},
+        "__gc": {"desc": "Appelé par le ramasse-miettes.", "internal": true},
+        "__tostring": {"desc": "Représentation texte du client.", "internal": true},
+        "_apply_network_timeout": {"desc": "Applique le délai réseau de l'ioloop à une connexion déjà établie.", "internal": true},
+        "_apply_secure": {"desc": "Construit conn.secure_params d'après les arguments de création.", "internal": true},
+        "_assign_packet_id": {"desc": "Attribue le prochain identifiant de paquet.", "internal": true},
+        "_io_iteration": {"desc": "Effectue une itération d'E/S : réception du paquet suivant et déclenchement des événements.", "internal": true},
+        "_ioloop_iteration": {"desc": "Une itération d'E/S appelée par l'ioloop.", "internal": true},
+        "_sync_iteration": {"desc": "Une itération d'E/S appelée par la boucle synchrone (mqtt.run_sync).", "internal": true},
+        "_parse_uri": {"desc": "Remplit conn.host et conn.port d'après args.uri (port 1883, ou 8883 en sécurisé).", "internal": true},
+        "_receive_packet": {"desc": "Reçoit un paquet de la connexion.", "internal": true},
+        "_send_packet": {"desc": "Envoie un paquet sur la connexion.", "internal": true}
+      }
+    }
+  }
+}

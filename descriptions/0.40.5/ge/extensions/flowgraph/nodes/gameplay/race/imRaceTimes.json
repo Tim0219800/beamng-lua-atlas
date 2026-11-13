@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/imRaceTimes.lua",
+  "module": "Nœud flowgraph « im Race Times » (catégorie repeat_instant, tag scenario). Dessine en imgui les temps de course d'un véhicule en appelant race:inDrawTimes(vehId, im, detailed) sur l'objet raceData reçu. Entrées : raceData (table 'raceData') et vehId (number). Si la fonction renvoie vrai (clic dans l'UI), l'option data.detailed est basculée.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise data.detailed à false.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
+        "drawMiddle": {"desc": "Vide : aucun dessin dans le corps du nœud.", "params": {"builder": {"type": "table", "desc": "Constructeur de nœud."}, "style": {"type": "table", "desc": "Style."}}, "internal": true},
+        "work": {"desc": "Si raceData est présent, dessine les temps du véhicule et bascule le mode détaillé quand inDrawTimes renvoie vrai.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+      }
+    }
+  }
+}

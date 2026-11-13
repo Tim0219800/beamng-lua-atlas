@@ -4,11 +4,19 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/vehicle/beamstate/reset")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud « Reset Vehicle » (catégorie `repeat_p_duration`, tag reset). Remet le véhicule à son état initial : `veh:requestReset(RESET_PHYSICS)` puis `veh:resetBrokenFlexMesh()`. Pin d'entrée : `vehId`. Si `vehId` n'est pas branché, le nœud prend le véhicule joueur (`getPlayerVehicle(0)`).
+
+## Remarques
+
+- Appelé à chaque frame tant que le flux est actif : utiliser une impulsion pour un seul reset.
+
 ## Classe `C`
+
+Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:work()` |  | 26 |
+| `C:work()` | Demande un reset physique du véhicule et remet à zéro ses flexmeshes cassés. | 26 |
 
 ## Appels vers le moteur (C++)
 

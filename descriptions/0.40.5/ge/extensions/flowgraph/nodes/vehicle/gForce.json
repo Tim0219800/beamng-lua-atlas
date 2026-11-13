@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/gForce.lua",
+  "module": "Nœud « Gravity Force » (catégorie `repeat_p_duration`, tags gravity/force/gforce). Calcule les g subis par le véhicule à partir des accélérations lissées `accXSmooth/accYSmooth/accZSmooth` du véhicule (lues via `core_vehicleBridge`) et de la gravité de `core_environment`. Sorties : `gx` (latéral), `gy` (longitudinal), `gz` (vertical, gravité retirée), `gForce` (total) et `gForceZ0` (sans composante verticale, pin caché). Pin d'entrée : `vehId` (défaut : joueur).",
+  "notes": [
+    "Les valeurs sont stockées dans une table locale partagée par tous les nœuds gForce du fichier (`values`).",
+    "Les descriptions des pins disent gx = latéral, gy = longitudinal (conventions du code).",
+    "La gravité est bornée à |g| >= 0,01 avec son signe ; `accZSmooth == 0` est remplacé par la gravité pour la première frame."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Appelé par le gestionnaire quand l'exécution du projet s'arrête ; nettoie l'état interne.",
+          "internal": true
+        },
+        "init": {
+          "desc": "Constructeur du nœud, appelé à sa création par l'éditeur/gestionnaire de flowgraph ; initialise l'état interne.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Fonction vide (le code d'initialisation est commenté).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Lit les accélérations lissées (s'abonne aux valeurs au premier appel), les divise par la gravité et remplit les sorties en g.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

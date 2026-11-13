@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/career/garageTutorialUtil.lua",
+  "module": "Nœud flowgraph « Garage Tutorial Util » (catégorie repeat_instant, couleur/icône ui), aide pour le tutoriel du garage. Sorties bool : parkedInGarage (un véhicule de l'inventaire est dans le garage le plus proche et sa vitesse est < 0,25 m/s) et isRepaired (le véhicule du joueur n'a pas besoin de réparation selon l'assurance). Toutes les secondes de temps simulé, met à jour l'état des pièces du véhicule du joueur (hors marche à pied).",
+  "notes": ["Utilise career_modules_inventory et career_modules_insurance_insurance : nécessite la carrière.", "Le code lit map.objects[objId] sans test de nil."],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Minuteur à 0.", "internal": true},
+        "_executionStarted": {"desc": "Minuteur à 0 au démarrage du graphe.", "internal": true},
+        "work": {"desc": "Chaque frame : calcule parkedInGarage et isRepaired ; chaque seconde, appelle career_modules_inventory.updatePartConditions pour le véhicule du joueur s'il ne marche pas.", "params": {"args": {"type": "any", "desc": "non utilisé"}}}
+      }
+    }
+  }
+}

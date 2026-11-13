@@ -1,0 +1,29 @@
+{
+  "path": "lua/ge/extensions/career/modules/debug/vehOfferDebug.lua",
+  "module": "Onglet de debug carrière « Delivery > Veh Offers ». Fenêtre 'Vehicle Offer Debug' listant, par facilité de livraison, les offres de véhicules/remorques non expirées (career_modules_delivery_vehicleOfferManager). L'entrée '> Available vehicle/trailer per facility' imprime le nombre d'offres par niveau de déblocage (1 à 5) via isVehicleTagUnlocked.",
+  "notes": ["Outil de développement ; debugOrder = 11.", "Réutilise career_modules_debug_parcelDebug.drawFacilityHeader."],
+  "fields": {
+    "debugOrder": {"type": "number", "desc": "Ordre de tri (11)."},
+    "debugName": {"type": "string", "desc": "'Delivery > Veh Offers'."}
+  },
+  "functions": {
+    "onCareerActivated": {
+      "desc": "Hook : mémorise les modules delivery et parcelDebug.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "drawDebugFunctions": {
+      "desc": "Entrées '> Available vehicle per facility' et '> Available trailer per facility' : comptent les offres non expirées par niveau et impriment le résultat trié.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "drawDebugMenu": {
+      "desc": "Dessine la fenêtre 'Vehicle Offer Debug' : temps de livraison, choix de facilité (all, auto ou id) et tableaux d'offres.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

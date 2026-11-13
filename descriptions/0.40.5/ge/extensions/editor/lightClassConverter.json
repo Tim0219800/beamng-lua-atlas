@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/editor/lightClassConverter.lua",
+  "module": "Ajoute un bouton « Convert To Spot Light / Point Light » en haut de l'inspecteur quand la sélection ne contient que des PointLight ou que des SpotLight. La conversion remplace l'objet sur place en gardant l'id SimObject, le nom, le groupe parent, la transformation et les champs communs ; c'est une seule étape d'undo réversible (restauration par la sérialisation d'origine).",
+  "notes": [
+    "Le bouton n'apparaît pas si la sélection est mixte ou contient un autre type ; si un objet est verrouillé (isLocked), un message jaune remplace le bouton.",
+    "Rayon : « radius » (PointLight) et « range » (SpotLight) sont mappés explicitement, sinon la lumière reprend la valeur par défaut et perd ses ombres.",
+    "intensity et brightness ne sont pas copiés bruts (unités différentes : lumens/candelas) ; brightness est réappliqué en dernier pour éviter une dérive à chaque conversion.",
+    "Émet le hook onEditorObjectAdded(id) après chaque conversion ou undo."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "{\"editor_inspector\"} : chargé après l'inspecteur pour disposer du hook de header et des API."}
+  },
+  "functions": {
+    "onEditorInspectorHeaderGui": {
+      "desc": "Dessine le bouton de conversion en haut de la fenêtre d'inspecteur (hook émis par editor_inspector). Utilise la sélection verrouillée de l'instance si elle existe, sinon editor.selection.object.",
+      "params": {"inspectorInfo": {"type": "table|nil", "desc": "Instance d'inspecteur ; son champ selection.object est utilisé s'il existe."}},
+      "internal": true
+    }
+  }
+}

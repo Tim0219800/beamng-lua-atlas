@@ -2,88 +2,101 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/session.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
+--- Aide partagée de sauvegarde et chargement de session pour les outils personnalisés de splines et de zones de l'éditeur. Elle gère ce qui est identique pour tous les outils : l'enveloppe JSON portable (version, tool, mapName, items ou state, globals, records), la lecture/écriture de fichier, la boucle de chargement en remplacement ou en fusion, les boutons Save / Save As / Load en haut de fenêtre et la fenêtre modale Replace/Merge. Tout le spécifique à l'outil passe par une table spec. Référence de câblage : heroRoadEditor et roadSpline.
 --- Accès : extension `editor_toolUtilities_session` : `extensions.load("editor_toolUtilities_session")`, puis la globale `editor_toolUtilities_session`
 ---@class editor_toolUtilities_session
 editor_toolUtilities_session = {}
 
---- Which file the document is attached to and whether it has unsaved changes.
+--- Renvoie le fichier auquel le document est attaché et s'il a des modifications non enregistrées.
 ---Source : lua/ge/extensions/editor/toolUtilities/session.lua:109
----@param toolId any
+---@param toolId string Identifiant de l'outil.
+---@return table  { path = string|nil, dirty = true|nil }
 function editor_toolUtilities_session.attachment(toolId) end
 
---- The bound path on its own, for callers that run every frame and should not allocate a table to read it.
+--- Renvoie seulement le chemin lié, pour les appels par frame qui ne doivent pas allouer de table.
 ---Source : lua/ge/extensions/editor/toolUtilities/session.lua:114
----@param toolId any
+---@param toolId string Identifiant de l'outil.
+---@return string|nil  Chemin du fichier lié.
 function editor_toolUtilities_session.boundPath(toolId) end
 
---- Deep-copies an item through the buffer codec.
+--- Copie profonde d'un élément via le codec string.buffer (encode puis decode), avec en option des clés remplacées par {} ou supprimées. Sert à écrire serializeItem sans muter l'élément vivant.
 ---Source : lua/ge/extensions/editor/toolUtilities/session.lua:138
----@param item any
----@param emptyKeys any
----@param nilKeys any
+---@param item table Élément à copier.
+---@param emptyKeys string[]|nil Clés à remplacer par une table vide.
+---@param nilKeys string[]|nil Clés à supprimer.
+---@return table  Copie propre.
 function editor_toolUtilities_session.itemToTable(item, emptyKeys, nilKeys) end
 
+--- Lit le fichier JSON puis applique spec.loadJson s'il existe, sinon loadJson du module.
 ---Source : lua/ge/extensions/editor/toolUtilities/session.lua:209
----@param path any
----@param spec any
----@param replace any
+---@param path string Chemin du fichier.
+---@param spec table Spécification de l'outil.
+---@param replace boolean true pour remplacer, false pour fusionner.
+---@return boolean  ok.
+---@return integer|string  Nombre d'éléments ou erreur.
+---@return boolean|nil  keepUnbound (fichier partiel) quand spec.loadJson le renvoie.
 function editor_toolUtilities_session.loadFromFile(path, spec, replace) end
 
---- Applies a decoded session JSON. `replace` wipes current items first; otherwise the loaded items are MERGED (an incoming id that
----  clashes with a live item gets a fresh one so nothing is clobbered). Returns ok, countOrError.
+--- Applique un JSON de session déjà décodé. replace vide d'abord les éléments courants (et applique globals/records) ; sinon les éléments chargés sont fusionnés, un id déjà utilisé recevant un nouvel UUID. Pour un outil à état global, passe state à spec.loadWhole.
 ---Source : lua/ge/extensions/editor/toolUtilities/session.lua:183
----@param j any
----@param spec any
----@param replace any
+---@param j table JSON décodé.
+---@param spec table Spécification de l'outil.
+---@param replace boolean true pour remplacer, false pour fusionner.
+---@return boolean  ok.
+---@return integer|string  Nombre d'éléments chargés, ou message d'erreur (« not a valid <toolId> session file »).
 function editor_toolUtilities_session.loadJson(j, spec, replace) end
 
---- Marks a tool's document as having unsaved changes. Tools call this from their dirty/rebuild pass (once per pass, when something
----  actually rebuilt). The load guard swallows exactly one call so the forced rebuild a fresh Load triggers doesn't flip the doc dirty.
+--- Marque le document d'un outil comme modifié (non enregistré). À appeler depuis la passe de reconstruction de l'outil, une fois par passe. La garde de chargement avale un appel après un Load.
 ---Source : lua/ge/extensions/editor/toolUtilities/session.lua:92
----@param toolId any
+---@param toolId string Identifiant de l'outil.
 function editor_toolUtilities_session.markEdited(toolId) end
 
+--- Rétablit la liaison fichier et l'état modifié depuis une table renvoyée par attachment (par exemple après un rechargement d'extension).
 ---Source : lua/ge/extensions/editor/toolUtilities/session.lua:131
----@param toolId any
----@param at any
+---@param toolId string Identifiant de l'outil.
+---@param at table { path, dirty } ; ignoré si ce n'est pas une table.
 function editor_toolUtilities_session.reattach(toolId, at) end
 
---- Rehydrates an array of node positions loaded from JSON (plain {x,y,z}) back into vec3, in place. Idempotent: entries that are
----  already vec3 (the buffer/undo path) have a :distance method and are left as-is. Safe on nil / non-table.
+--- Reconvertit en place un tableau de positions chargées depuis le JSON ({x,y,z} simples) en vec3. Idempotent (les vec3 existants, qui ont une méthode distance, sont laissés tels quels) ; sans danger sur nil ou une non-table.
 ---Source : lua/ge/extensions/editor/toolUtilities/session.lua:147
----@param arr any
+---@param arr table|nil Tableau de positions.
 function editor_toolUtilities_session.rehydrateVec3Array(arr) end
 
---- Inline variant: draws Save (once a file is known) + Save As (when non-empty) + Load side-by-side + the modal.
+--- Variante en ligne : dessine Save (une fois un fichier connu), Save As (si l'outil est non vide) et Load côte à côte, puis la fenêtre modale Replace/Merge.
 ---Source : lua/ge/extensions/editor/toolUtilities/session.lua:345
----@param spec any
+---@param spec table Spécification de l'outil.
 function editor_toolUtilities_session.renderButtons(spec) end
 
---- Column variant: draws Save + Save As + Load as three grid cells.
+--- Variante en colonnes : dessine Save, Save As et Load comme trois cellules de grille.
 ---Source : lua/ge/extensions/editor/toolUtilities/session.lua:357
----@param spec any
+---@param spec table Spécification de l'outil.
 function editor_toolUtilities_session.renderButtonsColumns(spec) end
 
---- Writes an edited document back over the file it is bound to, for a tool whose work should never wait on a Save press.
+--- Réécrit le document modifié sur le fichier auquel il est lié, pour un outil dont le travail ne doit jamais attendre un appui sur Save. Renvoie false s'il n'y a pas de fichier lié ou pas de modification.
 ---Source : lua/ge/extensions/editor/toolUtilities/session.lua:173
----@param spec any
+---@param spec table Spécification de l'outil.
+---@return boolean  true si enregistré.
 function editor_toolUtilities_session.saveIfEdited(spec) end
 
---- Writes every item to `path` as a portable session JSON. Returns ok, count.
+--- Écrit tous les éléments dans path en JSON de session portable : version, tool, mapName (niveau courant), items ou state, globals, records.
 ---Source : lua/ge/extensions/editor/toolUtilities/session.lua:156
----@param path any
----@param spec any
+---@param path string Chemin du fichier.
+---@param spec table Spécification de l'outil.
+---@return boolean  ok (toujours true).
+---@return integer  Nombre d'éléments de getItems().
 function editor_toolUtilities_session.saveToFile(path, spec) end
 
---- Detaches a tool from its file, so the next Save has to ask where instead of writing silently over whatever was last loaded.
+--- Détache un outil de son fichier : le prochain Save devra demander où écrire au lieu d'écraser silencieusement le dernier fichier chargé.
 ---Source : lua/ge/extensions/editor/toolUtilities/session.lua:104
----@param toolId any
+---@param toolId string Identifiant de l'outil.
 function editor_toolUtilities_session.unbind(toolId) end
 
+--- Titre de fenêtre nommant le fichier lié (ou newName avant qu'il y en ait un, « New Session » par défaut). L'identifiant id suit « ### » pour qu'ImGui garde l'ancrage et la taille. Mis en cache par outil.
 ---Source : lua/ge/extensions/editor/toolUtilities/session.lua:121
----@param toolId any
----@param label any
----@param id any
----@param newName any
+---@param toolId string Identifiant de l'outil.
+---@param label string Libellé affiché.
+---@param id string Identifiant ImGui stable.
+---@param newName string|nil Nom affiché tant qu'aucun fichier n'est lié.
+---@return string  Titre « label - [nom]###id ».
 function editor_toolUtilities_session.windowTitle(toolId, label, id, newName) end
 

@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/compositors/helpers/styleValidator.lua",
+  "module": "Vérifie la cohérence interne d'un style de compositeur de notes de rallye (fichier sous compositors/styles/). Il contrôle la table distance (callsEnabled, liens avec seuils croissants, unités base/large/point, arrondis, max), les composants componentTypes (corner avec numbering/intensité/longueurs/direction, caution, modifiers, modifierAliases) et les notes système via notebook/systemPacenotes. Il n'impose aucun schéma commun entre styles : chaque style peut définir ses propres types. Chaque erreur est journalisée (log 'E', tag styleValidator) et la validation s'arrête à la première erreur.",
+  "notes": [
+    "Les plages d'intensité/longueur doivent être des tables {min, max} explicites (pas {a, b}), contiguës depuis 0 : chaque min égale le max précédent ; max peut manquer seulement sur la dernière plage et doit être supérieur à min.",
+    "distance.links doit être un tableau non vide de {threshold = number, text = string|nil} à seuils strictement croissants.",
+    "Les clés de premier niveau de componentTypes autorisées sont : corner, caution, modifiers, modifierAliases ; toute autre clé est refusée (les modificateurs atomiques vont dans componentTypes.modifiers)."
+  ],
+  "functions": {
+    "validate": {
+      "desc": "Valide un style. Appelé par textCompositor:load après application des calibrages ; en cas d'échec le style n'est pas chargé.",
+      "params": {
+        "style": {"type": "table", "desc": "Table du style (distance, componentTypes, system...)."},
+        "name": {"type": "string|nil", "desc": "Nom du style pour les messages d'erreur ('?' par défaut)."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si le style est valide."}],
+      "internal": false
+    }
+  }
+}

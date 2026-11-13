@@ -1,0 +1,64 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/groundBounds.lua",
+  "module": "Répond aux questions que tout outil de l'éditeur posant une surface sur un contour dessiné au sol doit se poser : qu'est-ce qui est déjà là (routes, jonctions, bâtiments, terrains d'autres outils), que reste-t-il du contour une fois ces obstacles soustraits, et quels côtés sont coupés ou affleurants. Fait aussi l'inverse : publier ce que l'outil occupe. S'appuie sur groundClaims, networkState, polyBool et geom.",
+  "notes": [
+    "Constantes : marge de route 0.10 m, retrait de route pour les éléments posés (standoff) 0.6 m, tolérance de côté dessiné 0.05 m, tolérance de joint affleurant 0.20 m.",
+    "Les obstacles sont rognés à la boîte du contour (+1 m) et soustraits un par un par polyBool.difference, car deux obstacles partageant le bord de la boîte s'annuleraient en une seule soustraction.",
+    "'owner' est le nom sous lequel l'outil publie ses propres revendications : elles ne lui sont pas renvoyées comme obstacles."
+  ],
+  "functions": {
+    "obstacles": {
+      "desc": "Liste ce que owner ne doit pas paver près de ce contour : surfaces de route et jonctions (networkState.surfaces, avec au moins 0.10 m de marge) et revendications des autres outils. Renvoie aussi une seconde liste où les routes sont agrandies de 0.6 m, pour y placer des éléments en retrait.",
+      "params": {
+        "ring": {"type": "table", "desc": "Contour du site (points {x, y})."},
+        "owner": {"type": "any", "desc": "Nom du propriétaire à exclure."},
+        "site": {"type": "any|nil", "desc": "Dossier (étiquette) du site en édition : là où une copie existe déjà, elle est le contour et non un obstacle."},
+        "roadMargin": {"type": "number|nil", "desc": "Marge de route supérieure au défaut."}
+      },
+      "returns": [{"type": "table[]", "desc": "Anneaux obstacles."}, {"type": "table[]", "desc": "Mêmes obstacles, routes agrandies de 0.6 m."}],
+      "internal": false
+    },
+    "clip": {
+      "desc": "Soustrait les obstacles du contour et renvoie les morceaux restants à traiter un par un. Chaque morceau est { ring, holes, cut, flush } : cut[i] vrai si le côté i vient d'une soustraction (route ou bâtiment de l'autre côté), flush[i] vrai s'il touche un terrain déjà posé par un autre outil (jonction ouverte).",
+      "params": {
+        "ring": {"type": "table", "desc": "Contour (au moins 3 points) ; sinon renvoie {}."},
+        "obs": {"type": "table[]|nil", "desc": "Obstacles (résultat de obstacles) ; sans obstacle, un seul morceau égal au contour."},
+        "owner": {"type": "any", "desc": "Propriétaire à exclure."},
+        "site": {"type": "any|nil", "desc": "Étiquette de site ignorée."}
+      },
+      "returns": [{"type": "table[]", "desc": "Liste de morceaux { ring, holes, cut, flush }."}],
+      "internal": false
+    },
+    "largest": {
+      "desc": "Renvoie le plus grand morceau (par aire absolue), pour un outil qui ne pose qu'UNE chose sur son contour.",
+      "params": {"areas": {"type": "table[]|nil", "desc": "Morceaux issus de clip."}},
+      "returns": [{"type": "table|nil", "desc": "Le plus grand morceau, ou nil."}],
+      "internal": false
+    },
+    "pieceAt": {
+      "desc": "Indique sur quel morceau tombe un point (dans l'anneau et hors de ses trous), ou nil s'il n'est sur aucun.",
+      "params": {
+        "areas": {"type": "table[]|nil", "desc": "Morceaux issus de clip."},
+        "x": {"type": "number", "desc": "X monde."},
+        "y": {"type": "number", "desc": "Y monde."}
+      },
+      "returns": [{"type": "integer|nil", "desc": "Indice du morceau dans areas, ou nil."}],
+      "internal": false
+    },
+    "publish": {
+      "desc": "Annonce aux autres outils de terrain ce que celui-ci occupe, sans marge (groundClaims.publish avec marge 0), pour que deux surfaces contiguës se lisent comme une seule.",
+      "params": {
+        "owner": {"type": "any", "desc": "Nom du propriétaire."},
+        "rings": {"type": "table[]", "desc": "Anneaux occupés."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "sig": {
+      "desc": "Empreinte de tout ce qui, hors du contour, détermine sa forme (réseau routier et revendications), pour reconstruire quand une route ou un bâtiment bouge. Calculée à chaque frame sans construire d'anneau.",
+      "params": {},
+      "returns": [{"type": "number", "desc": "networkState.sig() + groundClaims.sig() * 104729."}],
+      "internal": false
+    }
+  }
+}

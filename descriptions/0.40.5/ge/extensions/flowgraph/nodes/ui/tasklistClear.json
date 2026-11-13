@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/tasklistClear.lua",
+  "module": "Nœud flowgraph « Clear Goals » (catégorie once_instant, auteur BeamNG) : efface tous les objectifs de la liste de tâches (hook 'ClearTasklist'). Aucun pin.",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "workOnce": {
+          "desc": "guihooks.trigger('ClearTasklist').",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -4,12 +4,20 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/trackStageTime")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Rally Track Stage Time » (catégorie repeat, icône timer, tag rally). À chaque frame, émet le hook onRallyDataUpdated avec {activeState = stageActive} pour signaler au système rally que la spéciale est active. Recopie flow en sortie.
+
+## Remarques
+
+- Malgré son nom, le nœud ne mesure aucun temps : stageTime = os.clockhp() est calculé mais jamais utilisé.
+
 ## Classe `C`
+
+Classe du nœud.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:init(mgr, ...)` |  | 23 |
-| `C:work(args)` |  | 30 |
+| `C:init(mgr, ...)` | Vide. | 23 |
+| `C:work(args)` | Émet onRallyDataUpdated (stageActive) et recopie le flux. | 30 |
 
 ## Hooks émis
 

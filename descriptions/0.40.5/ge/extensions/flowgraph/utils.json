@@ -1,0 +1,86 @@
+{
+  "path": "lua/ge/extensions/flowgraph/utils.lua",
+  "module": "Utilitaires du flowgraph : détection de type d'une valeur, test de compatibilité avec un type de pin, valeur par défaut par type, étiquette ImGui, et fonctions de fusion (merge) utilisées par les variables du `variableStorage` quand plusieurs nœuds écrivent la même variable dans la même frame. Il est chargé comme extension `flowgraph_utils` mais aussi par `require` depuis pin et variableStorage.",
+  "notes": [
+    "`getVariableType` ne reconnaît une table que par sa taille : 3 éléments = vec3, 4 = quat ; une couleur (4 composantes) est donc vue comme `quat`.",
+    "`isVariableCompatible` accepte un vecteur de 3 pour 'vec3' ou 'table', et 4 éléments pour 'quat', 'color' ou 'table'. Un `nil` ou autre type est incompatible.",
+    "Stratégies de fusion : `all` (first, last, readOnly), `number` (min, max, average, sum), `bool` (or_, and_), `vec3` (average, sum), `string` (concat, concatComma, concatSpace, concatNewline), `any` (toutes, préfixées num_, bool_, vec_, any_).",
+    "Chaque stratégie a `init(variable)`, `merge(variable, newValue)` et `finalize(variable)`, appelées par `variableStorage`.",
+    "Pour les stratégies `vec3`, `merge` garde la table de la première valeur et l'additionne en place : cela modifie la table passée par le premier appelant.",
+    "`any_concat*` sont rangées sous la clé `any_` mais s'appliquent aux chaînes."
+  ],
+  "fields": {
+    "mergeFuns": {
+      "type": "table<string, table>",
+      "desc": "Fonctions de fusion par catégorie : all, number, bool, vec3, string, any. Chaque entrée : {num, description, init, merge, finalize}."
+    },
+    "sortedMergeFuns": {
+      "type": "table<string, table[]>",
+      "desc": "Listes triées {name, desc, num} par catégorie (any, all, number, string, bool, vec3), pour l'affichage dans l'éditeur."
+    }
+  },
+  "functions": {
+    "getVariableType": {
+      "desc": "Donne le type flowgraph d'une valeur Lua : bool, string, number, vec3 (table de 3), quat (table de 4), sinon nil.",
+      "params": {
+        "value": {
+          "type": "any",
+          "desc": "Valeur à tester."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Nom du type ou nil."
+        }
+      ]
+    },
+    "isVariableCompatible": {
+      "desc": "Dit si une valeur peut être stockée dans un pin/variable du type `compType`.",
+      "params": {
+        "value": {
+          "type": "any",
+          "desc": "Valeur."
+        },
+        "compType": {
+          "type": "string",
+          "desc": "Type visé (bool, string, number, vec3, quat, color, table)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true si compatible."
+        }
+      ]
+    },
+    "getDefaultValueForType": {
+      "desc": "Valeur par défaut d'un type : 0 (number/any), '' (string), true (bool), {0,0,0} (vec3), {0,0,0,0} (quat), {1,1,1,1} (color), {} (table). Si `typeName` est une liste, utilise le premier élément. Autre type : nil.",
+      "params": {
+        "typeName": {
+          "type": "string|table",
+          "desc": "Type ou liste de types."
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Valeur par défaut ou nil."
+        }
+      ]
+    },
+    "showLabel": {
+      "desc": "Dessine en ImGui une petite étiquette (fond rouge translucide par défaut) juste au-dessus de la ligne courante.",
+      "params": {
+        "label": {
+          "type": "string",
+          "desc": "Texte."
+        },
+        "color": {
+          "type": "any",
+          "desc": "ImVec4 de fond (défaut rouge 0,4 alpha)."
+        }
+      }
+    }
+  }
+}

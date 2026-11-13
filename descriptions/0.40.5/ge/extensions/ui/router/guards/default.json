@@ -1,0 +1,37 @@
+{
+  "path": "lua/ge/extensions/ui/router/guards/default.lua",
+  "module": "Trois gardes de navigation « par défaut » du routeur : journalisation de la navigation, blocage si le délai de transition est atteint, blocage si une transition est déjà en cours (sauf context.settings.force). Chacune reçoit (lifecycleName, context) et renvoie {result=boolean, context=...}.",
+  "notes": [
+    "Ce module n'exporte pas de table M.guards : GuardManager.reloadGuards ne les enregistre donc pas, et GuardManager.executeGuards appelle les gardes avec (route, params, context), signature différente de celle-ci (lifecycleName, context). Ces fonctions semblent être un reliquat non branché dans le routeur actuel (déduit du code).",
+    "handleTimeoutGuard appelle TransitionManager.isTimeoutReached ; le contexte reçoit reason=\"timeout_reached\" ou \"transition_in_progress\" en cas de blocage."
+  ],
+  "functions": {
+    "logNavigationGuard": {
+      "desc": "Journalise (niveau debug) « Navigation: <context.to.name> » et autorise toujours.",
+      "params": {
+        "lifecycleName": {"type": "string", "desc": "Nom de l'étape de cycle de vie (inutilisé)."},
+        "context": {"type": "table", "desc": "Contexte de navigation avec context.to.name."}
+      },
+      "returns": [{"type": "table", "desc": "{result=true, context=context}."}],
+      "internal": false
+    },
+    "handleTimeoutGuard": {
+      "desc": "Bloque la navigation si TransitionManager.isTimeoutReached() est vrai (context.reason = \"timeout_reached\").",
+      "params": {
+        "lifecycleName": {"type": "string", "desc": "Nom de l'étape (inutilisé)."},
+        "context": {"type": "table", "desc": "Contexte de navigation, modifié (reason)."}
+      },
+      "returns": [{"type": "table", "desc": "{result=false|true, context=context}."}],
+      "internal": false
+    },
+    "handleTransitionStateGuard": {
+      "desc": "Autorise si aucune transition n'est en cours ou si context.settings.force est vrai ; sinon bloque avec context.reason = \"transition_in_progress\".",
+      "params": {
+        "lifecycleName": {"type": "string", "desc": "Nom de l'étape (inutilisé)."},
+        "context": {"type": "table", "desc": "Contexte avec context.settings.force."}
+      },
+      "returns": [{"type": "table", "desc": "{result=boolean, context=context}."}],
+      "internal": false
+    }
+  }
+}

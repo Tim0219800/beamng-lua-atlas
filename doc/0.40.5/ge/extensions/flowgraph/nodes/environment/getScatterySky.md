@@ -4,11 +4,15 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/environment/getScatterySky")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Get ScatterSky » (catégorie provider, tags environment/tod). Lit les paramètres actuels du ciel ScatterSky via core_environment. Sorties : skyBrightness (luminosité globale) et, cachées, les fichiers de gradient (string) : colorizeGradientFile (couleur du ciel), sunScaleGradientFile (soleil), ambientScaleGradientFile (ambiance), fogScaleGradientFile (brouillard), nightGradientFile (ambiance de nuit), nightFogGradientFile (brouillard de nuit).
+
 ## Classe `C`
+
+Classe du nœud.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:work()` |  | 26 |
+| `C:work()` | Chaque frame, lit les sept valeurs depuis core_environment et les écrit sur les sorties. | 26 |
 
 ## Appels vers le moteur (C++)
 

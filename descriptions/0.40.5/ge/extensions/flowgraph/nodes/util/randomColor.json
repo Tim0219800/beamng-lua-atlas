@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/randomColor.lua",
+  "module": "Nœud « Random Color » (repeat_instant, icône casino). Fournit une couleur aléatoire {r, g, b, a} à chaque frame. Entrées : cuteColor (couleurs très saturées seulement), randomAlpha (alpha aléatoire, sinon 1). Sortie : color.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "work": {
+          "desc": "Génère une couleur : en mode cuteColor via HSVtoRGB avec teinte aléatoire et saturation/valeur entre 0,7 et 1 ; sinon trois composantes aléatoires.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

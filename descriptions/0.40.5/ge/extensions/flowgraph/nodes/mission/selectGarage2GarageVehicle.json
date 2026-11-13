@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/mission/selectGarage2GarageVehicle.lua",
+  "module": "Noeud flowgraph 'Select Garage Vehicle' (categorie once_instant, auteur BeamNG) pour la mission garage-to-garage. Choisit au hasard un modele/config parmi mission.vehicleOptions (en appelant mission:generateVehicleOptions si besoin), en evitant les configs deja utilisees jusqu'a epuisement. Sorties : impulsion 'loaded', 'model', 'config', 'name' (nom affichable).",
+  "notes": [
+    "La fonction locale getAllAvailableConfigs transforme les options en liste {model, config, name}.",
+    "Quand toutes les configs ont ete utilisees, usedConfigs est vide et math.randomseed(os.time()) est rappele.",
+    "En cas d'erreur (pas de mission, pas d'options), le noeud journalise une erreur et ne fait rien."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Initialise la selection, state=1 et usedConfigs.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Remet la selection et les sorties a zero.",
+          "internal": true
+        },
+        "resetData": {
+          "desc": "Remet la selection, state=1 et les sorties a zero (usedConfigs est conserve).",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Appelle resetData.",
+          "internal": true
+        },
+        "work": {
+          "desc": "state 1 : choisit une config non utilisee, l'enregistre dans usedConfigs, ecrit model/config/name, loaded=true, passe a state 2. state 2 : loaded=false.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

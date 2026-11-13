@@ -1,0 +1,62 @@
+{
+  "path": "lua/ge/extensions/ui/arrowGPS.lua",
+  "module": "Affiche une flèche GPS 3D (TSStatic art/shapes/interface/s_mm_arrow_floating.dae) flottant devant la caméra, à l'emplacement de l'app d'interface arrowGPS, et orientée vers une cible du monde. Plusieurs sources peuvent enregistrer une cible avec une priorité (setTarget) ; la plus prioritaire (nombre le plus petit) est suivie. La flèche est créée à la demande, cachée si aucune cible ou aucun véhicule joueur, et supprimée au déchargement.",
+  "usage": "ui_arrowGPS.setTarget('maMission', 10, {pos = vec3(100, 200, 50), color = {1, 0.4, 0.2}})\nui_arrowGPS.removeTarget('maMission')",
+  "notes": [
+    "Priorité : la plus petite valeur gagne (comparaison « reg.priority < bestPriority »).",
+    "setTarget accepte pos sous forme vec3, {x,y,z} ou {1,2,3}. Une inscription sans pos est ignorée pour le choix de la cible active. color = {r,g,b} avec valeurs de 0 à 1, par défaut {1, 0.4, 0.2}.",
+    "La position écran de l'app (0 à 1) est fixée côté Vue par setAppScreenPos ; la flèche est placée à arrowDepth (0,15 m par défaut) devant la caméra en tenant compte du FOV et du ratio d'écran.",
+    "Échelle par défaut 0.04. La flèche reste cachée si le joueur n'a pas de véhicule (getPlayerVehicle(0)) ou si la cible est à moins de 0,1 m."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "{ \"core_camera\" } : chargé avant ce module."}
+  },
+  "functions": {
+    "setTarget": {
+      "desc": "Enregistre ou remplace la cible d'une source (clé) avec sa priorité, puis recalcule la cible active et la couleur de la flèche.",
+      "params": {
+        "key": {"type": "string", "desc": "Identifiant de la source."},
+        "priority": {"type": "number", "desc": "Priorité ; la plus petite valeur l'emporte."},
+        "data": {"type": "table|nil", "desc": "{pos=vec3|{x,y,z}, color={r,g,b}|nil}."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "removeTarget": {
+      "desc": "Retire la cible d'une source et recalcule la cible active (la flèche se cache s'il n'en reste aucune).",
+      "params": {"key": {"type": "string", "desc": "Identifiant de la source."}},
+      "returns": [],
+      "internal": false
+    },
+    "setAppScreenPos": {
+      "desc": "Fixe la position écran de l'app (fractions de 0 à 1) où la flèche est dessinée ; appelé côté interface.",
+      "params": {"sx": {"type": "number", "desc": "Position horizontale, 0 gauche, 1 droite."}, "sy": {"type": "number", "desc": "Position verticale, 0 haut, 1 bas."}},
+      "returns": [],
+      "internal": false
+    },
+    "setScale": {
+      "desc": "Change l'échelle de la flèche (0.04 par défaut).",
+      "params": {"scale": {"type": "number", "desc": "Facteur d'échelle uniforme."}},
+      "returns": [],
+      "internal": false
+    },
+    "setDepth": {
+      "desc": "Change la distance devant la caméra à laquelle la flèche est placée (0.15 par défaut).",
+      "params": {"depth": {"type": "number", "desc": "Distance en mètres."}},
+      "returns": [],
+      "internal": false
+    },
+    "onPreRender": {
+      "desc": "Hook appelé avant chaque rendu : crée la flèche si besoin, calcule sa position écran-vers-monde, l'oriente vers la cible active (quatFromDir) et l'affiche ; la cache si aucune cible ou aucun véhicule joueur.",
+      "params": {"dt": {"type": "number", "desc": "Temps écoulé (non utilisé)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook de déchargement : supprime l'objet flèche et vide toutes les inscriptions.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

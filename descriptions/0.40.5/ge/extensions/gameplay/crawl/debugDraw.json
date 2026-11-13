@@ -1,0 +1,34 @@
+{
+  "path": "lua/ge/extensions/gameplay/crawl/debugDraw.lua",
+  "module": "Visualisation de debug en lecture seule des parcours du mode crawl, via debugDrawer : points de passage (sphères, flèches de direction, étiquettes) et segments, zone limite, position de départ. Partagé par l'éditeur de crawl et l'overlay de dev en jeu pour garder un rendu cohérent. À appeler à chaque image de rendu.",
+  "usage": "gameplay_crawl_debugDraw.drawPath(path.nodes, {maxDist = 200, showSegmentDistance = true})",
+  "notes": [
+    "Couleurs : noeud normal blanc, point de récupération jaune, bonus violet, dernier noeud bleu ; flèche verte ; segments bleu clair.",
+    "Les noeuds et segments au-delà de maxDist (400 m par défaut) de la caméra ne sont pas dessinés.",
+    "Le rayon de sphère d'un noeud est node.radius (4.0 m par défaut) ; celui de la position de départ est transform.radius (10.0 m par défaut).",
+    "Cette page n'exporte pas d'autres fonctions ; dessiner ne modifie aucune donnée."
+  ],
+  "functions": {
+    "drawPath": {
+      "desc": "Dessine chaque noeud (sphère, flèche selon sa rotation, étiquette « indice: nom [REC]/[BONUS] ») et les cylindres entre noeuds consécutifs, avec éventuellement la distance cumulée.",
+      "params": {
+        "nodes": {"type": "table<integer, table>", "desc": "Noeuds : pos (vec3), radius, rotation (quat), name, flags (isRecoveryCheckpoint, isBonusCheckpoint)."},
+        "opts": {"type": "table|nil", "desc": "{maxDist = number (m, 400 par défaut), showSegmentDistance = boolean, showLabels = boolean (vrai par défaut)}."}
+      },
+      "internal": false
+    },
+    "drawBoundary": {
+      "desc": "Dessine la zone limite en appelant boundary:drawDebug(drawMode) (le culling caméra est fait par la zone).",
+      "params": {
+        "boundary": {"type": "table|nil", "desc": "Zone avec la méthode drawDebug."},
+        "drawMode": {"type": "any", "desc": "Mode de dessin transmis tel quel à drawDebug."}
+      },
+      "internal": false
+    },
+    "drawStartingPosition": {
+      "desc": "Dessine la sphère de la zone de départ, une flèche de direction et, si présent, une petite sphère à iconPosition.",
+      "params": {"startingPosition": {"type": "table|nil", "desc": "Position de départ : transform (position, rotation, radius) et iconPosition."}},
+      "internal": false
+    }
+  }
+}

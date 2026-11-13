@@ -2,93 +2,95 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/networkState.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
+--- Tableau d'échange entre le réseau routier de l'éditeur et les outils qui construisent contre lui (parcelles, trottoirs, parkings). Le réseau publie ses données une fois avec provide(t) au chargement de l'outil de route ; les autres outils lisent (roads, surfaces, overRoad...). Dans l'autre sens, un outil qui a pavé des bas-côtés les publie (publishFootway) et peut demander des passages piétons (crossingSites, applyCrossings). Aucun côté ne connaît l'autre.
 --- Accès : extension `editor_toolUtilities_networkState` : `extensions.load("editor_toolUtilities_networkState")`, puis la globale `editor_toolUtilities_networkState`
 ---@class editor_toolUtilities_networkState
 editor_toolUtilities_networkState = {}
 
---- The crossings this owner wants, as the sites above cut down to the ones it will have, in place of whatever it asked for
---- last time. An empty list takes its crossings back off the roads. Crossings placed by hand, or asked for by somebody
---- else, are left where they are. Answers how many were put down and how many were taken off.
+--- Pose les passages voulus par ce propriétaire (liste de sites réduite à ceux retenus) à la place de sa demande précédente. Liste vide : retire ses passages. Les passages posés à la main ou demandés par un autre sont laissés.
 ---Source : lua/ge/extensions/editor/toolUtilities/networkState.lua:114
----@param owner any
----@param list any
+---@param owner any Nom du propriétaire (nil = rien).
+---@param list table[] Sites retenus.
+---@return integer  Nombre posés.
+---@return integer  Nombre retirés (0, 0 sans réseau ou sans owner).
 function editor_toolUtilities_networkState.applyCrossings(owner, list) end
 
---- Whether what the network answers now is still on its way to being right: not loaded yet, roads and junctions waiting
---- to be rebuilt, which after a load or a Lua reload goes on for many frames, or a node still being dragged. Ground laid
---- against the roads meanwhile is laid against half of them, so a tool doing that waits for this to clear.
+--- Vrai si les réponses du réseau sont encore en cours de stabilisation (voir notes).
 ---Source : lua/ge/extensions/editor/toolUtilities/networkState.lua:76
+---@return boolean  true si le réseau n'est pas prêt.
 function editor_toolUtilities_networkState.busy() end
 
---- Where the network would take a pedestrian crossing, if somebody wanted one: a site on every approach of the junctions
---- that matter, `density` of them kept and `depthM` deep. Each site says which road it is on, where along it, and the two
---- points its band would reach to -- enough for a paver to keep only the ones it has paved both sides of, and no more than
---- that. Sites the road already carries a crossing at are left out, so a caller relaying its own takes those off first.
+--- Où le réseau poserait un passage piéton : un site sur chaque approche des jonctions qui comptent. Chaque site indique la route, la position le long d'elle et les deux points que sa bande atteindrait. Les sites ayant déjà un passage sont omis.
 ---Source : lua/ge/extensions/editor/toolUtilities/networkState.lua:106
----@param density any
----@param depthM any
+---@param density number Proportion de sites gardés.
+---@param depthM number Profondeur de la bande (m).
+---@return table[]  Sites de passage.
 function editor_toolUtilities_networkState.crossingSites(density, depthM) end
 
---- What the network has told the terrain to do: the ground it has graded and the structures it has stood in it.
+--- Ce que le réseau a demandé au terrain : le sol qu'il a nivelé et les structures qu'il y a posées.
 ---Source : lua/ge/extensions/editor/toolUtilities/networkState.lua:88
+---@return table  Éléments de sol nivelé.
+---@return table  Éléments de structures.
 function editor_toolUtilities_networkState.features() end
 
---- Everything paved on one road's verges, merged across owners. Nil where nobody has paved it, which is what the network
---- reads as "paint the blend right along".
+--- Tout ce qui est pavé sur les bas-côtés d'une route, fusionné entre propriétaires. Renvoie nil si personne n'y a pavé (le réseau comprend : peindre le fondu sur toute la longueur).
 ---Source : lua/ge/extensions/editor/toolUtilities/networkState.lua:129
----@param groupId any
+---@param groupId any Id de groupe de la route.
+---@return table|nil  { left, right } listes de spans, ou nil.
 function editor_toolUtilities_networkState.footwayFor(groupId) end
 
---- Which of a road's segments lie on the ground, per divPoint segment, rather than on a flying deck or in a tunnel: a bridge's
---- abutments count, the ground being brought up level with the deck there. Nil when all do.
+--- Indique, par segment de divPoint, quels segments d'une route reposent sur le sol (et non sur un tablier ou dans un tunnel) ; les culées de pont comptent comme sol. Renvoie nil si tous les segments sont au sol.
 ---Source : lua/ge/extensions/editor/toolUtilities/networkState.lua:42
----@param road any
+---@param road table Route (élément de roads()).
+---@return table|nil  Marqueurs par segment, ou nil.
 function editor_toolUtilities_networkState.groundSegs(road) end
 
---- How far past a road's surface edge its grade still holds the ground at the road's own height, outranking anything a site
---- lays there. `paved` is for a verge somebody else has posted as footway, where the road keeps no bare shoulder of its own.
+--- Distance au-delà du bord de la surface d'une route sur laquelle sa pente tient encore le terrain à la hauteur de la route, prioritaire sur ce qu'un site pose là.
 ---Source : lua/ge/extensions/editor/toolUtilities/networkState.lua:96
----@param paved any
+---@param paved boolean|nil Pour un bas-côté qu'un autre a déclaré trottoir : la route n'y garde pas d'accotement nu.
+---@return number  Distance en mètres (0 sans réseau).
 function editor_toolUtilities_networkState.heldPastEdge(paved) end
 
---- The surfaces are cached, and this is how a tool that has just moved something says so.
+--- Les surfaces sont mises en cache : cet appel dit au réseau qu'un outil vient de déplacer quelque chose.
 ---Source : lua/ge/extensions/editor/toolUtilities/networkState.lua:63
 function editor_toolUtilities_networkState.invalidate() end
 
---- Whether a ring lands on any of that. Asked of the network rather than worked out from `surfaces`, because a junction is
---- bounded partly by lines and testing against those is the network's own business.
+--- Indique si un anneau tombe sur une surface du réseau. Demandé au réseau plutôt que calculé depuis surfaces, car une jonction est en partie bornée par des lignes.
 ---Source : lua/ge/extensions/editor/toolUtilities/networkState.lua:57
----@param ring any
+---@param ring table Anneau de points.
+---@return boolean  true si l'anneau recouvre le réseau (false si le réseau n'est pas fourni).
 function editor_toolUtilities_networkState.overRoad(ring) end
 
---- The network's side of the board, filled in once as the road tool loads. Everything below is a thin pass to one of these.
---- Fields: roads, groundSegs, surfaces, invalidate, sig, rev, features, heldPastEdge, footwayChanged.
+--- Côté réseau : enregistre la table de fonctions du réseau routier. Appelée une fois au chargement de l'outil de route ; tout le reste du module y renvoie.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/ge/extensions/editor/toolUtilities/networkState.lua:29
----@param t any
+---@param t table Table avec roads, groundSegs, surfaces, invalidate, sig, rev, features, heldPastEdge, footwayChanged, etc.
 function editor_toolUtilities_networkState.provide(t) end
 
---- The verges this owner has paved over, as `{ [groupId] = { left = spans, right = spans } }`, replacing whatever it posted
---- before. The network is told at once, because the blend under those slabs is painted terrain and has to be repainted.
+--- Côté outil de pavage : publie les bas-côtés que ce propriétaire a pavés, { [groupId] = { left = spans, right = spans } }, en remplaçant sa publication précédente. Le réseau est prévenu aussitôt (footwayChanged) car le fondu sous les dalles est du terrain peint à repeindre.
 ---Source : lua/ge/extensions/editor/toolUtilities/networkState.lua:121
----@param owner any
----@param byGroup any
+---@param owner any Nom du propriétaire ; nil = sans effet.
+---@param byGroup table Spans gauche/droite par id de groupe de route.
 function editor_toolUtilities_networkState.publishFootway(owner, byGroup) end
 
---- Bumped whenever a road or junction is rebuilt, heights and all, for a tool that stands something on a road's surface.
+--- Compteur incrémenté à chaque reconstruction d'une route ou jonction (hauteurs comprises), pour les outils qui posent quelque chose sur la surface d'une route.
 ---Source : lua/ge/extensions/editor/toolUtilities/networkState.lua:82
+---@return number  Révision (0 sans réseau).
 function editor_toolUtilities_networkState.rev() end
 
---- Every road the network has laid, as its plan geometry: `id`, `divPoints`, `tangents`, `binormals`. Junction hubs and
---- anything else that is not a road are left out, so a reader never has to know what kinds there are.
+--- Toutes les routes posées, en géométrie plan : id, divPoints, tangents, binormals. Les noeuds de jonction et le reste sont exclus.
 ---Source : lua/ge/extensions/editor/toolUtilities/networkState.lua:35
+---@return table[]  Routes (table vide partagée si le réseau n'est pas fourni).
 function editor_toolUtilities_networkState.roads() end
 
---- Bumped whenever the network's surfaces change, for a tool that has to notice the road moved under its own ground.
+--- Compteur incrémenté quand les surfaces du réseau changent, pour qu'un outil remarque qu'une route a bougé sous son terrain.
 ---Source : lua/ge/extensions/editor/toolUtilities/networkState.lua:68
+---@return number  Signature (0 sans réseau).
 function editor_toolUtilities_networkState.sig() end
 
---- Every stretch of ground the network has surfaced, in plan: the closed rings of carriageway and sealed junction, and the
---- edge lines that bound no area of their own.
+--- Tout ce que le réseau a revêtu, en plan : les anneaux fermés de chaussée et de jonction scellée, puis les lignes de bord qui ne délimitent aucune aire propre.
 ---Source : lua/ge/extensions/editor/toolUtilities/networkState.lua:49
+---@return table[]  Anneaux fermés.
+---@return table[]  Lignes de bord.
 function editor_toolUtilities_networkState.surfaces() end
 

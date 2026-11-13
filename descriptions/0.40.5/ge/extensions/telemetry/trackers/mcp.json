@@ -1,0 +1,11 @@
+{
+  "path": "lua/ge/extensions/telemetry/trackers/mcp.lua",
+  "module": "Suiveur de télémétrie des appels d'outils MCP (serveur Model Context Protocol du jeu) : pour chaque appel d'outil, enregistre le nom de l'outil et si l'appel a échoué (évènement « mcpToolCalled »). Les arguments et résultats ne sont pas rapportés.",
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "telemetry_core."}
+  },
+  "functions": {
+    "onMcpToolCalled": {"desc": "Hook appelé quand un outil MCP est appelé : émet mcpToolCalled.", "params": {"toolName": {"type": "string", "desc": "Nom de l'outil MCP."}, "isError": {"type": "boolean", "desc": "true si l'appel a échoué."}}, "returns": [], "internal": true},
+    "onExtensionLoaded": {"desc": "Hook appelé au chargement : déchargement manuel.", "params": {}, "returns": [], "internal": true}
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/customLuaCommand.lua",
+  "module": "Noeud flowgraph « Custom Lua Command » (once_instant). Compile avec loadstring le code Lua recu dans le pin func puis l'execute avec pcall. Sorties : flow (true si l'appel a reussi), return (any) valeur renvoyee par la fonction. Utile pour appeler du code arbitraire depuis un graphe.",
+  "notes": [
+    "Si le texte ne compile pas, loadstring renvoie nil et pcall(nil) echoue : flow sera false, return contiendra le message d'erreur.",
+    "Seule la premiere valeur de retour est conservee."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Desactive le vidage des pins de sortie au demarrage (clearOutPinsOnStart = false).",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Remet le pin return a nil au demarrage du graphe.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Compile et execute le texte du pin func ; ecrit flow = succes du pcall et return = valeur retournee.",
+          "internal": false
+        },
+        "_onDeserialized": {
+          "desc": "Compatibilite : convertit l'ancien data.func en pin code en dur 'func' de type string.",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "donnees sauvegardees du noeud"
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

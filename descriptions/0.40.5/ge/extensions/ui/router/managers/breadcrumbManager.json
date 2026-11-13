@@ -1,0 +1,34 @@
+{
+  "path": "lua/ge/extensions/ui/router/managers/breadcrumbManager.lua",
+  "module": "Construit le fil d'Ariane (breadcrumbs) d'une route pour le routeur. Pour une route non globale, il ajoute éventuellement un décorateur de module en tête, puis une miette par nœud de la chaîne de routes (label, abstract, isMinorRoute, routeName, params). Les titres peuvent être statiques (chaîne ou table non dynamique) ou dynamiques (fonction source appelée avec les paramètres, avec valeur de repli).",
+  "notes": [
+    "Un titre dynamique : {mode=\"dynamic\", source=<référence de fonction>, paramKey?, fallback?}. Si paramKey est défini, seule params[paramKey] est passée à la source, sinon la table params entière. Une valeur nil ou vide donne fallback.",
+    "Le décorateur : celui fourni, sinon (si visible) la configuration du module via ui_router_routeManager.getModuleDecorator, en mode dynamique (source appelée avec params, repli config.fallback) ou statique ({label}). Il est ajouté comme première miette avec decorator=true et routeName=nil.",
+    "Une route avec global = true n'a aucune miette."
+  ],
+  "functions": {
+    "buildBreadcrumbs": {
+      "desc": "Construit la liste des miettes pour une route : décorateur éventuel puis une miette par nœud renvoyé par ui_router_routeManager.getRouteNodes(routename).",
+      "params": {
+        "routename": {"type": "string", "desc": "Nom de route de base."},
+        "route": {"type": "table", "desc": "Configuration de la route (route.global désactive le fil d'Ariane)."},
+        "params": {"type": "table|nil", "desc": "Paramètres de route (utilisés pour les titres dynamiques)."},
+        "decorator": {"type": "any|nil", "desc": "Décorateur déjà résolu (sinon calculé si le décorateur est visible)."}
+      },
+      "returns": [{"type": "table[]", "desc": "Miettes {label, abstract, isMinorRoute, routeName, params} ; le décorateur est {label, routeName=nil, decorator=true}."}],
+      "internal": false
+    },
+    "setDecoratorVisible": {
+      "desc": "Affiche ou masque le décorateur dans le fil d'Ariane (délègue à NavigationState.setDecoratorVisible).",
+      "params": {"visible": {"type": "boolean", "desc": "true pour afficher."}},
+      "returns": [],
+      "internal": false
+    },
+    "isDecoratorVisible": {
+      "desc": "Indique si le décorateur est visible (NavigationState.isDecoratorVisible).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si visible."}],
+      "internal": false
+    }
+  }
+}

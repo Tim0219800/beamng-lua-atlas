@@ -1,0 +1,158 @@
+{
+  "path": "lua/ge/extensions/gameplay/missions/missionManager.lua",
+  "module": "Chef d'orchestre du démarrage et de l'arrêt des missions. Chaque démarrage ou arrêt est une suite d'étapes (taskData.steps) exécutées image par image dans onUpdate : fondu d'écran, retrait/mise de côté (stash) des véhicules, création du véhicule de la mission, trafic, configuration de l'environnement (heure, nuages, vent, brouillard), puis mission:onStart(). L'arrêt restaure les véhicules, le trafic et l'environnement. Une seule mission « de premier plan » (foreground) peut tourner à la fois. Un moddeur l'appelle pour lancer ou arrêter une mission depuis le code.",
+  "usage": "local m = gameplay_missions_missions.getMissionById('gridmap_v2/timeTrial/monCircuit')\ngameplay_missions_missionManager.startWithFade(m, {}, {})\n-- plus tard\ngameplay_missions_missionManager.stop(m, {})",
+  "notes": [
+    "Les fonctions de démarrage et d'arrêt renvoient true en cas d'erreur (mission nil, déjà en cours, pas en cours) et nil si une tâche est déjà active (simple avertissement dans le log) ; un nouveau démarrage ou arrêt est refusé tant que taskData.active est vrai (voir isCurrentlyProcessingStep).",
+    "Chaque étape a un timeout (120 s par défaut, 10 s pour le fondu de départ, 5 s pour le fondu de fin) ; passé ce délai elle est marquée terminée avec une erreur dans le log.",
+    "Dans taskStartMissionStep, si mission:onStart() renvoie une valeur vraie, _isOngoing est remis à false et une erreur est loguée, mais l'exécution continue : foregroundMissionId est tout de même fixé (sauf mission.background) et le hook onAnyMissionChanged(\"started\") est émis.",
+    "Hook onAnyMissionChanged : (\"started\", mission, userSettings, startedFrom) au démarrage ; (\"stopped\", mission) à l'arrêt. onAnyMissionWillChange : (\"stopped\", mission, abandoned) juste avant l'arrêt effectif.",
+    "L'environnement n'est modifié que si mission.setupModules.environment.enabled ; les valeurs d'origine (heure, nuages, vent des nuages, brouillard) sont sauvegardées dans setupModules.environment._original* pour être restaurées. Le vent appliqué aux véhicules est _windVec = (sin(windDirAngle), cos(windDirAngle), 0) * windSpeed.",
+    "Les véhicules mis de côté peuvent être supprimés puis recréés depuis leurs données de spawn (despawnStashedVehiclesForMission=true) ; en carrière, un véhicule trop endommagé est rangé dans l'inventaire et n'est pas réapparu (toast « vehStoredMission »).",
+    "startInstant n'a ni vérification mission nil, ni garde « déjà en cours », ni garde « tâche active » contrairement à startWithFade / startAsScenario.",
+    "allowMissionInteraction est un WIP : renvoie false si core_gamestate.state.state n'est pas « freeroam », true sinon (l'appel dans onUpdate est commenté).",
+    "Le hook onUpdate de ce module appelle mission:onUpdate pour toutes les missions _isOngoing, seulement quand une mission de premier plan existe, en parcourant gameplay_missions_missions.getAllMissions()."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : gameplay_traffic, gameplay_police, gameplay_parking, ui_fadeScreen."},
+    "fadeDuration": {"type": "number", "desc": "Durée (s) du fondu d'écran, 0.75 par défaut ; utilisée pour le fondu de démarrage dans startFromWithinMission."}
+  },
+  "functions": {
+    "start": {
+      "desc": "Alias de startWithFade : démarre une mission avec fondu d'écran.",
+      "params": {
+        "mission": {"type": "table", "desc": "Mission construite (gameplay_missions_missions.getMissionById)."},
+        "userSettings": {"type": "table|nil", "desc": "Réglages utilisateur choisis ({} par défaut)."},
+        "startingOptions": {"type": "table|nil", "desc": "Options : startedFrom, skipPartConditionSnapshot, etc."}
+      },
+      "returns": [{"type": "boolean|nil", "desc": "true en cas d'erreur."}]
+    },
+    "startWithFade": {
+      "desc": "Démarre une mission avec la suite d'étapes complète : fondu, retrait des véhicules, préparation (pré-mission), réparation de départ, instantané de l'état des pièces (sauf skipPartConditionSnapshot), mise de côté des véhicules, véhicule de mission, trafic, puis onStart. Émet le hook onMissionStartWithFade(mission, userSettings).",
+      "params": {
+        "mission": {"type": "table", "desc": "Mission construite."},
+        "userSettings": {"type": "table|nil", "desc": "Réglages utilisateur."},
+        "startingOptions": {"type": "table|nil", "desc": "Options de démarrage."}
+      },
+      "returns": [{"type": "boolean|nil", "desc": "true en cas d'erreur (mission nil ou déjà en cours), nil si une tâche est déjà active."}]
+    },
+    "startAsScenario": {
+      "desc": "Démarre une mission sans fondu ni retrait de véhicules : pré-mission, mise de côté des véhicules, véhicule, trafic, onStart (utilisé quand la mission est lancée comme scénario).",
+      "params": {
+        "mission": {"type": "table", "desc": "Mission construite."},
+        "userSettings": {"type": "table|nil", "desc": "Réglages utilisateur."}
+      },
+      "returns": [{"type": "boolean|nil", "desc": "true en cas d'erreur, nil si une tâche est active."}]
+    },
+    "startFromWithinMission": {
+      "desc": "Arrête la mission de premier plan puis en démarre une autre (ou la même, reconfigurée) : avec fondu (par défaut) ou instantanément. Le démarrage réel est différé jusqu'à la fin de l'arrêt (traité dans onUpdate). Émet onMissionReconfigured si c'est la même mission.",
+      "params": {
+        "mission": {"type": "table", "desc": "Mission à démarrer."},
+        "userSettings": {"type": "table|nil", "desc": "Réglages utilisateur."},
+        "instant": {"type": "boolean|nil", "desc": "true pour éviter le fondu."}
+      },
+      "returns": []
+    },
+    "startInstant": {
+      "desc": "Démarre une mission immédiatement avec seulement les étapes pré-mission et onStart (sans toucher aux véhicules). Émet le hook startFromWithinMissionInstant(mission, userSettings, startingOptions).",
+      "params": {
+        "mission": {"type": "table", "desc": "Mission construite."},
+        "userSettings": {"type": "table|nil", "desc": "Réglages utilisateur."},
+        "startingOptions": {"type": "table|nil", "desc": "Options de démarrage."}
+      },
+      "returns": []
+    },
+    "startWithLoadingLevel": {
+      "desc": "Charge d'abord le niveau (celui de la mission par défaut), arrête toute mission de premier plan, puis exécute pré-mission, mise de côté des véhicules, véhicule, trafic et onStart.",
+      "params": {
+        "mission": {"type": "table", "desc": "Mission construite."},
+        "userSettings": {"type": "table|nil", "desc": "Réglages utilisateur."},
+        "level": {"type": "string|nil", "desc": "Niveau à charger ; par défaut mission.startTrigger.level."},
+        "startedFrom": {"type": "string|nil", "desc": "Origine du démarrage (transmise aux hooks)."}
+      },
+      "returns": [{"type": "boolean|nil", "desc": "true en cas d'erreur."}]
+    },
+    "stop": {
+      "desc": "Arrête une mission en cours : onStop de la mission, restauration des véhicules mis de côté, post-traitement, retrait de véhicules, réapparition du véhicule du joueur et du trafic, puis fondu (sauf data.ignoreFade). Émet le hook onMissionStopped(mission).",
+      "params": {
+        "mission": {"type": "table", "desc": "Mission en cours."},
+        "data": {"type": "table|nil", "desc": "Données d'arrêt : ignoreFade, abandoned, attempt, stopInstant..."}
+      },
+      "returns": [{"type": "boolean|nil", "desc": "true en cas d'erreur (mission nil ou non en cours), nil si une tâche est active."}]
+    },
+    "attemptAbandonMissionWithFade": {
+      "desc": "Demande l'abandon d'une mission. Émet onGameplayActivityAborted (si abandonButtonPressed) puis onMissionAbandoned(mission, abandonButtonPressed). Si la mission gère elle-même l'abandon (mission:attemptAbandonMission() vrai, p. ex. un flowgraph avec onRequestAbandon), s'arrête là ; sinon lance la séquence d'arrêt avec fondu.",
+      "params": {
+        "mission": {"type": "table", "desc": "Mission en cours."},
+        "force": {"type": "boolean|nil", "desc": "Non utilisé dans le code."},
+        "abandonButtonPressed": {"type": "boolean|nil", "desc": "true si le joueur a appuyé sur le bouton d'abandon (data.abandoned = true)."}
+      },
+      "returns": [{"type": "boolean|nil", "desc": "true en cas d'erreur ou si la mission gère l'abandon elle-même."}]
+    },
+    "stopForegroundMissionInstantly": {
+      "desc": "Arrête immédiatement la mission de premier plan (taskStopMissionStep avec stopInstant) sans restaurer véhicules ni environnement. Appelé aussi à la fin du chargement d'un niveau et à l'activation de la carrière.",
+      "params": {},
+      "returns": []
+    },
+    "allowMissionInteraction": {
+      "desc": "WIP : indique si l'interaction avec les missions est autorisée (true seulement si l'état de jeu est « freeroam »).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si autorisée."}]
+    },
+    "getForegroundMissionId": {
+      "desc": "Id de la mission de premier plan en cours (exclusivité : une seule à la fois), ou nil.",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "Id de mission."}]
+    },
+    "isCurrentlyProcessingStep": {
+      "desc": "Indique si une suite d'étapes de démarrage/arrêt est en cours de traitement.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si taskData.active."}]
+    },
+    "getCurrentTaskdataTypeOrNil": {
+      "desc": "Renvoie le type de tâche en cours (\"start\" ou \"stop\"), \"start\" aussi si un démarrage depuis l'intérieur d'une mission est différé, nil si aucune tâche.",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "\"start\", \"stop\" ou nil."}]
+    },
+    "onUpdate": {
+      "desc": "Appelé chaque frame. Avance les étapes de la tâche active (timeouts compris), lance le démarrage différé de startFromWithinMission quand l'arrêt est fini, et appelle mission:onUpdate des missions en cours. Contient une fenêtre de debug imgui (désactivée par défaut).",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Temps de simulation (s)."},
+        "dtRaw": {"type": "number", "desc": "Temps brut (s)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onScreenFadeState": {
+      "desc": "Hook de ui_fadeScreen appelé à chaque phase du fondu. Débloque l'étape qui attend le fondu (fadeState<state> = true) et déclenche l'arrêt de la mission courante pour un démarrage différé.",
+      "params": {"state": {"type": "integer", "desc": "Numéro de phase du fondu (1, 2, 3)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onTrafficStarted": {
+      "desc": "Hook appelé quand le trafic démarre : valide l'étape qui attend le trafic (waitForTraffic).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onParkingVehiclesActivated": {
+      "desc": "Hook appelé quand des véhicules garés apparaissent sans trafic : même effet que onTrafficStarted.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook appelé à la fin du niveau courant (changement de niveau) : arrête immédiatement la mission de premier plan sans nettoyage (alias de stopForegroundMissionInstantly). Sans rapport avec une fin de mission de gameplay.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onCareerActive": {
+      "desc": "Hook appelé à l'activation de la carrière : arrête immédiatement la mission de premier plan (alias de stopForegroundMissionInstantly).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

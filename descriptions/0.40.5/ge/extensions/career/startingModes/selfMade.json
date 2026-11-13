@@ -1,0 +1,31 @@
+{
+  "path": "lua/ge/extensions/career/startingModes/selfMade.lua",
+  "module": "Mode de départ de carrière « selfMade » (tier minor, ordre 300, ignore = true) : 1 000 d'argent et une vieille voiture générée aléatoirement. setupInventory choisit parmi les véhicules éligibles (util_configListGenerator) ceux passant un filtre (années 1990-2005, valeur 1000-50000, types de config Factory ou Service), tire une année, estime par dichotomie (28 itérations) le kilométrage qui amène la valeur ajustée au plus près d'une cible de 4000 à 5000, garde le meilleur candidat, le fait apparaître à (838.51, -522.42, 165.75) avec une peinture aléatoire, l'ajoute à l'inventaire et remplit les réservoirs à 15 %. Table de description chargée par career/career.lua, pas une extension.",
+  "notes": [
+    "ignore = true : le mode n'est pas proposé dans cette version (déduit du nom du champ).",
+    "Repli si aucun véhicule ne passe le filtre : la Sunburst du tutoriel (sunburst2, apmTutorial_sunburst.pc, année 2005, 250 000 000 de kilométrage).",
+    "L'année de référence 2023 est codée en dur dans les calculs d'âge.",
+    "Les entrées maxYear, high et rot affichées dans la page auto sont des variables locales, pas des champs du module."
+  ],
+  "fields": {
+    "ignore": {"type": "boolean", "desc": "true."},
+    "id": {"type": "string", "desc": "\"selfMade\"."},
+    "order": {"type": "number", "desc": "300."},
+    "tier": {"type": "string", "desc": "\"minor\"."},
+    "title": {"type": "string", "desc": "\"Self-Made\"."},
+    "description": {"type": "string", "desc": "« Start with nothing but a beaten down car, a handful of dollars and a dream. »"},
+    "image": {"type": "string", "desc": "images/career/start_beater.jpg."}
+  },
+  "functions": {
+    "initPlayerAttributes": {
+      "desc": "Initialise l'argent à 1 000.",
+      "params": {"playerAttributes": {"type": "table", "desc": "Module career_modules_playerAttributes."}},
+      "internal": true
+    },
+    "setupInventory": {
+      "desc": "Génère et fait apparaître la voiture de départ (voir description du module) et l'ajoute à l'inventaire avec initPartConditions pour le kilométrage estimé.",
+      "params": {"inventoryModule": {"type": "table", "desc": "Module career_modules_inventory (utilise addVehicle)."}},
+      "internal": true
+    }
+  }
+}

@@ -4,12 +4,20 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/gameplay/race/raceDisqualify")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Race Disqualify » (catégorie repeat_instant, tag scenario). Disqualifie un véhicule d'une course en appelant raceData:abortRace(vehId). Entrées : raceData et vehId.
+
+## Remarques
+
+- work() n'a aucune garde : une pin raceData vide provoque une erreur Lua.
+
 ## Classe `C`
+
+Classe du nœud.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:init()` |  | 22 |
-| `C:work()` |  | 25 |
+| `C:init()` | Vide. | 22 |
+| `C:work()` | Appelle abortRace(vehId) sur la course reçue. | 25 |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceDisqualify.lua`.*

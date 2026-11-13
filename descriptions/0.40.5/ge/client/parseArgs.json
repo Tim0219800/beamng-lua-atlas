@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/client/parseArgs.lua",
+  "module": "Analyse les arguments de la ligne de commande du jeu ($Game::argc / $Game::argv0…) et applique ou mémorise les options reconnues. Utile pour lancer BeamNG avec -level, -vehicle, -lua, -luafile, etc.",
+  "usage": "-- ligne de commande : BeamNG.drive.exe -level gridmap_v2 -vehicle pickup -vehicleConfig \"pickup/myConfig.pc\" -lua \"print('salut')\"",
+  "notes": [
+    "Options gérées : -log <0|1|2> (le mode reçu est décalé de +4 sauf si 0), -cefdev, -fullscreen, -windowed, -vehicleConfig, -vehicle ($beamngVehicleArgs), -useDefaultPc, -translationScrambleDebug, -luafile (require), -lua (LuaExecuteQueueString), -onLevelLoad_ext, -level ($levelToLoad), -tcom / -tcom-capture (charge tech/techCore ; -tcom ouvre aussi le serveur), -levelOffset x y z (server.setLevelOffset), -enableAiRecordingForMissions.",
+    "-worldeditor est obsolète : seule une erreur est journalisée (utiliser -worldEditor).",
+    "Les options simples sont stockées dans M.args (vehicleConfig, useDefaultPc, translationScrambleDebug, enableAiRecordingForMissions) ; les autres passent par VariableRegistry ou par des fonctions du moteur.",
+    "Bug : dans la boucle for, « i = i + 1 » ne saute pas réellement l'argument suivant en Lua (la variable de boucle est locale à chaque itération) ; la valeur consommée est donc relue comme argument ensuite, sans effet tant qu'elle ne ressemble pas à une option.",
+    "Les fonctions locales pushFront/pushBack/popFront ne sont pas utilisées."
+  ],
+  "fields": {
+    "args": {"type": "table", "desc": "Résultat de l'analyse : clés vehicleConfig (string), useDefaultPc, translationScrambleDebug, enableAiRecordingForMissions (booléens). Remise à {} à chaque appel de defaultParseArgs."}
+  },
+  "functions": {
+    "defaultParseArgs": {
+      "desc": "Réinitialise M.args puis parcourt tous les arguments de la ligne de commande et applique chaque option reconnue.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

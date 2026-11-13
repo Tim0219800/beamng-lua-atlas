@@ -1,0 +1,59 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/types/vec3.lua",
+  "module": "Nœud flowgraph « Vec3 » (catégorie repeat_instant, tags vec3/vector/direction) : construit un vecteur 3D. Entrées number « x », « y », « z » (0 par défaut) ; entrée cachée « rot » (quat) : si elle est reliée, la sortie « value » est le vecteur (0,1,0) tourné par ce quaternion (direction avant). Sortie « value » (vec3 sous forme de table {x,y,z}).",
+  "notes": [
+    "Si 'rot' a une valeur, x/y/z sont ignorés.",
+    "drawMiddle affiche le vecteur construit à partir de x/y/z (même si rot est utilisé)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_onDeserialized": {
+          "desc": "Vide.",
+          "params": {
+            "nodeData": {
+              "type": "table",
+              "desc": "Données sauvegardées du nœud."
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Vide (rien à sauvegarder).",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde du nœud à remplir."
+            }
+          },
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche le texte du vecteur (x,y,z) au centre du nœud.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "Constructeur de nœud de l'éditeur (builder:Middle() ouvre la zone centrale)."
+            },
+            "style": {
+              "type": "any",
+              "desc": "Style d'affichage du nœud fourni par l'éditeur."
+            }
+          },
+          "internal": true
+        },
+        "drawProperties": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Calcule la sortie : direction (0,1,0) tournée par 'rot' si présent, sinon {x,y,z}.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

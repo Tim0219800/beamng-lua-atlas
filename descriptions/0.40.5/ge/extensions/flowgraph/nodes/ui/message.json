@@ -1,0 +1,37 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/message.lua",
+  "module": "Nœud flowgraph « Message » (catégorie once_instant par défaut, durée) : affiche un message dans la petite app de messages via le hook 'Message'. Entrées : flow, « message » (any ; nil efface), « duration » (5 s), « category » (flowgraph ; un seul message par catégorie), « icon » (info, caché). Sortie : flow.",
+  "notes": [
+    "Le message est renvoyé toutes les 0.05 s tant que le flux est actif, pour rester affiché.",
+    "Sans catégorie, l'identifiant '__<id du nœud>' est utilisé."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_afterTrigger": {
+          "desc": "Remet le minuteur à 0 si le flux d'entrée est coupé.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Remet le minuteur à 0 et prépare la catégorie par défaut.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Efface le message affiché.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Bouton « Open Icons overview ».",
+          "internal": true
+        },
+        "work": {
+          "desc": "Renvoie périodiquement le message à l'UI et propage le flux.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

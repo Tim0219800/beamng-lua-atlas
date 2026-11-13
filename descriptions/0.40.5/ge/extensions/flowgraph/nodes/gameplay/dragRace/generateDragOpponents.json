@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/generateDragOpponents.lua",
+  "module": "Nœud flowgraph « Generate Drag Race Opponents » (catégorie once_instant, dépend de gameplay_drag_dragBridge). Génère une liste de configurations de véhicules adverses (model, config, paint, dial) adaptée au véhicule du joueur. Pins d'entrée : vehId, numberOfOpponents (1), playerDial (-1 = automatique). Sortie : vehicleGroup (table). En bracketRace, adversaires aléatoires avec dial réduit de 0.5 ; sinon adversaires de temps 1/4 mile proche du dial du joueur ([dial-0.1 ; dial+0.4[).",
+  "notes": ["Seuls les modèles de type Car ou Truck non auxiliaires et hors configs simple_traffic sont candidats.", "Si rien ne convient, le véhicule du joueur est dupliqué (getPlayerVehicleAsFallback).", "Le dial par défaut vaut 12 si aucune donnée de performance n'existe.", "Le pin vehId est déclaré mais jamais lu : le véhicule courant est pris via core_vehicles.getCurrentVehicleDetails()."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise selectedOpponents et playerId.", "internal": true},
+        "_executionStarted": {"desc": "Vide la sélection et met playerId à 0.", "internal": true},
+        "drawCustomProperties": {"desc": "Éditeur : aucune propriété.", "internal": true},
+        "drawMiddle": {"desc": "Dessin du nœud dans l'éditeur.", "internal": true},
+        "filterValidVehicleConfigs": {"desc": "Liste les configurations de core_vehicles.getConfigList valides comme adversaires.", "returns": [{"type": "table", "desc": "Liste de configs"}]},
+        "createVehicleEntry": {"desc": "Construit {model, config, paint aléatoire, dial} à partir d'une config (dial = time_1_4 des données de performance, sinon 12).", "params": {"config": {"type": "table", "desc": "Config de véhicule"}}, "returns": [{"type": "table", "desc": "Entrée véhicule"}]},
+        "getPlayerVehicleAsFallback": {"desc": "Renvoie count copies du véhicule du joueur comme adversaires de secours.", "params": {"count": {"type": "integer", "desc": "Nombre d'entrées"}}, "returns": [{"type": "table", "desc": "Liste d'entrées"}]},
+        "getPlayerDial": {"desc": "Détermine le dial du joueur : pin playerDial si >= 0, sinon dial enregistré (dragBridge.getDialTimes), sinon données de performance, sinon 12.", "params": {"currentVeh": {"type": "table|nil", "desc": "Détails du véhicule courant"}}, "returns": [{"type": "number", "desc": "Dial (temps 1/4 de mile, s)"}]},
+        "generateBracketRaceOpponents": {"desc": "Choisit des configs aléatoires avec dial - 0.5.", "params": {"vehConfigs": {"type": "table", "desc": "Configs candidates"}, "count": {"type": "integer", "desc": "Nombre d'adversaires"}}, "returns": [{"type": "table", "desc": "Liste d'entrées"}]},
+        "generateSimilarOpponents": {"desc": "Choisit des configs dont le temps 1/4 est proche du dial donné.", "params": {"vehConfigs": {"type": "table", "desc": "Configs candidates"}, "dial": {"type": "number", "desc": "Dial du joueur"}, "count": {"type": "integer", "desc": "Nombre d'adversaires"}, "currentVeh": {"type": "table|nil", "desc": "Véhicule courant"}}, "returns": [{"type": "table", "desc": "Liste d'entrées"}]},
+        "selectVehicle": {"desc": "Choisit la stratégie (bracketRace ou similaire) et renvoie la liste d'adversaires.", "returns": [{"type": "table", "desc": "Liste d'entrées"}]},
+        "workOnce": {"desc": "Initialise le hasard et écrit vehicleGroup."}
+      }
+    }
+  }
+}

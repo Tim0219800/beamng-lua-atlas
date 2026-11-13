@@ -1,0 +1,64 @@
+{
+  "path": "lua/common/libs/inspect/inspect.lua",
+  "module": "inspect.lua 3.1.0 : bibliothèque tierce (Enrique García Cota, licence MIT) qui transforme n'importe quelle valeur Lua en chaîne lisible : tables triées, indentation, références circulaires repérées par <id>, métatables affichées. Le module est appelable : inspect(t, options). Pratique pour déboguer.",
+  "usage": "local inspect = require(\"libs/inspect/inspect\")\nprint(inspect({1, 2, a = {b = true}}, {depth = 2}))",
+  "notes": [
+    "Options de inspect.inspect : depth (profondeur max, défaut illimitée), newline (défaut \"\\n\"), indent (défaut deux espaces), process (fonction process(item, path) appliquée récursivement avant l'affichage).",
+    "Les fonctions, userdata et threads sont affichés sous la forme <type id>.",
+    "Les champs KEY et METATABLE sont des marqueurs internes utilisés dans process (déduit du code).",
+    "`i` est listé comme globale affectée par l'extracteur automatique ; c'est en pratique une variable de boucle locale du fichier (à vérifier, non essentiel)."
+  ],
+  "functions": {
+    "inspect": {
+      "desc": "Renvoie une représentation textuelle de root. Peut aussi s'appeler directement : inspect(root, options).",
+      "params": {
+        "root": {"type": "any", "desc": "Valeur à afficher"},
+        "options": {"type": "table|nil", "desc": "{depth, newline, indent, process}"}
+      },
+      "returns": [{"type": "string", "desc": "Texte formaté"}]
+    }
+  },
+  "fields": {
+    "KEY": {"type": "any", "desc": "Marqueur de clé utilisé dans le chemin passé à options.process."},
+    "METATABLE": {"type": "any", "desc": "Marqueur de métatable utilisé dans le chemin passé à options.process."}
+  },
+  "classes": {
+    "Inspector": {
+      "desc": "Objet interne qui accumule le texte dans un tampon pendant le parcours de la valeur.",
+      "functions": {
+        "puts": {"desc": "Ajoute des morceaux de texte au tampon.", "internal": true},
+        "tabify": {"desc": "Ajoute un saut de ligne suivi de l'indentation du niveau courant.", "internal": true},
+        "down": {
+          "desc": "Exécute f un niveau plus profond (incrémente puis décrémente le niveau).",
+          "params": {"f": {"type": "function", "desc": "Fonction à exécuter"}},
+          "internal": true
+        },
+        "alreadyVisited": {
+          "desc": "Indique si la valeur a déjà un identifiant (table déjà rencontrée).",
+          "params": {"v": {"type": "any", "desc": "Valeur"}},
+          "internal": true
+        },
+        "getId": {
+          "desc": "Renvoie l'identifiant numérique de la valeur, selon son type, en le créant au besoin.",
+          "params": {"v": {"type": "any", "desc": "Valeur"}},
+          "internal": true
+        },
+        "putKey": {
+          "desc": "Écrit une clé de table : identifiant brut ou [clé] entre crochets.",
+          "params": {"k": {"type": "any", "desc": "Clé"}},
+          "internal": true
+        },
+        "putTable": {
+          "desc": "Écrit une table : parties séquentielle et non séquentielle, métatable, limite de profondeur, références répétées.",
+          "params": {"t": {"type": "table", "desc": "Table"}},
+          "internal": true
+        },
+        "putValue": {
+          "desc": "Écrit une valeur selon son type (chaîne échappée, nombre, booléen, table, ou <type id>).",
+          "params": {"v": {"type": "any", "desc": "Valeur"}},
+          "internal": true
+        }
+      }
+    }
+  }
+}

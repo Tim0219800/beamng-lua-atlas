@@ -1,0 +1,49 @@
+{
+  "path": "lua/ge/extensions/editor/ezObjectSelect/rotateOperator.lua",
+  "module": "Opérateur modal « Rotate » (touche R) de l'outil Easy Select. Ouvre une session de transformation (historique « EasySelectRotate ») et fait tourner la sélection autour du pivot : sans contrainte l'axe est la direction de vue de la caméra, avec contrainte X/Y/Z c'est l'axe choisi (monde ou local). L'angle vient de l'angle écran souris-pivot ou d'une saisie numérique en degrés, avec magnétisme optionnel. Clic gauche/Entrée valide, clic droit/Échap annule.",
+  "notes": [
+    "Le magnétisme n'est appliqué qu'à l'angle souris (pas à la saisie numérique) et si options.rotateSnapEnabled est vrai et rotateSnapSize > 0 (en degrés).",
+    "Changer d'axe ou d'espace réinitialise la référence souris et l'angle à 0."
+  ],
+  "functions": {
+    "wantsBegin": {
+      "desc": "True si la touche R vient d'être pressée.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": ""}]
+    },
+    "begin": {
+      "desc": "Démarre la rotation. Renvoie false si déjà actif, session impossible ou pivot non projetable.",
+      "params": {"options": {"type": "table|nil", "desc": "{defaultLocal = boolean}"}},
+      "returns": [{"type": "boolean", "desc": "true si démarré"}]
+    },
+    "update": {
+      "desc": "Chaque frame : gère fin, contrainte, saisie, calcule l'angle (rad), applique transformSession.updateRotation et dessine le gizmo.",
+      "params": {"options": {"type": "table|nil", "desc": "{rotateSnapEnabled = boolean, rotateSnapSize = degrés}"}},
+      "returns": [{"type": "string|nil", "desc": "\"active\" pendant l'opération, résultat de finish à la fin, nil si inactif"}]
+    },
+    "cancel": {
+      "desc": "Annule la rotation en cours.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si un opérateur était actif"}]
+    },
+    "setLocalSpace": {
+      "desc": "Bascule espace local/monde et réinitialise la référence souris.",
+      "params": {"localSpace": {"type": "boolean", "desc": "true pour local"}},
+      "returns": [{"type": "boolean", "desc": "false si le changement n'a pas eu lieu"}]
+    },
+    "isActive": {
+      "desc": "Indique si l'opérateur est en cours.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": ""}]
+    },
+    "getObjectIds": {
+      "desc": "Ids des objets de la session ({} si inactif).",
+      "params": {},
+      "returns": [{"type": "table", "desc": ""}]
+    },
+    "drawScreen": {
+      "desc": "Dessine l'indicateur et le HUD (contrainte VIEW/axe, espace, angle en degrés ou texte saisi).",
+      "params": {}
+    }
+  }
+}

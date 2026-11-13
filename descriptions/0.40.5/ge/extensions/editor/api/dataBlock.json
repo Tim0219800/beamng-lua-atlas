@@ -1,0 +1,71 @@
+{
+  "path": "lua/ge/extensions/editor/api/dataBlock.lua",
+  "module": "API de l'éditeur pour gérer les datablocks du moteur (objets de données partagés : sons, particules, matériaux physiques…). initialize(editor) ajoute les fonctions de création, recherche, sauvegarde et suppression sur l'objet editor ; la persistance passe par un PersistenceManager nommé dataBlockPersistMan. Fichier par défaut : art/datablocks/managedDatablocks.json.",
+  "notes": [
+    "Bug : initialize assigne editor.addDataBlockToFile = addDataBlockToFile, mais la fonction locale s'appelle addDatablockToFile (casse différente). editor.addDataBlockToFile vaut donc nil.",
+    "createDataBlock renvoie l'ID de l'objet (getID()), pas l'objet."
+  ],
+  "functions": {
+    "initialize": {
+      "desc": "Crée le PersistenceManager dataBlockPersistMan s'il n'existe pas et installe les fonctions sur l'objet editor.",
+      "params": {"editorInstance": {"type": "table", "desc": "Objet editor"}},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {
+    "editor": {
+      "desc": "Fonctions ajoutées à l'objet editor par initialize.",
+      "functions": {
+        "createDataBlock": {
+          "desc": "Crée un datablock du type donné, copie éventuellement les champs d'un existant, l'enregistre, le nomme, l'ajoute au groupe dataBlockGroup et au set de datablocks, puis le marque modifié pour le fichier.",
+          "params": {
+            "name": {"type": "string|nil", "desc": "Nom unique"},
+            "type": {"type": "string", "desc": "Type (classe) du datablock"},
+            "copyFrom": {"type": "string|nil", "desc": "Nom d'un datablock dont copier les champs (ignoré si nil ou vide)"},
+            "filename": {"type": "string|nil", "desc": "Fichier cible, défaut art/datablocks/managedDatablocks.json"}
+          },
+          "returns": [{"type": "integer", "desc": "ID de l'objet créé"}]
+        },
+        "saveDirtyDataBlock": {
+          "desc": "Sauvegarde le datablock s'il est modifié.",
+          "params": {"dataBlock": {"type": "userdata", "desc": "Objet datablock"}},
+          "returns": []
+        },
+        "removeDataBlockFromFile": {
+          "desc": "Retire le datablock du set et, s'il a un nom de fichier, le supprime de son fichier.",
+          "params": {"dataBlock": {"type": "userdata", "desc": "Objet datablock"}},
+          "returns": []
+        },
+        "saveDataBlockToFile": {
+          "desc": "Associe le datablock à un fichier (par défaut son fichier actuel) puis le sauvegarde immédiatement.",
+          "params": {
+            "dataBlock": {"type": "userdata", "desc": "Objet datablock"},
+            "filename": {"type": "string|nil", "desc": "Fichier cible"}
+          },
+          "returns": []
+        },
+        "isDataBlockDirty": {
+          "desc": "Indique si le datablock a été modifié.",
+          "params": {"dataBlock": {"type": "userdata", "desc": "Objet datablock"}},
+          "returns": [{"type": "boolean", "desc": "true si modifié"}]
+        },
+        "setDataBlockDirty": {
+          "desc": "Marque le datablock comme modifié (fichier = son fichier, sinon le fichier par défaut).",
+          "params": {"dataBlock": {"type": "userdata", "desc": "Objet datablock"}},
+          "returns": []
+        },
+        "getDataBlocks": {
+          "desc": "Renvoie le set de tous les datablocks (Sim.getDataBlockSet()).",
+          "params": {},
+          "returns": [{"type": "userdata", "desc": "SimSet de datablocks"}]
+        },
+        "findDataBlock": {
+          "desc": "Cherche un datablock par son nom en parcourant le set.",
+          "params": {"name": {"type": "string", "desc": "Nom recherché"}},
+          "returns": [{"type": "userdata|nil", "desc": "Datablock trouvé ou nil"}]
+        }
+      }
+    }
+  }
+}

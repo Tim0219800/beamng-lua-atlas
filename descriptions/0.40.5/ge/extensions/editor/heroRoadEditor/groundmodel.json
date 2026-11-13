@@ -1,0 +1,52 @@
+{
+  "path": "lua/ge/extensions/editor/heroRoadEditor/groundmodel.lua",
+  "module": "Mode de peinture des groundmodels (sec, mouillé, neige, glace…) du Hero Road Editor. L'artiste peint à la souris sur la chaussée ; la peinture est stockée comme tampons en coordonnées monde dans group.surfaceStamps ({x, y, r, m}), que mesh.lua rastérise sur les quads à la construction. Le module gère l'état du mode, l'entrée pinceau (un undo par trait) et la surcouche d'éditeur (cellules colorées, curseur, fil de fer). Le rendu en jeu ne change pas ; seule la physique change.",
+  "notes": [
+    "matIndex : indice dans la palette de surfaceKit ; 1 = Dry = gomme ; défaut 2 (premier non-base, Wet).",
+    "Rayon de pinceau par défaut 3.0 m ; l'espacement des tampons le long d'un trait est max(0.25, rayon*0.5) m.",
+    "La reconstruction physique est différée : la peinture met seulement le groupe dans la file pending ; groupMgr.rebuildSurfaceOnly n'est appelé qu'après requestApply (bouton Apply), via flushPending à la frame suivante.",
+    "Le lancer de rayon sous la souris utilise castRayStatic avec une portée de 2000 m ; la souris est ignorée si ImGui la capture ou si le gizmo d'axes est survolé.",
+    "Le fil de fer est limité à 90 m autour de la caméra."
+  ],
+  "functions": {
+    "isActive": {"desc": "Indique si le mode peinture est actif.", "params": {}, "returns": [{"type": "boolean", "desc": "true si actif."}], "internal": false},
+    "setActive": {
+      "desc": "Active ou désactive le mode ; en désactivant, interrompt tout trait en cours.",
+      "params": {"b": {"type": "boolean", "desc": "Nouvel état."}},
+      "internal": false
+    },
+    "getMatIndex": {"desc": "Indice de matériau de la palette actuellement peint.", "params": {}, "returns": [{"type": "integer", "desc": "Indice (1 = Dry/gomme)."}], "internal": false},
+    "setMatIndex": {"desc": "Choisit le matériau peint.", "params": {"i": {"type": "integer", "desc": "Indice dans la palette de surfaceKit."}}, "internal": false},
+    "getBrushRadius": {"desc": "Rayon actuel du pinceau.", "params": {}, "returns": [{"type": "number", "desc": "Rayon en mètres."}], "internal": false},
+    "setBrushRadius": {"desc": "Fixe le rayon du pinceau.", "params": {"r": {"type": "number", "desc": "Rayon en mètres."}}, "internal": false},
+    "getBrushDefault": {"desc": "Rayon de pinceau par défaut (3.0).", "params": {}, "returns": [{"type": "number", "desc": "Mètres."}], "internal": false},
+    "getShowWire": {"desc": "Indique si le fil de fer de la chaussée est affiché.", "params": {}, "returns": [{"type": "boolean", "desc": "true si affiché."}], "internal": false},
+    "setShowWire": {"desc": "Affiche ou masque le fil de fer de la chaussée.", "params": {"b": {"type": "boolean", "desc": "Nouvel état (converti en booléen)."}}, "internal": false},
+    "requestApply": {
+      "desc": "Demande la reconstruction de la physique des routes peintes (bouton Apply). Consommé par flushPending à la frame suivante.",
+      "params": {},
+      "internal": false
+    },
+    "flushPending": {
+      "desc": "Reconstruit le maillage physique de chaque route peinte depuis le dernier Apply (chemin léger surface seule : maillage + collision, sans décals/mobilier/peinture terrain), puis vide la file. Sans effet si Apply n'a pas été demandé. Appelé à chaque frame depuis onEditorGui.",
+      "params": {},
+      "internal": true
+    },
+    "clearAll": {
+      "desc": "Supprime toute la peinture du groupe (vide surfaceStamps) et le met en attente de reconstruction. L'appelant gère le commit d'annulation.",
+      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "internal": false
+    },
+    "updateAndPaint": {
+      "desc": "À chaque frame en mode actif : dessine le curseur pinceau (sphère + disque) au point visé et, en glissant le bouton gauche, dépose des tampons {x,y,r,m} espacés régulièrement. Un seul commit d'historique 'Paint Groundmodel' par trait.",
+      "params": {"group": {"type": "table", "desc": "Groupe Hero Road sélectionné."}},
+      "returns": [{"type": "boolean", "desc": "true si le mode possède la souris (actif et groupe valide), false sinon."}],
+      "internal": false
+    },
+    "drawOverlay": {
+      "desc": "Surcouche d'éditeur : teinte chaque cellule de la grille (chaussée + accotements) avec la couleur du matériau (alpha 60 pour la base, 135 pour le peint), plus un fil de fer optionnel. Lit les mêmes tampons et la même grille (group.meshGrid) que le maillage, donc cohérent avec la physique. Seulement pour la route sélectionnée.",
+      "params": {"group": {"type": "table", "desc": "Groupe Hero Road sélectionné (meshGrid requis)."}},
+      "internal": false
+    }
+  }
+}

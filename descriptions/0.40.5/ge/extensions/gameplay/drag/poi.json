@@ -1,0 +1,43 @@
+{
+  "path": "lua/ge/extensions/gameplay/drag/poi.lua",
+  "module": "Points d'intérêt (POI) des pistes de drag. Pour chaque couloir de chaque piste du niveau, crée un déclencheur invisible de 6 m de rayon posé sur la ligne de stage. Quand un véhicule y entre, le module arme la piste (core.setDragRaceData avec les règles utilisateur sauvegardées) et lance la course (core.startDragRaceActivity), ou ouvre le menu MP si le mode multijoueur est actif. Gère aussi l'entrée multiseat (plusieurs joueurs, un par couloir) et empêche de rejoindre immédiatement après une course tant que le véhicule reste à la ligne.",
+  "notes": [
+    "Rayon de déclenchement : 6 m (JOIN_RADIUS_SQ = 36). En multiseat, seul le couloir le plus proche du véhicule le prend en charge.",
+    "Dans le tutoriel carrière (career_modules_tutorial actif), le point de stage du POI est décalé de 10 m vers l'arrière de la ligne.",
+    "Les POI ne sont générés que si core.isDragEnabled() est vrai (carrière active ou réglage enableDragRaceInFreeroam).",
+    "Identifiant d'un POI : 'drag##<nom du fichier de piste>-<shortName du couloir ou laneN>'.",
+    "En solo freeroam, si une course est finie et que le joueur revient dans le déclencheur, la course est remise à zéro (dragBridge.reset).",
+    "Un seul appel startDragRaceActivity par couloir tant que la demande n'est pas effacée (poiJoinRequestSent)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "gameplay_drag_rulesMenu."}
+  },
+  "functions": {
+    "applyUserRulesToData": {
+      "desc": "Applique à data les règles sauvegardées par l'utilisateur pour la piste (dragType, importantTimerId, prefabs.christmasTree.treeType).",
+      "params": {"data": {"type": "table", "desc": "Données de piste, modifiées en place."}, "stripId": {"type": "string|nil", "desc": "Identifiant de piste."}, "levelId": {"type": "string|nil", "desc": "Identifiant de niveau."}},
+      "returns": []
+    },
+    "blockRejoinForStagedRacers": {
+      "desc": "Marque les racers encore à moins de 6 m d'une ligne de stage : ils ne pourront pas relancer une course tant qu'ils ne sont pas sortis de tous les déclencheurs de stage.",
+      "params": {},
+      "returns": []
+    },
+    "clearRejoinBlocks": {
+      "desc": "Efface la liste des véhicules interdits de relance.",
+      "params": {},
+      "returns": []
+    },
+    "createStagePoi": {
+      "desc": "Crée la définition d'un POI (id et markerInfo.invisibleTrigger multiseat avec onInside/onExit) pour un couloir. Renvoie nil avec un warning si le couloir n'a pas de point de stage.",
+      "params": {"data": {"type": "table", "desc": "Données de piste (strip, _fnWithoutExt...)."}, "lane": {"type": "table", "desc": "Couloir (waypoints.stage, shortName)."}, "laneIndex": {"type": "integer", "desc": "Indice du couloir."}},
+      "returns": [{"type": "table|nil", "desc": "POI {id, markerInfo} ou nil."}]
+    },
+    "onGetRawPoiListForLevel": {
+      "desc": "Hook (relayé par core) : ajoute à elements un POI par couloir de chaque piste de drag du niveau, si le drag est activé.",
+      "params": {"levelIdentifier": {"type": "string", "desc": "Nom du niveau."}, "elements": {"type": "table[]", "desc": "Liste de POI complétée en place."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

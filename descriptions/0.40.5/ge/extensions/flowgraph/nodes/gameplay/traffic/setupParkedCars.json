@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/setupParkedCars.lua",
+  "module": "Nœud flowgraph « Setup Parking System » (once_instant). Active le système de placement sur places de parking : gameplay_parking.setState(true), option sitesData via setSites, puis traffic:activateParkedCars(vehicleIds). Au reset : deactivateParkedCars et setSites() sans argument.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Appelle onNodeReset().",
+          "internal": true
+        },
+        "init": {
+          "desc": "Appelle onNodeReset().",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Désactive les voitures garées et réinitialise les sites du système de parking.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Active le parking, applique les sites si fournis et active les voitures garées pour la liste d'ids.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

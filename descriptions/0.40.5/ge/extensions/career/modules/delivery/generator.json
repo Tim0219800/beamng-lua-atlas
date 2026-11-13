@@ -1,0 +1,171 @@
+{
+  "path": "lua/ge/extensions/career/modules/delivery/generator.lua",
+  "module": "Générateur de contenu de la livraison en carrière. Au chargement (setup) il lit les gabarits de colis (*.deliveryParcels.json), de véhicules (*.deliveryVehicles.json) et de matériaux (*.deliveryMaterials.json) dans gameplay/delivery/, prépare les installations (freeroam_facilities de type deliveryProvider : places de parking, types logistiques fournis/reçus, stockages de matériaux, générateurs, progression), puis produit des colis, des offres de véhicules/remorques et fait évoluer les stocks de matériaux selon les intervalles des générateurs. Fournit aussi le calcul des distances et des récompenses initiales, et les opérations sur les matériaux (fractionnement, déplacement, stockage).",
+  "usage": "local fac = career_modules_delivery_generator.getFacilityById(\"someFacilityId\")\nlocal ps = career_modules_delivery_generator.getParkingSpotByPath(psPath)\nlocal d = career_modules_delivery_generator.getDistanceBetweenFacilities(originLoc, destLoc) -- mètres par la route",
+  "notes": [
+    "Types de générateurs : parcelProvider, parcelReceiver (colis), vehOfferProvider, trailerOfferProvider (offres de véhicules/remorques), materialProvider, materialReceiver (stock de matériaux).",
+    "Un lieu (location) est une table {type='facilityParkingspot', facId, psPath} ; 'multi' contient plusieurs destinations possibles.",
+    "Les générateurs ne tournent que lorsqu'une requête appelle triggerAllGenerators (par exemple les fonctions getAllCargo* du parcelManager) ; un drapeau limite l'appel à une fois par image (remis à faux par onUpdate).",
+    "Distance mini d'une livraison : 150 m (minDeliveryDistance), mesurée par le réseau routier (map.getPath) plus les distances aux routes les plus proches ; 1 si une position n'a pas de route.",
+    "Récompense d'un colis : money = (sqrt(slots)/4 + (km)^(1+sqrt(slots)/100) * (5 + poids^0.9)), multiplié par le bonus de livraison de l'organisation ; XP = base (2, +1 à 16, 32, 64 slots) + km arrondis.",
+    "Bug : dans triggerParcelGenerator, pour les parcelProvider avec multiDestination, psPath est rempli par `s:getPath()` où `s` n'est pas défini : provoquerait une erreur Lua si ce mode est utilisé (il faudrait ap.psPath).",
+    "Bug : setupMaterialStorage corrige un stock négatif par `storage.storedVlume = 0` (faute de frappe) ; la valeur négative n'est donc pas corrigée.",
+    "Dans triggerVehicleOfferGenerator, si aucune installation de destination n'est trouvée, la fonction quitte tout (return) au lieu de passer à l'offre suivante.",
+    "Si un générateur de type vehicleProvider est testé dans createGeneratorTemplateCache, le bloc est vide ; seul le code des colis remplit validTemplates.",
+    "finalizeMaterialDistances ne fait rien dans cette version : tout le calcul est dans un bloc commenté.",
+    "Le champ commenté M.getLogisticTypesLookup n'existe pas ; la ligne qui le référence dans la page automatique vient d'un commentaire de code."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : freeroam_facilities, gameplay_sites_sitesManager, util_configListGenerator."}
+  },
+  "functions": {
+    "onCareerActivated": {
+      "desc": "Hook appelé à l'activation de la carrière : mémorise les références vers les autres extensions de livraison et util_stepHandler.",
+      "internal": true
+    },
+    "setup": {
+      "desc": "Initialise tout le système de livraison : charge les gabarits de matériaux, colis et véhicules, prépare les installations (setupFacilities), puis soit recharge les colis et offres sauvegardés (en jetant les cargaisons de matériaux temporaires 'addMaterialAsParcelToContainer'), soit génère un stock initial en simulant les générations passées (240 s de colis, 1000 s d'offres de véhicules).",
+      "params": {"loadData": {"type": "table", "desc": "Données de sauvegarde : facilities (progress, materialStorages, logisticGenerators), parcels, vehicleOffers, general.maxGroupId."}}
+    },
+    "getFacilities": {
+      "desc": "Liste des installations de livraison, triées par nom traduit.",
+      "returns": [{"type": "table", "desc": "Liste d'installations."}]
+    },
+    "getFacilityById": {
+      "desc": "Cherche une installation par id.",
+      "params": {"id": {"type": "string", "desc": "Identifiant de l'installation."}},
+      "returns": [{"type": "table|nil", "desc": "Installation."}]
+    },
+    "getFacilitiesForOrganizationId": {
+      "desc": "Installations associées à une organisation.",
+      "params": {"orgId": {"type": "string", "desc": "Identifiant de l'organisation."}},
+      "returns": [{"type": "table", "desc": "Liste de {name, id}."}]
+    },
+    "getParkingSpotByPath": {
+      "desc": "Renvoie la place de parking (objet site) correspondant à un chemin d'identification.",
+      "params": {"path": {"type": "string", "desc": "psPath (ps:getPath())."}},
+      "returns": [{"type": "table|nil", "desc": "Place de parking (pos, rot, name, customFields…)."}]
+    },
+    "getParcelTemplateById": {
+      "desc": "Renvoie le gabarit de colis chargé depuis les fichiers *.deliveryParcels.json.",
+      "params": {"templateId": {"type": "string|integer", "desc": "Identifiant du gabarit."}},
+      "returns": [{"type": "table|nil", "desc": "Gabarit (names, slots, weight, modChance, offerDuration, isTutorialParcel…)."}]
+    },
+    "getMaterialsTemplatesById": {
+      "desc": "Renvoie le gabarit d'un matériau (*.deliveryMaterials.json) : type (fluid/dryBulk), density, money, name…",
+      "params": {"id": {"type": "string", "desc": "Identifiant du matériau."}},
+      "returns": [{"type": "table|nil", "desc": "Gabarit."}]
+    },
+    "selectAccessPointByLookupKeyByType": {
+      "desc": "Choisit au hasard un point d'accès parmi ceux qui gèrent un type logistique donné ; loggue une erreur et affiche la liste si aucun ne convient.",
+      "params": {
+        "accessPointsByName": {"type": "table<string, table>", "desc": "Points d'accès d'une installation."},
+        "logisticType": {"type": "string", "desc": "Type logistique recherché."},
+        "typeLookupKey": {"type": "string", "desc": "'logisticTypesProvidedLookup' ou 'logisticTypesReceivedLookup'."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Point d'accès (ps, psPath, facId…)."}]
+    },
+    "distanceBetween": {
+      "desc": "Distance par la route entre deux positions : somme des segments du chemin de la carte (map.getPath) plus la distance à la route la plus proche de chaque position.",
+      "params": {
+        "posA": {"type": "vec3", "desc": "Position de départ."},
+        "posB": {"type": "vec3", "desc": "Position d'arrivée."}
+      },
+      "returns": [{"type": "number", "desc": "Distance en mètres (1 si l'une des positions n'a pas de route)."}]
+    },
+    "getLocationCoordinates": {
+      "desc": "Position monde d'un lieu : place de parking pour 'facilityParkingspot', position du véhicule pour 'vehicle'. Autres types : affiche un message et renvoie nil.",
+      "params": {"loc": {"type": "table", "desc": "Lieu."}},
+      "returns": [{"type": "vec3|nil", "desc": "Position."}]
+    },
+    "getDistanceBetweenFacilities": {
+      "desc": "Distance par la route (mise en cache par couple origine/destination) entre deux lieux. Si loc2 est 'multi', renvoie la médiane (haute) des distances vers chaque destination.",
+      "params": {
+        "loc1": {"type": "table", "desc": "Lieu de départ ('facilityParkingspot')."},
+        "loc2": {"type": "table", "desc": "Lieu d'arrivée ('facilityParkingspot' ou 'multi')."}
+      },
+      "returns": [{"type": "number|nil", "desc": "Distance en mètres (nil pour un autre type de lieu)."}]
+    },
+    "finalizeParcelItemDistanceAndRewards": {
+      "desc": "Calcule (une seule fois) la distance d'origine d'un colis, ses modificateurs (dParcelMods.generateModifiers) et ses récompenses : argent, XP logistique, XP de compétence (logistics-materials ou logistics-delivery, +10 pour les colis tutoriel) et réputation de l'organisation (avec bonus de livraison selon son niveau).",
+      "params": {"item": {"type": "table", "desc": "Cargaison (slots, weight, origin, destination, templateId, organization…)."}}
+    },
+    "finalizeVehicleOffer": {
+      "desc": "Complète une offre de véhicule : choisit un véhicule au hasard selon son filtre (modèle, config, kilométrage, nom) si absent, puis calcule distance et récompenses (baseReward + rewardPerKm, XP logistique, XP du type vehicle/trailer, réputation).",
+      "params": {"offer": {"type": "table", "desc": "Offre (vehicle.filterId, locations, data.type, organization…)."}}
+    },
+    "finalizeMaterialDistances": {
+      "desc": "Prévu pour calculer les fournisseurs/receveurs les plus proches d'une installation ; le corps est entièrement commenté, donc sans effet.",
+      "params": {"fac": {"type": "table", "desc": "Installation."}}
+    },
+    "finalizeMaterialDistanceRewards": {
+      "desc": "Calcule l'XP d'une livraison de matériau selon la distance et le nombre de slots, l'inscrit dans rewards.logistics et rewards['logistics-materials'], ainsi que la réputation de l'organisation et le bonus d'argent.",
+      "params": {
+        "item": {"type": "table", "desc": "Cargaison de matériau."},
+        "destination": {"type": "table", "desc": "Lieu de dépôt."}
+      }
+    },
+    "addMaterialAsParcelToContainer": {
+      "desc": "Crée une cargaison de matériau (merge=true, offre sans expiration, destinations 'multi' : installations qui reçoivent ce matériau) à partir du stock d'une installation, et planifie son déplacement transitoire vers le conteneur du véhicule.",
+      "params": {
+        "con": {"type": "table", "desc": "Conteneur de cargaison (avec location)."},
+        "storage": {"type": "table", "desc": "Stockage de matériau de l'installation (materialType, id…)."},
+        "amount": {"type": "number", "desc": "Quantité (slots)."},
+        "sourceFacId": {"type": "string", "desc": "Installation d'origine."},
+        "sourcePsPath": {"type": "string", "desc": "Place de repli si aucun point d'accès fournisseur trouvé."}
+      }
+    },
+    "splitOffPartsFromMaterialCargo": {
+      "desc": "Scinde une cargaison de matériau : crée des copies de tailles données et réduit l'original d'autant (poids et argent recalculés).",
+      "params": {
+        "cargo": {"type": "table", "desc": "Cargaison de matériau."},
+        "otherPartSizes": {"type": "table<integer, number>|nil", "desc": "Tailles (slots) des parties à détacher."}
+      },
+      "returns": [{"type": "table", "desc": "Liste : cargaison d'origine puis copies détachées."}]
+    },
+    "moveMaterialToDestination": {
+      "desc": "Déplace une cargaison de matériau vers une installation. Si le stock ne peut pas tout accueillir, scinde : la partie qui rentre est déplacée, le reste reste dans le véhicule.",
+      "params": {
+        "cargo": {"type": "table", "desc": "Cargaison de matériau."},
+        "destination": {"type": "table", "desc": "Lieu de destination (facId)."}
+      },
+      "returns": [
+        {"type": "table", "desc": "Cargaison traitée (la copie déposée en cas de scission)."},
+        {"type": "table|nil", "desc": "Cargaison restante (nil si tout déposé)."}
+      ]
+    },
+    "changeMaterialAmountInFacility": {
+      "desc": "Ajoute ou retire du volume au stock d'un matériau dans une installation, avec bornage à [0, capacité] et avertissement logué en cas de dépassement.",
+      "params": {
+        "facId": {"type": "string", "desc": "Identifiant de l'installation."},
+        "materialType": {"type": "string", "desc": "Identifiant du matériau."},
+        "change": {"type": "number", "desc": "Variation de volume (négative pour retirer)."}
+      }
+    },
+    "isMixable": {
+      "desc": "Indique si un type de cargaison peut être mélangé dans un même conteneur (parcel : oui, fluid et dryBulk : non).",
+      "params": {"type": {"type": "string", "desc": "'parcel', 'fluid' ou 'dryBulk'."}},
+      "returns": [{"type": "boolean|nil", "desc": "nil pour un type inconnu."}]
+    },
+    "triggerGenerator": {
+      "desc": "Exécute une génération pour un générateur : colis (parcelProvider/parcelReceiver), offres de véhicules ou remorques, ou évolution du stock de matériau.",
+      "params": {
+        "fac": {"type": "table", "desc": "Installation."},
+        "generator": {"type": "table", "desc": "Générateur (type, min, max, interval, logisticTypes…)."},
+        "timeOffset": {"type": "number|nil", "desc": "Décalage de temps (négatif pour simuler une génération passée) ; 0 par défaut."}
+      }
+    },
+    "triggerAllGenerators": {
+      "desc": "Déclenche tous les générateurs dont l'échéance est atteinte (nextGenerationTimestamp), au plus une fois par image."
+    },
+    "onUpdate": {
+      "desc": "Hook par image : réarme triggerAllGenerators pour l'image suivante.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s), inutilisé."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulation (s), inutilisé."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s), inutilisé."}
+      },
+      "internal": true
+    }
+  }
+}

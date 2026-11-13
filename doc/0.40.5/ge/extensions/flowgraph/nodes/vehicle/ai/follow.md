@@ -4,11 +4,15 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/vehicle/ai/follow")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud « AI Follow » (couleur ai, once_p_duration). Met un véhicule en mode IA « follow » pour suivre un autre véhicule, sans contact intentionnel. Entrées : aiVehId (sans valeur = véhicule du joueur), targetId (par défaut le véhicule du joueur).
+
 ## Classe `C`
+
+Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:workOnce()` |  | 22 |
+| `C:workOnce()` | Envoie au véhicule ai.setMode("follow") puis ai.setTargetObjectID(targetId). | 22 |
 
 ## Appels vers le moteur (C++)
 

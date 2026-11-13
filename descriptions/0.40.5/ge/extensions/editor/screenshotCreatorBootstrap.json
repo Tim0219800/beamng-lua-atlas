@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/editor/screenshotCreatorBootstrap.lua",
+  "module": "Petit amorçage de l'éditeur : ajoute l'entrée de menu Fenêtre > Vehicles > « Vehicle Screenshot Creator » qui ouvre la fenêtre de l'extension util_screenshotCreator (captures de véhicules).",
+  "functions": {
+    "onEditorInitialized": {
+      "desc": "Appelé à l'initialisation de l'éditeur : crée l'élément de menu « Vehicle Screenshot Creator » (groupe de menu « Vehicles »). Son clic appelle extensions.util_screenshotCreator.openWindow().",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

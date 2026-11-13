@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/editor/roadArchitect/clothoid.lua",
+  "module": "Évaluation de clothoïdes (spirales d'Euler, courbure variant linéairement avec l'abscisse) pour Road Architect. Le code est largement basé sur la bibliothèque Clothoids d'Enrico Bertolazzi et Marco Frego (licence BSD, copyright 2024 Bertolazzi, Frego et BeamNG) : les intégrales de Fresnel généralisées sont calculées en interne (fresnelCS, evalXYaSmall, evalXYaLarge, generalizedFresnelCS). Un moddeur s'en sert pour obtenir des points sur une courbe de raccordement progressive (routes, jonctions).",
+  "usage": "local clothoid = require('editor/roadArchitect/clothoid')\nlocal p = clothoid.evaluate(vec3(0, 0, 0), 0, 0, 0.001, 20) -- point à 20 m, départ cap 0, courbure initiale 0, dKappa 0.001",
+  "notes": [
+    "Seule evaluate est exportée ; les routines de Fresnel sont locales.",
+    "Le vec3 renvoyé n'a que x et y renseignés (z = 0 par défaut) : la hauteur de start n'est pas reprise.",
+    "Le cap theta0 est en radians ; p est la longueur d'arc depuis le point de départ (unités du monde, mètres)."
+  ],
+  "functions": {
+    "evaluate": {
+      "desc": "Évalue une clothoïde au paramètre p (longueur d'arc, de 0 à la longueur géodésique totale) : calcule l'intégrale de Fresnel généralisée avec a = dKappa·p², b = kappa·p et c = theta0, puis renvoie start + p·(C, S).",
+      "params": {
+        "start": {"type": "vec3", "desc": "Point de départ de la spirale (seuls x et y sont utilisés)."},
+        "theta0": {"type": "number", "desc": "Cap initial en radians."},
+        "kappa": {"type": "number", "desc": "Courbure initiale (1/m)."},
+        "dKappa": {"type": "number", "desc": "Taux de variation de la courbure par unité de longueur (1/m²)."},
+        "p": {"type": "number", "desc": "Abscisse curviligne à évaluer, entre 0 et la longueur de la spirale."}
+      },
+      "returns": [{"type": "vec3", "desc": "Position (x, y) du point sur la clothoïde, z à 0."}],
+      "internal": false
+    }
+  }
+}

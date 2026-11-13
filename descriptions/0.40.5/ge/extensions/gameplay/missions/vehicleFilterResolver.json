@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/gameplay/missions/vehicleFilterResolver.lua",
+  "module": "Transforme une configuration de filtre de véhicules de mission (filterData : liste blanche/noire, réglages de probabilité, ajouts et retraits manuels, maxVehicles) en liste plate de couples modèle/configuration. S'appuie sur util/configListGenerator pour obtenir les véhicules éligibles.",
+  "fields": {},
+  "functions": {
+    "hasAnyConfiguration": {
+      "desc": "Indique si filterData contient une contrainte réelle : liste blanche ou noire non vide, probabilitySettings, manualAdditions, manualRemovals ou maxVehicles > 0.",
+      "params": {"filterData": {"type": "table|any", "desc": "Données de filtre ; tout non-table donne false."}},
+      "returns": [{"type": "boolean", "desc": "true si le filtre contraint l'ensemble de véhicules."}],
+      "internal": false
+    },
+    "resolveFilteredConfigs": {
+      "desc": "Résout filterData en liste {model, config, name}. Applique le filtre de base, les probabilitySettings (qui remplacent le résultat s'ils trouvent des véhicules), la limite maxVehicles, les retraits manuels (clés 'modèle/config') puis ajoute les ajouts manuels non déjà présents, sans doublon. allowAuxiliaryVehicles et allowLoadedTrailers contrôlent l'éligibilité.",
+      "params": {"filterData": {"type": "table|any", "desc": "Champs lus : allowAuxiliaryVehicles, allowLoadedTrailers, baseFilter, probabilitySettings, maxVehicles, manualRemovals, manualAdditions."}},
+      "returns": [{"type": "table[]", "desc": "Liste de {model = string, config = string, name = string} (vide si filterData n'est pas une table)."}],
+      "internal": false
+    }
+  }
+}

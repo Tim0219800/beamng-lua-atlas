@@ -4,6 +4,8 @@
 
 **Accès :** `require("client/lighting/shadowMaps/init")`
 
+Déclare le ShaderData « BlurDepthShader » (boxFilterV.hlsl / boxFilterP.hlsl) utilisé pour flouter les shadow maps, s'il n'existe pas déjà. Aucune fonction exportée.
+
 ## Appels vers le moteur (C++)
 
 - `scenetree.` `findObject`

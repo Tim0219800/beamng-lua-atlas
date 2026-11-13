@@ -1,0 +1,59 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/siteWater.lua",
+  "module": "Eau stagnante et en chute d'un « site » (open space editor) : bassins d'une cascade, nappes qui débordent entre eux, jets, gerbes et jets d'écume (émetteur de particules BNGP_sprinkler). L'eau n'est pas un mesh et ne peut donc pas être cuite dans une coque ; le manifeste du site la porte sous forme de chiffres et tout ce qui monte le site recrée les objets (WaterBlock, River, ParticleEmitterNode). Tout part d'un enregistrement unique, exprimé dans le repère du site : un point d'ancrage et un angle règlent tout le placement.",
+  "usage": "local sw = extensions.editor_toolUtilities_siteWater\nlocal rec = sw.localise(ca, ox, oy, oz)      -- vers le manifeste\nlocal ca2 = sw.place(rec, px, py, pz, yaw, ox, oy) -- depuis le manifeste\nlocal ids, names = sw.build(ca2, folder, 'site1')",
+  "notes": [
+    "build() commence par appeler remove(folder), donc reconstruit tout depuis zéro.",
+    "remove() balaie par classe (WaterBlock, River, ParticleEmitterNode) plutôt que par liste d'ids, car l'annulation restaure un document dont les ids peuvent désigner des objets supprimés.",
+    "Une nappe (fall) part de chacune des 8 arêtes du bord d'un bassin (4 plats et 4 coins coupés) ; le nombre de gerbes est plafonné à 8 par arête.",
+    "Les valeurs flow, sprayPow et sprayVar sont bornées à 0..1 dans build ; flow vaut 0.55 par défaut, sprayPow et sprayVar 0.5.",
+    "Les altitudes (z, jetZ, spoutZ, zTop, zBot) sont relatives à oz/pz dans le manifeste et absolues dans l'enregistrement de l'éditeur."
+  ],
+  "functions": {
+    "build": {
+      "desc": "Inonde ce que le centre d'intérêt a posé (bassins), puis accroche une nappe sur chaque face de chaque bassin qui déborde, avec gerbes d'écume, puis les couronnes (jets et déversoirs). Vide d'abord le dossier.",
+      "params": {
+        "ca": {"type": "table|nil", "desc": "Enregistrement de l'éditeur : pools, falls, crowns, flow, sprayPow, sprayVar, spraySeed."},
+        "folder": {"type": "userdata|nil", "desc": "Dossier de scène (SimGroup) qui reçoit les objets."},
+        "tag": {"type": "string|nil", "desc": "Nom du site qui monte l'eau, pour que deux sites identiques sur une carte n'aient pas les mêmes noms d'objets (défaut 'site')."}
+      },
+      "returns": [
+        {"type": "table|nil", "desc": "Ids des objets créés (nil si pas de bassins ou de dossier)."},
+        {"type": "table|nil", "desc": "Noms des objets créés."}
+      ]
+    },
+    "remove": {
+      "desc": "Supprime tout ce qui est mouillé sous un dossier : objets des classes WaterBlock, River et ParticleEmitterNode.",
+      "params": {"folder": {"type": "userdata|nil", "desc": "Dossier de scène ; sans effet si nil."}},
+      "returns": []
+    },
+    "commit": {
+      "desc": "Passe chaque objet en persistant (canSave et cansave à true) et renvoie leurs noms, ce qui sert à l'annulation d'une gravure.",
+      "params": {"ids": {"type": "table|nil", "desc": "Ids renvoyés par build."}},
+      "returns": [{"type": "table<integer, string>", "desc": "Noms des objets retrouvés et nommés."}]
+    },
+    "localise": {
+      "desc": "Produit l'enregistrement du manifeste, dans le repère du site : seulement ce que build lit (bassins, couronnes, nappes, débit, gerbes). Positions relatives à (ox, oy, oz), bassins et couronnes relatifs à l'ancre.",
+      "params": {
+        "ca": {"type": "table|nil", "desc": "Enregistrement de l'éditeur (doit avoir pools non vide)."},
+        "ox": {"type": "number", "desc": "X de l'origine du site."},
+        "oy": {"type": "number", "desc": "Y de l'origine du site."},
+        "oz": {"type": "number", "desc": "Z de l'origine du site."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Enregistrement du manifeste, nil s'il n'y a pas de bassin."}]
+    },
+    "place": {
+      "desc": "Opération inverse : place un enregistrement de manifeste à une position et un cap, prêt pour build. L'ancre pivote autour du placement et l'angle s'ajoute au sien. (ox, oy) est le point du repère du site autour duquel pivote le placement (le milieu de l'emprise).",
+      "params": {
+        "rec": {"type": "table|nil", "desc": "Enregistrement du manifeste (avec pools)."},
+        "px": {"type": "number", "desc": "X monde du placement."},
+        "py": {"type": "number", "desc": "Y monde du placement."},
+        "pz": {"type": "number", "desc": "Z monde de base."},
+        "yaw": {"type": "number|nil", "desc": "Cap en radians (0 par défaut)."},
+        "ox": {"type": "number|nil", "desc": "X du point pivot dans le repère du site (0 par défaut)."},
+        "oy": {"type": "number|nil", "desc": "Y du point pivot dans le repère du site (0 par défaut)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Enregistrement monde, avec ct et sn (cosinus et sinus du cap) ; nil si rec invalide."}]
+    }
+  }
+}

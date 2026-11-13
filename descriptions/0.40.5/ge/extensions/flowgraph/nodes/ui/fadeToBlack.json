@@ -1,0 +1,46 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/fadeToBlack.lua",
+  "module": "Nœud flowgraph « Fade To Black » (catégorie once_f_duration) : fait passer l'écran au noir. Entrée « duration » (0.75 s). Sortie de durée par setDurationState (flow « complete », ancien nom « done »). Passe directement à 'finished' si l'écran est déjà noir (ui_fadeScreen.isBlack).",
+  "notes": [
+    "Met self.mgr.modules.ui.isFadeScreenActive = true pour que Fade From Black sache qu'un fondu est actif."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Remet l'état 'inactive' et isFadeScreenActive = false.",
+          "internal": true
+        },
+        "init": {
+          "desc": "État de durée 'inactive'.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Remet l'état 'inactive'.",
+          "internal": true
+        },
+        "onScreenFadeState": {
+          "desc": "Hook : état 1 (noir atteint) -> terminé.",
+          "params": {
+            "state": {
+              "type": "integer",
+              "desc": "État du fondu d'écran (1 = noir atteint, 3 = fondu terminé)."
+            }
+          },
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Modèle de durée à 0.75.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Lance ui_fadeScreen.fadeToBlack (sauf si déjà noir).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

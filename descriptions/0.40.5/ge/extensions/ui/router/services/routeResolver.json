@@ -1,0 +1,25 @@
+{
+  "path": "lua/ge/extensions/ui/router/services/routeResolver.lua",
+  "module": "Service OBSOLÈTE du routeur UI : le flux principal construit désormais les NavigationEntries directement avec ResolvedRoute.createEntry(). Ce module reste pour d'éventuels appelants externes : il résout un nom de route en table résolue et compare deux routes.",
+  "functions": {
+    "resolve": {
+      "desc": "Résout un nom de route (relatif possible, résolu avec utils.resolveRelativeRoute si une route courante est fournie) en route résolue via routeManager.getRoute puis ResolvedRoute.createResolved. Renvoie nil avec un avertissement si la route est introuvable ou la création échoue. Obsolète.",
+      "params": {
+        "routeName": {"type": "string", "desc": "Nom de la route."},
+        "params": {"type": "table|nil", "desc": "Paramètres de la requête."},
+        "currentRoute": {"type": "table|nil", "desc": "Route courante (pour les noms relatifs)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Route résolue."}],
+      "internal": false
+    },
+    "isEqualRoutes": {
+      "desc": "Compare deux routes : même `name` et mêmes `params` (comparaison valeur à valeur, non récursive).",
+      "params": {
+        "routeA": {"type": "table", "desc": "Première route."},
+        "routeB": {"type": "table", "desc": "Seconde route."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si identiques ; false si l'une est nil."}],
+      "internal": false
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/transcripts/vehicleSnapshot.lua",
+  "module": "Classe squelette représentant un instantané de véhicule (position, orientation, braquage, horodatage) rattaché à un chemin de transcriptions du rallye. Elle se comporte comme un élément de `sortedList` (champs id, name, sortOrder). Le module renvoie un constructeur : `require(...)(path, name, forceId)`. Dans cette version, la plupart des champs restent à nil et la désérialisation est vide.",
+  "notes": [
+    "onSerialize lit self.text, qui n'est jamais initialisé dans init : le champ sérialisé `text` vaudra toujours nil.",
+    "onDeserialized ne fait rien (tout le corps est commenté) : le code semble être une copie inachevée de transcripts/entry.lua.",
+    "sortOrder est fixé à 999999."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instantané de véhicule. Champs initialisés : path, id, name, sortOrder, pos, quat, steering, timestamp, cornerCall (les cinq derniers à nil).",
+      "functions": {
+        "init": {
+          "desc": "Constructeur appelé par la fonction retournée par le module. Mémorise le chemin parent, prend l'id fourni ou un nouvel id via path:getNextUniqueIdentifier(), et nomme l'objet `t_<id>` par défaut.",
+          "params": {
+            "path": {"type": "table", "desc": "Objet chemin de transcriptions (doit fournir getNextUniqueIdentifier)."},
+            "name": {"type": "string|nil", "desc": "Nom ; défaut `t_<id>`."},
+            "forceId": {"type": "integer|nil", "desc": "Id imposé (par exemple lors d'un chargement)."}
+          },
+          "internal": true
+        },
+        "onSerialize": {
+          "desc": "Renvoie une table {oldId, name, text} pour la sauvegarde.",
+          "returns": [{"type": "table", "desc": "Données sérialisables (text vaut nil, voir notes)."}],
+          "internal": true
+        },
+        "onDeserialized": {
+          "desc": "Restauration depuis les données sauvegardées. Ne fait rien dans cette version.",
+          "params": {
+            "data": {"type": "table", "desc": "Données sauvegardées."},
+            "oldIdMap": {"type": "table", "desc": "Table de correspondance des anciens ids."}
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

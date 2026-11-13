@@ -4,13 +4,22 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/ui/imgui/elemental/imBegin")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « im Begin » (catégorie repeat_instant, tag imgui) : ouvre une fenêtre imgui (à terminer avec « im End »). Entrées : « title » (sans titre = barre de titre masquée), « width » (200), « height » (150), « posX », « posY » (100), « anchor » (TL, TR, BL, BR : coin de référence de la fenêtre par rapport à la fenêtre du jeu). Sortie « wasClosed » (impulsion quand l'utilisateur ferme la fenêtre).
+
+## Remarques
+
+- Taille et position ne sont appliquées qu'une fois (flag done) ; ensuite la fenêtre est librement déplaçable.
+- Si anchor est nil, il vaut 100 dans le code (faute : valeur numérique) et aucune position n'est appliquée.
+
 ## Classe `C`
+
+Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:_executionStarted()` |  | 33 |
-| `C:init()` |  | 27 |
-| `C:work()` |  | 41 |
+| `C:_executionStarted()` | done = false et sorties à false. | 33 |
+| `C:init()` | done = false. | 27 |
+| `C:work()` | Fixe taille/position (une seule fois, via l'ancre) puis appelle im.Begin et écrit wasClosed. | 41 |
 
 ## Appels vers le moteur (C++)
 

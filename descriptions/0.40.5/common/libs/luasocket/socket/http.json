@@ -1,0 +1,43 @@
+{
+  "path": "lua/common/libs/luasocket/socket/http.lua",
+  "module": "Client HTTP/1.1 de LuaSocket (Diego Nehab) : requêtes GET/POST, corps en flux via LTN12, transfert chunked, redirections (jusqu'à 5), authentification Basic, proxy. API haut niveau avec http.request (URL simple ou table de paramètres) et API bas niveau avec http.open. Le module s'enregistre aussi dans socket.http. Appels bloquants : un moddeur doit les lancer avec précaution (délai TIMEOUT de 60 s).",
+  "usage": "local http = require('libs/luasocket/socket/http')\nlocal corps, code, entetes, statut = http.request('http://example.com/')\n\nlocal t = {}\nlocal ok, code = http.request{url = 'http://example.com/api', method = 'POST', source = ltn12.source.string('a=1'),\n  headers = {['content-length'] = 3, ['content-type'] = 'application/x-www-form-urlencoded'}, sink = ltn12.sink.table(t)}",
+  "notes": [
+    "request est enveloppée par socket.protect : en cas d'erreur elle renvoie nil, message plutôt que de lever.",
+    "Forme chaîne : request(url [, corps]) renvoie corps (chaîne), code, headers, status ; avec un corps, c'est un POST x-www-form-urlencoded. Forme table : request{...} renvoie 1, code, headers, status (le corps va dans reqt.sink).",
+    "Champs de la table de requête : url, host, port, path, params, query, fragment, scheme, user, password, method, headers, source, sink, step, proxy, redirect (false pour désactiver), create, uri. Si le corps est envoyé sans en-tête content-length, il part en transfert chunked.",
+    "Les redirections (301, 302, 303, 307) ne sont suivies que pour GET/HEAD, si aucun corps n'a été envoyé et jusqu'à 5 fois ; l'en-tête location est renvoyé pour indiquer une redirection.",
+    "Pas de HTTPS : ce module ne gère que HTTP simple (socket TCP).",
+    "http.PROXY (globale du module, non définie par défaut) force l'usage d'un proxy.",
+    "Bug mineur du code original : dans receiveheaders, la boucle de dépliage fait 'line = sock:receive()' sans mettre à jour err, puis teste err.",
+    "Le fichier requiert 'socket.socket', 'socket.url', 'ltn12', 'mime' et 'socket.headers' par nom court ; ces noms doivent être résolubles par le chemin de recherche du jeu."
+  ],
+  "fields": {
+    "TIMEOUT": {"type": "number", "desc": "Délai de connexion en secondes : 60."},
+    "PORT": {"type": "integer", "desc": "Port HTTP par défaut : 80."},
+    "USERAGENT": {"type": "string", "desc": "Valeur de l'en-tête user-agent : socket._VERSION."},
+    "request": {"type": "function", "desc": "http.request(url [, corps]) ou http.request(table). Voir notes. Protégée par socket.protect."}
+  },
+  "functions": {
+    "open": {
+      "desc": "API bas niveau : crée la socket (socket.tcp ou create), fixe le délai et se connecte. Renvoie un objet avec les méthodes sendrequestline, sendheaders, sendbody, receivestatusline, receiveheaders, receivebody, receive09body et close. Lève une erreur en cas d'échec (socket.try).",
+      "params": {"host": {"type": "string", "desc": "Hôte."}, "port": {"type": "integer|nil", "desc": "Port (défaut 80)."}, "create": {"type": "function|nil", "desc": "Fabrique de socket alternative."}},
+      "returns": [{"type": "table", "desc": "Objet de connexion HTTP."}]
+    }
+  },
+  "classes": {
+    "connection": {
+      "desc": "Objet renvoyé par open (champs c = socket, try = fonction de contrôle d'erreur qui ferme la connexion).",
+      "functions": {
+        "sendrequestline": {"desc": "Envoie la ligne de requête 'METHODE uri HTTP/1.1'.", "params": {"method": {"type": "string|nil", "desc": "Méthode (défaut GET)."}, "uri": {"type": "string", "desc": "URI."}}},
+        "sendheaders": {"desc": "Envoie les en-têtes (noms mis en forme canonique) suivis de la ligne vide.", "params": {"tosend": {"type": "table<string, string>", "desc": "En-têtes."}}},
+        "sendbody": {"desc": "Envoie le corps depuis une source LTN12 (chunked sauf si content-length est connu).", "params": {"headers": {"type": "table", "desc": "En-têtes."}, "source": {"type": "function|nil", "desc": "Source."}, "step": {"type": "function|nil", "desc": "Fonction de pas."}}},
+        "receivestatusline": {"desc": "Lit la ligne de statut ; renvoie le code, ou nil et les 5 premiers octets si la réponse est de type HTTP/0.9.", "returns": [{"type": "integer|nil", "desc": "Code HTTP."}, {"type": "string", "desc": "Ligne de statut."}]},
+        "receiveheaders": {"desc": "Lit les en-têtes de réponse (noms en minuscules).", "returns": [{"type": "table<string, string>", "desc": "En-têtes."}]},
+        "receivebody": {"desc": "Lit le corps (chunked, par longueur ou jusqu'à la fermeture) vers un sink LTN12.", "params": {"headers": {"type": "table", "desc": "En-têtes reçus."}, "sink": {"type": "function|nil", "desc": "Sink (défaut : sink nul)."}, "step": {"type": "function|nil", "desc": "Fonction de pas."}}},
+        "receive09body": {"desc": "Lit un corps de réponse HTTP/0.9.", "params": {"status": {"type": "string", "desc": "Octets déjà lus."}, "sink": {"type": "function", "desc": "Sink."}, "step": {"type": "function|nil", "desc": "Fonction de pas."}}},
+        "close": {"desc": "Ferme la socket."}
+      }
+    }
+  }
+}

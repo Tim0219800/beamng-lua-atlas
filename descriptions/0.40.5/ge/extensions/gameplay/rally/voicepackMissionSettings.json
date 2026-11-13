@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/voicepackMissionSettings.lua",
+  "module": "Fine couche autour de gameplay/rally/voicepack pour les réglages utilisateur d'une mission de rallye : construit le réglage « pack de voix » d'une étape ou d'une boucle, et mémorise le choix de l'utilisateur dans la liste des packs récemment utilisés (MRU). Le choix est stocké dans les réglages utilisateur sous la clé `rallyVoicepackPick`. Toute la logique est déléguée à voicepack.lua.",
+  "functions": {
+    "buildStageSetting": {
+      "desc": "Construit le réglage utilisateur « pack de voix » pour une étape (délègue à voicepack.buildMissionUserSetting).",
+      "params": {
+        "missionDir": {"type": "string", "desc": "Dossier de la mission."},
+        "missionId": {"type": "string", "desc": "Identifiant de la mission."}
+      },
+      "returns": [{"type": "table", "desc": "Définition du réglage utilisateur (telle que renvoyée par voicepack)."}]
+    },
+    "buildLoopSetting": {
+      "desc": "Construit le réglage utilisateur « pack de voix » pour une mission de type boucle (délègue à voicepack.buildLoopMissionUserSetting).",
+      "params": {
+        "missionTypeData": {"type": "table", "desc": "Données du type de mission boucle."}
+      },
+      "returns": [{"type": "table", "desc": "Définition du réglage utilisateur."}]
+    },
+    "rememberStagePick": {
+      "desc": "Lit le choix de pack dans userSettings.rallyVoicepackPick et l'ajoute au MRU de la mission. Ne fait rien si aucun choix n'est valide ou si le choix est de type 'preferences'.",
+      "params": {
+        "userSettings": {"type": "table|nil", "desc": "Réglages utilisateur de la mission."},
+        "missionDir": {"type": "string", "desc": "Dossier de la mission."},
+        "missionId": {"type": "string", "desc": "Identifiant de la mission."}
+      }
+    },
+    "rememberLoopPick": {
+      "desc": "Ajoute le choix de pack (userSettings.rallyVoicepackPick) au MRU des missions boucle via voicepack.addLoopMissionSettingToMRU.",
+      "params": {
+        "missionTypeData": {"type": "table", "desc": "Données du type de mission boucle."},
+        "userSettings": {"type": "table|nil", "desc": "Réglages utilisateur."}
+      }
+    }
+  }
+}

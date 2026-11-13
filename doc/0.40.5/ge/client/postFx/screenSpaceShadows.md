@@ -4,6 +4,8 @@
 
 **Accès :** `require("client/postFx/screenSpaceShadows")`
 
+Crée, s'il n'existe pas, l'objet natif « ScreenSpaceShadowsPostFx » (type PostFxScreenSpaceShadows) pour les ombres en espace écran. Aucune fonction exportée ; toute la logique est côté C++.
+
 ## Appels vers le moteur (C++)
 
 - `scenetree.` `findObject`

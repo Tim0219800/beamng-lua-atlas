@@ -1,0 +1,41 @@
+{
+  "path": "lua/ge/extensions/editor/assetDeduplicator.lua",
+  "module": "Outil d'éditeur « Asset Deduplicator » (menu Window > Assets) : repère les fichiers en double du niveau courant et propose de les remplacer par des fichiers lien. Il construit un cache de hashs (/temp/assetdeduplicator.cache.json, version 3, lié à la version du jeu) via un job, puis compare soit par hash de contenu (sans risque), soit par nom de fichier (revue manuelle requise). Utile surtout aux équipes qui préparent des niveaux ; rien à appeler depuis un mod.",
+  "notes": [
+    "Écrit/lit le cache dans /temp/assetdeduplicator.cache.json ; les boutons « Reset current level asset cache » et « Deep clean asset cache » l'invalident.",
+    "Le lancement du job de cache se fait une seule fois par session (jobLaunchedThisSession) à la première ouverture de la fenêtre.",
+    "Bug mineur probable : « Deep clean asset cache » met cacheData à nil, alors que le reste du code suppose une table (tableIsEmpty(cacheData) est ensuite rappelé) — déduit du code."
+  ],
+  "functions": {
+    "onEditorActivated": {
+      "desc": "Hook appelé à l'activation de l'éditeur ; corps vide.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Hook appelé à la désactivation de l'éditeur ; corps vide.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Hook appelé à chaque frame de l'éditeur : dessine la fenêtre « Asset Deduplicator » (état du cache, choix du mode hash/nom, bouton « Run assessment », prévisualisation et application des liens, boutons de reset du cache). Lance le job de génération de cache à la première ouverture.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook appelé à l'initialisation de l'éditeur : ajoute l'entrée de menu « Asset Deduplicator » (groupe Assets) et enregistre la fenêtre 'assetDeduplicator' (500x300).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onWindowMenuItem": {
+      "desc": "Callback du menu : affiche la fenêtre 'assetDeduplicator'.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

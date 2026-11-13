@@ -1,0 +1,143 @@
+{
+  "path": "lua/ge/extensions/ui/multiseat/multiseatConfiguration.lua",
+  "module": "Modèle transactionnel de la configuration multi-sièges : quels périphériques d'entrée (ou groupes de périphériques gérés par la plateforme) appartiennent à quel joueur/persona. begin() ouvre une transaction (copie de l'état actuel ou du cache d'affectations), les fonctions d'édition la modifient, getPreview() fournit l'état à l'interface, puis commit() (ou commitCore + completeCommit) l'applique via core_multiseat.applyConfiguration ; discard() l'abandonne. Utilisé par l'écran de réglages multiseat.",
+  "usage": "local cfg = require('ge/extensions/ui/multiseat/multiseatConfiguration')\ncfg.begin({source = 'settings'})\ncfg.setDevicePlayer('keyboard-mouse', 1)\nlocal ok, configOrReason = cfg.commit()",
+  "notes": [
+    "Toutes les fonctions d'édition renvoient false quand aucune transaction n'est ouverte (sauf getPreview qui appelle begin() automatiquement).",
+    "Les fonctions toggleDevicePlayer, setDevicePlayer, removeDevice, moveDevicePlayer et cycleDevicePlayer ne marchent qu'en mode manuel (platformManagesPlayers == false) ; joinDeviceGroup seulement en mode plateforme.",
+    "Le nombre de personas est limité à MAX_PLAYERS = 64 et par la limite dure du gamemode en cours (core/multiseatPlayerLimits).",
+    "Les numéros de persona commencent à 1 ; l'indice de joueur (player) commence à 0 et suit l'ordre croissant des numéros de persona.",
+    "Une persona sans propriétaire (aucun périphérique/groupe) est supprimée automatiquement.",
+    "En l'absence de session multiseat active, begin() reprend le véhicule du joueur 0 (sauf unicycle) pour la persona 1 et essaie de réutiliser le cache d'affectations (core_multiseat.getCachedPlayerAssignments) si le mode plateforme n'a pas changé.",
+    "Chaque modification déclenche guihooks MultiseatConfigurationChanged avec un numéro de révision croissant et met à jour l'aperçu des couleurs de périphériques.",
+    "commitCore refuse une configuration sans joueur (raison « no_players »)."
+  ],
+  "fields": {
+    "AUTOMATIC_COLOR_DEFAULT": {"type": "boolean", "desc": "Valeur par défaut (true) du réglage multiseatAutomaticColor."},
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : core_playerPersonas."}
+  },
+  "functions": {
+    "begin": {
+      "desc": "Ouvre la transaction de configuration si elle n'existe pas (copie de la configuration active ou du cache), sinon réconcilie l'inventaire des périphériques. Appelle core_multiseat.beginConfigurationEdit.",
+      "params": {"options": {"type": "table|nil", "desc": "Options ; source = origine de l'ouverture (par exemple « settings »)."}},
+      "returns": [{"type": "table", "desc": "Aperçu, voir getPreview."}]
+    },
+    "isActive": {
+      "desc": "Indique si une transaction est ouverte.",
+      "returns": [{"type": "boolean", "desc": "true si ouverte."}]
+    },
+    "discard": {
+      "desc": "Abandonne la transaction ; si elle avait déjà été appliquée (commitCore), restaure la configuration de départ. Termine l'édition côté core_multiseat.",
+      "returns": [{"type": "boolean", "desc": "false s'il n'y avait pas de transaction."}]
+    },
+    "toggleDevicePlayer": {
+      "desc": "Mode manuel : retire le périphérique de son joueur s'il en a un, sinon l'assigne à la première persona libre.",
+      "params": {"deviceId": {"type": "string", "desc": "Identifiant du périphérique ou du groupe."}},
+      "returns": [{"type": "boolean", "desc": "true si modifié."}]
+    },
+    "setDevicePlayer": {
+      "desc": "Mode manuel : assigne le périphérique à la persona indiquée (1 à 64), ou le désassigne avec nil ou 0. Renvoie false si rien ne change ou si la limite de joueurs l'interdit.",
+      "params": {
+        "deviceId": {"type": "string", "desc": "Identifiant du périphérique ou du groupe."},
+        "personaNumber": {"type": "integer|nil", "desc": "1..64 pour assigner, nil ou 0 pour désassigner."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si modifié."}]
+    },
+    "removeDevice": {
+      "desc": "Mode manuel : oublie un périphérique déconnecté (connected == false), le désassigne et le marque comme supprimé.",
+      "params": {"deviceId": {"type": "string", "desc": "Identifiant du périphérique ou du groupe."}},
+      "returns": [{"type": "boolean", "desc": "false si le périphérique est introuvable ou encore connecté."}]
+    },
+    "moveDevicePlayer": {
+      "desc": "Mode manuel : déplace le périphérique vers la persona précédente (direction -1, ou aucune si c'est la première) ou suivante (direction 1, ou une nouvelle persona si c'est la dernière et qu'elle a plusieurs périphériques).",
+      "params": {
+        "deviceId": {"type": "string", "desc": "Identifiant du périphérique ou du groupe."},
+        "direction": {"type": "integer", "desc": "-1 ou 1."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si modifié."}]
+    },
+    "cycleDevicePlayer": {
+      "desc": "Mode manuel : sans joueur, assigne le périphérique à la première persona libre ; sinon le déplace vers la persona précédente (ou le désassigne s'il n'y en a pas).",
+      "params": {"deviceId": {"type": "string", "desc": "Identifiant du périphérique ou du groupe."}},
+      "returns": [{"type": "boolean", "desc": "true si modifié."}]
+    },
+    "joinDeviceGroup": {
+      "desc": "Mode plateforme : fait rejoindre un groupe de périphériques ; la persona porte le numéro du groupe s'il est libre et valide, sinon la première libre.",
+      "params": {"groupId": {"type": "integer", "desc": "Identifiant de groupe (converti avec tonumber)."}},
+      "returns": [{"type": "boolean", "desc": "false si déjà rejoint ou limite atteinte."}]
+    },
+    "leavePlayer": {
+      "desc": "Retire un joueur : libère tous ses périphériques/groupes et supprime sa persona.",
+      "params": {"player": {"type": "integer", "desc": "Indice de joueur (à partir de 0)."}},
+      "returns": [{"type": "boolean", "desc": "false si le joueur n'existe pas."}]
+    },
+    "setPersonaData": {
+      "desc": "Copie les clés de data dans la persona (nom, icône, couleur, véhicule…).",
+      "params": {
+        "personaNumber": {"type": "integer", "desc": "Numéro de persona."},
+        "data": {"type": "table", "desc": "Champs à écraser."},
+        "emitChange": {"type": "boolean|nil", "desc": "Si false, ne notifie pas l'interface."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si pas de transaction, data invalide ou persona inconnue."}]
+    },
+    "getPersona": {
+      "desc": "Renvoie une copie de la persona de la transaction.",
+      "params": {"personaNumber": {"type": "integer", "desc": "Numéro de persona."}},
+      "returns": [{"type": "table|nil", "desc": "Persona ou nil."}]
+    },
+    "getPreview": {
+      "desc": "Renvoie l'état affichable de la configuration (ouvre la transaction si besoin) : availablePlayers (périphériques en mode manuel), availablePersonas et joinedPersonas, deviceGroups (mode plateforme), maxPlayers, platformManagesPlayers, playerLimit {limit, hard, atLimit, exceeded} et revision.",
+      "returns": [{"type": "table", "desc": "Table d'aperçu."}]
+    },
+    "getPlayers": {
+      "desc": "Renvoie la liste des indices de joueurs (0 à n-1).",
+      "returns": [{"type": "integer[]", "desc": "Indices ; vide sans transaction."}]
+    },
+    "getCommitConfiguration": {
+      "desc": "Construit la configuration à appliquer : platformManagesPlayers, personaOptInMode, manualAssignments (deviceId vers joueur, -1 si aucun), manualDeviceMetadata, groupAssignments, platformDeviceGroups, participants {playerIndex, personaNumber, persona} et adoptVehicleId.",
+      "returns": [{"type": "table|nil", "desc": "Configuration, nil sans transaction."}]
+    },
+    "hasUserChanges": {
+      "desc": "Indique si l'utilisateur a modifié les affectations depuis l'ouverture (ou si elles viennent du cache).",
+      "returns": [{"type": "boolean", "desc": "true si modifié."}]
+    },
+    "clearCachedAssignments": {
+      "desc": "Vide le cache d'affectations de joueurs (core_multiseat.cachePlayerAssignments avec des listes vides). Sans effet si le multiseat est déjà actif.",
+      "returns": [{"type": "boolean", "desc": "Résultat du vidage, false si impossible."}]
+    },
+    "hasChanges": {
+      "desc": "Compare la configuration courante à la base de départ : true si multiseat n'était pas actif, si le nombre de joueurs ou les affectations diffèrent.",
+      "returns": [{"type": "boolean", "desc": "true s'il y a des changements."}]
+    },
+    "commitCore": {
+      "desc": "Applique la configuration via core_multiseat.applyConfiguration (notification des participants différée) et mémorise le journal des changements ; la transaction reste ouverte pour permettre rollbackCommit.",
+      "returns": [
+        {"type": "boolean", "desc": "Succès."},
+        {"type": "table|string", "desc": "Configuration appliquée, ou raison de l'échec (par exemple « no_players »)."}
+      ]
+    },
+    "completeCommit": {
+      "desc": "Termine un commit réussi : appelle core_multiseat.finalizeConfiguration, ferme la transaction et journalise les changements.",
+      "returns": [{"type": "boolean", "desc": "false si aucun commitCore réussi."}]
+    },
+    "rollbackCommit": {
+      "desc": "Restaure la configuration de départ après un commitCore.",
+      "returns": [{"type": "boolean", "desc": "Résultat de core_multiseat.restoreConfiguration, ou false."}]
+    },
+    "commit": {
+      "desc": "commitCore puis completeCommit.",
+      "returns": [
+        {"type": "boolean", "desc": "Succès."},
+        {"type": "table|string", "desc": "Configuration appliquée, ou raison de l'échec."}
+      ]
+    },
+    "onClientEndMission": {
+      "desc": "Hook appelé à la fin du niveau ; abandonne la transaction sans restaurer et efface l'aperçu des couleurs.",
+      "internal": true
+    },
+    "onInputBindingsChanged": {
+      "desc": "Hook appelé quand les périphériques ou liaisons changent ; réconcilie l'inventaire et notifie l'interface si la liste a changé.",
+      "internal": true
+    }
+  }
+}

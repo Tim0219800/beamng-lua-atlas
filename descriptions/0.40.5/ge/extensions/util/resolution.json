@@ -1,0 +1,25 @@
+{
+  "path": "lua/ge/extensions/util/resolution.lua",
+  "module": "Aide pour lire et changer la résolution de la fenêtre du jeu via GFXDevice. getVideoModeSnapshot renvoie la largeur, la hauteur et le mode d'affichage courants ; setWindowedResolution force une résolution précise en mode fenêtré (pas sans bordure). Pratique pour les captures d'écran à taille fixe ou les tests d'interface.",
+  "usage": "extensions.reload('util_resolution')\nextensions.util_resolution.setWindowedResolution(1280, 720)",
+  "notes": [
+    "setWindowedResolution ne fait rien (avec un log) si la résolution et le mode « Window » sont déjà actifs, et refuse les arguments non numériques."
+  ],
+  "functions": {
+    "getVideoModeSnapshot": {
+      "desc": "Lit le mode vidéo courant de GFXDevice.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "{width, height, displayMode} ou nil si GFXDevice.getVideoMode est indisponible"}],
+      "internal": false
+    },
+    "setWindowedResolution": {
+      "desc": "Passe la fenêtre en mode « Window » à la résolution donnée (GFXDevice.setVideoMode).",
+      "params": {
+        "width": {"type": "number", "desc": "Largeur en pixels"},
+        "height": {"type": "number", "desc": "Hauteur en pixels"}
+      },
+      "returns": [],
+      "internal": false
+    }
+  }
+}

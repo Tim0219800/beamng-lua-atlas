@@ -1,0 +1,57 @@
+{
+  "path": "lua/common/libs/LuaIRC/util.lua",
+  "module": "Partie de la bibliothèque tierce LuaIRC (client IRC). Module \"irc\" : analyse des lignes du protocole IRC (parse), des pseudos et préfixes (parseNick, parsePrefix, parseAccess), validation de pseudo, générateur de pseudo de secours, et mise en forme mIRC (couleurs, gras, souligné).",
+  "usage": "local prefix, cmd, params = irc.parse(\":nick!user@host PRIVMSG #chan :salut\")\n-- prefix = \"nick!user@host\", cmd = \"PRIVMSG\", params = {\"#chan\", \"salut\"}",
+  "fields": {
+    "color": {"type": "table<string, integer>", "desc": "Codes de couleur mIRC (black=1 … white=16). La table est aussi appelable : color(text, nomOuNumero) renvoie le texte entouré de l'octet 0x03 et du numéro."}
+  },
+  "functions": {
+    "parse": {
+      "desc": "Découpe une ligne IRC brute en préfixe (sans le ':' initial), commande et liste de paramètres. Le paramètre final introduit par ' :' est ajouté en dernier.",
+      "params": {"line": {"type": "string", "desc": "Ligne reçue du serveur"}},
+      "returns": [
+        {"type": "string|nil", "desc": "Préfixe"},
+        {"type": "string", "desc": "Commande ou code numérique"},
+        {"type": "table<integer, string>", "desc": "Paramètres"}
+      ]
+    },
+    "parseNick": {
+      "desc": "Sépare les symboles d'accès (@, +) du pseudo, comme dans une liste NAMES.",
+      "params": {"nick": {"type": "string", "desc": "Ex. \"@bob\""}},
+      "returns": [
+        {"type": "table", "desc": "{op, halfop, voice}"},
+        {"type": "string", "desc": "Pseudo sans symboles"}
+      ]
+    },
+    "parsePrefix": {
+      "desc": "Analyse un préfixe nick!user@host en table {access, nick, username, host}. Sans préfixe valide, seuls les droits d'accès par défaut sont remplis.",
+      "params": {"prefix": {"type": "string|nil", "desc": "Préfixe de la ligne"}},
+      "returns": [{"type": "table", "desc": "{access, nick, username, host}"}]
+    },
+    "parseAccess": {
+      "desc": "Convertit une chaîne de symboles en table {op, halfop, voice} (@ = op, % = halfop, + = voice).",
+      "params": {"accessString": {"type": "string", "desc": "Symboles d'accès"}},
+      "returns": [{"type": "table", "desc": "{op = boolean, halfop = boolean, voice = boolean}"}]
+    },
+    "bold": {
+      "desc": "Entoure le texte de l'octet de contrôle gras mIRC (0x02).",
+      "params": {"text": {"type": "string", "desc": "Texte"}},
+      "returns": [{"type": "string", "desc": "Texte en gras IRC"}]
+    },
+    "underline": {
+      "desc": "Entoure le texte de l'octet de contrôle souligné mIRC (0x1F).",
+      "params": {"text": {"type": "string", "desc": "Texte"}},
+      "returns": [{"type": "string", "desc": "Texte souligné IRC"}]
+    },
+    "checkNick": {
+      "desc": "Vérifie qu'un pseudo ne contient que des caractères IRC valides et ne commence pas par un chiffre ou un tiret.",
+      "params": {"nick": {"type": "string", "desc": "Pseudo"}},
+      "returns": [{"type": "boolean", "desc": "true si valide"}]
+    },
+    "defaultNickGenerator": {
+      "desc": "Génère un pseudo de remplacement en incrémentant le code d'un caractère choisi au hasard (revient à 65 si hors de 65..125). Utilisé quand le pseudo est refusé (codes 432/433).",
+      "params": {"nick": {"type": "string", "desc": "Pseudo refusé"}},
+      "returns": [{"type": "string", "desc": "Nouveau pseudo"}]
+    }
+  }
+}

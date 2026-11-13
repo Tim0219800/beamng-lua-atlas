@@ -1,0 +1,139 @@
+{
+  "path": "lua/ge/extensions/gameplay/drag/display.lua",
+  "module": "Affichage de la piste de drag : arbre de départ (feux pré-stage, stage, trois ambres, vert, rouge, bleu global, feu gagnant, feu conducteur clignotant), panneaux de chrono/vitesse (chiffres 5 par couloir, temps en 3 décimales, vitesse en mph avec 2 décimales), messages flash, repère de guidage de staging, et événements UI (guihooks) pour l'app d'arbre. Il pilote les objets de scène nommés par couloir (displayTime1..5, displaySpeed1..5, displayLight) et applique les états reçus du réseau en multijoueur. Chargée à la demande par gameplay_drag_core ; un moddeur s'en sert surtout via les hooks et pour allumer/éteindre des feux.",
+  "notes": [
+    "Les chiffres des panneaux sont mis en file (queueDigitShape/applyPendingDigitShapes) car changer le shapeName recharge le mesh : tout faire sur la frame d'arrivée gèlerait le jeu.",
+    "La vitesse affichée vient de timers en m/s multipliés par 2.23694 (mph) ; le temps est celui du timer important (importantTimerId, time_1_4 par défaut) ; rien n'est affiché tant que ce timer vaut 0.",
+    "Deux arbres supportés : treeType '.500' (par défaut) et '.400', gérés par handle500TreeLogic / handle400TreeLogic. En MP seul l'hôte pilote les feux de décompte ; les clients appliquent l'état reçu (updateTreeLightsFromNetwork).",
+    "Le feu conducteur clignote 6 fois à 6 Hz après l'allumage du feu gagnant.",
+    "Séquence ambre/vert de l'arbre (lightStages) : ambre 1 à 1,0 s, ambre 2 à 1,5 s, ambre 3 à 2,0 s, vert à 2,5 s (temps du laneTimer).",
+    "Option de jeu dragAssistStageGuideVisualizer : active le repère de guidage de staging (onPreRender).",
+    "M.alwaysShowStageApp vaut true : l'app de staging reste visible même loin de la ligne ; si false, elle est cachée au-delà de 10 m en freeroam.",
+    "Multiseat : les événements UI sont dupliqués par joueur sous le nom multiseatDrag.<joueur>.<événement>.",
+    "Les fonctions onBeforeDragUnloadAllExtensions et clearAll sont la même fonction."
+  ],
+  "fields": {
+    "alwaysShowStageApp": {"type": "boolean", "desc": "true par défaut : garde l'app de staging visible quelle que soit la distance à la ligne de stage."},
+    "dependencies": {"type": "string[]", "desc": "gameplay_drag_core, gameplay_drag_phaseHandlers."}
+  },
+  "functions": {
+    "broadcastTreeLightStaging": {
+      "desc": "Affiche ou cache le voyant de staging de l'UI (guihook updateTreeLightStaging), et le répète pour chaque joueur multiseat.",
+      "params": {"visible": {"type": "boolean", "desc": "true pour afficher."}},
+      "returns": []
+    },
+    "clearAll": {
+      "desc": "Éteint tous les feux de l'arbre, cache les chiffres des panneaux et le repère de staging, annule un flash en cours et réinitialise la graine aléatoire.",
+      "params": {},
+      "returns": []
+    },
+    "dragRaceEndLineReached": {
+      "desc": "Ligne d'arrivée franchie : met à jour les panneaux (temps et vitesse) du couloir du racer.",
+      "params": {"vehId": {"type": "integer", "desc": "ID du véhicule du racer."}},
+      "returns": []
+    },
+    "dragRaceVehicleStopped": {
+      "desc": "Véhicule arrêté après la course : envoie updateTreeLightPhase=false à l'UI. N'efface pas les résultats affichés.",
+      "params": {},
+      "returns": []
+    },
+    "onBeforeDragUnloadAllExtensions": {
+      "desc": "Hook émis par core avant de décharger les extensions drag ; fait clearAll (même fonction).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onDragClear": {
+      "desc": "Hook de clear complet : vide les caches joueur, fait clearAll puis lance un flash « reset système » (feux et chiffres clignotent 2 fois puis restent éteints) à partir d'un cache de la piste.",
+      "params": {"options": {"type": "table", "desc": "Options du clear (non utilisées)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDragDataSet": {
+      "desc": "Hook émis par core.setDragRaceData : construit l'arbre de feux et les chiffres de la piste. En MP, ne déclenche pas le staging et garde les chiffres de la manche précédente (réinitialise seulement les feux) ; en solo fait clearAll.",
+      "params": {"data": {"type": "table", "desc": "Données de piste armées."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDragRaceTimerUpdated": {
+      "desc": "Hook MP : un timer d'un pilote distant est arrivé ; met à jour ses panneaux.",
+      "params": {"raceId": {"type": "any", "desc": "Identifiant de course."}, "mpPlayerId": {"type": "any", "desc": "Joueur MP."}, "timerName": {"type": "string", "desc": "Nom du timer."}, "timerValue": {"type": "number", "desc": "Valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDragReset": {
+      "desc": "Hook de reset : éteint les feux (mais garde les chiffres des résultats), annule un flash, remet à zéro les timers de couloir et les drapeaux treeStarted/raceStartBroadcasted.",
+      "params": {"options": {"type": "table", "desc": "Options (raceId...), non utilisées."}},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook de chargement : init() puis clearAll().",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onPreRender": {
+      "desc": "Hook de pré-rendu : met à jour ou efface le repère de guidage de staging selon l'option dragAssistStageGuideVisualizer.",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."}, "dtRaw": {"type": "number", "desc": "Delta brut (s)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook par frame : applique les chiffres en attente, envoie les mises à jour d'arbre différées (MP), avance l'éventuel flash, vérifie la visibilité de l'app de staging, fait avancer le décompte de chaque racer et le clignotement du feu conducteur.",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."}, "dtRaw": {"type": "number", "desc": "Delta brut (s)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onWinnerLightOn": {
+      "desc": "Allume le feu gagnant du couloir et fait clignoter son feu conducteur.",
+      "params": {"lane": {"type": "integer", "desc": "Couloir gagnant."}},
+      "returns": []
+    },
+    "preStageLightOff": {
+      "desc": "Éteint le feu de pré-stage du couloir du racer et met l'UI à jour.",
+      "params": {"vehId": {"type": "integer", "desc": "ID du véhicule."}},
+      "returns": []
+    },
+    "preStageLightOn": {
+      "desc": "Allume le feu de pré-stage du couloir du racer, met l'UI à jour et affiche le message flash ui.drag.flash.preStage pour un racer jouable.",
+      "params": {"vehId": {"type": "integer", "desc": "ID du véhicule."}},
+      "returns": []
+    },
+    "resetDragRaceValues": {
+      "desc": "Remet à zéro les timers de couloir de l'arbre (laneTimer, laneTimerFlag, dialOffset) et les drapeaux treeStarted/raceStartBroadcasted de chaque racer.",
+      "params": {},
+      "returns": []
+    },
+    "setDisqualifiedLights": {
+      "desc": "Éteint les ambres du racer disqualifié ; si la raison est le faux départ (redLightReason), éteint le vert et allume le rouge. Efface les panneaux, émet startRaceFromTree et affiche la raison en message flash (5 s) pour un racer jouable.",
+      "params": {"vehId": {"type": "integer", "desc": "ID du véhicule disqualifié."}},
+      "returns": []
+    },
+    "stageLightOff": {
+      "desc": "Éteint le feu de stage, le feu bleu, décrémente le compteur de racers en stage et synchronise l'état (MP : drag.syncStageLightState).",
+      "params": {"vehId": {"type": "integer", "desc": "ID du véhicule."}},
+      "returns": []
+    },
+    "stageLightOn": {
+      "desc": "Allume le feu de stage du racer ; quand tous les couloirs sont en stage, allume le feu bleu. Met l'UI à jour, synchronise l'état (MP) et affiche ui.drag.flash.stage pour un racer jouable.",
+      "params": {"vehId": {"type": "integer", "desc": "ID du véhicule."}},
+      "returns": []
+    },
+    "startDragCountdown": {
+      "desc": "Démarre le décompte de l'arbre pour un racer en phase 2 'countdown' : émet onDragCountdownStarted, met treeStarted à true et règle dialOffset (dial moins le temps déjà écoulé depuis le départ MP).",
+      "params": {"vehId": {"type": "integer", "desc": "ID du véhicule."}, "dial": {"type": "number", "desc": "Délai avant le début de la séquence de feux (s)."}},
+      "returns": []
+    },
+    "stoppingVehicleDrag": {
+      "desc": "Affiche le message flash missions.dragRace.gameplay.inLine (5 s) pour un racer jouable.",
+      "params": {"vehId": {"type": "integer", "desc": "ID du véhicule."}},
+      "returns": []
+    },
+    "updateTreeLightsFromNetwork": {
+      "desc": "Applique à un couloir l'état de feux reçu du réseau (countDownLights, stageLights) : met à jour isOn, les objets de scène, et l'UI du joueur du couloir (et multiseat). Construit l'arbre s'il n'existe pas encore.",
+      "params": {"lane": {"type": "integer", "desc": "Couloir."}, "lightState": {"type": "table", "desc": "{countDownLights = {amberLight1..3, greenLight, redLight}, stageLights = {prestageLight, stageLight}}."}},
+      "returns": []
+    }
+  }
+}

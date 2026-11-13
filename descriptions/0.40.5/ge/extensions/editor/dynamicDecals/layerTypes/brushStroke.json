@@ -1,0 +1,28 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/layerTypes/brushStroke.lua",
+  "module": "Type de calque « Brush Stroke » de l'outil Dynamic Decals : un coup de pinceau virtuel qui pose un decal à chaque frame pendant le déplacement et interpole des decals entre les frames. Il partage les propriétés d'un calque decal. Ce module fournit la section « Brush Stroke Properties » (nombre d'étapes d'interpolation, ordre 1070), la GUI d'inspecteur du type brushStroke (uid, nom, enabled, couleur, échelle, rotation, masque alpha, SDF, textures, dataPoints, etc.) et les pages de documentation (Brush Stroke Layers, Properties).",
+  "notes": [
+    "Dans l'inspecteur, les points de données (dataPoints) sont dessinés dans le monde 3D avec debugDrawer:drawSphere et drawTextAdvanced (index du point), taille/couleur selon les préférences `dynamicDecalsTool.general.dataPointSphereSize` / `dataPointSphereColor`.",
+    "La page « Properties » liste api.properties[\"Brush Stroke Layer\"] et un bouton « Highlight » ouvre la section « Decal Properties » et surligne le widget correspondant."
+  ],
+  "functions": {
+    "registerEditorPreferences": {
+      "desc": "Ne déclare aucune préférence (corps commenté).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : récupère les modules liés, enregistre la section « Brush Stroke Properties », la GUI d'inspecteur du type brushStroke et les pages de documentation.",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

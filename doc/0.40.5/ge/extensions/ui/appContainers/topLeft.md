@@ -4,19 +4,25 @@
 
 **Accès :** extension `ui_appContainers_topLeft` : `extensions.load("ui_appContainers_topLeft")`, puis la globale `ui_appContainers_topLeft`
 
+Déclare le conteneur d'apps « topLeft » (coin haut-gauche de l'interface) auprès de ui_appContainers. Le trigger UI est setTopLeftAppVisibility. Apps déclarées : messages et tasks (visibles par défaut), scoreboard, driftScores, dragInfo et dragDialControl (cachées par défaut).
+
+## Remarques
+
+- Remplace l'ancien identifiant utilityApps (voir ui_appContainers.resolveContainerId).
+
 **Dépendances (chargées avant) :** `ui_appContainers`
 
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `ui_appContainers_topLeft.onExtensionLoaded()` | *(hook)* | 8 |
+| `ui_appContainers_topLeft.onExtensionLoaded()` | Appelé au chargement de l'extension : enregistre le conteneur topLeft via ui_appContainers.registerContainer. *(interne)* *(hook)* | 8 |
 
 ## Champs
 
 | Champ | Type | Description |
 |---|---|---|
-| `dependencies` | table |  |
+| `dependencies` | table<integer, string> | { "ui_appContainers" } : chargé avant ce module. |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/appContainers/topLeft.lua`.*

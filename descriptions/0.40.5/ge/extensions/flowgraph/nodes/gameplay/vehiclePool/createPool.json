@@ -1,0 +1,31 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/createPool.lua",
+  "module": "Nœud flowgraph « Create Vehicle Pool » (once_instant). Crée un pool de véhicules (core_vehicleActivePooling.createPool({name})) pour gérer l'activation/désactivation des objets véhicule ; sortie vehPool. Option data.keepVehicles (« Keep Inactive Vehicles ») : à la suppression du pool, garde les véhicules inactifs (deletePool(keepVehicles)).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "_executionStopped": {
+          "desc": "Appelle onNodeReset().",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Affiche la case « Keep Inactive Vehicles » (data.keepVehicles).",
+          "internal": true
+        },
+        "init": {
+          "desc": "Appelle onNodeReset().",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Supprime le pool créé (deletePool) et l'oublie.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Crée le pool s'il n'existe pas et le publie sur vehPool.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

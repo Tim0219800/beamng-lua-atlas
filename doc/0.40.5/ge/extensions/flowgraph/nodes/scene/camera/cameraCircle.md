@@ -4,14 +4,23 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/scene/camera/cameraCircle")` (fichier sous extensions/ mais pas une extension classique)
 
+Noeud flowgraph 'Camera Auto Circle' (categorie once_p_duration). Fait tourner la camera libre en cercle autour d'un vehicule (vehId, defaut vehicule joueur) ou d'un point (centerPos) : rayon 'radius' (5 par defaut), hauteur 'height', vitesse angulaire 'speed' en degres/s (10 par defaut, negatif pour le sens inverse), angle de depart 'startAngle' (relatif a l'orientation du vehicule si vehId est donne), 'snapHeight' pour suivre le relief. La camera regarde toujours le centre.
+
+## Remarques
+
+- L'angle avance avec mgr.dtReal (temps reel, pas simulation).
+- Le centre suit le centre de la boite englobante (OOBB) du vehicule a chaque frame.
+
 ## Classe `C`
+
+Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:_executionStarted()` |  | 28 |
-| `C:onNodeReset()` |  | 32 |
-| `C:work()` |  | 54 |
-| `C:workOnce()` |  | 39 |
+| `C:_executionStarted()` | Appelle onNodeReset. | 28 |
+| `C:onNodeReset()` | Remet centre, decalage, position camera et angle a zero. | 32 |
+| `C:work()` | Calcule le centre, la position sur le cercle, la hauteur (avec lissage 5 % si snapHeight), oriente la camera vers le centre (core_camera.setPosRot) puis incremente l'angle de dtReal * speed. | 54 |
+| `C:workOnce()` | Passe en camera libre et fixe l'angle de depart (+180 degres, plus l'orientation du vehicule si vehId). | 39 |
 
 ## Appels vers le moteur (C++)
 

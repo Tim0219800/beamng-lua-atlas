@@ -1,0 +1,147 @@
+{
+  "path": "lua/ge/extensions/gameplay/traffic/baseRole.lua",
+  "module": "Classe de base des « rôles » du trafic (civil, police, suspect, etc.). Un rôle est attaché à un véhicule du trafic (objet de gameplay_traffic) et lui donne une personnalité (aggression, patience, bravery), des actions nommées (pullOver, disabled et celles ajoutées par les classes dérivées), un état et éventuellement un flowgraph propre. Le module renvoie un constructeur appelé avec la classe dérivée : require('/lua/ge/extensions/gameplay/traffic/baseRole')(derivedClass, {veh = vehObj, name = 'police'}). Les méthodes onXxx vides sont des points d'extension pour les rôles dérivés.",
+  "notes": [
+    "Constructeur : crée l'objet à partir de la table passée (o.veh, o.name), appelle init, copie les champs de derivedClass (qui peuvent remplacer init et les méthodes), appelle de nouveau o:init() sans argument, puis postInit(). La classe dérivée doit donc fournir son propre init qui rappelle la base avec les bons paramètres.",
+    "Personnalité : chaque valeur est gaussienne centrée sur 0,5 (randomGauss3()/3 + offset, bornée par min/max), valeurs dans [0, 1]. Ne s'applique qu'aux véhicules IA (veh.isAi) ; l'agressivité IA finale est base + (aggression - 0,5) * 0,6, bornée à [0,25 ; 1,25].",
+    "Incohérence : init crée self.personalityModifiers, mais generatePersonality lit self.driver.personalityModifiers (jamais créé ici) ; les modificateurs ne s'appliquent donc que si une classe dérivée définit driver.personalityModifiers.",
+    "Le commentaire du code précise que l'action pullOver ne fonctionne pas toujours correctement (le véhicule peut ne pas se garer sur le côté).",
+    "lockAction (activé par setupFlowgraph) empêche setAction et resetAction d'agir."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance d'un rôle de trafic. Champs : veh (objet véhicule de trafic), name, class, actionName, actionTimer, state, flags, actions (table nom -> fonction(args)), baseActions (pullOver, disabled), driver {personality, aggression}, targetId, targetVisible, targetNear, flowgraph, lockAction, ignorePersonality, keepPersonalityOnRefresh, keepActionOnRefresh.",
+      "functions": {
+        "init": {
+          "desc": "Initialise les champs par défaut du rôle et les actions de base pullOver et disabled. Options lues dans data : ignorePersonality, keepPersonalityOnRefresh, keepActionOnRefresh.",
+          "params": {
+            "veh": {"type": "table", "desc": "Véhicule de trafic associé."},
+            "name": {"type": "string|nil", "desc": "Nom du rôle, 'none' par défaut."},
+            "data": {"type": "table|nil", "desc": "Options (voir description)."}
+          },
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Appelé après la construction (et à chaque refresh de véhicule) : réinitialise l'action et regénère la personnalité sauf si keepActionOnRefresh / keepPersonalityOnRefresh, puis appelle onRefresh.",
+          "internal": true
+        },
+        "setupFlowgraph": {
+          "desc": "Charge un flowgraph propre à ce véhicule, fixe ses variables, l'active (avec keepTrafficState), met l'IA du véhicule en mode 'stop' et verrouille l'action (lockAction). Journalise une erreur si le fichier est introuvable.",
+          "params": {
+            "fgFile": {"type": "string", "desc": "Chemin du fichier flowgraph."},
+            "varData": {"type": "table<string, any>|nil", "desc": "Valeurs des variables du flowgraph (avertissement si la variable n'existe pas)."}
+          }
+        },
+        "clearFlowgraph": {"desc": "Arrête et supprime le flowgraph, remet le mode IA par défaut et déverrouille l'action."},
+        "setTarget": {
+          "desc": "Définit le véhicule cible (si l'identifiant existe) et, pour un véhicule IA, envoie ai.setTargetObjectID.",
+          "params": {"id": {"type": "integer", "desc": "Identifiant de l'objet cible."}}
+        },
+        "setAction": {
+          "desc": "Exécute l'action nommée de self.actions (sauf si lockAction), mémorise son nom et émet le hook onTrafficAction(vehId, name, {targetId, data}). Erreur journalisée si l'action n'existe pas.",
+          "params": {
+            "name": {"type": "string", "desc": "Nom de l'action."},
+            "args": {"type": "table|nil", "desc": "Arguments passés à l'action."}
+          }
+        },
+        "setAggression": {
+          "desc": "Calcule et envoie à l'IA du véhicule l'agressivité (ai.setAggression), en tenant compte de la personnalité sauf si ignorée.",
+          "params": {
+            "baseAggression": {"type": "number|nil", "desc": "Valeur de base ; défaut baseAggression des variables de trafic."},
+            "ignorePersonality": {"type": "boolean|nil", "desc": "Ne pas appliquer le modificateur de personnalité."}
+          }
+        },
+        "resetAction": {
+          "desc": "Remet l'action par défaut : mode IA par défaut, paramètres et électriques réinitialisés, flags vidés, état 'none', cible effacée. Sans effet si lockAction. Appelé à chaque réapparition du véhicule sauf keepActionOnRefresh."
+        },
+        "generatePersonality": {
+          "desc": "Génère une personnalité aléatoire (aggression, patience, bravery). Renvoie la personnalité neutre (0,5) si ignorePersonality.",
+          "returns": [{"type": "table<string, number>|nil", "desc": "Personnalité ; nil si le véhicule n'est pas IA."}]
+        },
+        "applyPersonality": {
+          "desc": "Applique une personnalité (fusionnée dans driver.personality) et envoie l'agressivité à l'IA. Si data n'est pas une table, restaure la personnalité neutre.",
+          "params": {"data": {"type": "table|nil", "desc": "Valeurs aggression, patience, bravery."}}
+        },
+        "checkTargetVisible": {
+          "desc": "Teste par lancer de rayon statique si le véhicule cible est visible depuis ce véhicule (point visé 1 m au-dessus de la cible).",
+          "params": {"id": {"type": "integer|nil", "desc": "Cible ; défaut self.targetId."}},
+          "returns": [{"type": "boolean", "desc": "true si visible."}]
+        },
+        "freezeTrafficSignals": {
+          "desc": "Pour véhicules d'urgence : force les feux. À true, avance les séquences ayant un feu vert, et fige (timer coupé) celles dont tous les feux sont rouges ; à false, relance les séquences figées. Sans effet si les feux de signalisation ne sont pas actifs.",
+          "params": {"state": {"type": "boolean", "desc": "true pour figer, false pour relâcher."}}
+        },
+        "tryRandomEvent": {"desc": "Point d'extension (vide) : tentative d'évènement aléatoire du rôle."},
+        "onActiveDone": {"desc": "Point d'extension (vide) : appelé par le système de trafic quand le véhicule a fini d'être actif.", "internal": true},
+        "onRefresh": {"desc": "Point d'extension (vide) : appelé par postInit, à la création et au refresh du véhicule.", "internal": true},
+        "onRoleStarted": {"desc": "Point d'extension (vide) : appelé quand le rôle devient actif.", "internal": true},
+        "onRoleEnded": {"desc": "Point d'extension (vide) : appelé quand le rôle se termine.", "internal": true},
+        "onCrashDamage": {
+          "desc": "Point d'extension (vide) : dégâts de crash sur ce véhicule.",
+          "params": {"data": {"type": "table", "desc": "Données de l'évènement."}},
+          "internal": true
+        },
+        "onOtherCrashDamage": {
+          "desc": "Point d'extension (vide) : dégâts de crash sur un autre véhicule.",
+          "params": {
+            "otherId": {"type": "integer", "desc": "Véhicule touché."},
+            "data": {"type": "table", "desc": "Données de l'évènement."}
+          },
+          "internal": true
+        },
+        "onCollision": {
+          "desc": "Point d'extension (vide) : collision de ce véhicule avec un autre.",
+          "params": {
+            "otherId": {"type": "integer", "desc": "Autre véhicule."},
+            "data": {"type": "table", "desc": "Données de collision."}
+          },
+          "internal": true
+        },
+        "onOtherCollision": {
+          "desc": "Point d'extension (vide) : collision entre deux autres véhicules.",
+          "params": {
+            "id1": {"type": "integer", "desc": "Premier véhicule."},
+            "id2": {"type": "integer", "desc": "Second véhicule."},
+            "data": {"type": "table", "desc": "Données de collision."}
+          },
+          "internal": true
+        },
+        "onOtherEvent": {
+          "desc": "Point d'extension (vide) : évènement lié à un autre véhicule.",
+          "params": {
+            "eventType": {"type": "string", "desc": "Type d'évènement."},
+            "otherId": {"type": "integer", "desc": "Autre véhicule."},
+            "data": {"type": "table", "desc": "Données."}
+          },
+          "internal": true
+        },
+        "onTrafficTick": {
+          "desc": "Point d'extension (vide) : tick périodique du système de trafic.",
+          "params": {"tickTime": {"type": "number", "desc": "Durée du tick (s)."}},
+          "internal": true
+        },
+        "onUpdate": {
+          "desc": "Point d'extension (vide) : mise à jour à chaque frame.",
+          "params": {
+            "dt": {"type": "number", "desc": "Temps réel (s)."},
+            "dtSim": {"type": "number", "desc": "Temps simulé (s)."}
+          },
+          "internal": true
+        },
+        "onSerialize": {
+          "desc": "Sérialise id du véhicule, nom, état, nom d'action et cible.",
+          "returns": [{"type": "table", "desc": "Données {id, name, state, actionName, targetId}."}],
+          "internal": true
+        },
+        "onDeserialized": {
+          "desc": "Restaure le rôle après rechargement Lua.",
+          "params": {
+            "data": {"type": "table", "desc": "Données de onSerialize."},
+            "veh": {"type": "table|nil", "desc": "Véhicule de trafic ; défaut gameplay_traffic.getTraffic()[data.id]."}
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

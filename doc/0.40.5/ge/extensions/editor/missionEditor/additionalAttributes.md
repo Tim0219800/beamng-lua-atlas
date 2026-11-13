@@ -4,19 +4,31 @@
 
 **Accès :** `require("extensions/editor/missionEditor/additionalAttributes")` (fichier sous extensions/ mais pas une extension classique)
 
+Section « AdditionalInfo » du Mission Editor : édite l'auteur, la date de création ou de mise à jour (timestamp Unix), les options « As Scenario » et « DEV Mission », les attributs additionnels de la mission (difficulté, etc., listés par gameplay_missions_missions.getAdditionalAttributes, certains en mode automatique) et le groupement dans la grande carte (Group Id, Group Label). Fournit aussi une fenêtre qui met à jour en masse la date de plusieurs missions. Le module renvoie un constructeur.
+
+## Remarques
+
+- La date est un entier (secondes depuis 1970) ; os.date('%Y-%m-%d %H:%M:%S') sert à l'afficher.
+- Les missions avec le même Group Id sont regroupées dans la bigmap ; vide = pas de groupe.
+- Problèmes détectés par getMissionIssues : difficulté manquante, auteur manquant, date manquante (error), label de groupe sans traduction (minor), mission DEV dans une version shipping_build (error).
+- Le popup de mise à jour de dates propose par défaut les missions dont la date est postérieure à maintenant moins 2 629 743 s (environ un mois).
+- Le fichier contient une fonction locale todToTime (heure du jour en hh:mm:ss) non utilisée dans ce fichier.
+
 ## Classe `C`
+
+Sous-fenêtre des informations additionnelles.
 
 Le module renvoie un constructeur : `local obj = require("editor_missionEditor_additionalAttributes")(options)`.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:draw()` |  | 74 |
-| `C:getMissionIssues(m)` |  | 43 |
-| `C:init(missionEditor)` |  | 14 |
-| `C:openTimeUpdater()` |  | 198 |
-| `C:setMission(mission)` |  | 29 |
-| `C:timeUpdaterPopup()` |  | 213 |
-| `C:updateDateHumanReadable()` |  | 39 |
+| `C:draw()` | Dessine les champs Author, Date (avec bouton « Now »), As Scenario, DEV Mission, les listes déroulantes d'attributs additionnels, Group Id et Group Label. | 74 |
+| `C:getMissionIssues(m)` | Appelle setMission puis renvoie les problèmes de cette section (difficulté, auteur, date, traduction du label de groupe, mission DEV en release). | 43 |
+| `C:init(missionEditor)` | Constructeur : mémorise missionEditor, nomme la section « AdditionalInfo » et charge les attributs additionnels et leurs clés triées. | 14 |
+| `C:openTimeUpdater()` | Ouvre le popup « timeUpdaterForMissions ». | 198 |
+| `C:setMission(mission)` | Sélectionne la mission : retrouve son instance (gameplay_missions_missions.getMissionById) et crée les tampons de Group Id, Group Label, auteur et date. | 29 |
+| `C:timeUpdaterPopup()` | Dessine le popup de mise à jour en masse : on choisit une date « After » et une date « Set To », la liste des missions concernées s'affiche (un clic en retire une), et « Update Affected Missions » écrit la nouvelle date dans chaque mission en la marquant _dirty. Les données du popup sont effacées à sa fermeture. | 213 |
+| `C:updateDateHumanReadable()` | Calcule, une seule fois, la date lisible de la mission (format AAAA-MM-JJ hh:mm:ss) et la met en cache. | 39 |
 
 ---
 *tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/missionEditor/additionalAttributes.lua`.*

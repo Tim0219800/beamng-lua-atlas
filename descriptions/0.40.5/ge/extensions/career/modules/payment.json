@@ -1,0 +1,29 @@
+{
+  "path": "lua/ge/extensions/career/modules/payment.lua",
+  "module": "Paiement générique en carrière : vérifie qu'un prix (table de devises) est payable avec les attributs du joueur et le débite via career_modules_playerAttributes.",
+  "usage": "if career_modules_payment.pay({money = {amount = 500}}, {tags = {\"buying\"}, label = \"Achat\"}) then ... end",
+  "notes": [
+    "Le prix est une table {devise = {amount = n, canBeNegative = bool}}. Une devise avec canBeNegative = true n'est jamais bloquante.",
+    "pay renvoie false sans rien débiter si canPay échoue."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : career_career."}
+  },
+  "functions": {
+    "canPay": {
+      "desc": "Teste si le joueur possède assez de chaque devise du prix (sauf devises canBeNegative ou montant <= 0).",
+      "params": {"price": {"type": "table<string, {amount: number, canBeNegative: boolean|nil}>", "desc": "Prix par devise."}},
+      "returns": [{"type": "boolean", "desc": "true si payable."}],
+      "internal": false
+    },
+    "pay": {
+      "desc": "Débite le prix (montants négatifs) via playerAttributes.addAttributes si canPay.",
+      "params": {
+        "price": {"type": "table", "desc": "Prix par devise, comme pour canPay."},
+        "reason": {"type": "table|nil", "desc": "Raison passée au journal des attributs (tags, label)."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si le paiement a eu lieu."}],
+      "internal": false
+    }
+  }
+}

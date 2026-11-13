@@ -1,0 +1,74 @@
+{
+  "path": "lua/ge/extensions/gameplay/drag/times.lua",
+  "module": "Chronométrage du drag. Chaque frame, onUpdate fait avancer le timer principal de chaque racer dont les timers sont démarrés (dtSim en solo, horloge de départ synchronisée en MP), détecte le franchissement de chaque distance configurée (timers de type distanceTimer et velocity, interpolés entre deux frames), calcule le temps de réaction (timer de distance < 0,5 m) et disqualifie un départ anticipé (temps de réaction négatif). Il fournit aussi des lecteurs de valeurs de timers (locaux ou reçus du réseau en MP) utilisés par le classement et le ticket. Débloque le succès DRAG_QUARTER_MILE pour un time_1_4 <= 8,20 s du joueur non disqualifié.",
+  "notes": [
+    "Unités : temps en secondes, vitesses (timers velocity) en m/s.",
+    "Le temps de réaction est la valeur du timer de distance < 0,5 m ; si reactionTimeInvalid est vrai (faux départ ou sortie de couloir), il vaut -1. Après calcul, le timer principal est décalé de la valeur de réaction (timer = timer - réaction), donc les temps ET/distance sont mesurés à partir du feu vert.",
+    "En MP, les timers franchis sont envoyés à l'hôte via drag.updateTimerValue, et ceux des racers finis ou retirés sont complétés pour que tous aient leurs temps (ex. time_1_4 après les 1000 pi).",
+    "Le code gère aussi des types de timer 'timeToVelocity' (champ velocity) et 'brakingG' (champs deltaTime, startTime...) en phase emergencyStop, mais core.buildRacerTimers ne crée que dial, timer, distanceTimer et velocity : ces branches ne servent que si la config de piste les ajoute autrement.",
+    "Les timers de type dialTimer ne sont jamais remis à zéro par reset()."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "gameplay_drag_core, gameplay_achievement."}
+  },
+  "functions": {
+    "dragRaceStarted": {
+      "desc": "Marque les timers d'un racer comme démarrés (racer.timersStarted = true). Appelée via le hook dragRaceStarted quand le feu vert part.",
+      "params": {"vehId": {"type": "integer", "desc": "ID du véhicule du racer."}},
+      "returns": []
+    },
+    "getImportantTimerValue": {
+      "desc": "Valeur du timer important (data.importantTimerId, time_1_4 par défaut) d'un racer.",
+      "params": {"racer": {"type": "table", "desc": "Racer."}, "data": {"type": "table|nil", "desc": "Données de piste (importantTimerId)."}},
+      "returns": [{"type": "number", "desc": "Valeur en s (ou m/s pour un timer de vitesse), 0 si absente."}]
+    },
+    "getImportantTimerValueForWin": {
+      "desc": "Temps effectif de comparaison pour le classement : valeur du timer important plus le temps de réaction si c'est un timer de distance (ou si le timer n'est pas dans la config) ; la valeur brute pour un timer de vitesse.",
+      "params": {"racer": {"type": "table", "desc": "Racer."}, "data": {"type": "table|nil", "desc": "Données de piste (importantTimerId, timers)."}},
+      "returns": [{"type": "number", "desc": "Temps effectif."}]
+    },
+    "getNetworkTimersForRacer": {
+      "desc": "En MP, renvoie la table des timers diffusés par le réseau pour le véhicule du racer (clé = id de timer). Utilise un cache véhicule vers joueur MP reconstruit si la course ou les joueurs changent.",
+      "params": {"racer": {"type": "table", "desc": "Racer (vehId)."}},
+      "returns": [{"type": "table|nil", "desc": "Timers réseau, nil hors MP ou si inconnus."}]
+    },
+    "getRacerTimerValue": {
+      "desc": "Valeur d'un timer pour un racer : la valeur réseau en MP si elle existe, sinon la valeur locale.",
+      "params": {"racer": {"type": "table", "desc": "Racer."}, "timerId": {"type": "string", "desc": "Identifiant du timer (par ex. 'time_1_4')."}},
+      "returns": [{"type": "number", "desc": "Valeur, 0 si absente."}]
+    },
+    "getReactionTimerValue": {
+      "desc": "Temps de réaction d'un racer : timer réseau dont l'id contient 'reaction' en MP, sinon valeur du timer de type distanceTimer à moins de 0,5 m.",
+      "params": {"racer": {"type": "table", "desc": "Racer."}},
+      "returns": [{"type": "number", "desc": "Temps de réaction en s (-1 si invalide, 0 si absent)."}]
+    },
+    "onDragClear": {
+      "desc": "Hook de clear drag ; ne fait rien.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onDragReset": {
+      "desc": "Hook de reset drag : appelle reset().",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Mise à jour par frame des timers : temps écoulé, passages de distance/vitesse, réaction, succès quart de mile, freinage d'urgence, synchronisation MP (et checkTimerDrift de l'hôte). Sans effet si la course est terminée.",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."}, "dtRaw": {"type": "number", "desc": "Delta brut (s)."}},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet à zéro tous les timers sauf le dial de chaque racer (valeur 0, isSet = false) et timersStarted = false.",
+      "params": {},
+      "returns": []
+    },
+    "resetDragRaceValues": {
+      "desc": "Alias de reset().",
+      "params": {},
+      "returns": []
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gfx/blur.lua",
+  "module": "Nœud flowgraph « Blur » (repeat_instant, tags gfx/blur). Floute la scène : pin blurAmount (0 à 1, défaut 1) devient l'alpha d'un rectangle plein écran ajouté à l'effet ScreenBlurFX à chaque frame de rendu. Ne dessine rien si l'UI CEF n'est pas visible ou si work n'a pas tourné depuis plus de 10 frames.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "init": {
+          "desc": "Initialise lastWorking, blurAmount et blurColor.",
+          "internal": true,
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "gestionnaire flowgraph"
+            }
+          }
+        },
+        "onPreRender": {
+          "desc": "Hook appelé avant le rendu (dt, dtSim) ; ajoute un rectangle de flou plein écran à ScreenBlurFX si le nœud a été actif dans les 10 dernières frames.",
+          "internal": false,
+          "params": {
+            "dt": {
+              "type": "any",
+              "desc": "temps réel écoulé depuis la dernière frame (s)"
+            },
+            "dtSim": {
+              "type": "any",
+              "desc": "temps de simulation écoulé (s)"
+            }
+          }
+        },
+        "postInit": {
+          "desc": "Configure le pin blurAmount comme curseur float entre 0 et 1.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Mémorise la quantité de flou, la couleur correspondante et le numéro de frame courant.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

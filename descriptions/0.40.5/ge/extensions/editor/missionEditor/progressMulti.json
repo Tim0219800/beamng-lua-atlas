@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/editor/missionEditor/progressMulti.lua",
+  "module": "Onglet « Progress Multi » de l'éditeur de missions : affiche la progression sauvegardée d'une mission à progression multiple. Il lit gameplay_missions_progress.formatSaveDataForUi(mission.id), propose un combo de clé de progression et un tableau des agrégats de la mission (ownAggregate : labels et lignes). Lecture seule. Le module renvoie un constructeur : require(...)(missionEditor).",
+  "notes": [
+    "Les fonctions pushStyle/popStyle et la case Raw sont déclarées mais pas utilisées dans ce fichier (code hérité de progressSingle).",
+    "draw lève une erreur si formattedProgressByKey[currentProgressKey] est nil (pas de test avant l'accès à ownAggregate).",
+    "Le commentaire du code précise que seule la mission courante est affichée depuis un changement de formatSaveDataForUi."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance de l'onglet. Champs : missionEditor, tabName = 'Progress Multi', mission, missionInstance, formattedSaveData, currentProgressKey.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur.",
+          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "internal": true
+        },
+        "setMission": {
+          "desc": "Définit la mission courante, recharge les données de progression formatées et choisit la clé de progression (currentProgressKey, defaultProgressKey ou 'default').",
+          "params": {"mission": {"type": "table", "desc": "Mission courante."}},
+          "internal": true
+        },
+        "draw": {
+          "desc": "Affiche le combo de clé de progression et le tableau d'agrégats.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

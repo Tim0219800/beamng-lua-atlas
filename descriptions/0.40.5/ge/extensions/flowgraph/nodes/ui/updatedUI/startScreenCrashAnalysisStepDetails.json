@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenCrashAnalysisStepDetails.lua",
+  "module": "Nœud « Start Screen Crash Analysis Step Details » (repeat_instant, couleur ui). Ajoute à l'écran de démarrage simple un panneau de détails d'une étape d'analyse de crash. Entrées : flow, stepScoreData (table). Sortie : flow (chainFlow).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "work": {
+          "desc": "Recopie flow puis appelle modules.ui:addCrashAnalysisStepDetails({stepScoreData = ...}).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

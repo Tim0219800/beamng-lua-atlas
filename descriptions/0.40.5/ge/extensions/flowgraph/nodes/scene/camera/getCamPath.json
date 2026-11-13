@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/getCamPath.lua",
+  "module": "Noeud flowgraph 'Get Cam Path' (categorie once_f_duration). Renseigne sur l'etat d'une trajectoire de camera (par 'id', sinon celle qui est active) : sorties inactive, complete, completed (impulsion une fois), incomplete et duration. Utile avec Simple Cam Path ou les noeuds de trajectoire procedurale.",
+  "notes": [
+    "La description du code ('Lets the camera follow the path...') est copiee de Simple Cam Path ; ce noeud ne fait que lire l'etat.",
+    "Si 'id' est fourni mais ne correspond pas a la trajectoire active, le noeud est considere inactif."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Remet done et completedFlag a zero.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Sur reset, repart de zero. flow suit l'entree. Avec du flux, determine si la trajectoire est active, puis calcule inactive/complete/completed/incomplete/duration via camera:isPathComplete et getPathDuration.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine le milieu du noeud (vide).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

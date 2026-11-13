@@ -1,0 +1,56 @@
+{
+  "path": "lua/ge/extensions/gameplay/drift/quickMessages.lua",
+  "module": "Détecte les « quick messages » de drift (petits bonus affichés pendant le drift : grand angle, drift inversé, long drift, frôlement, chaîne longue, drift de précision) et leur attribue une récompense qui s'ajoute au score en cache. Chaque message est décrit par des conditions primaires (toutes à remplir en même temps), éventuellement des conditions de confirmation (ex. pas de crash ensuite) et des conditions de remise à zéro. Émet onDriftQuickMessageDisplay pour l'interface et onDriftQuickMessageReached pour le scoreboard.",
+  "notes": [
+    "Messages et réglages : bigAngle (angle > 80°, +15), reverseDrift (angle > 105°, +30), longDrift (durée > 4 s et vitesse > 30, +20), closeCall (angle > 25°, vitesse > 30 km/h, distance au mur < 1.5 m, confirmé si pas de crash pendant 1 s, remise à zéro après 4 s, +80), longDriftChain (>= 10 drifts chaînés, +160), precisionDrifting (3 closeCalls dans une chaîne et plus en train de drifter, +150).",
+    "Le texte vient de la traduction missions.drift.quickMessage.<id> et est affiché sous la forme « texte +récompense ».",
+    "Les conditions ne sont pas évaluées quand le drift général est gelé (gameplay_drift_general.getFrozen()).",
+    "Optimisation : après 2 s sans drift, ni chaîne ni confirmation en attente, le module passe en mode idle et saute les vérifications jusqu'au prochain drift.",
+    "Un crash, un spinout ou la remise en place du véhicule du joueur appellent reset() et annulent tout message en attente."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "gameplay_drift_general, gameplay_drift_drift, gameplay_drift_scoring."}
+  },
+  "functions": {
+    "getQuickMessages": {
+      "desc": "Retraduit puis renvoie la table des quick messages (utilisée par le scoreboard et l'écran de fin).",
+      "returns": [{"type": "table<string, {msg:string, reward:number, primaryConditions:table}>", "desc": "Quick messages indexés par id (precisionDrifting, bigAngle, reverseDrift, longDrift, closeCall, longDriftChain)."}]
+    },
+    "reset": {
+      "desc": "Vide les messages en attente de confirmation et déjà déclenchés, remet le compteur de frôlements et le mode idle à zéro."
+    },
+    "getDriftDebugInfo": {
+      "desc": "Renvoie {default=false, canBeChanged=true} pour la fenêtre de debug drift.",
+      "returns": [{"type": "table", "desc": "{default = false, canBeChanged = true}"}]
+    },
+    "getGC": {
+      "desc": "Renvoie la quantité de garbage mesurée par le profileur à la dernière frame (0 hors debug).",
+      "returns": [{"type": "number", "desc": "Garbage de la section « Drift quick messages »."}]
+    },
+    "onUpdate": {
+      "desc": "Appelé à chaque frame : lit l'état de drift du véhicule suivi, vérifie conditions primaires, confirmations et remises à zéro, gère le mode idle.",
+      "params": {"dt": {"type": "number", "desc": "Delta temps (premier argument de onUpdate, dtReal)."}},
+      "internal": true
+    },
+    "onDriftActiveDataFinished": {
+      "desc": "Hook : un drift individuel vient de se terminer (déclenche les remises à zéro de type onDriftEnd).",
+      "internal": true
+    },
+    "onDriftCompleted": {
+      "desc": "Hook : une chaîne de drifts est terminée (déclenche les remises à zéro de type onChainEnd).",
+      "internal": true
+    },
+    "onDriftPlVehReset": {
+      "desc": "Hook : le véhicule de drift du joueur a été remis en place ; appelle reset().",
+      "internal": true
+    },
+    "onDriftCrash": {
+      "desc": "Hook : crash, appelle reset().",
+      "internal": true
+    },
+    "onDriftSpinout": {
+      "desc": "Hook : spinout, appelle reset().",
+      "internal": true
+    }
+  }
+}

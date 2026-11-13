@@ -1,0 +1,92 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/driveline/pointList.lua",
+  "module": "Liste de points le long d'un chemin (driveline de rallye). Chaque point est une table {pos (vec3), quat, ts, normal, prev, next, id, partition, pacenoteDistances, cachedPacenotes{cs, ce, at, auto_at, half}}. La classe sait chaîner les points (prev/next/id), calculer leurs normales (snaproad/normals), mesurer la longueur, trouver le point le plus proche et dessiner un aperçu de débogage. Le module renvoie un constructeur : require(...)(points).",
+  "notes": [
+    "BUG : dans createPoint, le paramètre s'appelle 'quat' et masque la fonction globale quat() ; la valeur par défaut 'quat or quat(0,0,0,1)' appelle donc nil si l'argument est omis (erreur Lua). Passer toujours un quaternion.",
+    "setAll remplace les points puis recalcule relations (prev/next/id) et normales ; le constructeur, lui, ne le fait pas.",
+    "La longueur est la somme des distances 3D entre points consécutifs, en mètres."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Liste de points renvoyée par le constructeur ; attribut self.points.",
+      "functions": {
+        "init": {
+          "desc": "Mémorise la liste de points fournie (vide par défaut) sans calculer relations ni normales.",
+          "params": {"points": {"type": "table[]|nil", "desc": "Points déjà au format standard."}},
+          "returns": [],
+          "internal": true
+        },
+        "createPoint": {
+          "desc": "Crée un point au format standard (normal (0,0,1), pacenoteDistances vide, cachedPacenotes vide). N'ajoute pas le point à la liste.",
+          "params": {
+            "pos": {"type": "vec3", "desc": "Position."},
+            "quat": {"type": "quat|nil", "desc": "Orientation (voir le bug dans notes : ne pas l'omettre)."},
+            "ts": {"type": "number|nil", "desc": "Horodatage en secondes (0 par défaut)."}
+          },
+          "returns": [{"type": "table", "desc": "Le point."}],
+          "internal": false
+        },
+        "setupPointRelationships": {
+          "desc": "Renseigne id (indice), prev et next de chaque point.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "setupPointNormals": {
+          "desc": "Calcule la normale de chaque point avec snaproadNormals.forwardNormalVec et crée pacenoteDistances/cachedPacenotes s'ils manquent.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "calculateLength": {
+          "desc": "Longueur totale du chemin (0 s'il y a moins de 2 points).",
+          "params": {},
+          "returns": [{"type": "number", "desc": "Longueur en mètres."}],
+          "internal": false
+        },
+        "count": {
+          "desc": "Nombre de points.",
+          "params": {},
+          "returns": [{"type": "integer", "desc": "Nombre de points."}],
+          "internal": false
+        },
+        "get": {
+          "desc": "Point à l'indice donné.",
+          "params": {"index": {"type": "integer", "desc": "Indice à partir de 1."}},
+          "returns": [{"type": "table|nil", "desc": "Point."}],
+          "internal": false
+        },
+        "getAll": {
+          "desc": "Table interne de tous les points (pas une copie).",
+          "params": {},
+          "returns": [{"type": "table[]", "desc": "Points."}],
+          "internal": false
+        },
+        "setAll": {
+          "desc": "Remplace tous les points puis recalcule relations et normales.",
+          "params": {"points": {"type": "table[]", "desc": "Nouveaux points."}},
+          "returns": [],
+          "internal": false
+        },
+        "findNearestPoint": {
+          "desc": "Point le plus proche d'une position (distance 3D, parcours linéaire).",
+          "params": {"srcPos": {"type": "vec3", "desc": "Position de référence."}},
+          "returns": [{"type": "table|nil", "desc": "Point le plus proche, nil si la liste est vide."}],
+          "internal": false
+        },
+        "downsample": {
+          "desc": "Stub de compatibilité avec DrivelineRoute : renvoie la liste elle-même (drivelineV3 simplifie déjà).",
+          "params": {},
+          "returns": [{"type": "table", "desc": "self."}],
+          "internal": false
+        },
+        "drawDebug": {
+          "desc": "Dessine une sphère par point (couleur recce_driveline_clr, alpha 0,3) et, si demandé, l'horodatage ts en étiquette. À appeler à chaque frame.",
+          "params": {"drawLabels": {"type": "boolean|nil", "desc": "true pour afficher les étiquettes ts."}},
+          "returns": [],
+          "internal": false
+        }
+      }
+    }
+  }
+}

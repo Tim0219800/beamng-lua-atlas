@@ -4,11 +4,15 @@
 
 **Accès :** `require("extensions/flowgraph/nodes/environment/getGravity")` (fichier sous extensions/ mais pas une extension classique)
 
+Nœud flowgraph « Get Gravity » (catégorie provider, tag environment). Sort la gravité globale actuelle en m/s² (core_environment.getGravity) sur le pin « gravity ».
+
 ## Classe `C`
+
+Classe du nœud.
 
 | Méthode | Description | Ligne |
 |---|---|---|
-| `C:work()` |  | 19 |
+| `C:work()` | Chaque frame, écrit la gravité sur le pin de sortie. | 19 |
 
 ## Appels vers le moteur (C++)
 

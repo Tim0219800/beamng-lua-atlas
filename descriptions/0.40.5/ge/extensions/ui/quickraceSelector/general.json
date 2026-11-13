@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/ui/quickraceSelector/general.lua",
+  "module": "Backend du sélecteur en grille de l'assistant Vue « Quickrace » : expose la liste des niveaux et, pour chaque niveau, sa liste de pistes. Le module ne contient aucune logique propre : il crée un backend avec ui/oneshotRaceSelector/core à partir du descripteur partagé quickRaceTrackDescriptor (identifiant \"quickraceSelector\") puis recopie toutes ses fonctions dans M.",
+  "notes": [
+    "Dépend de scenario_quickRaceLoader, chargé avant.",
+    "Les fonctions réellement exposées sont celles de createBackend (définies dans ui/oneshotRaceSelector/core.lua) ; elles ne sont pas visibles dans ce fichier."
+  ],
+  "fields": {
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions à charger avant : {\"scenario_quickRaceLoader\"}."
+    }
+  }
+}

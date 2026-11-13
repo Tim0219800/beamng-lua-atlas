@@ -1,0 +1,26 @@
+{
+  "path": "lua/ge/extensions/ui/options.lua",
+  "module": "Petit utilitaire côté GE pour la disposition (layout) du menu d'options Vue. Il lit quels fichiers layout.json / layout.dev.json existent dans le dossier utilisateur et peut sauvegarder un layout dans /ui/ui-vue/src/modules/options/runtime/ (donc dans le dossier utilisateur). Utile à un moddeur qui veut surcharger la structure du menu d'options.",
+  "usage": "ui_options.saveLayout(\"mon-layout\", jsonString) -- écrit layout.mon-layout.json",
+  "notes": [
+    "La clé de saveLayout doit être vide/nil ou correspondre à ^[%w%-_]+$ ; sinon la fonction logue une erreur et renvoie false.",
+    "isValidKey n'est appelé que si key n'est ni nil ni vide, donc pas de risque d'erreur string.match sur nil."
+  ],
+  "functions": {
+    "getUserFolderLayouts": {
+      "desc": "Liste ceux des fichiers layout.json et layout.dev.json dont le chemin réel se trouve sous le dossier utilisateur (FS:getUserPath).",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Noms de fichiers trouvés ; vide si le dossier utilisateur est inconnu."}],
+      "internal": false
+    },
+    "saveLayout": {
+      "desc": "Écrit les données JSON dans layout[.key].json sous /ui/ui-vue/src/modules/options/runtime/ via writeFile.",
+      "params": {
+        "key": {"type": "string|nil", "desc": "Suffixe du fichier (slug sûr) ; nil ou vide pour layout.json."},
+        "data": {"type": "string", "desc": "Contenu JSON déjà sérialisé."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si l'écriture a réussi, false si data n'est pas une chaîne, si la clé est invalide ou si l'écriture échoue."}],
+      "internal": false
+    }
+  }
+}

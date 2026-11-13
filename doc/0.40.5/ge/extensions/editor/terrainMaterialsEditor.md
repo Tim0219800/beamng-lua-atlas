@@ -4,21 +4,37 @@
 
 **Accès :** extension `editor_terrainMaterialsEditor` : `extensions.load("editor_terrainMaterialsEditor")`, puis la globale `editor_terrainMaterialsEditor`
 
+Fenêtre « Terrain Material Library » du World Editor : liste, édite, duplique, supprime et importe depuis un autre niveau les matériaux de terrain (TerrainMaterial) du niveau, avec validation des textures (format PNG, tailles puissances de 2, plages de valeurs, ordre des distances), annulation par historique pour les propriétés, changement de textures en masse et mise à niveau de l'ancien format de fichier (art/terrains/materials.json vers art/terrain/main.materials.json). Dépend de editor_terrainEditor (qui fournit la bibliothèque et les proxies de matériaux). Publie editor.showTerrainMaterialsEditor(internalName) pour ouvrir la fenêtre sur un matériau donné.
+
+## Exemple
+
+```lua
+editor.showTerrainMaterialsEditor("grass_01")
+```
+
+## Remarques
+
+- Un PersistenceManager 'terrainMatEditor_PersistMan' est créé au chargement du module s'il n'existe pas.
+- Le nom interne d'un matériau ne doit pas être vide, ne doit pas commencer par un chiffre et ne doit pas déjà exister (états de notification NotificationState_*).
+- Deux formats de matériau sont gérés : V0 (carte diffuse/normal/detail/macro) et V1 (baseColor, normal, roughness, ao, height avec tailles de texture par slot : baseTexSize, macroTexSize, detailTexSize).
+- Incohérence probable dans applyMtlChanges : le contrôle de nom déjà pris itère editor_terrainEditor.getMaterialsInJson() avec ipairs, alors que la table est ailleurs parcourue avec pairs (clés non entières) ; la détection de doublon à cet endroit pourrait ne jamais se déclencher.
+- La constante terrainMaterialTextureSetPath ('art/terrains/main.materials.json') est déclarée mais ne semble pas utilisée.
+
 **Dépendances (chargées avant) :** `editor_terrainEditor`
 
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `editor_terrainMaterialsEditor.onEditorActivated()` | *(hook)* | 2282 |
-| `editor_terrainMaterialsEditor.onEditorGui()` | *(hook)* | 1666 |
-| `editor_terrainMaterialsEditor.onEditorInitialized()` | *(hook)* | 2272 |
+| `editor_terrainMaterialsEditor.onEditorActivated()` | Hook appelé quand l'éditeur est activé : si la fenêtre est visible, recharge la bibliothèque de matériaux (editor_terrainEditor.updateMaterialLibrary) et invalide le cache de validation. *(interne)* *(hook)* | 2282 |
+| `editor_terrainMaterialsEditor.onEditorGui()` | Hook de rendu de l'éditeur : dessine la fenêtre « Terrain Material Library » (liste des matériaux, propriétés V0/V1, validation, boutons d'import/duplication/suppression/mise à niveau) et les fenêtres modales associées. *(interne)* *(hook)* | 1666 |
+| `editor_terrainMaterialsEditor.onEditorInitialized()` | Hook d'initialisation de l'éditeur : enregistre la fenêtre (710x530), les modales (changement de textures en masse, mise à niveau, import) et publie editor.showTerrainMaterialsEditor. *(interne)* *(hook)* | 2272 |
 
 ## Champs
 
 | Champ | Type | Description |
 |---|---|---|
-| `dependencies` | table | public interface |
+| `dependencies` | string[] | {"editor_terrainEditor"} : extensions à charger avant celle-ci. |
 
 ## Appels vers le moteur (C++)
 

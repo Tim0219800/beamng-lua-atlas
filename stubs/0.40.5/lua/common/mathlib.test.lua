@@ -2,93 +2,111 @@
 -- tim19Atlas stub generated from lua/common/mathlib.test.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
+--- Tests unitaires de mathlib (vec3, quat, helpers scalaires, courbes, géométrie, StackVec3/push3), à exécuter avec testFramework/TestManager. Contient aussi des tests de performance en boucle et des tests « sans garbage » qui vérifient que les opérations en place n'allouent pas de mémoire. Lancement : `require('testFramework/TestManager'):runTestFiles('mathlib')` dans la console GE. Utile à un moddeur comme catalogue d'exemples d'utilisation des fonctions mathlib.
 --- Accès : `require("mathlib.test")`
 ---@class mathlib_test
 local mathlib_test = {}
 
---- Tests curve interpolation helpers (spline/Catmull-Rom/Bezier families).
+--- Teste les helpers d'interpolation de courbes (familles spline, Catmull-Rom, Bézier).
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/common/mathlib.test.lua:455
----@param ctx any
+---@param ctx table Contexte de test.
 function mathlib_test.testMathlibCurves(ctx) end
 
---- Tests generic scalar helpers: sign, clamp, interpolation, medians, and bounds.
+--- Teste les helpers scalaires génériques : signe, clamp, interpolation, médianes, bornes.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/common/mathlib.test.lua:399
----@param ctx any
+---@param ctx table Contexte de test.
 function mathlib_test.testMathlibGeneric(ctx) end
 
---- Tests geometry overlap/containment/intersection helper families.
+--- Teste les familles de helpers de chevauchement, d'inclusion et d'intersection géométriques.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/common/mathlib.test.lua:472
----@param ctx any
+---@param ctx table Contexte de test.
 function mathlib_test.testMathlibGeom(ctx) end
 
---- Tests StackVec3 (push3) parity with core vec3 operations.
+--- Teste StackVec3 (push3) : parité avec les opérations vec3 de base.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/common/mathlib.test.lua:271
----@param ctx any
+---@param ctx table Contexte de test.
 function mathlib_test.testMathlibPush3(ctx) end
 
---- Tests quaternion construction, algebra, interpolation, and conversions.
+--- Teste la construction de quaternions, l'algèbre, l'interpolation et les conversions.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/common/mathlib.test.lua:298
----@param ctx any
+---@param ctx table Contexte de test.
 function mathlib_test.testMathlibQuat(ctx) end
 
---- Tests NaN/inf/div-by-zero edge behavior across math helpers.
+--- Teste le comportement sur NaN, infini et division par zéro dans les helpers mathématiques.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/common/mathlib.test.lua:505
----@param ctx any
+---@param ctx table Contexte de test.
 function mathlib_test.testMathlibSpecialValuesAndOddities(ctx) end
 
---- Tests vec3 constructors, core arithmetic, normalization, and helpers.
+--- Teste les constructeurs de vec3, l'arithmétique de base, la normalisation et les helpers.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/common/mathlib.test.lua:33
----@param ctx any
+---@param ctx table Contexte de test (TestManager).
 function mathlib_test.testMathlibVec3Core(ctx) end
 
---- Tests vec3 geometry methods (distances, barycentric, projection, basis, mutators).
+--- Teste les méthodes géométriques de vec3 : distances, coordonnées barycentriques, projection, base orthonormée, mutateurs.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/common/mathlib.test.lua:122
----@param ctx any
+---@param ctx table Contexte de test.
 function mathlib_test.testMathlibVec3Geom(ctx) end
 
---- Tests vec3 noise/random generators and axis/line helper utilities.
+--- Teste les générateurs de bruit/aléatoire de vec3 et les helpers d'axes et de lignes.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/common/mathlib.test.lua:230
----@param ctx any
+---@param ctx table Contexte de test.
 function mathlib_test.testMathlibVec3NoiseAndHelpers(ctx) end
 
---- Verifies in-place quaternion operations stay allocation-free under strict garbage allowance.
+--- Vérifie que les opérations de quaternion en place (setMul2, setInvMul2, setMulInv2, normalize) n'allouent rien.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/common/mathlib.test.lua:712
----@param ctx any
+---@param ctx table Contexte de test.
 function mathlib_test.testNoGarbageQuatInPlace(ctx) end
 
---- Verifies scalar helper loop stays allocation-free under strict garbage allowance.
+--- Vérifie que la boucle de helpers scalaires (sign, clamp, lerp, smoothstep, biasFun…) n'alloue rien (budget 512 octets, checkGarbage(0)).
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/common/mathlib.test.lua:662
----@param ctx any
+---@param ctx table Contexte de test.
 function mathlib_test.testNoGarbageScalarMathHelpers(ctx) end
 
---- Verifies single-shot scalar helpers stay allocation-free without loops.
+--- Vérifie que clamp, lerp, inverseLerp et smoothstep appelés une seule fois n'allouent aucune mémoire (budget 0).
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/common/mathlib.test.lua:734
----@param ctx any
+---@param ctx table Contexte de test.
 function mathlib_test.testNoGarbageScalarSingleShot(ctx) end
 
---- Verifies in-place vec3 operations stay allocation-free under strict garbage allowance.
+--- Vérifie que les opérations vec3 en place (setAdd2, setSub, setScaled, setComponentMul, setLerp, setCross) n'allouent rien.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/common/mathlib.test.lua:687
----@param ctx any
+---@param ctx table Contexte de test.
 function mathlib_test.testNoGarbageVec3InPlace(ctx) end
 
---- Benchmarks representative geometric query helpers in a tight loop.
+--- Benchmark : requêtes géométriques représentatives en boucle serrée.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/common/mathlib.test.lua:636
----@param ctx any
+---@param ctx table Contexte de test.
 function mathlib_test.testPerfGeometryBatch(ctx) end
 
---- Benchmarks representative quaternion math in a tight loop.
+--- Benchmark : opérations de quaternions sur 10000 itérations.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/common/mathlib.test.lua:591
----@param ctx any
+---@param ctx table Contexte de test.
 function mathlib_test.testPerfQuatBatch(ctx) end
 
---- Benchmarks representative scalar helper math in a tight loop.
+--- Benchmark : helpers mathématiques scalaires en boucle serrée.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/common/mathlib.test.lua:617
----@param ctx any
+---@param ctx table Contexte de test.
 function mathlib_test.testPerfScalarBatch(ctx) end
 
---- Benchmarks representative vec3 math in a tight loop.
+--- Benchmark : arithmétique vec3 (dot, length, cross, normalized, somme) sur 10000 itérations.
+---*(interne : appelée par le moteur ou la boucle principale)*
 ---Source : lua/common/mathlib.test.lua:567
----@param ctx any
+---@param ctx table Contexte de test.
 function mathlib_test.testPerfVec3Batch(ctx) end
 
 return mathlib_test

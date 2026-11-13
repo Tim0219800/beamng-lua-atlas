@@ -1,0 +1,48 @@
+{
+  "path": "lua/ge/extensions/flowgraph/baseModule.lua",
+  "module": "Classe de base des modules du gestionnaire flowgraph (les « modules » attachés au manager, par opposition aux nœuds). Elle définit une classe C avec des hooks vides (clear, onUpdate, executionStarted, executionStopped) que les modules dérivés surchargent. Le fichier n'est pas une extension utilisable seule : il est utilisé par les modules flowgraph via M.use(mgr, derivedClass).",
+  "usage": "local base = require('/lua/ge/extensions/flowgraph/baseModule')\nlocal module = base.use(mgr, {\n  onUpdate = function(self, dtReal, dtSim, dtRaw) end,\n})",
+  "notes": [
+    "C.moduleOrder = 0 : ordre de traitement des modules, les valeurs basses passent en premier.",
+    "C.hooks est une table vide, destinée à déclarer les hooks gérés par le module.",
+    "Les fonctions preTrigger/afterTrigger sont commentées dans le code (non disponibles).",
+    "M.use n'appelle o:init() une seconde fois que si la classe dérivée a redéfini init (sans argument mgr dans ce cas)."
+  ],
+  "functions": {
+    "createBase": {
+      "desc": "Crée une instance de la classe de base : table avec C comme métatable, puis appelle init(...) (donc init(mgr)).",
+      "params": {"...": {"type": "any", "desc": "arguments transmis à init, normalement le manager flowgraph mgr"}},
+      "returns": [{"type": "table", "desc": "instance du module de base"}],
+      "internal": true
+    },
+    "use": {
+      "desc": "Crée un module de base, copie dessus tous les champs/méthodes de derivedClass (surcharge), puis rappelle init() si la classe dérivée l'a redéfini.",
+      "params": {
+        "mgr": {"type": "table", "desc": "manager flowgraph propriétaire du module"},
+        "derivedClass": {"type": "table", "desc": "table de méthodes/champs qui remplacent ceux de la base"}
+      },
+      "returns": [{"type": "table", "desc": "instance du module"}],
+      "internal": true
+    }
+  },
+  "classes": {
+    "C": {
+      "desc": "Classe de base d'un module flowgraph. Les méthodes vides sont à surcharger.",
+      "functions": {
+        "init": {"desc": "Mémorise le manager dans self.mgr.", "params": {"mgr": {"type": "table", "desc": "manager flowgraph"}}, "internal": true},
+        "clear": {"desc": "Hook vide « utilisable » par les modules dérivés pour vider leur état."},
+        "onUpdate": {
+          "desc": "Hook vide appelé à chaque mise à jour du manager (surchargé par les modules).",
+          "params": {
+            "dtReal": {"type": "number", "desc": "delta de temps réel (s)"},
+            "dtSim": {"type": "number", "desc": "delta de temps de simulation (s)"},
+            "dtRaw": {"type": "number", "desc": "delta de temps brut (s)"}
+          }
+        },
+        "executionStopped": {"desc": "Hook vide appelé à l'arrêt de l'exécution du flowgraph."},
+        "executionStarted": {"desc": "Hook vide appelé au démarrage de l'exécution du flowgraph."},
+        "onClear": {"desc": "Appelle self:executionStopped(). Sert de réaction au vidage du manager.", "internal": true}
+      }
+    }
+  }
+}

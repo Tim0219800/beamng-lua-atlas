@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/debug/restartManager.lua",
+  "module": "Nœud flowgraph « Restart Project » (catégorie logic, behaviour duration). Redémarre le projet flowgraph : appelle graph.mgr:queueForRestart() quand l'entrée flow a du flux.",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Met le gestionnaire en file pour redémarrage."}
+      }
+    }
+  }
+}

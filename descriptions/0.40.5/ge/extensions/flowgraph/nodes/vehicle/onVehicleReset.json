@@ -1,0 +1,40 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleReset.lua",
+  "module": "Nœud événement « On Vehicle Reset » (catégorie `logic`). Émet une impulsion sur `flow` quand un véhicule est remis à zéro (hook `onVehicleResetted`). Si le pin d'entrée `vehId` est fourni, ne réagit que pour ce véhicule. Sortie `vehId` (caché) : le véhicule reseté.",
+  "notes": [
+    "Le nom du hook est `onVehicleResetted` (avec « ted »)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "_afterTrigger": {
+          "desc": "Appelé par le gestionnaire après le déclenchement du nœud ; remet le drapeau d'événement à false.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro.",
+          "internal": true
+        },
+        "init": {
+          "desc": "Constructeur vide.",
+          "internal": true
+        },
+        "onVehicleResetted": {
+          "desc": "Hook appelé quand un véhicule est reset ; filtre éventuellement par `vehId` puis lève le drapeau.",
+          "internal": true,
+          "params": {
+            "id": {
+              "type": "integer",
+              "desc": "Id du véhicule reseté."
+            }
+          }
+        },
+        "work": {
+          "desc": "Si le drapeau est levé, remplit `vehId` et met `flow` à true une frame, sinon false.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

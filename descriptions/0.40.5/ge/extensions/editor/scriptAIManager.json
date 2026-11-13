@@ -1,0 +1,25 @@
+{
+  "path": "lua/ge/extensions/editor/scriptAIManager.lua",
+  "module": "Fenêtre 'Script AI Manager' (menu Gameplay) : enregistre, rejoue et sauvegarde la conduite des véhicules de la scène pour les concepteurs de niveaux. Pour chaque véhicule, elle pilote le module ai du véhicule par queueLuaCommand (ai.startRecording, ai.stopRecording, ai.startFollowing, ai.stopFollowing, ai.scriptStop) et reçoit les enregistrements et l'état du script par des hooks. Elle affiche l'état, la progression, un tracé 3D du chemin enregistré et gère les fichiers *.track.json.",
+  "usage": "local recs = extensions.editor_scriptAIManager.getCurrentRecordings()\nfor vehId, rec in pairs(recs) do print(vehId, #rec.path) end",
+  "notes": [
+    "Les pistes sont écrites et lues dans /replays/scriptai/tracks/ avec l'extension .track.json ; le fichier contient levelName, vehicle (JBeam), recording, version = 2, startDelay et timeOffset.",
+    "Options par véhicule (menu 'More') : Loop (loopCount -1 ou 1), Debug (tracé), Start Offset (coupe X secondes au début), Start Delay (retarde le départ) ; il faut relancer la lecture après les avoir changées.",
+    "Avance rapide : be:setPhysicsSpeedFactor(2) quand elle est cochée, 0 quand elle est décochée.",
+    "À chaque frame de onEditorGui, be:queueAllObjectLua demande à tous les véhicules ai.scriptState() ; la réponse arrive par onVehicleSubmitInfo.",
+    "Le tracé du chemin n'affiche que les points à moins de 100 à 200 m de la caméra (borne entre 100 et 200 selon la distance au point de focus) et peut coûter en performances.",
+    "Le code commenté de persistance (aiscript.json) n'est pas actif."
+  ],
+  "functions": {
+    "getCurrentRecordings": {"desc": "Renvoie la table des enregistrements en mémoire, indexée par id de véhicule (chaque enregistrement contient notamment le chemin path).", "params": {}, "returns": [{"type": "table<integer, table>", "desc": "Enregistrements par id de véhicule."}], "internal": false},
+    "onEditorGui": {"desc": "Hook de dessin appelé chaque frame : demande l'état de script de tous les véhicules et dessine le tableau (nom, état, progression, boutons enregistrer/lire/stop/sauvegarder/charger/More) et les options de débogage (Fast forward, Display IDs, Display Path).", "params": {}, "returns": [], "internal": true},
+    "onEditorInitialized": {"desc": "Hook d'initialisation de l'éditeur : enregistre la fenêtre (640x200) et l'entrée de menu 'Script AI Manager' (groupe Gameplay).", "params": {}, "returns": [], "internal": true},
+    "onWindowMenuItem": {"desc": "Appelé par l'entrée de menu : retrouve le véhicule joueur actif et affiche la fenêtre.", "params": {}, "returns": [], "internal": true},
+    "onDrawDebug": {"desc": "Hook de dessin debug : trace en prismes carrés colorés le chemin enregistré de chaque véhicule (si Display Path est coché et la fenêtre visible), limité aux points proches de la caméra.", "params": {"lastDebugFocusPos": {"type": "any", "desc": "Non utilisé : le code lit Lua.lastDebugFocusPos."}, "dtReal": {"type": "number", "desc": "Delta temps réel."}, "dtSim": {"type": "number", "desc": "Delta temps simulation."}, "dtRaw": {"type": "number", "desc": "Delta temps brut."}}, "returns": [], "internal": true},
+    "onVehicleSubmitRecording": {"desc": "Appelé par le véhicule (via extensions.hook) quand un enregistrement est terminé : stocke les données dans recordings[vehId]. Ne pas appeler directement.", "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}, "data": {"type": "table", "desc": "Enregistrement renvoyé par ai.stopRecording()."}}, "returns": [], "internal": true},
+    "onVehicleSubmitInfo": {"desc": "Appelé par le véhicule (via extensions.hook) avec ai.scriptState() : calcule le pourcentage (time / endScriptTime), détecte l'état de sommeil (time < startDelay) et le passage à 'idle' quand le script est terminé (data nil).", "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}, "data": {"type": "table|nil", "desc": "État du script (status, time, scriptTime, endScriptTime, posError...) ou nil si plus de script."}}, "returns": [], "internal": true},
+    "onVehicleSwitched": {"desc": "Hook appelé au changement de véhicule joueur : met à jour le véhicule actif dans la liste.", "params": {"oldVehicle": {"type": "integer", "desc": "Ancien véhicule (déduit du code)."}, "newVehicle": {"type": "integer", "desc": "Nouveau véhicule, id utilisé pour trouver l'index."}, "player": {"type": "integer", "desc": "Joueur concerné."}}, "returns": [], "internal": true},
+    "onSerialize": {"desc": "Hook de sérialisation (rechargement Lua) : renvoie {recordings, vehState}.", "params": {}, "returns": [{"type": "table", "desc": "Données à restaurer."}], "internal": true},
+    "onDeserialized": {"desc": "Hook de restauration après rechargement Lua : réinstalle recordings et vehState.", "params": {"data": {"type": "table", "desc": "Données renvoyées par onSerialize."}}, "returns": [], "internal": true}
+  }
+}

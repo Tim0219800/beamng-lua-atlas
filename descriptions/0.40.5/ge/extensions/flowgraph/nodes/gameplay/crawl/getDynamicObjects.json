@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getDynamicObjects.lua",
+  "module": "Nœud flowgraph « Get Dynamic Objects » (catégorie repeat_instant, crawl). Récupère les objets d'un prefab ayant un champ dynamique donné. Pins d'entrée : prefabId (0 = rien) et dynamicName ('crawlDynamic' par défaut). Sortie : dynamicObjects (table d'ids) via bridge.getDynamicObjectsFromPrefab.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Charge le bridge du crawl.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
+        "work": {"desc": "Renvoie {} si prefabId est nil ou 0, sinon la liste fournie par le bridge."}
+      }
+    }
+  }
+}

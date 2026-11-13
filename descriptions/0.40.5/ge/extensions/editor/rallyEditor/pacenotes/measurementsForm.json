@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/editor/rallyEditor/pacenotes/measurementsForm.lua",
+  "module": "Section « Measurements » de l'éditeur de pacenotes de rallye : repliable au clic sur son titre. Elle affiche pour le pacenote sélectionné le résumé de la mesure géométrique du virage (type d'ajustement, intensité, direction, diamètre, arc, corde, angle, qualité d'ajustement, candidat épingle) et une liste déroulante « Measurement Type ». Un bouton « Details » ouvre une fenêtre avec l'arbre complet de pacenote.measurements, et un bouton ouvre/ferme la fenêtre de calibration.",
+  "notes": [
+    "Distances en mètres, arrondies à l'unité ; angle en degrés.",
+    "Le type de mesure par défaut n'est pas stocké dans le carnet (corner.measurementType est remis à nil).",
+    "Changer le type relance la mesure du pacenote (measureSelectedPacenote(true)) si une snaproad est disponible, sinon applyMeasurements ou refreshStructured."
+  ],
+  "functions": {
+    "draw": {
+      "desc": "Dessine la section Measurements. Met pacenoteToolsState.showMeasurements à true quand la section est dépliée, false sinon.",
+      "params": {
+        "pacenote": {"type": "table", "desc": "Pacenote sélectionné."},
+        "pacenoteToolsState": {"type": "table|nil", "desc": "État partagé des outils pacenotes (champ showMeasurements écrit)."},
+        "pacenoteToolsWindow": {"type": "table|nil", "desc": "Fenêtre d'outils pacenotes (rallyEditor, measureSelectedPacenote, markValidationDirty)."}
+      },
+      "internal": false
+    },
+    "clear": {
+      "desc": "Réinitialisation d'état appelée par l'éditeur ; ne fait rien dans ce module.",
+      "internal": true
+    }
+  }
+}

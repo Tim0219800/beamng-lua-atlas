@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/news.lua",
+  "module": "Fenêtre « Vehicle Livery Creator - News » (nom public de l'outil Dynamic Decals) : message de bienvenue, lien vers le fil du forum BeamNG et historique des versions (1.1.0, 1.0.1, 1.0.0, textes en dur). Elle s'ouvre automatiquement quand la version de l'outil (tool.version) dépasse celle stockée dans la préférence `dynamicDecalsTool.general.version`, ou tant que « do not show again » n'est pas coché.",
+  "notes": [
+    "Quand une nouvelle version est détectée, la préférence general.version est mise à jour et doNotShowAgain remis à false.",
+    "La fenêtre est aussi rouverte à chaque frame tant que windowBeenClosed == false et doNotShowAgain == false ; le bouton « OK » met windowBeenClosed à true et masque la fenêtre.",
+    "Les textes sont en anglais, non traduits."
+  ],
+  "functions": {
+    "showWindow": {
+      "desc": "Ouvre la fenêtre de news.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "registerEditorPreferences": {
+      "desc": "Enregistre la préférence bool `dynamicDecalsTool.news.doNotShowAgain` (défaut false).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : récupère helper, déclare la fenêtre éditeur (640x640) et enregistre le dessin de la fenêtre via tool.registerOnEditorGuiFn.",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

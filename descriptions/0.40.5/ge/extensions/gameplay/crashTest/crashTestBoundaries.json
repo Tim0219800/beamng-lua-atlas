@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/gameplay/crashTest/crashTestBoundaries.lua",
+  "module": "Gère les limites de zone du scénario de test de collision (crash test). Charge un fichier .sites.json de la mission (bounds.sites.json, ou boundsStep<id>.sites.json si l'étape a son propre fichier) et vérifie à chaque image si le véhicule du joueur est hors de toutes les zones. Si oui, il appelle gameplay_crashTest_scenarioManager.onPlayerOutOfBounds(). Dessine aussi les zones en blanc, ou en rouge clignotant quand le joueur est dehors.",
+  "notes": [
+    "Bug probable : dans checkOutOfBounds, la boucle 'for i = 0, 8' appelle toujours oobb:getPoint(0) au lieu de getPoint(i) ; seul le premier coin de la boîte est testé.",
+    "Bug probable : setParameters teste params.drawBoundsWhenNear_ == nil (avec un underscore final) et met alors drawBoundsWhenNear à true ; le champ n'est donc jamais réellement lu et le dessin est activé dès qu'un fichier est donné.",
+    "setDebug mémorise isBeingDebugged mais cette variable n'est jamais utilisée ailleurs.",
+    "checkForStepBoundsFile contient un dump(\"new step\") de debug laissé dans le code.",
+    "Dépend de la mission au premier plan (gameplay_missions_missionManager) pour résoudre les chemins de fichiers de bornes."
+  ],
+  "functions": {
+    "setParameters": {
+      "desc": "Charge les zones de limites depuis un fichier de sites et les finalise. Sans filePath, supprime les limites et remet isPlayerOutOfBounds à false.",
+      "params": {"params": {"type": "table|nil", "desc": "Table avec filePath (string) : chemin du fichier .sites.json ; drawBoundsWhenNear_ (voir notes)."}},
+      "internal": false
+    },
+    "setDebug": {
+      "desc": "Mémorise un drapeau de debug (non exploité ailleurs dans le fichier).",
+      "params": {"debug": {"type": "boolean", "desc": "Drapeau de debug."}},
+      "internal": false
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque image : teste si le véhicule joueur est hors limites, prévient scenarioManager le cas échéant et dessine les limites.",
+      "internal": true
+    },
+    "onNewCrashTestStep": {
+      "desc": "Hook appelé au début d'une étape du crash test : charge le fichier de bornes de cette étape (ou bounds.sites.json par défaut).",
+      "params": {"stepData": {"type": "table", "desc": "Données de l'étape : id, hasStepBoundsFile."}},
+      "internal": true
+    },
+    "deactivateBounds": {
+      "desc": "Désactive les limites (équivaut à setParameters sans filePath).",
+      "internal": false
+    }
+  }
+}

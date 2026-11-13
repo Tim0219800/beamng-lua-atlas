@@ -1,0 +1,26 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/macro/getForeach.lua",
+  "module": "Noeud flowgraph 'Get Foreach' (categorie provider). Dans un flowgraph cree par un noeud Foreach, expose la cle (key) et la valeur (value) de l'element courant, lues dans self.mgr.modules.foreach.",
+  "notes": [
+    "C.tags est defini deux fois ; la seconde definition ecrase la premiere."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Copie mgr.modules.foreach.key et .value vers les pins de sortie.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

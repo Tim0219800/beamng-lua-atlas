@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/trackVehicleDistanceToPos.lua",
+  "module": "Nœud flowgraph « Track Vehicle Distance to Position » (catégorie repeat, icône straighten, tag rally). Mesure la distance entre le centre avant d'un véhicule (RallyUtil.getVehFrontCenter) et une position cible, et la diffuse à l'UI via extensions.hook('onRallyDataUpdated', {activeState = vehicleProximity, vehicleProximity = {isNear = false, distance, isStopped = false, isFrozen = false, timer = 0, duration = 0}}). Entrées : flow, vehId (sinon véhicule joueur 0), pos (vec3 ou table). Sortie : flow (recopie).",
+  "notes": ["La position cible est mise en cache à la première lecture et ne change plus jusqu'au redémarrage du graphe."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise targetPos à nil.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire flowgraph."}}, "internal": true},
+        "_executionStarted": {"desc": "Oublie la position cible mémorisée.", "internal": true},
+        "updateVehicleData2": {"desc": "Met à jour (variables locales du module) position avant, rotation et vitesse du véhicule suivi à partir de map.objects.", "internal": true},
+        "getDistanceSquared": {"desc": "Calcule le carré de la distance entre le centre avant du véhicule et la position cible.", "returns": [{"type": "number|nil", "desc": "Distance au carré en m², ou nil sans cible."}]},
+        "work": {"desc": "Chaque frame : met à jour les données du véhicule, diffuse la distance à l'UI et recopie le flux.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+      }
+    }
+  }
+}

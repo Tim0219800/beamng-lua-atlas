@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/ui/router/routeHandlers/missionExitHandlers.lua",
+  "module": "Gestionnaires de sortie/retour des écrans de mission et de pause. Quand un écran de début/fin de mission est actif, ils renvoient vers la route « mission.control » avec le mode correspondant ; sinon vers la route de gameplay (ui_menuManager.getGameplayRoute(), « play » par défaut).",
+  "functions": {
+    "missionDetailsExitHandler": {
+      "desc": "Quitte les détails de mission : si une mission est active et qu'un écran de début/fin est affiché, navigue vers mission.control avec {mode = mode de l'écran} ; sinon vers la route de gameplay.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Résultat de navigate dans le cas mission.control ; nil sinon (la navigation est lancée sans retourner son résultat)."}],
+      "internal": false
+    },
+    "pauseExitHandler": {
+      "desc": "Quitte la pause : navigue vers mission.control {mode} si un écran de début/fin de mission est actif, sinon vers la route de gameplay.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Résultat de ui_router.navigate."}],
+      "internal": false
+    },
+    "missionVehicleSelectorBackHandler": {
+      "desc": "Retour du sélecteur de véhicule de mission : même logique que pauseExitHandler.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Résultat de ui_router.navigate."}],
+      "internal": false
+    }
+  }
+}

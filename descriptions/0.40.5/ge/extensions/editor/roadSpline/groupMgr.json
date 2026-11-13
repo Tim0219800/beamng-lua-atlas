@@ -1,0 +1,236 @@
+{
+  "path": "lua/ge/extensions/editor/roadSpline/groupMgr.lua",
+  "module": "Gestionnaire des « groupes » de l'outil Road Spline : un groupe = une route (nœuds, largeurs, normales, couches, options de couches automatiques, peinture de terrain, verrouillage) avec son dossier SimGroup dans MissionGroup. Gère création/suppression, reconstruction des groupes sales (updateDirtyGroups : échantillonnage Catmull-Rom ou géométrie « engineered », points de côtes, puis couches), copie profonde, découpe/jointure, sérialisation (buffer ou table JSON de session), annulation/rétablissement et liaison avec la Master Spline. Un moddeur l'utilise pour créer ou modifier des routes par script.",
+  "usage": "local gm = require('editor/roadSpline/groupMgr')\ngm.addNewGroup('Ma route')\nlocal g = gm.getGroups()[#gm.getGroups()]\ng.nodes = {vec3(0,0,0), vec3(50,0,0), vec3(100,20,0)}\ng.widths = {8, 8, 8}\ng.nmls = {vec3(0,0,1), vec3(0,0,1), vec3(0,0,1)}\ng.isDirty = true -- reconstruit au prochain updateDirtyGroups()",
+  "notes": [
+    "Champs d'un groupe utilisés dans le code : name, id (UUID), isLoop, sceneTreeFolderId, isEnabled (false = verrouillé), isDirty, isLink/linkId, nodes (vec3[]), widths, nmls, layers, corners, geometryMode, roadLength, ribPoints, divPoints, divWidths, tangents, binormals, normals, discMap, chunkStartIndices/chunkEndIndices/numChunks, isPainting + paint*.",
+    "Le nom exporté convertPathsToRoadGroups correspond à la fonction locale convertPathsToRoadSplines.",
+    "convertPathsToRoadGroups crée le groupe (addNewGroup) AVANT de tester la taille du tracé : un chemin trop petit laisse un groupe vide, et le message de log « paths too small » compte #paths - #groups, donc toujours 0.",
+    "Un groupe verrouillé (isEnabled = false) dont les DecalRoads existent n'est pas reconstruit (keepLocked) : l'outil ne les déplace plus et ne repeint pas le terrain.",
+    "Les ids de groupes sont des UUID (chaînes) ; groupMap associe id -> indice et doit être recalculé après toute insertion/suppression (util.computeIdToIdxMap)."
+  ],
+  "functions": {
+    "getGroups": {"desc": "Renvoie le tableau vivant des groupes (routes) de l'outil.", "params": {}, "returns": [{"type": "table[]", "desc": "Liste des groupes, modifiable en place."}], "internal": false},
+    "getIdToIdxMap": {"desc": "Renvoie la table id de groupe -> indice dans getGroups().", "params": {}, "returns": [{"type": "table<string, integer>", "desc": "Table vivante."}], "internal": false},
+    "getToolPrefixStr": {"desc": "Renvoie le préfixe de nom de l'outil (« Road Spline »).", "params": {}, "returns": [{"type": "string", "desc": "« Road Spline »"}], "internal": false},
+    "getEditModeKey": {"desc": "Renvoie la clé du mode d'édition de l'outil (« roadSplineEditor »).", "params": {}, "returns": [{"type": "string", "desc": "« roadSplineEditor »"}], "internal": false},
+    "addGroupToGroupArray": {
+      "desc": "Ajoute un groupe déjà construit à la liste, avec un nom unique ; crée son dossier SimGroup (cansave = false) dans MissionGroup s'il n'existe pas encore.",
+      "params": {"group": {"type": "table", "desc": "Groupe à ajouter."}},
+      "returns": [],
+      "internal": false
+    },
+    "removeGroup": {
+      "desc": "Supprime le groupe à l'indice donné : annule la peinture de terrain, supprime ses couches (DecalRoads) et son dossier de scène, puis recalcule la table id -> indice.",
+      "params": {"idx": {"type": "integer", "desc": "Indice dans la liste des groupes."}},
+      "returns": [],
+      "internal": false
+    },
+    "findGroup": {
+      "desc": "Cherche un groupe par id.",
+      "params": {"id": {"type": "string", "desc": "UUID du groupe."}},
+      "returns": [{"type": "table|nil", "desc": "Le groupe ou nil."}],
+      "internal": false
+    },
+    "release": {
+      "desc": "Avant un rechargement Lua : renvoie, par id de couche, les ids de DecalRoad du groupe verrouillé, pour que adopt() les reprenne ensuite (routes, dossier et peinture restent dans la scène).",
+      "params": {"group": {"type": "table", "desc": "Groupe."}},
+      "returns": [{"type": "table", "desc": "{ [layerId] = {id = decalRoadId, ids = {...}} }"}],
+      "internal": true
+    },
+    "adopt": {
+      "desc": "Reprend les DecalRoads listés par release() (seulement ceux encore présents dans la scène) et fixe l'état de verrouillage appliqué.",
+      "params": {
+        "group": {"type": "table", "desc": "Groupe recréé."},
+        "ids": {"type": "table", "desc": "Valeur renvoyée par release()."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "removeLinkedRoadSpline": {
+      "desc": "Supprime une spline liée par son id (appelé quand la couche correspondante de la Master Spline est retirée).",
+      "params": {"splineId": {"type": "string", "desc": "UUID du groupe."}},
+      "returns": [],
+      "internal": false
+    },
+    "removeAllGroups": {
+      "desc": "Supprime les groupes. Avec isIncludeDisabled, supprime tout et vide la liste ; sinon seulement les groupes activés et non liés (les verrouillés et liés restent).",
+      "params": {"isIncludeDisabled": {"type": "boolean|nil", "desc": "true pour tout supprimer, y compris verrouillés et liés."}},
+      "returns": [],
+      "internal": false
+    },
+    "updateDirtyGroups": {
+      "desc": "Reconstruit les groupes marqués sales (isDirty) : ignore les groupes de moins de 2 nœuds (couches supprimées), plaque les nœuds au terrain (raycast vertical), échantillonne la spline (Catmull-Rom, ou clothoïde en mode engineered), calcule les points de côtes et la longueur, repeint le terrain si actif, régénère les couches automatiques et met à jour les DecalRoads. Met aussi à jour les couches seules marquées sales. Pendant un glissement de poignée, seul l'échantillonnage est fait et le groupe reste sale.",
+      "params": {"dragging": {"type": "boolean|nil", "desc": "true pendant un glissement en direct (reconstruction lourde différée)."}},
+      "returns": [],
+      "internal": false
+    },
+    "setFixedWidth": {
+      "desc": "Met la même largeur à chaque nœud du groupe et le marque sale.",
+      "params": {
+        "group": {"type": "table", "desc": "Groupe."},
+        "width": {"type": "number", "desc": "Largeur en mètres."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "recreateAutoGeneratedLayers": {
+      "desc": "Supprime les couches cachées (automatiques) puis recrée celles dont l'option du groupe est active (marques de pneus, réparations, fissures, rustines, asphalte abîmé, ligne centrale, lignes de rive/de voie, fondus de bord 1 à 3), et marque le groupe sale.",
+      "params": {"group": {"type": "table", "desc": "Groupe."}},
+      "returns": [],
+      "internal": false
+    },
+    "addNewGroup": {
+      "desc": "Crée un nouveau groupe vide (nom unique, UUID, dossier SimGroup transitoire sous MissionGroup, couches automatiques initiales) et l'ajoute à la liste.",
+      "params": {"name": {"type": "string|nil", "desc": "Nom de base ; par défaut « Road Spline N »."}},
+      "returns": [],
+      "internal": false
+    },
+    "copyGroupProfile": {
+      "desc": "Copie le « profil » d'un groupe : ses couches non cachées (serializeLayer, sans ids de scène) et ses options/réglages de couches automatiques (largeurs et décalages de lignes et fondus).",
+      "params": {"sourceGroup": {"type": "table", "desc": "Groupe source."}},
+      "returns": [{"type": "table", "desc": "Profil prêt pour pasteGroupProfile ou JSON."}],
+      "internal": false
+    },
+    "pasteGroupProfile": {
+      "desc": "Applique un profil au groupe cible : supprime ses couches, recrée celles du profil, recopie les options (valeurs par défaut si absentes), puis régénère les couches automatiques et marque le groupe sale.",
+      "params": {
+        "targetGroup": {"type": "table", "desc": "Groupe cible."},
+        "profile": {"type": "table", "desc": "Profil de copyGroupProfile."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "deepCopyGroup": {
+      "desc": "Copie profonde d'un groupe via string.buffer ; vide la géométrie dérivée (divPoints, divWidths, tangents, binormals, normals, discMap, divCurv) qui sera recalculée.",
+      "params": {"group": {"type": "table", "desc": "Groupe."}},
+      "returns": [{"type": "table", "desc": "Copie indépendante."}],
+      "internal": false
+    },
+    "deepCopyAllGroups": {
+      "desc": "Copie profonde de tous les groupes (pour l'historique d'annulation).",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Liste de copies."}],
+      "internal": false
+    },
+    "splitGroup": {
+      "desc": "Coupe un groupe au nœud donné. Une boucle devient une route ouverte réordonnée ; une route ouverte est remplacée par deux nouveaux groupes « nom (1) » et « nom (2) » (nouveaux UUID). Les réglages par virage (corners) suivent.",
+      "params": {
+        "group": {"type": "table", "desc": "Groupe à couper."},
+        "groupIdx": {"type": "integer", "desc": "Indice du groupe."},
+        "selectedNodeIdx": {"type": "integer", "desc": "Indice du nœud de coupe."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "joinRoadSplines": {
+      "desc": "Joint deux routes non bouclées en une seule : group1 est modifié, group2 est supprimé. Ne fait rien si un groupe est introuvable ou si les indices de nœuds sont invalides.",
+      "params": {
+        "groupIdx1": {"type": "integer", "desc": "Indice du premier groupe."},
+        "nodeIdx1": {"type": "integer", "desc": "Nœud d'extrémité du premier groupe."},
+        "groupIdx2": {"type": "integer", "desc": "Indice du second groupe."},
+        "nodeIdx2": {"type": "integer", "desc": "Nœud d'extrémité du second groupe."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "convertPathsToRoadGroups": {
+      "desc": "Convertit des tracés issus d'un bitmap en Road Splines : points de grille convertis en coordonnées monde via le terrain, normales prises sur le terrain ; un tracé dont la plus petite dimension est inférieure ou égale à 10 m n'est pas importé.",
+      "params": {"paths": {"type": "table[]", "desc": "Liste de {points = {{x=,y=},...}, widths = {...}} en coordonnées de grille."}},
+      "returns": [],
+      "internal": false
+    },
+    "serializeGroup": {
+      "desc": "Sérialise un groupe en blob string.buffer : annule la peinture de terrain si activé et vide les tables dérivées avant encodage.",
+      "params": {"group": {"type": "table", "desc": "Groupe."}},
+      "returns": [{"type": "string", "desc": "Données encodées."}],
+      "internal": false
+    },
+    "serializeGroupToTable": {
+      "desc": "Sérialise un groupe en table portable pour un fichier de session JSON : sans géométrie dérivée ni poignées de scène, couches réduites aux champs auteur (serializeLayer). Le groupe vivant n'est pas modifié.",
+      "params": {"group": {"type": "table", "desc": "Groupe."}},
+      "returns": [{"type": "table", "desc": "Table JSON-compatible."}],
+      "internal": false
+    },
+    "deserializeGroup": {
+      "desc": "Désérialise un groupe, soit depuis un blob (string), soit depuis une table JSON : garantit toutes les tables, ré-hydrate les couches et les vec3, remplit les valeurs par défaut des décors de bord et crée le dossier de scène si demandé (sauf si un dossier gardé existe encore). Marque le groupe sale.",
+      "params": {
+        "data": {"type": "string|table", "desc": "Blob string.buffer ou table de session."},
+        "isCreateObject": {"type": "boolean", "desc": "true pour créer le dossier SimGroup dans MissionGroup."}
+      },
+      "returns": [{"type": "table", "desc": "Le groupe prêt à être ajouté."}],
+      "internal": false
+    },
+    "singleGroupEditUndo": {
+      "desc": "Annulation d'une édition d'un seul groupe : restaure data.old (couches recopiées, tous les champs de la route, peinture, nom du dossier si renommé).",
+      "params": {"data": {"type": "table", "desc": "{ old = groupe, new = groupe }"}},
+      "returns": [],
+      "internal": true
+    },
+    "singleGroupEditRedo": {
+      "desc": "Rétablissement d'une édition d'un seul groupe : restaure data.new.",
+      "params": {"data": {"type": "table", "desc": "{ old = groupe, new = groupe }"}},
+      "returns": [],
+      "internal": true
+    },
+    "transGroupEditUndo": {
+      "desc": "Annulation d'une édition touchant plusieurs groupes : supprime tous les groupes et réinsère les copies de groupsData.old.",
+      "params": {"groupsData": {"type": "table", "desc": "{ old = groupes[], new = groupes[] }"}},
+      "returns": [],
+      "internal": true
+    },
+    "transGroupEditRedo": {
+      "desc": "Rétablissement d'une édition multi-groupes : réinsère les copies de groupsData.new.",
+      "params": {"groupsData": {"type": "table", "desc": "{ old = groupes[], new = groupes[] }"}},
+      "returns": [],
+      "internal": true
+    },
+    "recomputeIdMap": {
+      "desc": "Recalcule la table id -> indice (appelé par l'assistant de session après un chargement qui ajoute des routes).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "getCurrentRoadSplineList": {
+      "desc": "Liste les Road Splines actifs (isEnabled), pour les menus de liaison d'autres outils.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Éléments { name, id, type = « Road Spline » }."}],
+      "internal": false
+    },
+    "isLinked": {
+      "desc": "Indique si la route est liée à une Master Spline.",
+      "params": {"id": {"type": "string", "desc": "UUID du groupe."}},
+      "returns": [{"type": "boolean", "desc": "true si liée (false si inconnue)."}],
+      "internal": false
+    },
+    "setLink": {
+      "desc": "Active ou désactive la liaison d'une route avec une autre spline (champ linkId) et la marque sale.",
+      "params": {
+        "id": {"type": "string", "desc": "UUID de la route."},
+        "groupId": {"type": "string", "desc": "UUID de la spline maître (ignoré si isLink est false)."},
+        "isLink": {"type": "boolean", "desc": "true pour lier."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "updateLinkedRoadSpline": {
+      "desc": "Remplace la géométrie (nœuds, largeurs, normales, boucle) d'une route liée et la marque sale.",
+      "params": {
+        "id": {"type": "string", "desc": "UUID de la route liée."},
+        "points": {"type": "vec3[]", "desc": "Nouveaux nœuds."},
+        "widths": {"type": "number[]", "desc": "Largeurs en m."},
+        "nmls": {"type": "vec3[]", "desc": "Normales."},
+        "isLoop": {"type": "boolean", "desc": "État de boucle du maître."},
+        "isConformToTerrain": {"type": "boolean", "desc": "Reçu mais non utilisé dans le code."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "unlinkAll": {
+      "desc": "Détache toutes les routes liées (isLink = false, linkId = nil) et marque tous les groupes sales.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

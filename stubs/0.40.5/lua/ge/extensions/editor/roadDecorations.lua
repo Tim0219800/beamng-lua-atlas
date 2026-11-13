@@ -2,40 +2,29 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/roadDecorations.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
+--- Place automatiquement des objets décoratifs (TSStatic, par exemple des réflecteurs ou des poteaux) de chaque côté d'un DecalRoad, à intervalle régulier. Les objets sont posés sur la hauteur du terrain, enregistrés sous « decoration.<route>.<fichier>.<n> » et regroupés dans un SimGroup ajouté à MissionGroup. Un moddeur l'appelle depuis un script d'éditeur.
 --- Accès : extension `editor_roadDecorations` : `extensions.load("editor_roadDecorations")`, puis la globale `editor_roadDecorations`
 ---@class editor_roadDecorations
 editor_roadDecorations = {}
 
---- Parameters:
----   - roadName: The unique name of the DecalRoad to decorate
----   - shapeName: Path to the shape file to decorate with
----   - distance: Offset to the side of the road
----   - period: Interval with which to place objects -- "Every x metres"
----   - rotation: Direction vector by which to offset rotation. Props are already rotated to be facing parallel to the road
----   - zOff: Vertical offset of the props. Props are placed at the height of the decalroad's closest node with the given offset added
----   - align: boolean flag that dis/-enables objects always being placed along the same length of the road
---- Returns:
----   A lua table of all objects created
----
---- Example call:
----   decorateProps(9459, "levels/driver_training/art/shapes/objects/reflector.dae", 2, 25, nil, 0, true)
----   Places a reflector 2 metres off the side of the road every 25 metres with no rotation and no z offset such
----   that left and right are on the same length of the road.
---- --
+--- Crée un SimGroup et y place, tous les `period` mètres, un TSStatic de chaque côté de la route (collisionType 'Collision Mesh', échelle 1). Les positions sont recalées sur le terrain (core_terrain.getTerrainHeight) puis décalées de zOff.
 ---Source : lua/ge/extensions/editor/roadDecorations.lua:112
----@param roadName any
----@param shapeName any
----@param distance any
----@param period any
----@param rotation any
----@param zOff any
----@param align any
+---@param roadName string|integer Nom unique du DecalRoad (voir bug : doit être numérique).
+---@param shapeName string Chemin du fichier .dae à placer.
+---@param distance number Décalage latéral par rapport au bord de la route, en mètres.
+---@param period number Intervalle entre deux paires d'objets, en mètres.
+---@param rotation quat|nil Rotation supplémentaire appliquée aux objets (nil = aucune).
+---@param zOff number Décalage vertical ajouté à la hauteur du terrain.
+---@param align boolean true : le côté gauche est placé à l'opposé exact du côté droit (même longueur de route).
+---@return integer|nil  Identifiant du SimGroup créé, ou nil si la route n'existe pas.
 function editor_roadDecorations.decorateProps(roadName, shapeName, distance, period, rotation, zOff, align) end
 
+--- Cherche sur une polyligne (bord de route) le point situé à la longueur donnée depuis le début, puis le décale latéralement. Renvoie nil si la longueur dépasse la polyligne.
 ---Source : lua/ge/extensions/editor/roadDecorations.lua:7
----@param spline any
----@param length any
----@param distance any
----@param left any
+---@param spline table<integer, vec3> Points du bord de la route (au moins 2).
+---@param length number Distance depuis le début, en mètres.
+---@param distance number Décalage latéral vers l'extérieur de la route, en mètres.
+---@param left boolean true pour le bord gauche (direction inversée), false pour le bord droit.
+---@return table|nil  {point = vec3 décalé, rotation = quat, edgePos = vec3 sur le bord, edgeIdx = integer (indice C++, base 0)} ou nil.
 function editor_roadDecorations.findOffsetPoint(spline, length, distance, left) end
 

@@ -1,0 +1,32 @@
+{
+  "path": "lua/ge/extensions/ui/apps/minimap/roads.lua",
+  "module": "Dessine les routes du graphe de navigation (map.getMap()) sur la mini-carte. Au premier appel, il construit un tableau de segments (positions, couleur selon drivability) et un kd-tree 2D (kdtreebox2d) ; aux appels suivants il interroge le kd-tree autour de la caméra et trace les segments visibles avec td:lineRoundEndWithBackground sur les couches ROADS_BG/ROADS_FG. Module utilitaire de la minimap, chargé par require, pas une extension à appeler directement.",
+  "notes": [
+    "Le premier appel de drawRoads ne dessine rien : il ne fait que construire le cache ; le dessin commence au deuxième appel.",
+    "Couleur selon link.drivability : >= 0.9 couleur normale, > 0.25 colorLow, sinon colorLowest. Les liens hiddenInNavi sont ignorés.",
+    "S'il n'y a aucune route et que la grille n'est pas déjà activée (debugSettings.drawGrid), il appelle ui_apps_minimap_utils.drawGrid si elle existe.",
+    "Appeler reset() quand la carte de navigation change, sinon le cache reste ancien."
+  ],
+  "functions": {
+    "drawRoads": {
+      "desc": "Construit le cache des routes au premier appel, puis dessine les routes visibles dans le carré de côté 2*radius centré sur la caméra.",
+      "params": {
+        "p": {"type": "table|nil", "desc": "Profileur optionnel (méthode add)."},
+        "radius": {"type": "number", "desc": "Demi-côté de la zone interrogée, en mètres monde."},
+        "td": {"type": "table", "desc": "Objet de dessin de la minimap (doit fournir lineRoundEndWithBackground)."},
+        "debugSettings": {"type": "table", "desc": "Réglages de debug ; seul drawGrid est lu."},
+        "camPos": {"type": "vec3", "desc": "Position de la caméra (x, y utilisés)."},
+        "scale": {"type": "number", "desc": "Échelle de la carte ; la largeur de trait est 2 / scale * dpi."},
+        "dpi": {"type": "number|nil", "desc": "Facteur d'échelle d'écran, 1 par défaut."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "reset": {
+      "desc": "Vide le cache (kd-tree et indicateur hasRoads) ; il sera reconstruit au prochain drawRoads.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

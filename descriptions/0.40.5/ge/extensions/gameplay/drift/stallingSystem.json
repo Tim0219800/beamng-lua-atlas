@@ -1,0 +1,40 @@
+{
+  "path": "lua/ge/extensions/gameplay/drift/stallingSystem.lua",
+  "module": "Système anti-répétition du mode défi « Gymkhana » : il garde l'historique des figures (drifts normaux et zones de cascade) et calcule un multiplicateur (stallingValue, entre 0.5 et 1) qui réduit le score quand le joueur répète la même figure. Chargé par gameplay_drift_general quand le mode de défi est \"Gymkhana\". Contient aussi une fenêtre imgui de debug.",
+  "notes": [
+    "Réglages : minStallingValue 0.5, maxStallingValue 1, historique pris en compte = 10 dernières figures. Drift normal (stuntId 0) : +0.35 si changement de figure, -0.15 au-delà de 5 répétitions. Zone de cascade : +1, -0.6 au-delà de 1 répétition.",
+    "Le multiplicateur reste à 1 tant que l'historique contient moins de 2 entrées ou moins de 2 figures différentes.",
+    "Le multiplicateur vaut score/maxPossibleScore borné ; si maxPossibleScore reste à 0 la division donne NaN/inf avant le bornage (math.max/min).",
+    "La variable stuntZonesCount est remise à -1 mais n'est jamais utilisée ailleurs (code mort)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "gameplay_drift_general, chargé avant."}
+  },
+  "functions": {
+    "reset": {
+      "desc": "Vide l'historique et remet le multiplicateur à 1."
+    },
+    "calculateScore": {
+      "desc": "Applique le multiplicateur de stalling à un score.",
+      "params": {"score": {"type": "number", "desc": "Score brut."}},
+      "returns": [{"type": "number", "desc": "score * stallingValue."}]
+    },
+    "processStuntZone": {
+      "desc": "Ajoute une zone de cascade à l'historique (type \"stuntZone\") et recalcule le multiplicateur.",
+      "params": {"stuntZoneId": {"type": "integer", "desc": "Identifiant de la zone ; une valeur différente de 0 la distingue des drifts normaux."}}
+    },
+    "onDriftStatusChanged": {
+      "desc": "Hook : quand le joueur commence à drifter, ajoute un drift (stuntId 0) à l'historique et recalcule le multiplicateur.",
+      "params": {"isDrifting": {"type": "boolean", "desc": "true au début d'un drift."}},
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Appelé à chaque frame : affiche la fenêtre de debug « Drift stalling system » si activée.",
+      "internal": true
+    },
+    "getDriftDebugInfo": {
+      "desc": "Renvoie {default=true, canBeChanged=true} pour la fenêtre de debug drift.",
+      "returns": [{"type": "table", "desc": "{default = true, canBeChanged = true}"}]
+    }
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "path": "lua/ge/extensions/gameplay/rallyLoop.lua",
+  "module": "Extension façade du mode « boucle de rallye » (enchaînement service, liaison, spéciales). Elle possède l'instance de RallyLoopManager (loop/rallyLoopManager) créée par setup(missionId, missionDir), lui relaie les mises à jour et les hooks du jeu, et publie chaque image le flux UI « rallyLoop » via guihooks.queueStream. Sans manager, elle publie le flux du StandaloneFallbackStream (mode `standaloneUiBridge`) ; getRuntimeMode renvoie 'rallyLoop', 'standaloneUiBridge' ou 'idle'. Elle héberge aussi la fenêtre imgui « Loop Toolbox » de debug.",
+  "usage": "gameplay_rallyLoop.setup(missionId, missionDir)\nprint(gameplay_rallyLoop.getRuntimeMode()) -- 'rallyLoop'\ngameplay_rallyLoop.unload()",
+  "notes": [
+    "Le compte à rebours du flux UI est masqué (activeState remplacé par inactive, countdownData supprimé) si le réglage `rallyStartCountdownDisplay` n'est pas '2d' et que l'horloge 3D est disponible (ou que le réglage vaut autre chose que '3d').",
+    "handleGOTO : la branche par défaut appelle rallyLoopManager:startNextMission() même si rallyLoopManager est nil, ce qui provoque une erreur dans ce cas.",
+    "Pour 'abandon' d'une mission en cours (onAnyMissionWillChange avec state 'stopped' et abandoned), une tentative DNF est enregistrée sauf si la mission courante est 'serviceOut'.",
+    "La plupart des accesseurs renvoient une valeur neutre (false, nil, 0) quand aucun manager n'existe."
+  ],
+  "functions": {
+    "setup": {
+      "desc": "Crée le RallyLoopManager pour la mission et vide le flux de repli.",
+      "params": {
+        "missionId": {"type": "string", "desc": "Id de la mission boucle."},
+        "missionDir": {"type": "string", "desc": "Dossier de la mission."}
+      }
+    },
+    "unload": {"desc": "Détruit le manager et vide le flux de repli."},
+    "isReady": {
+      "desc": "API publique : vrai si un manager existe.",
+      "returns": [{"type": "boolean", "desc": "true après setup."}]
+    },
+    "getRuntimeMode": {
+      "desc": "Mode d'exécution courant.",
+      "returns": [{"type": "string", "desc": "'rallyLoop', 'standaloneUiBridge' ou 'idle'."}]
+    },
+    "onUpdate": {
+      "desc": "Hook d'extension appelé chaque image. Met à jour le manager et publie le flux 'rallyLoop' ; gère aussi la fenêtre Loop Toolbox.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+      },
+      "internal": true
+    },
+    "onGuiUpdate": {
+      "desc": "Hook appelé à chaque mise à jour GUI ; relayé au manager.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+      },
+      "internal": true
+    },
+    "onExtensionLoaded": {"desc": "Hook de chargement ; n'écrit qu'un log si debugLogging est actif.", "internal": true},
+    "onExtensionUnloaded": {"desc": "Hook de déchargement : publie un flux {activeState = inactive} et vide le flux de repli.", "internal": true},
+    "onSettingsChanged": {"desc": "Hook appelé quand les réglages changent ; relayé au manager (s'il gère le hook) et au flux de repli.", "internal": true},
+    "toggleDebug": {"desc": "Affiche ou masque la fenêtre Loop Toolbox."},
+    "getLoopToolbox": {
+      "desc": "Objet LoopToolbox courant.",
+      "returns": [{"type": "table|nil", "desc": "Toolbox, nil si la fenêtre n'a jamais été ouverte ou est fermée."}]
+    },
+    "isLoopToolboxVisible": {
+      "desc": "Indique si la fenêtre Loop Toolbox est affichée.",
+      "returns": [{"type": "boolean", "desc": "Visibilité."}]
+    },
+    "drawDebug": {
+      "desc": "Délègue le dessin de debug au manager.",
+      "params": {
+        "zOnTop": {"type": "boolean", "desc": "Dessiner au premier plan."},
+        "drawRoute": {"type": "boolean", "desc": "Dessiner la route."},
+        "drawLabels": {"type": "boolean", "desc": "Dessiner les étiquettes."}
+      }
+    },
+    "onRallyDataUpdated": {
+      "desc": "Hook émis quand les données de rallye changent ; relayé au manager, sinon au flux de repli.",
+      "params": {"data": {"type": "table", "desc": "Données de rallye."}},
+      "internal": true
+    },
+    "onGameplayInteract": {"desc": "Hook d'interaction gameplay ; appelle manager:onRallyModeInteract().", "internal": true},
+    "onUIStartButtonClicked": {"desc": "Hook appelé quand le bouton de départ de l'UI est cliqué ; relayé au manager.", "internal": true},
+    "onRecalculatedRoute": {"desc": "Hook appelé quand la route a été recalculée ; relayé au manager.", "internal": true},
+    "onCreatedRallyGroundMarkerRoute": {"desc": "Hook appelé quand la route des marqueurs au sol est créée ; relayé au manager.", "internal": true},
+    "onRallyVehicleRecovery": {
+      "desc": "Hook appelé lors d'une récupération du véhicule ; appelle manager:trackRecovery.",
+      "params": {"recoveryType": {"type": "string", "desc": "Type de récupération."}},
+      "internal": true
+    },
+    "onRallyRouteRecoveryComplete": {
+      "desc": "Hook appelé quand la récupération de route est terminée ; relayé au manager s'il gère le hook.",
+      "params": {"data": {"type": "table", "desc": "Données de la récupération."}},
+      "internal": true
+    },
+    "onAnyMissionWillChange": {
+      "desc": "Hook appelé avant tout changement d'état de mission. Supprime l'exclusion de trafic du manager et enregistre un DNF en cas d'abandon (sauf en serviceOut).",
+      "params": {
+        "state": {"type": "string", "desc": "Nouvel état de la mission (ex. 'stopped')."},
+        "mission": {"type": "table|nil", "desc": "Mission concernée."},
+        "abandoned": {"type": "boolean", "desc": "true si la mission est abandonnée."}
+      },
+      "internal": true
+    },
+    "getDebugLogging": {
+      "desc": "État du log de debug.",
+      "returns": [{"type": "boolean", "desc": "debugLogging."}]
+    },
+    "setDebugLogging": {
+      "desc": "Active le log de debug.",
+      "params": {"val": {"type": "boolean", "desc": "Nouvelle valeur."}}
+    },
+    "setupForNewMission": {"desc": "Prépare le manager pour la mission suivante (manager:setupForNewMission)."},
+    "setMissionExecutionTransferFlag": {
+      "desc": "Fixe l'indicateur de transfert d'exécution de mission du manager.",
+      "params": {"val": {"type": "boolean", "desc": "Valeur."}}
+    },
+    "getMissionExecutionTransferFlag": {
+      "desc": "Lit l'indicateur de transfert d'exécution.",
+      "returns": [{"type": "boolean", "desc": "false sans manager."}]
+    },
+    "getNextMissionId": {
+      "desc": "Id de la prochaine mission de la boucle.",
+      "returns": [{"type": "string|nil", "desc": "Id, nil sans manager."}]
+    },
+    "startNextMission": {
+      "desc": "Démarre la mission suivante de la boucle.",
+      "returns": [{"type": "any", "desc": "Résultat du manager (false sans manager)."}]
+    },
+    "skipLiaisonForTesting": {
+      "desc": "Aide de test : saute la liaison.",
+      "params": {"options": {"type": "table|nil", "desc": "Options transmises au manager (déduit du code)."}},
+      "returns": [{"type": "boolean", "desc": "Succès."}, {"type": "string|nil", "desc": "'no rally loop manager' sans manager."}]
+    },
+    "addTestPenalty": {
+      "desc": "Enregistre une pénalité de test dans le manager (recordTestPenalty).",
+      "params": {"amount": {"type": "number", "desc": "Montant de la pénalité (unité déduite du code : temps)."}},
+      "returns": [{"type": "boolean|any", "desc": "Résultat du manager, ou false et 'no rally loop manager'."}]
+    },
+    "handleGOTO": {
+      "desc": "Traite une demande de navigation depuis l'UI : 'restart' relance la boucle, 'abandon' retourne instantanément à la boucle, 'postServiceIn' et tout autre valeur démarrent la mission suivante.",
+      "params": {"gotoRallyLoop": {"type": "string", "desc": "'restart', 'abandon', 'postServiceIn' ou autre."}}
+    },
+    "getManager": {
+      "desc": "Instance RallyLoopManager courante.",
+      "returns": [{"type": "table|nil", "desc": "Manager."}]
+    },
+    "getDrawFlag": {
+      "desc": "Lit un indicateur de dessin de debug du manager.",
+      "params": {"flagName": {"type": "string", "desc": "Nom de l'indicateur."}},
+      "returns": [{"type": "boolean", "desc": "false sans manager."}]
+    },
+    "setDrawFlag": {
+      "desc": "Fixe un indicateur de dessin de debug du manager.",
+      "params": {
+        "flagName": {"type": "string", "desc": "Nom de l'indicateur."},
+        "value": {"type": "boolean", "desc": "Valeur."}
+      }
+    },
+    "getSSRescheduleCount": {
+      "desc": "Nombre de reprogrammations de spéciale (SS) du manager.",
+      "returns": [{"type": "integer", "desc": "0 sans manager."}]
+    }
+  }
+}

@@ -259,9 +259,9 @@ Généré par tim19Atlas à partir du code Lua du jeu (lecture seule).
 | [✍ `outsim`](vehicle/extensions/outsim.md) | 0 | Fichier obsolète : il se contente d'écrire une erreur dans le log (avec la trace d'appel) disant que quelque chose a tenté d'utiliser l'anci |
 | [✍ `perfectLaunch`](vehicle/extensions/perfectLaunch.md) | 6 | Aide au départ arrêté 'parfait' (launch control) pour dragsters : gaz à fond, puis contrôle PI de la patinage des roues motrices et du lacet |
 | [✍ `performanceLogger`](vehicle/extensions/performanceLogger.md) | 6 | Petit outil de profilage : mesure des durées en millisecondes avec HighPerfTimer, soit une mesure unique (startMeasurement / stopMeasurement |
-| [`profiling_p`](vehicle/extensions/profiling/p.md) | 2 | LuaJIT profiler. |
-| [`profiling_vmdef`](vehicle/extensions/profiling/vmdef.md) | 0 | This is a generated file. DO NOT EDIT! |
-| [`profiling_zone`](vehicle/extensions/profiling/zone.md) | 0 | LuaJIT profiler zones. |
+| [✍ `profiling_p`](vehicle/extensions/profiling/p.md) | 2 | Bibliothèque tierce : profileur LuaJIT (jit.p) de Mike Pall, copyright 2005-2016, licence MIT. C'est une interface simple au profileur à fai |
+| [✍ `profiling_vmdef`](vehicle/extensions/profiling/vmdef.md) | 0 | Bibliothèque tierce : jit.vmdef de LuaJIT (Mike Pall), fichier généré (« DO NOT EDIT ») qui contient les tables de noms de la VM LuaJIT : no |
+| [✍ `profiling_zone`](vehicle/extensions/profiling/zone.md) | 0 | Bibliothèque tierce : jit.zone de LuaJIT (Mike Pall), copyright 2005-2016, licence MIT. Implémente un modèle simple de zones hiérarchiques ( |
 | [✍ `scenario_annotate`](vehicle/extensions/scenario/annotate.md) | 2 | Exemple d'extension véhicule pilotée par un scénario. Elle affiche un texte flottant 2 m au-dessus du véhicule (avec un trait vertical) via  |
 | [✍ `scenario_functionFreezer`](vehicle/extensions/scenario/functionFreezer.md) | 3 | Permet à un créateur de scénario d'empêcher l'exécution de certaines fonctions Lua du véhicule tant que le scénario n'a pas démarré (écran d |
 | [✍ `scenario_shiftBooster`](vehicle/extensions/scenario/shiftBooster.md) | 5 | Extension de scénario de démonstration : donne un coup de pouce (« boost ») au véhicule en lui appliquant un vent constant dirigé selon son  |
@@ -282,37 +282,37 @@ Généré par tim19Atlas à partir du code Lua du jeu (lecture seule).
 
 | Nom | Fonctions | Résumé |
 |---|---|---|
-| [`client_canvas`](ge/client/canvas.md) | 4 |  |
-| [`client_core`](ge/client/core.md) | 3 |  |
-| [`client_init`](ge/client/init.md) | 3 |  |
-| [`client_lighting`](ge/client/lighting.md) | 2 |  |
-| [`client_lighting_advanced_init`](ge/client/lighting/advanced/init.md) | 0 |  |
-| [`client_lighting_advanced_lightViz`](ge/client/lighting/advanced/lightViz.md) | 7 |  |
-| [`client_lighting_advanced_shaders`](ge/client/lighting/advanced/shaders.md) | 0 |  |
-| [`client_lighting_advanced_shadowViz`](ge/client/lighting/advanced/shadowViz.md) | 0 |  |
-| [`client_lighting_basic_init`](ge/client/lighting/basic/init.md) | 0 |  |
-| [`client_lighting_basic_shadowFilter`](ge/client/lighting/basic/shadowFilter.md) | 0 |  |
-| [`client_lighting_shadowMaps_init`](ge/client/lighting/shadowMaps/init.md) | 0 |  |
-| [`client_objectsRequiredForStartup`](ge/client/objectsRequiredForStartup.md) | 0 |  |
-| [`parseArgs`](ge/client/parseArgs.md) | 1 |  |
-| [`client_postFx`](ge/client/postFx.md) | 4 |  |
-| [`client_postFx_caustics`](ge/client/postFx/caustics.md) | 0 |  |
-| [`dofModule`](ge/client/postFx/dof.md) | 6 |  |
-| [`client_postFx_edgeAA`](ge/client/postFx/edgeAA.md) | 0 |  |
-| [`client_postFx_fog`](ge/client/postFx/fog.md) | 2 |  |
-| [`client_postFx_fxaa`](ge/client/postFx/fxaa.md) | 1 |  |
-| [`client_postFx_glow`](ge/client/postFx/glow.md) | 0 |  |
-| [`client_postFx_maskedScreenBlur`](ge/client/postFx/maskedScreenBlur.md) | 0 |  |
-| [`client_postFx_screenSpaceShadows`](ge/client/postFx/screenSpaceShadows.md) | 0 |  |
-| [`client_postFx_smaa`](ge/client/postFx/smaa.md) | 4 |  |
-| [`ssaoModule`](ge/client/postFx/ssao.md) | 6 |  |
-| [`client_renderManager`](ge/client/renderManager.md) | 1 |  |
+| [✍ `client_canvas`](ge/client/canvas.md) | 4 | Gère le GuiCanvas (la fenêtre de rendu) côté client : création unique de l'objet « Canvas » et affichage/masquage du curseur de la souris. A |
+| [✍ `client_core`](ge/client/core.md) | 3 | Initialisation du « core » graphique du client : crée par code Lua les matériaux, shaders et state blocks de base qui étaient autrefois des  |
+| [✍ `client_init`](ge/client/init.md) | 3 | Initialisation du client graphique (portage de client.cs de Torque). initClient prépare le rendu (postFx, renderManager, systèmes d'éclairag |
+| [✍ `client_lighting`](ge/client/lighting.md) | 2 | Choisit et active le gestionnaire de lumière (light manager) du jeu. Il charge tous les fichiers init.lua des sous-dossiers de lua/ge/client |
+| [✍ `client_lighting_advanced_init`](ge/client/lighting/advanced/init.md) | 0 | Light manager « Advanced Lighting ». Charge les sous-modules shaders, lightViz et shadowViz, puis, si le gestionnaire existe (LightManager.f |
+| [✍ `client_lighting_advanced_lightViz`](ge/client/lighting/advanced/lightViz.md) | 7 | Modes de visualisation de débogage de l'éclairage avancé. Il crée des PostEffect (priorité 9999, cible $backBuffer) : AL_DepthVisualize, AL_ |
+| [✍ `client_lighting_advanced_shaders`](ge/client/lighting/advanced/shaders.md) | 0 | Déclare, si absents, les objets de rendu de l'éclairage avancé (deferred) : state blocks AL_VectorLightState et AL_ConvexLightState, shaders |
+| [✍ `client_lighting_advanced_shadowViz`](ge/client/lighting/advanced/shadowViz.md) | 0 | Déclare, s'ils n'existent pas, le ShaderData « AL_ShadowVisualizeShader » (dbgShadowVisualizeP.hlsl) et le CustomMaterial « AL_ShadowVisuali |
+| [✍ `client_lighting_basic_init`](ge/client/lighting/basic/init.md) | 0 | Light manager « Basic Lighting ». Crée le state block BL_ProjectedShadowSBData, le shader BL_ProjectedShadowShaderData et le matériau BL_Pro |
+| [✍ `client_lighting_basic_shadowFilter`](ge/client/lighting/basic/shadowFilter.md) | 0 | Crée le filtre de flou des ombres de l'éclairage basique : deux ShaderData (BL_ShadowFilterShaderV et BL_ShadowFilterShaderH, même compute s |
+| [✍ `client_lighting_shadowMaps_init`](ge/client/lighting/shadowMaps/init.md) | 0 | Déclare le ShaderData « BlurDepthShader » (boxFilterV.hlsl / boxFilterP.hlsl) utilisé pour flouter les shadow maps, s'il n'existe pas déjà.  |
+| [✍ `client_objectsRequiredForStartup`](ge/client/objectsRequiredForStartup.md) | 0 | Crée, à l'import, les objets GUI de base nécessaires au démarrage : le curseur « DefaultCursor » (GuiCursor, point chaud (4,4) sous macOS, ( |
+| [✍ `parseArgs`](ge/client/parseArgs.md) | 1 | Analyse les arguments de la ligne de commande du jeu ($Game::argc / $Game::argv0…) et applique ou mémorise les options reconnues. Utile pour |
+| [✍ `client_postFx`](ge/client/postFx.md) | 4 | Gestionnaire des post-effets (PostFX) du jeu. À l'import il crée les objets communs : state blocks PFX_DefaultStateBlock et PFX_DefaultBlitS |
+| [✍ `client_postFx_caustics`](ge/client/postFx/caustics.md) | 0 | Post-effet de caustiques sous l'eau. Crée (s'ils n'existent pas) le state block PFX_CausticsStateBlock (mélange additif), le shader PFX_Caus |
+| [✍ `dofModule`](ge/client/postFx/dof.md) | 6 | Profondeur de champ (DOF) en post-traitement. Crée le PostEffect « DOFPostEffect » (désactivé au départ, PFXAfterBin / UpscaleDispatch) avec |
+| [✍ `client_postFx_edgeAA`](ge/client/postFx/edgeAA.md) | 0 | Détection de contours pour l'anti-aliasing par arêtes. Crée le state block PFX_DefaultEdgeAAStateBlock, le shader PFX_EdgeAADetectShader (ed |
+| [✍ `client_postFx_fog`](ge/client/postFx/fog.md) | 2 | Brouillard en post-traitement. Crée le PostEffect « FogPostFx » (shader fog.cs.hlsl, priorité 5, activé, hors passes de réflexion) et le Pos |
+| [✍ `client_postFx_fxaa`](ge/client/postFx/fxaa.md) | 1 | Anti-aliasing FXAA. Crée le state block FXAA_StateBlock, le shader FXAA_ShaderData (fxaa.cs.hlsl) et le PostEffect « FXAA_PostEffect » (désa |
+| [✍ `client_postFx_glow`](ge/client/postFx/glow.md) | 0 | Effet de lueur (glow). Crée les shaders de flou séparable PFX_GlowBlurVertShader et PFX_GlowBlurHorzShader, le shader de combinaison PFX_Glo |
+| [✍ `client_postFx_maskedScreenBlur`](ge/client/postFx/maskedScreenBlur.md) | 0 | Flou d'écran masqué. Crée l'objet « ScreenBlurFX » (type PostEffectMaskedBlur, activé, rendu après OverlayRender, cible à 40 % de l'écran) a |
+| [✍ `client_postFx_screenSpaceShadows`](ge/client/postFx/screenSpaceShadows.md) | 0 | Crée, s'il n'existe pas, l'objet natif « ScreenSpaceShadowsPostFx » (type PostFxScreenSpaceShadows) pour les ombres en espace écran. Aucune  |
+| [✍ `client_postFx_smaa`](ge/client/postFx/smaa.md) | 4 | Anti-aliasing SMAA (Subpixel Morphological Anti-Aliasing). Crée les shaders et state block SMAA_*, les PostEffect SMAA_PostEffect (détection |
+| [✍ `ssaoModule`](ge/client/postFx/ssao.md) | 6 | Occlusion ambiante en espace écran (SSAO, avec normales courbées / GTAO). À l'import, crée l'objet « SSAOPostFx » (PostEffectSSAO) s'il manq |
+| [✍ `client_renderManager`](ge/client/renderManager.md) | 1 | Prépare le format de rendu hors écran : crée le RenderFormatToken « AL_FormatToken » (couleur R8G8B8A8, profondeur $GFXFormatDefaultDepth ou |
 | [✍ `ge_utils`](ge/ge_utils.md) | 0 | Fonctions utilitaires globales de la VM GE, chargées par main.lua (require('ge_utils')) avant les extensions. Elles sont accessibles partout |
 | [✍ `main`](ge/main.md) | 0 | Point d'entrée de la VM Lua « Game Engine » (GE, vmType = 'game'). Le moteur C++ charge ce fichier au démarrage puis appelle ses fonctions g |
 | [✍ `map`](ge/map.md) | 53 | Graphe routier (navgraph) du niveau côté Game Engine. Il construit le graphe de nœuds et d'arêtes à partir des routes décalques (DecalRoad), |
 | [✍ `screenshot`](ge/screenshot.md) | 24 | Prise de captures d'écran côté Game Engine. Il prépare le nom de fichier (dossier screenshots/<mois>/screenshot_<date>), les options de qual |
-| [`commands`](ge/server/commands.md) | 21 |  |
-| [`server`](ge/server/server.md) | 4 |  |
+| [✍ `commands`](ge/server/commands.md) | 21 | Commandes de caméra et de placement du joueur, appelées en grande partie par le côté C++ et les actions d'entrée : basculer entre caméra de  |
+| [✍ `server`](ge/server/server.md) | 4 | Chargement et déchargement d'un niveau côté « serveur » du jeu (mode solo/freeroam). `createGame` ouvre l'écran de chargement puis exécute l |
 | [✍ `serverConnection`](ge/serverConnection.md) | 3 | Déconnexion de la session locale (arrêt de la simulation, nettoyage) et passage de l'état de monde prêt. Il sert quand on quitte un niveau p |
 | [✍ `setSpawnpoint`](ge/setSpawnpoint.md) | 3 | Mémorise et relit le point d'apparition par défaut choisi pour chaque niveau. Les données sont stockées dans settings/cloud/game-state.json  |
 | [✍ `simTimeAuthority`](ge/simTimeAuthority.md) | 19 | Autorité sur la vitesse du temps de simulation : pause, ralenti (bullet time) et reprise, avec lissage. Un moddeur l'utilise pour mettre le  |
@@ -323,108 +323,108 @@ Généré par tim19Atlas à partir du code Lua du jeu (lecture seule).
 
 | Nom | Fonctions | Résumé |
 |---|---|---|
-| [`busroute_busrouteConfigurator`](ge/extensions/busroute/busrouteConfigurator.md) | 0 |  |
-| [`campaign_campaigns`](ge/extensions/campaign/campaigns.md) | 36 |  |
-| [`campaign_campaignsLoader`](ge/extensions/campaign/campaignsLoader.md) | 10 |  |
-| [`campaign_comics`](ge/extensions/campaign/comics.md) | 3 |  |
-| [`campaign_dealer`](ge/extensions/campaign/dealer.md) | 8 |  |
-| [`campaign_photoSafari`](ge/extensions/campaign/photoSafari.md) | 3 |  |
-| [`campaign_rewards`](ge/extensions/campaign/rewards.md) | 5 |  |
-| [`career_branches`](ge/extensions/career/branches.md) | 23 |  |
-| [`career_career`](ge/extensions/career/career.md) | 32 |  |
-| [`career_modules_branches_landing`](ge/extensions/career/modules/branches/landing.md) | 8 |  |
-| [`career_modules_branches_leagues`](ge/extensions/career/modules/branches/leagues.md) | 16 |  |
-| [`career_modules_computer`](ge/extensions/career/modules/computer.md) | 6 |  |
-| [`career_modules_debug_attributesDebug`](ge/extensions/career/modules/debug/attributesDebug.md) | 2 |  |
-| [`career_modules_debug_cargoContainerDebug`](ge/extensions/career/modules/debug/cargoContainerDebug.md) | 10 |  |
-| [`career_modules_debug_cargoFluidDebug`](ge/extensions/career/modules/debug/cargoFluidDebug.md) | 3 |  |
-| [`career_modules_debug_dealershipFilterDebug`](ge/extensions/career/modules/debug/dealershipFilterDebug.md) | 2 |  |
-| [`career_modules_debug_deliveryRoutes`](ge/extensions/career/modules/debug/deliveryRoutes.md) | 4 |  |
-| [`career_modules_debug_insuranceDebug`](ge/extensions/career/modules/debug/insuranceDebug.md) | 1 |  |
-| [`career_modules_debug_marketplaceDebug`](ge/extensions/career/modules/debug/marketplaceDebug.md) | 2 |  |
-| [`career_modules_debug_missionDebug`](ge/extensions/career/modules/debug/missionDebug.md) | 1 |  |
-| [`career_modules_debug_organizationsDebug`](ge/extensions/career/modules/debug/organizationsDebug.md) | 1 |  |
-| [`career_modules_debug_parcelDebug`](ge/extensions/career/modules/debug/parcelDebug.md) | 6 |  |
-| [`career_modules_debug_precisionParkingDebug`](ge/extensions/career/modules/debug/precisionParkingDebug.md) | 3 |  |
-| [`career_modules_debug_psDuplicationChecker`](ge/extensions/career/modules/debug/psDuplicationChecker.md) | 4 |  |
-| [`career_modules_debug_vehOfferDebug`](ge/extensions/career/modules/debug/vehOfferDebug.md) | 3 |  |
-| [`career_modules_debug_vehicleDebug`](ge/extensions/career/modules/debug/vehicleDebug.md) | 1 |  |
-| [`career_modules_debug_vehicleShoppingDebug`](ge/extensions/career/modules/debug/vehicleShoppingDebug.md) | 1 |  |
-| [`career_modules_debug_vehicleSpawn`](ge/extensions/career/modules/debug/vehicleSpawn.md) | 5 |  |
-| [`career_modules_delivery_cargoCards`](ge/extensions/career/modules/delivery/cargoCards.md) | 9 |  |
-| [`career_modules_delivery_cargoScreen`](ge/extensions/career/modules/delivery/cargoScreen.md) | 44 |  |
-| [`career_modules_delivery_general`](ge/extensions/career/modules/delivery/general.md) | 34 |  |
-| [`career_modules_delivery_generator`](ge/extensions/career/modules/delivery/generator.md) | 24 |  |
-| [`career_modules_delivery_parcelManager`](ge/extensions/career/modules/delivery/parcelManager.md) | 30 |  |
-| [`career_modules_delivery_parcelMods`](ge/extensions/career/modules/delivery/parcelMods.md) | 14 |  |
-| [`career_modules_delivery_precisionParking`](ge/extensions/career/modules/delivery/precisionParking.md) | 7 |  |
-| [`career_modules_delivery_progress`](ge/extensions/career/modules/delivery/progress.md) | 19 |  |
-| [`career_modules_delivery_tasklist`](ge/extensions/career/modules/delivery/tasklist.md) | 8 |  |
-| [`career_modules_delivery_tutorial`](ge/extensions/career/modules/delivery/tutorial.md) | 7 |  |
-| [`career_modules_delivery_vehicleOfferManager`](ge/extensions/career/modules/delivery/vehicleOfferManager.md) | 16 |  |
-| [`career_modules_delivery_vehicleTasks`](ge/extensions/career/modules/delivery/vehicleTasks.md) | 17 |  |
-| [`career_modules_fuel`](ge/extensions/career/modules/fuel.md) | 18 |  |
-| [`career_modules_inspectVehicle`](ge/extensions/career/modules/inspectVehicle.md) | 22 |  |
-| [`career_modules_insurance_history`](ge/extensions/career/modules/insurance/history.md) | 11 |  |
-| [`career_modules_insurance_insurance`](ge/extensions/career/modules/insurance/insurance.md) | 66 |  |
-| [`career_modules_insurance_repairScreen`](ge/extensions/career/modules/insurance/repairScreen.md) | 8 |  |
-| [`career_modules_inventory`](ge/extensions/career/modules/inventory.md) | 63 |  |
-| [`career_modules_loanerVehicles`](ge/extensions/career/modules/loanerVehicles.md) | 10 |  |
-| [`career_modules_log`](ge/extensions/career/modules/log.md) | 3 |  |
-| [`career_modules_logbook`](ge/extensions/career/modules/logbook.md) | 14 |  |
-| [`career_modules_marketplace`](ge/extensions/career/modules/marketplace.md) | 21 |  |
-| [`career_modules_milestones_general`](ge/extensions/career/modules/milestones/general.md) | 5 |  |
-| [`career_modules_milestones_generalMilestones_branches`](ge/extensions/career/modules/milestones/generalMilestones/branches.md) | 4 |  |
-| [`career_modules_milestones_generalMilestones_delivery`](ge/extensions/career/modules/milestones/generalMilestones/delivery.md) | 4 |  |
-| [`career_modules_milestones_generalMilestones_insurance`](ge/extensions/career/modules/milestones/generalMilestones/insurance.md) | 2 |  |
-| [`career_modules_milestones_generalMilestones_missions`](ge/extensions/career/modules/milestones/generalMilestones/missions.md) | 7 |  |
-| [`career_modules_milestones_generalMilestones_money`](ge/extensions/career/modules/milestones/generalMilestones/money.md) | 4 |  |
-| [`career_modules_milestones_generalMilestones_speedTraps`](ge/extensions/career/modules/milestones/generalMilestones/speedTraps.md) | 2 |  |
-| [`career_modules_milestones_generalMilestones_statistic`](ge/extensions/career/modules/milestones/generalMilestones/statistic.md) | 5 |  |
-| [`career_modules_milestones_milestones`](ge/extensions/career/modules/milestones/milestones.md) | 15 |  |
-| [`career_modules_missionWrapper`](ge/extensions/career/modules/missionWrapper.md) | 9 |  |
-| [`career_modules_painting`](ge/extensions/career/modules/painting.md) | 13 |  |
-| [`career_modules_partInventory`](ge/extensions/career/modules/partInventory.md) | 24 |  |
-| [`career_modules_partShopping`](ge/extensions/career/modules/partShopping.md) | 19 |  |
-| [`career_modules_payment`](ge/extensions/career/modules/payment.md) | 2 |  |
-| [`career_modules_permissions`](ge/extensions/career/modules/permissions.md) | 1 |  |
-| [`career_modules_playbookWriter`](ge/extensions/career/modules/playbookWriter.md) | 4 |  |
-| [`career_modules_playerAbstract`](ge/extensions/career/modules/playerAbstract.md) | 7 |  |
-| [`career_modules_playerAttributes`](ge/extensions/career/modules/playerAttributes.md) | 15 |  |
-| [`career_modules_playerDriving`](ge/extensions/career/modules/playerDriving.md) | 17 |  |
-| [`career_modules_quickTravel`](ge/extensions/career/modules/quickTravel.md) | 4 |  |
-| [`career_modules_rentals`](ge/extensions/career/modules/rentals.md) | 1 |  |
-| [`career_modules_reputation`](ge/extensions/career/modules/reputation.md) | 5 |  |
-| [`career_modules_spawnPoints`](ge/extensions/career/modules/spawnPoints.md) | 6 |  |
-| [`career_modules_speedTraps`](ge/extensions/career/modules/speedTraps.md) | 4 |  |
-| [`career_modules_testDrive`](ge/extensions/career/modules/testDrive.md) | 14 |  |
-| [`career_modules_tether`](ge/extensions/career/modules/tether.md) | 9 |  |
-| [`career_modules_tuning`](ge/extensions/career/modules/tuning.md) | 9 |  |
-| [`career_modules_tutorial`](ge/extensions/career/modules/tutorial.md) | 17 |  |
-| [`career_modules_tutorial_debug`](ge/extensions/career/modules/tutorial/debug.md) | 1 |  |
-| [`career_modules_tutorial_step01enterVehicle`](ge/extensions/career/modules/tutorial/step01enterVehicle.md) | 7 |  |
-| [`career_modules_tutorial_step02moveOff`](ge/extensions/career/modules/tutorial/step02moveOff.md) | 5 |  |
-| [`career_modules_tutorial_step03basicManeuvers`](ge/extensions/career/modules/tutorial/step03basicManeuvers.md) | 5 |  |
-| [`career_modules_tutorial_step04timeTrial`](ge/extensions/career/modules/tutorial/step04timeTrial.md) | 12 |  |
-| [`career_modules_tutorial_step05driveToDragStrip`](ge/extensions/career/modules/tutorial/step05driveToDragStrip.md) | 6 |  |
-| [`career_modules_tutorial_step06dragStripBasics`](ge/extensions/career/modules/tutorial/step06dragStripBasics.md) | 10 |  |
-| [`career_modules_tutorial_step07bigmap`](ge/extensions/career/modules/tutorial/step07bigmap.md) | 10 |  |
-| [`career_modules_tutorial_step08driveToGarage`](ge/extensions/career/modules/tutorial/step08driveToGarage.md) | 6 |  |
-| [`career_modules_tutorial_step09spmSignup`](ge/extensions/career/modules/tutorial/step09spmSignup.md) | 12 |  |
-| [`career_modules_tutorial_tasklistLocale`](ge/extensions/career/modules/tutorial/tasklistLocale.md) | 4 |  |
-| [`career_modules_tutorialPopups`](ge/extensions/career/modules/tutorialPopups.md) | 12 |  |
-| [`career_modules_uiUtils`](ge/extensions/career/modules/uiUtils.md) | 6 |  |
-| [`career_modules_unlockFlags`](ge/extensions/career/modules/unlockFlags.md) | 6 |  |
-| [`career_modules_valueCalculator`](ge/extensions/career/modules/valueCalculator.md) | 9 |  |
-| [`career_modules_vehicleClassGrouping`](ge/extensions/career/modules/vehicleClassGrouping.md) | 2 |  |
-| [`career_modules_vehicleDeletionService`](ge/extensions/career/modules/vehicleDeletionService.md) | 7 |  |
-| [`career_modules_vehiclePerformance`](ge/extensions/career/modules/vehiclePerformance.md) | 16 |  |
-| [`career_modules_vehicleShopping`](ge/extensions/career/modules/vehicleShopping.md) | 37 |  |
-| [`career_saveSystem`](ge/extensions/career/saveSystem.md) | 20 |  |
-| [`career_startingModes_apmOnboarding`](ge/extensions/career/startingModes/apmOnboarding.md) | 2 |  |
-| [`career_startingModes_freshStart`](ge/extensions/career/startingModes/freshStart.md) | 2 |  |
-| [`career_startingModes_sandbox`](ge/extensions/career/startingModes/sandbox.md) | 2 |  |
-| [`career_startingModes_selfMade`](ge/extensions/career/startingModes/selfMade.md) | 2 |  |
+| [✍ `busroute_busrouteConfigurator`](ge/extensions/busroute/busrouteConfigurator.md) | 0 | Backend de l'étape « aperçu / options » de l'assistant Vue des lignes de bus. Il décrit le mode « busRoute » (descripteur) et le passe à one |
+| [✍ `campaign_campaigns`](ge/extensions/campaign/campaigns.md) | 36 | Moteur d'exécution d'une campagne en cours. Il tient la campagne active (variable locale campaign = {meta, state}), enchaîne les scénarios d |
+| [✍ `campaign_campaignsLoader`](ge/extensions/campaign/campaignsLoader.md) | 10 | Chargeur de campagnes : trouve les fichiers /campaigns/*.json dont header.type vaut « campaign », les charge (avec infos de mod et image d'a |
+| [✍ `campaign_comics`](ge/extensions/campaign/comics.md) | 3 | Affiche une bande dessinée (suite de planches) dans l'interface de la campagne. playComic construit la liste des planches à partir de comicD |
+| [✍ `campaign_dealer`](ge/extensions/campaign/dealer.md) | 8 | Concessionnaire de la campagne : tient un stock (M.state.stock) indexé par type d'objet en majuscules. Un stock est soit une liste de tables |
+| [✍ `campaign_photoSafari`](ge/extensions/campaign/photoSafari.md) | 3 | Logique de la mission « photo safari » de la campagne : le joueur doit photographier des lieux. À l'acceptation, un fichier JSON liste les l |
+| [✍ `campaign_rewards`](ge/extensions/campaign/rewards.md) | 5 | Calcul et attribution des récompenses de scénario de la campagne. À partir de scenarioData.onEvent.onSucceed (ou onFail), getRewards sélecti |
+| [✍ `career_branches`](ge/extensions/career/branches.md) | 23 | Arbre des domaines, branches et compétences (skills) du mode carrière. Il lit tous les fichiers info.json sous /gameplay/domains/ (récursive |
+| [✍ `career_career`](ge/extensions/career/career.md) | 32 | Point d'entrée du mode carrière. Il active et désactive la carrière : charge le niveau (west_coast_usa par défaut, ou celui de la sauvegarde |
+| [✍ `career_modules_branches_landing`](ge/extensions/career/modules/branches/landing.md) | 8 | Fournit à l'UI carrière les données de la page d'accueil de progression (domaines, branches, compétences) : titres, fils d'Ariane, niveau/XP |
+| [✍ `career_modules_branches_leagues`](ge/extensions/career/modules/branches/leagues.md) | 16 | Gère les « ligues » de la carrière : groupes de missions (et de spots de drift) rattachés à une compétence, chargés depuis les fichiers /gam |
+| [✍ `career_modules_computer`](ge/extensions/career/modules/computer.md) | 6 | Menu « ordinateur » du garage en mode carrière. openMenu construit la liste des véhicules du garage le plus proche, laisse les autres module |
+| [✍ `career_modules_debug_attributesDebug`](ge/extensions/career/modules/debug/attributesDebug.md) | 2 | Onglet de debug carrière « Attributes ». Affiche l'argent, la BeamXP, les vouchers et l'XP de chaque branche avec des boutons de triche (+/- |
+| [✍ `career_modules_debug_cargoContainerDebug`](ge/extensions/career/modules/debug/cargoContainerDebug.md) | 10 | Outil de debug « Vehicle > Cargo Containers ». Interroge tous les véhicules actifs (core_vehicleBridge.requestValue 'getCargoContainers'), a |
+| [✍ `career_modules_debug_cargoFluidDebug`](ge/extensions/career/modules/debug/cargoFluidDebug.md) | 3 | Onglet de debug carrière « Delivery > Fluid Cargo ». Fenêtre ImGui 'Fluid CargoDebug' qui affiche, par facilité de livraison (toutes, la plu |
+| [✍ `career_modules_debug_dealershipFilterDebug`](ge/extensions/career/modules/debug/dealershipFilterDebug.md) | 2 | Outil de debug « General > Filter Debug » : fenêtre ImGui où l'on colle un JSON de filtre de concessionnaire (filter avec whiteList/blackLis |
+| [✍ `career_modules_debug_deliveryRoutes`](ge/extensions/career/modules/debug/deliveryRoutes.md) | 4 | Onglet de debug carrière « Delivery > Routes ». Fenêtre ImGui 'Delivery Access Points' listant les facilités de livraison et leurs points d' |
+| [✍ `career_modules_debug_insuranceDebug`](ge/extensions/career/modules/debug/insuranceDebug.md) | 1 | Onglet de debug carrière « Insurance ». Ajoute une seule entrée de menu '> Reset insurance data' qui appelle career_modules_insurance_insura |
+| [✍ `career_modules_debug_marketplaceDebug`](ge/extensions/career/modules/debug/marketplaceDebug.md) | 2 | Onglet de debug carrière « Marketplace ». Affiche les véhicules de l'inventaire (et s'ils sont en vente via career_modules_marketplace.findV |
+| [✍ `career_modules_debug_missionDebug`](ge/extensions/career/modules/debug/missionDebug.md) | 1 | Onglet de debug carrière « Missions ». Deux entrées : '> Reload Missions' (gameplay_missions_missions.reloadCompleteMissionSystem) et '> Mak |
+| [✍ `career_modules_debug_organizationsDebug`](ge/extensions/career/modules/debug/organizationsDebug.md) | 1 | Onglet de debug carrière « Organizations ». Deux entrées de triche : donner une réputation aléatoire (-50 à 150) à environ 30 % des organisa |
+| [✍ `career_modules_debug_parcelDebug`](ge/extensions/career/modules/debug/parcelDebug.md) | 6 | Onglet de debug carrière « Delivery > Parcels ». Fenêtre ImGui 'Parcel Debug' montrant, pour chaque facilité de livraison (toutes, la plus p |
+| [✍ `career_modules_debug_precisionParkingDebug`](ge/extensions/career/modules/debug/precisionParkingDebug.md) | 3 | Onglet de debug carrière « Precision Parking ». Un bouton active/désactive le debug ; quand il est actif, le module cherche (toutes les 0,1  |
+| [✍ `career_modules_debug_psDuplicationChecker`](ge/extensions/career/modules/debug/psDuplicationChecker.md) | 4 | Outil de debug « Parking Spot Duplication Checker » pour level designers : compare les places de parking (parkingSpots) de deux fichiers .si |
+| [✍ `career_modules_debug_vehOfferDebug`](ge/extensions/career/modules/debug/vehOfferDebug.md) | 3 | Onglet de debug carrière « Delivery > Veh Offers ». Fenêtre 'Vehicle Offer Debug' listant, par facilité de livraison, les offres de véhicule |
+| [✍ `career_modules_debug_vehicleDebug`](ge/extensions/career/modules/debug/vehicleDebug.md) | 1 | Onglet de debug carrière « Vehicles ». Permet d'ajouter le véhicule joueur à l'inventaire, de le réapparaître (career_modules_inventory.debu |
+| [✍ `career_modules_debug_vehicleShoppingDebug`](ge/extensions/career/modules/debug/vehicleShoppingDebug.md) | 1 | Onglet de debug carrière « Vehicle Shopping ». Relit les fichiers *.facilities.json du niveau courant pour obtenir les concessionnaires, sim |
+| [✍ `career_modules_debug_vehicleSpawn`](ge/extensions/career/modules/debug/vehicleSpawn.md) | 5 | Outil de debug « Vehicle Spawn » : ajoute un marqueur de point d'intérêt au parking 'debugParking' de west_coast_usa (facilities.sites.json) |
+| [✍ `career_modules_delivery_cargoCards`](ge/extensions/career/modules/delivery/cargoCards.md) | 9 | Aide à la présentation de l'écran de cargaison (livraison) : prépare pour l'UI les filtres (parcel, vehicle, trailer, material, all, loaner) |
+| [✍ `career_modules_delivery_cargoScreen`](ge/extensions/career/modules/delivery/cargoScreen.md) | 44 | Back-end de l'écran « Cargo Overview » de la carrière (livraison de colis, matériaux, véhicules et remorques). Il formate pour l'UI les cart |
+| [✍ `career_modules_delivery_general`](ge/extensions/career/modules/delivery/general.md) | 34 | Noyau du système de livraison (logistique) de la carrière : horloge de jeu de livraison, sauvegarde/chargement de logisticsDatabase.json (co |
+| [✍ `career_modules_delivery_generator`](ge/extensions/career/modules/delivery/generator.md) | 24 | Générateur de contenu de la livraison en carrière. Au chargement (setup) il lit les gabarits de colis (*.deliveryParcels.json), de véhicules |
+| [✍ `career_modules_delivery_parcelManager`](ge/extensions/career/modules/delivery/parcelManager.md) | 30 | Gestionnaire central des cargaisons (colis et matériaux) de la livraison en mode carrière. Il tient la liste allCargo (chaque cargo a un id, |
+| [✍ `career_modules_delivery_parcelMods`](ge/extensions/career/modules/delivery/parcelMods.md) | 14 | Définit les modificateurs (« mods ») de colis du mode carrière : timed, post, precious, supplies, large, fluid, dryBulk, parcel, hazardous.  |
+| [✍ `career_modules_delivery_precisionParking`](ge/extensions/career/modules/delivery/precisionParking.md) | 7 | Évalue la précision de stationnement du véhicule du joueur à la destination d'une livraison (colis, matériaux ou véhicule) et applique des b |
+| [✍ `career_modules_delivery_progress`](ge/extensions/career/modules/delivery/progress.md) | 19 | Suivi de progression et écran de dépôt (drop-off) de la livraison en carrière. Compte les livraisons par type (parcel, vehicle, trailer, flu |
+| [✍ `career_modules_delivery_tasklist`](ge/extensions/career/modules/delivery/tasklist.md) | 8 | Alimente la liste de tâches affichée à l'écran (tasklist) pendant la livraison en carrière. Il regroupe les cargaisons chargées par destinat |
+| [✍ `career_modules_delivery_tutorial`](ge/extensions/career/modules/delivery/tutorial.md) | 7 | Détermine si les tutoriels de livraison (colis, véhicules, matériaux) sont encore actifs et fournit les listes de tâches du tutoriel pour la |
+| [✍ `career_modules_delivery_vehicleOfferManager`](ge/extensions/career/modules/delivery/vehicleOfferManager.md) | 16 | Gère les offres de livraison de véhicules et de remorques en mode carrière (la liste allOffers) : ajout, recherche (par lieu, par installati |
+| [✍ `career_modules_delivery_vehicleTasks`](ge/extensions/career/modules/delivery/vehicleTasks.md) | 17 | Exécute les tâches de livraison de véhicules et de remorques acceptées en carrière. Chaque offre devient un taskData avec une suite d'étapes |
+| [✍ `career_modules_fuel`](ge/extensions/career/modules/fuel.md) | 18 | Transaction de ravitaillement du mode carrière à une station-service. startTransaction ouvre l'écran career.refueling, lit les réservoirs du |
+| [✍ `career_modules_inspectVehicle`](ge/extensions/career/modules/inspectVehicle.md) | 22 | Gère l'inspection d'un véhicule à vendre (concession ou vendeur privé) en mode carrière avant achat. startInspection fait apparaître le véhi |
+| [✍ `career_modules_insurance_history`](ge/extensions/career/modules/insurance/history.md) | 11 | Historique des événements d'assurance du joueur en carrière (réclamations, réparations privées, renouvellements, changements de contrat…). C |
+| [✍ `career_modules_insurance_insurance`](ge/extensions/career/modules/insurance/insurance.md) | 66 | Système d'assurance et de réparation de véhicules du mode carrière. Il charge les définitions de gameplay/insurance (fournisseurs, classes,  |
+| [✍ `career_modules_insurance_repairScreen`](ge/extensions/career/modules/insurance/repairScreen.md) | 8 | Prépare les données et gère l'ouverture/fermeture de l'écran de réparation (route UI career.computer.repair) accessible depuis l'ordinateur  |
+| [✍ `career_modules_inventory`](ge/extensions/career/modules/inventory.md) | 63 | Inventaire de véhicules de la carrière : la table vehicles (inventoryId -> infos : model, config, niceName, owned, partConditions, timeToAcc |
+| [✍ `career_modules_loanerVehicles`](ge/extensions/career/modules/loanerVehicles.md) | 10 | Véhicules prêtés (loaners) par les organisations de livraison en carrière. Il construit les offres affichées dans l'UI (formatLoanerOfferFor |
+| [✍ `career_modules_log`](ge/extensions/career/modules/log.md) | 3 | Petit journal texte de la carrière. Les modules appellent addLog pour accumuler des lignes en mémoire ; à chaque sauvegarde du profil, les l |
+| [✍ `career_modules_logbook`](ge/extensions/career/modules/logbook.md) | 14 | Journal de bord de la carrière (logbook.json dans le dossier career de la sauvegarde). Stocke les entrées affichées dans l'UI : déblocage de |
+| [✍ `career_modules_marketplace`](ge/extensions/career/modules/marketplace.md) | 21 | Place de marché de véhicules de la carrière, dans deux sens. (1) Le joueur met en vente des véhicules de son inventaire (listVehicles) ; des |
+| [✍ `career_modules_milestones_general`](ge/extensions/career/modules/milestones/general.md) | 5 | Gestionnaire des « jalons généraux » (milestones) de la carrière. À l'activation de la carrière, il collecte via le hook onGeneralMilestones |
+| [✍ `career_modules_milestones_generalMilestones_branches`](ge/extensions/career/modules/milestones/generalMilestones/branches.md) | 4 | Jalons de niveaux de branches et de compétences de la carrière. Pour chaque branche non « isInDevelopment » de career_branches.getSortedBran |
+| [✍ `career_modules_milestones_generalMilestones_delivery`](ge/extensions/career/modules/milestones/generalMilestones/delivery.md) | 4 | Jalons liés aux livraisons de la carrière : colis (parcel), véhicules, remorques, fluides et vrac sec livrés ; livraisons à l'heure, retardé |
+| [✍ `career_modules_milestones_generalMilestones_insurance`](ge/extensions/career/modules/milestones/generalMilestones/insurance.md) | 2 | Jalon sur le nombre de réclamations d'assurance pour réparation (id insurance_repair_claims). Paliers : 1, 5, 10, 20, 50 réclamations (caree |
+| [✍ `career_modules_milestones_generalMilestones_missions`](ge/extensions/career/modules/milestones/generalMilestones/missions.md) | 7 | Jalons liés aux missions de la carrière. Pour l'ensemble des missions showInCareer puis pour chaque branche (déduite de gameplay_missions_un |
+| [✍ `career_modules_milestones_generalMilestones_money`](ge/extensions/career/modules/milestones/generalMilestones/money.md) | 4 | Jalons d'argent de la carrière. Chaque jalon cumule, pour un mode (gains ou losses) et des tags, les montants suivis par career_modules_play |
+| [✍ `career_modules_milestones_generalMilestones_speedTraps`](ge/extensions/career/modules/milestones/generalMilestones/speedTraps.md) | 2 | Jalons liés aux radars (gameplay_speedTraps) en carrière : record de vitesse atteinte devant un radar (velocitySpeedTrapMilestone, paliers 7 |
+| [✍ `career_modules_milestones_generalMilestones_statistic`](ge/extensions/career/modules/milestones/generalMilestones/statistic.md) | 5 | Jalons basés sur les statistiques de gameplay (gameplay_statistic) : distance parcourue (vehicle/total_odometer.length, en m, 8 paliers de 1 |
+| [✍ `career_modules_milestones_milestones`](ge/extensions/career/modules/milestones/milestones.md) | 15 | Module central des jalons (milestones) de la carrière : sauvegarde (milestones.json), liste agrégée pour l'UI via le hook onGetMilestones, r |
+| [✍ `career_modules_missionWrapper`](ge/extensions/career/modules/missionWrapper.md) | 9 | Fait le lien entre le système de missions (gameplay_missions_*) et la sauvegarde de carrière. Les données de progression des missions sont s |
+| [✍ `career_modules_painting`](ge/extensions/career/modules/painting.md) | 13 | Atelier de peinture de la carrière, accessible depuis l'ordinateur du garage. Il prépare la scène (entre dans le véhicule, le fige, caméra o |
+| [✍ `career_modules_partInventory`](ge/extensions/career/modules/partInventory.md) | 24 | Inventaire des pièces de la carrière. Chaque pièce (installée sur un véhicule de l'inventaire ou en stockage, location = 0) est une entrée d |
+| [✍ `career_modules_partShopping`](ge/extensions/career/modules/partShopping.md) | 19 | Boutique de pièces de la carrière (écran « personnalisation de pièces » de l'ordinateur du garage). Pour un véhicule de l'inventaire, il gén |
+| [✍ `career_modules_payment`](ge/extensions/career/modules/payment.md) | 2 | Paiement générique en carrière : vérifie qu'un prix (table de devises) est payable avec les attributs du joueur et le débite via career_modu |
+| [✍ `career_modules_permissions`](ge/extensions/career/modules/permissions.md) | 1 | Système de permissions de la carrière. Une action (tag comme vehicleModification, vehicleSelling, interactRefuel, recoveryTowToRoad…) peut ê |
+| [✍ `career_modules_playbookWriter`](ge/extensions/career/modules/playbookWriter.md) | 4 | Enregistre l'historique des missions jouées (missionId et étoiles) dans playbook.json du dossier career de la sauvegarde. Chargé seulement q |
+| [✍ `career_modules_playerAbstract`](ge/extensions/career/modules/playerAbstract.md) | 7 | Écran « résumé du conducteur » (driver abstract) accessible depuis l'ordinateur du garage en carrière. Il ajoute une entrée au menu de l'ord |
+| [✍ `career_modules_playerAttributes`](ge/extensions/career/modules/playerAttributes.md) | 15 | Registre central des attributs du joueur en carrière : money, beamXP, vouchers, un attribut par branche/compétence (branch.attributeKey) et  |
+| [✍ `career_modules_playerDriving`](ge/extensions/career/modules/playerDriving.md) | 17 | Gère la conduite du joueur en carrière : mise en place du trafic et des véhicules garés, suivi de l'état du joueur (stationné, trafic, pours |
+| [✍ `career_modules_quickTravel`](ge/extensions/career/modules/quickTravel.md) | 4 | Voyage rapide payant en carrière : calcule un prix selon la distance de route entre le joueur et une destination, puis téléporte le joueur ( |
+| [✍ `career_modules_rentals`](ge/extensions/career/modules/rentals.md) | 1 | Ébauche non terminée d'un système de location de véhicules en carrière : la plupart des fonctions ne contiennent que des commentaires, et le |
+| [✍ `career_modules_reputation`](ge/extensions/career/modules/reputation.md) | 5 | Calcul de la réputation du joueur auprès des organisations de la carrière. Valeur comprise entre -50 et 700, convertie en niveau (-1 à 3 par |
+| [✍ `career_modules_spawnPoints`](ge/extensions/career/modules/spawnPoints.md) | 6 | Découverte des points d'apparition (spawn points) d'un niveau en carrière. Chaque seconde, si le joueur conduit un véhicule de l'inventaire, |
+| [✍ `career_modules_speedTraps`](ge/extensions/career/modules/speedTraps.md) | 4 | Réaction de la carrière aux radars (gameplay_speedTraps) : amendes pour excès de vitesse et feu rouge, messages UI, son du flash, et enregis |
+| [✍ `career_modules_testDrive`](ge/extensions/career/modules/testDrive.md) | 14 | Essai routier d'un véhicule chez un concessionnaire en carrière. start() fait monter le joueur dans le véhicule, crée un instantané des cond |
+| [✍ `career_modules_tether`](ge/extensions/career/modules/tether.md) | 9 | Système de « laisses » (tethers) du mode carrière : une zone (boîte, sphère, capsule, porte ou véhicule) autour de laquelle le joueur doit r |
+| [✍ `career_modules_tuning`](ge/extensions/career/modules/tuning.md) | 9 | Menu de réglage (tuning) d'un véhicule d'inventaire en carrière, depuis l'ordinateur du garage. Il lit les variables de tuning du véhicule,  |
+| [✍ `career_modules_tutorial`](ge/extensions/career/modules/tutorial.md) | 17 | Tutoriel de la carrière, en 9 étapes (01enterVehicle à 09spmSignup). Ce module est une fine couche au-dessus de gameplay_tutorial_runtime :  |
+| [✍ `career_modules_tutorial_debug`](ge/extensions/career/modules/tutorial/debug.md) | 1 | Menu de debug imgui du tutoriel de carrière. Il affiche l'étape courante, des boutons pour démarrer/avancer/terminer le tutoriel, sauter à u |
+| [✍ `career_modules_tutorial_step01enterVehicle`](ge/extensions/career/modules/tutorial/step01enterVehicle.md) | 7 | Étape 1 du tutoriel de carrière (« enterVehicle ») : le joueur monte dans le véhicule du tutoriel, apprend les commandes de base (accélérer, |
+| [✍ `career_modules_tutorial_step02moveOff`](ge/extensions/career/modules/tutorial/step02moveOff.md) | 5 | Étape 2 du tutoriel de carrière (« moveOff ») : apprendre à démarrer le véhicule selon le mode de boîte réglé à l'étape 1. Trois modes (dédu |
+| [✍ `career_modules_tutorial_step03basicManeuvers`](ge/extensions/career/modules/tutorial/step03basicManeuvers.md) | 5 | Étape 3 du tutoriel de carrière (« basicManeuvers ») : le joueur conduit librement (message sur le changement de caméra) puis doit garer le  |
+| [✍ `career_modules_tutorial_step04timeTrial`](ge/extensions/career/modules/tutorial/step04timeTrial.md) | 12 | Étape 4 du tutoriel de carrière (« timeTrial ») : une popup d'intro lance la mission contre-la-montre west_coast_usa/timeTrial/tutorialSimpl |
+| [✍ `career_modules_tutorial_step05driveToDragStrip`](ge/extensions/career/modules/tutorial/step05driveToDragStrip.md) | 6 | Étape 5 du tutoriel de carrière (« driveToDragStrip ») : le joueur conduit jusqu'au drag strip, avec guidage au sol et marqueur, puis gare l |
+| [✍ `career_modules_tutorial_step06dragStripBasics`](ge/extensions/career/modules/tutorial/step06dragStripBasics.md) | 10 | Étape 6 du tutoriel de carrière (« dragStripBasics ») : apprendre une course de drag. Le joueur se place (staging), attend le compte à rebou |
+| [✍ `career_modules_tutorial_step07bigmap`](ge/extensions/career/modules/tutorial/step07bigmap.md) | 10 | Étape 7 du tutoriel de carrière (« bigmap ») : apprendre la grande carte. Le joueur l'ouvre, lit une popup (v2/bigmapTutorial), sélectionne  |
+| [✍ `career_modules_tutorial_step08driveToGarage`](ge/extensions/career/modules/tutorial/step08driveToGarage.md) | 6 | Étape 8 du tutoriel de carrière (« driveToGarage ») : le joueur conduit jusqu'au garage, se gare sur la place garageExteriorPark (immobile 1 |
+| [✍ `career_modules_tutorial_step09spmSignup`](ge/extensions/career/modules/tutorial/step09spmSignup.md) | 12 | Étape 9 et dernière du tutoriel de carrière (« spmSignup ») : le joueur accède à l'ordinateur du garage, signe le contrat d'embauche (popup  |
+| [✍ `career_modules_tutorial_tasklistLocale`](ge/extensions/career/modules/tutorial/tasklistLocale.md) | 4 | Aide utilisée par les étapes du tutoriel de carrière pour envoyer la liste de tâches à l'UI : elle traduit les champs texte (label, subtext, |
+| [✍ `career_modules_tutorialPopups`](ge/extensions/career/modules/tutorialPopups.md) | 12 | Gère les popups d'introduction (tutoriel et aides contextuelles) de la carrière : mémorise lesquelles ont déjà été vues (drapeaux sauvegardé |
+| [✍ `career_modules_uiUtils`](ge/extensions/career/modules/uiUtils.md) | 6 | Fonctions utilitaires pour l'interface de la carrière : données du bandeau de statut (argent, beamXP, bons, score d'assurance), statistiques |
+| [✍ `career_modules_unlockFlags`](ge/extensions/career/modules/unlockFlags.md) | 6 | Drapeaux de déblocage de la carrière. Les définitions viennent des autres extensions via le hook onGetUnlockFlagDefinitions (chacune ajoute  |
+| [✍ `career_modules_valueCalculator`](ge/extensions/career/modules/valueCalculator.md) | 9 | Calcul de la valeur et de l'état de réparation des véhicules et pièces de la carrière : dépréciation par année d'âge (table depreciationByYe |
+| [✍ `career_modules_vehicleClassGrouping`](ge/extensions/career/modules/vehicleClassGrouping.md) | 2 | Génère des groupes de véhicules par classe de performance (S, A, B, C, D) pour le système core_multiSpawn (adversaires, courses). Parcourt t |
+| [✍ `career_modules_vehicleDeletionService`](ge/extensions/career/modules/vehicleDeletionService.md) | 7 | Service de suppression différée de véhicules en carrière : un véhicule « marqué » est supprimé (avec appel d'un callback) quand il est à plu |
+| [✍ `career_modules_vehiclePerformance`](ge/extensions/career/modules/vehiclePerformance.md) | 16 | Certification de performance (« indice de performance ») des véhicules de la carrière, depuis l'ordinateur du garage. startDragTest enchaîne |
+| [✍ `career_modules_vehicleShopping`](ge/extensions/career/modules/vehicleShopping.md) | 37 | Marché de véhicules de la carrière : génère et entretient la liste des véhicules en vente (concessionnaires et vendeurs privés), gère leur d |
+| [✍ `career_saveSystem`](ge/extensions/career/saveSystem.md) | 20 | Système de sauvegarde de la carrière. Les profils sont des dossiers de settings/cloud/saves/<profil>/ ; chaque sauvegarde est un sous-dossie |
+| [✍ `career_startingModes_apmOnboarding`](ge/extensions/career/startingModes/apmOnboarding.md) | 2 | Mode de départ de carrière « apmOnboarding » (tier major, ordre 100, image start_apm.jpg) : c'est le départ avec tutoriel. Ce fichier ne ret |
+| [✍ `career_startingModes_freshStart`](ge/extensions/career/startingModes/freshStart.md) | 2 | Mode de départ de carrière « freshStart » (tier minor, ordre 200, image start_fresh.jpg) : départ sans tutoriel avec 10 000 d'argent. Table  |
+| [✍ `career_startingModes_sandbox`](ge/extensions/career/startingModes/sandbox.md) | 2 | Mode de départ de carrière « sandbox » (tier minor, ordre 400) : 50 millions d'argent, « tout débloqué » d'après sa description. Table de de |
+| [✍ `career_startingModes_selfMade`](ge/extensions/career/startingModes/selfMade.md) | 2 | Mode de départ de carrière « selfMade » (tier minor, ordre 300, ignore = true) : 1 000 d'argent et une vieille voiture générée aléatoirement |
 | [✍ `core_activity`](ge/extensions/core/activity.md) | 1 | Extension GE (core_activity) minuscule : démarre une 'activité' nommée. Aujourd'hui la seule activité connue est 'ContinueFreeroam', qui lan |
 | [✍ `core_audio`](ge/extensions/core/audio.md) | 11 | Extension GE (core_audio) qui charge les banques FMOD du jeu. Au premier update, elle scanne /art/sound/fmod/<plateforme> (et le sous-dossie |
 | [✍ `core_audioForest`](ge/extensions/core/audioForest.md) | 19 | Extension GE (core_audioForest) : coordinateur d'exécution des émetteurs audio de forêt. À partir des arbres/objets du Forest du niveau, ell |
@@ -569,1127 +569,1127 @@ Généré par tim19Atlas à partir du code Lua du jeu (lecture seule).
 | [✍ `core_versionUpdate`](ge/extensions/core/versionUpdate.md) | 3 | Détecte au démarrage si le jeu vient d'être mis à jour vers une nouvelle version majeure (comparaison des deux premiers nombres de beamng_ve |
 | [✍ `core_weather`](ge/extensions/core/weather.md) | 8 | Applique des préréglages météo (presets) en modifiant directement les champs d'objets de la scène (LevelInfo, CloudLayer, ScatterSky, etc.)  |
 | [✍ `core_windowsConsole`](ge/extensions/core/windowsConsole.md) | 8 | Pont entre la fenêtre console native de Windows (C++) et Lua. Il remplit la liste déroulante des contextes d'exécution (GE-Lua, véhicule cou |
-| [`debug_vehicleDebug`](ge/extensions/debug/vehicleDebug.md) | 7 |  |
-| [`editor_aiTests`](ge/extensions/editor/aiTests.md) | 3 |  |
-| [`editor_aiViz`](ge/extensions/editor/aiViz.md) | 4 |  |
-| [`editor_api_aiPath`](ge/extensions/editor/api/aiPath.md) | 1 |  |
-| [`editor_api_assets`](ge/extensions/editor/api/assets.md) | 3 |  |
-| [`editor_api_camera`](ge/extensions/editor/api/camera.md) | 28 |  |
-| [`editor_api_colorTemperatureUI`](ge/extensions/editor/api/colorTemperatureUI.md) | 3 |  |
-| [`editor_api_core`](ge/extensions/editor/api/core.md) | 51 |  |
-| [`editor_api_dataBlock`](ge/extensions/editor/api/dataBlock.md) | 9 |  |
-| [`editor_api_decal`](ge/extensions/editor/api/decal.md) | 18 |  |
-| [`editor_api_dynamicDecals`](ge/extensions/editor/api/dynamicDecals.md) | 204 |  |
-| [`editor_api_dynamicDecals_sidecarFileMigration`](ge/extensions/editor/api/dynamicDecals/sidecarFileMigration.md) | 1 |  |
-| [`editor_api_dynamicDecals_textures`](ge/extensions/editor/api/dynamicDecals/textures.md) | 14 |  |
-| [`editor_api_easeCurveUI`](ge/extensions/editor/api/easeCurveUI.md) | 1 |  |
-| [`editor_api_forest`](ge/extensions/editor/api/forest.md) | 8 |  |
-| [`editor_api_forestItemTools`](ge/extensions/editor/api/forestItemTools.md) | 19 |  |
-| [`editor_api_genericInspector`](ge/extensions/editor/api/genericInspector.md) | 3 |  |
-| [`editor_api_gizmo`](ge/extensions/editor/api/gizmo.md) | 30 |  |
-| [`editor_api_gui`](ge/extensions/editor/api/gui.md) | 124 |  |
-| [`editor_api_guiInstancer`](ge/extensions/editor/api/guiInstancer.md) | 5 |  |
-| [`editor_api_guiTheme`](ge/extensions/editor/api/guiTheme.md) | 0 |  |
-| [`editor_api_history`](ge/extensions/editor/api/history.md) | 11 |  |
-| [`editor_api_iesImporter`](ge/extensions/editor/api/iesImporter.md) | 14 |  |
-| [`editor_api_material`](ge/extensions/editor/api/material.md) | 8 |  |
-| [`editor_api_navigation`](ge/extensions/editor/api/navigation.md) | 10 |  |
-| [`editor_api_object`](ge/extensions/editor/api/object.md) | 65 |  |
-| [`editor_api_objectHistoryActions`](ge/extensions/editor/api/objectHistoryActions.md) | 4 |  |
-| [`editor_api_preferencesRegistry`](ge/extensions/editor/api/preferencesRegistry.md) | 25 |  |
-| [`editor_api_proceduralContentGenerator`](ge/extensions/editor/api/proceduralContentGenerator.md) | 40 |  |
-| [`editor_api_roadRiver`](ge/extensions/editor/api/roadRiver.md) | 19 |  |
-| [`editor_api_selectabilityPresets`](ge/extensions/editor/api/selectabilityPresets.md) | 11 |  |
-| [`editor_api_sketch`](ge/extensions/editor/api/sketch.md) | 4 |  |
-| [`editor_api_terrain`](ge/extensions/editor/api/terrain.md) | 48 |  |
-| [`editor_api_valueInspector`](ge/extensions/editor/api/valueInspector.md) | 8 |  |
-| [`editor_assemblySpline`](ge/extensions/editor/assemblySpline.md) | 9 |  |
-| [`editor_assemblySpline_distribution`](ge/extensions/editor/assemblySpline/distribution.md) | 1 |  |
-| [`editor_assemblySpline_import`](ge/extensions/editor/assemblySpline/import.md) | 4 |  |
-| [`editor_assemblySpline_molecule`](ge/extensions/editor/assemblySpline/molecule.md) | 15 |  |
-| [`editor_assemblySpline_populate`](ge/extensions/editor/assemblySpline/populate.md) | 5 |  |
-| [`editor_assemblySpline_splineMgr`](ge/extensions/editor/assemblySpline/splineMgr.md) | 37 |  |
-| [`editor_assetBrowser`](ge/extensions/editor/assetBrowser.md) | 13 |  |
-| [`editor_assetDeduplicator`](ge/extensions/editor/assetDeduplicator.md) | 5 |  |
-| [`editor_assetManagementTool`](ge/extensions/editor/assetManagementTool.md) | 4 |  |
-| [`editor_audioEventsList`](ge/extensions/editor/audioEventsList.md) | 5 |  |
-| [`editor_audioForestEditor`](ge/extensions/editor/audioForestEditor.md) | 4 |  |
-| [`editor_audioRibbonEditor`](ge/extensions/editor/audioRibbonEditor.md) | 3 |  |
-| [`editor_autoSave`](ge/extensions/editor/autoSave.md) | 4 |  |
-| [`editor_barriersEditor`](ge/extensions/editor/barriersEditor.md) | 5 |  |
-| [`editor_biomeTool`](ge/extensions/editor/biomeTool.md) | 12 |  |
-| [`editor_bulkRename`](ge/extensions/editor/bulkRename.md) | 5 |  |
-| [`editor_camPathEditor`](ge/extensions/editor/camPathEditor.md) | 7 |  |
-| [`editor_cameraBookmarks`](ge/extensions/editor/cameraBookmarks.md) | 3 |  |
-| [`editor_cameraTransform`](ge/extensions/editor/cameraTransform.md) | 4 |  |
-| [`editor_cameraV2`](ge/extensions/editor/cameraV2.md) | 10 |  |
-| [`editor_cameraV2_controller`](ge/extensions/editor/cameraV2/controller.md) | 11 |  |
-| [`editor_cameraV2_orbit`](ge/extensions/editor/cameraV2/orbit.md) | 13 |  |
-| [`editor_cameraV2_validation`](ge/extensions/editor/cameraV2/validation.md) | 12 |  |
-| [`editor_cameraV2_zoom`](ge/extensions/editor/cameraV2/zoom.md) | 5 |  |
-| [`editor_cefHelper`](ge/extensions/editor/cefHelper.md) | 2 |  |
-| [`editor_copyToSelected`](ge/extensions/editor/copyToSelected.md) | 2 |  |
-| [`editor_crawlEditor`](ge/extensions/editor/crawlEditor.md) | 27 |  |
-| [`editor_crawlEditor_boundaries`](ge/extensions/editor/crawlEditor/boundaries.md) | 18 |  |
-| [`editor_crawlEditor_input`](ge/extensions/editor/crawlEditor/input.md) | 2 |  |
-| [`editor_crawlEditor_missionPortTool`](ge/extensions/editor/crawlEditor/missionPortTool.md) | 3 |  |
-| [`editor_crawlEditor_paths`](ge/extensions/editor/crawlEditor/paths.md) | 27 |  |
-| [`editor_crawlEditor_presets`](ge/extensions/editor/crawlEditor/presets.md) | 43 |  |
-| [`editor_crawlEditor_startingPositions`](ge/extensions/editor/crawlEditor/startingPositions.md) | 15 |  |
-| [`editor_crawlEditor_trails`](ge/extensions/editor/crawlEditor/trails.md) | 11 |  |
-| [`editor_crawlEditor_waypoints`](ge/extensions/editor/crawlEditor/waypoints.md) | 20 |  |
-| [`editor_createObjectTool`](ge/extensions/editor/createObjectTool.md) | 15 |  |
-| [`editor_cubemapEditor`](ge/extensions/editor/cubemapEditor.md) | 3 |  |
-| [`editor_dataBlockEditor`](ge/extensions/editor/dataBlockEditor.md) | 6 |  |
-| [`editor_decalEditor`](ge/extensions/editor/decalEditor.md) | 7 |  |
-| [`editor_decalSpline`](ge/extensions/editor/decalSpline.md) | 8 |  |
-| [`editor_decalSpline_populate`](ge/extensions/editor/decalSpline/populate.md) | 7 |  |
-| [`editor_decalSpline_splineMgr`](ge/extensions/editor/decalSpline/splineMgr.md) | 32 |  |
-| [`editor_documentationHelper`](ge/extensions/editor/documentationHelper.md) | 3 |  |
-| [`editor_dragRaceEditor`](ge/extensions/editor/dragRaceEditor.md) | 5 |  |
-| [`editor_dragRaceEditor_constants`](ge/extensions/editor/dragRaceEditor/constants.md) | 0 |  |
-| [`editor_dragRaceEditor_dragSettings`](ge/extensions/editor/dragRaceEditor/dragSettings.md) | 17 |  |
-| [`editor_dragRaceEditor_facilities`](ge/extensions/editor/dragRaceEditor/facilities.md) | 14 |  |
-| [`editor_dragRaceEditor_input`](ge/extensions/editor/dragRaceEditor/input.md) | 2 | Mouse input for zone editing (same pattern as crawl editor). |
-| [`editor_dragRaceEditor_lanes`](ge/extensions/editor/dragRaceEditor/lanes.md) | 13 |  |
-| [`editor_dragRaceEditor_state`](ge/extensions/editor/dragRaceEditor/state.md) | 36 |  |
-| [`editor_dragRaceEditor_strips`](ge/extensions/editor/dragRaceEditor/strips.md) | 23 |  |
-| [`editor_dragRaceEditor_utils`](ge/extensions/editor/dragRaceEditor/utils.md) | 15 |  |
-| [`editor_dragRaceEditor_zones`](ge/extensions/editor/dragRaceEditor/zones.md) | 16 | Zone editing for drag strip zone and lane zones (crawl boundary-style). |
-| [`editor_driftDataEditor`](ge/extensions/editor/driftDataEditor.md) | 10 |  |
-| [`editor_drivePathEditor`](ge/extensions/editor/drivePathEditor.md) | 7 |  |
-| [`editor_drivePathEditor_playback`](ge/extensions/editor/drivePathEditor/playback.md) | 4 |  |
-| [`editor_drivePathEditor_record`](ge/extensions/editor/drivePathEditor/record.md) | 4 |  |
-| [`editor_drivePathEditor_splineMgr`](ge/extensions/editor/drivePathEditor/splineMgr.md) | 32 |  |
-| [`editor_dynamicDecals_browser`](ge/extensions/editor/dynamicDecals/browser.md) | 8 |  |
-| [`editor_dynamicDecals_brushes`](ge/extensions/editor/dynamicDecals/brushes.md) | 7 |  |
-| [`editor_dynamicDecals_camera`](ge/extensions/editor/dynamicDecals/camera.md) | 3 |  |
-| [`editor_dynamicDecals_colorHistory`](ge/extensions/editor/dynamicDecals/colorHistory.md) | 5 |  |
-| [`editor_dynamicDecals_colorPresets`](ge/extensions/editor/dynamicDecals/colorPresets.md) | 4 |  |
-| [`editor_dynamicDecals_debugSection`](ge/extensions/editor/dynamicDecals/debugSection.md) | 3 |  |
-| [`editor_dynamicDecals_debugTextures`](ge/extensions/editor/dynamicDecals/debugTextures.md) | 3 |  |
-| [`editor_dynamicDecals_docs`](ge/extensions/editor/dynamicDecals/docs.md) | 11 |  |
-| [`editor_dynamicDecals_export`](ge/extensions/editor/dynamicDecals/export.md) | 3 |  |
-| [`editor_dynamicDecals_fonts`](ge/extensions/editor/dynamicDecals/fonts.md) | 6 |  |
-| [`editor_dynamicDecals_gizmo`](ge/extensions/editor/dynamicDecals/gizmo.md) | 11 |  |
-| [`editor_dynamicDecals_helper`](ge/extensions/editor/dynamicDecals/helper.md) | 10 |  |
-| [`editor_dynamicDecals_history`](ge/extensions/editor/dynamicDecals/history.md) | 3 |  |
-| [`editor_dynamicDecals_inspector`](ge/extensions/editor/dynamicDecals/inspector.md) | 6 |  |
-| [`editor_dynamicDecals_inspector_utils`](ge/extensions/editor/dynamicDecals/inspector/utils.md) | 6 |  |
-| [`editor_dynamicDecals_layerStack`](ge/extensions/editor/dynamicDecals/layerStack.md) | 4 |  |
-| [`editor_dynamicDecals_layerTypes_brushStroke`](ge/extensions/editor/dynamicDecals/layerTypes/brushStroke.md) | 3 |  |
-| [`editor_dynamicDecals_layerTypes_decal`](ge/extensions/editor/dynamicDecals/layerTypes/decal.md) | 8 |  |
-| [`editor_dynamicDecals_layerTypes_fill`](ge/extensions/editor/dynamicDecals/layerTypes/fill.md) | 4 |  |
-| [`editor_dynamicDecals_layerTypes_group`](ge/extensions/editor/dynamicDecals/layerTypes/group.md) | 4 |  |
-| [`editor_dynamicDecals_layerTypes_linkedSet`](ge/extensions/editor/dynamicDecals/layerTypes/linkedSet.md) | 4 |  |
-| [`editor_dynamicDecals_layerTypes_path`](ge/extensions/editor/dynamicDecals/layerTypes/path.md) | 3 |  |
-| [`editor_dynamicDecals_layerTypes_textureFill`](ge/extensions/editor/dynamicDecals/layerTypes/textureFill.md) | 4 |  |
-| [`editor_dynamicDecals_loadSave`](ge/extensions/editor/dynamicDecals/loadSave.md) | 8 |  |
-| [`editor_dynamicDecals_meshes`](ge/extensions/editor/dynamicDecals/meshes.md) | 3 |  |
-| [`editor_dynamicDecals_news`](ge/extensions/editor/dynamicDecals/news.md) | 4 |  |
-| [`editor_dynamicDecals_notification`](ge/extensions/editor/dynamicDecals/notification.md) | 5 |  |
-| [`editor_dynamicDecals_selection`](ge/extensions/editor/dynamicDecals/selection.md) | 5 |  |
-| [`editor_dynamicDecals_settings`](ge/extensions/editor/dynamicDecals/settings.md) | 5 |  |
-| [`editor_dynamicDecals_textures`](ge/extensions/editor/dynamicDecals/textures.md) | 6 |  |
-| [`editor_dynamicDecals_vehicleColorPalette`](ge/extensions/editor/dynamicDecals/vehicleColorPalette.md) | 6 |  |
-| [`editor_dynamicDecals_widgets`](ge/extensions/editor/dynamicDecals/widgets.md) | 6 |  |
-| [`editor_dynamicDecalsTool`](ge/extensions/editor/dynamicDecalsTool.md) | 31 |  |
-| [`editor_editorRenderSettings`](ge/extensions/editor/editorRenderSettings.md) | 7 |  |
-| [`editor_engineAudioDebug`](ge/extensions/editor/engineAudioDebug.md) | 8 |  |
-| [`editor_extensionsDebug`](ge/extensions/editor/extensionsDebug.md) | 3 |  |
-| [`editor_extensionsEditor`](ge/extensions/editor/extensionsEditor.md) | 4 |  |
-| [`editor_ezObjectSelect`](ge/extensions/editor/ezObjectSelect.md) | 17 |  |
-| [`editor_ezObjectSelect_cameraBookmarks`](ge/extensions/editor/ezObjectSelect/cameraBookmarks.md) | 1 |  |
-| [`editor_ezObjectSelect_controller`](ge/extensions/editor/ezObjectSelect/controller.md) | 44 |  |
-| [`editor_ezObjectSelect_modalOperatorCommon`](ge/extensions/editor/ezObjectSelect/modalOperatorCommon.md) | 15 |  |
-| [`editor_ezObjectSelect_nativeGizmo`](ge/extensions/editor/ezObjectSelect/nativeGizmo.md) | 4 |  |
-| [`editor_ezObjectSelect_objectBoxAnchors`](ge/extensions/editor/ezObjectSelect/objectBoxAnchors.md) | 3 |  |
-| [`editor_ezObjectSelect_rotateOperator`](ge/extensions/editor/ezObjectSelect/rotateOperator.md) | 8 |  |
-| [`editor_ezObjectSelect_scaleOperator`](ge/extensions/editor/ezObjectSelect/scaleOperator.md) | 8 |  |
-| [`editor_ezObjectSelect_selectionCache`](ge/extensions/editor/ezObjectSelect/selectionCache.md) | 5 |  |
-| [`editor_ezObjectSelect_selectionDebug`](ge/extensions/editor/ezObjectSelect/selectionDebug.md) | 3 |  |
-| [`editor_ezObjectSelect_selectionGeometry`](ge/extensions/editor/ezObjectSelect/selectionGeometry.md) | 10 |  |
-| [`editor_ezObjectSelect_selectionLabelOverlay`](ge/extensions/editor/ezObjectSelect/selectionLabelOverlay.md) | 1 |  |
-| [`editor_ezObjectSelect_selectionLabels`](ge/extensions/editor/ezObjectSelect/selectionLabels.md) | 1 |  |
-| [`editor_ezObjectSelect_selectionModel`](ge/extensions/editor/ezObjectSelect/selectionModel.md) | 8 |  |
-| [`editor_ezObjectSelect_selectionQuery`](ge/extensions/editor/ezObjectSelect/selectionQuery.md) | 5 |  |
-| [`editor_ezObjectSelect_selectionScreenDebug`](ge/extensions/editor/ezObjectSelect/selectionScreenDebug.md) | 2 |  |
-| [`editor_ezObjectSelect_stats`](ge/extensions/editor/ezObjectSelect/stats.md) | 6 |  |
-| [`editor_ezObjectSelect_subtools_fence_anchors`](ge/extensions/editor/ezObjectSelect/subtools/fence/anchors.md) | 2 |  |
-| [`editor_ezObjectSelect_subtools_fence_controller`](ge/extensions/editor/ezObjectSelect/subtools/fence/controller.md) | 4 |  |
-| [`editor_ezObjectSelect_subtools_fence_session`](ge/extensions/editor/ezObjectSelect/subtools/fence/session.md) | 14 |  |
-| [`editor_ezObjectSelect_transformGizmo`](ge/extensions/editor/ezObjectSelect/transformGizmo.md) | 4 |  |
-| [`editor_ezObjectSelect_transformNumericInput`](ge/extensions/editor/ezObjectSelect/transformNumericInput.md) | 4 |  |
-| [`editor_ezObjectSelect_transformOperator`](ge/extensions/editor/ezObjectSelect/transformOperator.md) | 9 |  |
-| [`editor_ezObjectSelect_transformSession`](ge/extensions/editor/ezObjectSelect/transformSession.md) | 13 |  |
-| [`editor_ezObjectSelect_viewportOrientationGizmo`](ge/extensions/editor/ezObjectSelect/viewportOrientationGizmo.md) | 1 |  |
-| [`editor_ffiptrleaktest`](ge/extensions/editor/ffiptrleaktest.md) | 2 |  |
-| [`editor_fileDialog`](ge/extensions/editor/fileDialog.md) | 8 |  |
-| [`editor_flowgraph_basewindow`](ge/extensions/editor/flowgraph/basewindow.md) | 13 |  |
-| [`editor_flowgraph_events`](ge/extensions/editor/flowgraph/events.md) | 7 |  |
-| [`editor_flowgraph_examples`](ge/extensions/editor/flowgraph/examples.md) | 19 |  |
-| [`editor_flowgraph_execution`](ge/extensions/editor/flowgraph/execution.md) | 5 |  |
-| [`editor_flowgraph_garbageDebug`](ge/extensions/editor/flowgraph/garbageDebug.md) | 10 |  |
-| [`editor_flowgraph_history`](ge/extensions/editor/flowgraph/history.md) | 5 |  |
-| [`editor_flowgraph_legend`](ge/extensions/editor/flowgraph/legend.md) | 5 |  |
-| [`editor_flowgraph_main`](ge/extensions/editor/flowgraph/main.md) | 13 |  |
-| [`editor_flowgraph_missionVariableHelper`](ge/extensions/editor/flowgraph/missionVariableHelper.md) | 2 |  |
-| [`editor_flowgraph_nodePreview`](ge/extensions/editor/flowgraph/nodePreview.md) | 6 |  |
-| [`editor_flowgraph_nodelibrary`](ge/extensions/editor/flowgraph/nodelibrary.md) | 43 |  |
-| [`editor_flowgraph_overview`](ge/extensions/editor/flowgraph/overview.md) | 9 |  |
-| [`editor_flowgraph_projectSettings`](ge/extensions/editor/flowgraph/projectSettings.md) | 5 |  |
-| [`editor_flowgraph_properties`](ge/extensions/editor/flowgraph/properties.md) | 17 |  |
-| [`editor_flowgraph_references`](ge/extensions/editor/flowgraph/references.md) | 15 |  |
-| [`editor_flowgraph_search`](ge/extensions/editor/flowgraph/search.md) | 17 |  |
-| [`editor_flowgraph_stateView`](ge/extensions/editor/flowgraph/stateView.md) | 5 |  |
-| [`editor_flowgraph_variables`](ge/extensions/editor/flowgraph/variables.md) | 10 |  |
-| [`editor_flowgraph_welcome`](ge/extensions/editor/flowgraph/welcome.md) | 8 |  |
-| [`editor_flowgraphEditor`](ge/extensions/editor/flowgraphEditor.md) | 37 |  |
-| [`editor_forestEditor`](ge/extensions/editor/forestEditor.md) | 20 |  |
-| [`editor_forestTsstaticMover`](ge/extensions/editor/forestTsstaticMover.md) | 2 |  |
-| [`editor_forestView`](ge/extensions/editor/forestView.md) | 3 |  |
-| [`editor_gizmoHelper`](ge/extensions/editor/gizmoHelper.md) | 3 |  |
-| [`editor_groundCoverEditor`](ge/extensions/editor/groundCoverEditor.md) | 4 |  |
-| [`editor_groundModelDebugHelper`](ge/extensions/editor/groundModelDebugHelper.md) | 1 |  |
-| [`editor_headlessEditorTest`](ge/extensions/editor/headlessEditorTest.md) | 0 |  |
-| [`editor_heroRoadEditor`](ge/extensions/editor/heroRoadEditor.md) | 7 |  |
-| [`editor_heroRoadEditor_barrierMgr`](ge/extensions/editor/heroRoadEditor/barrierMgr.md) | 4 |  |
-| [`editor_heroRoadEditor_exportMgr`](ge/extensions/editor/heroRoadEditor/exportMgr.md) | 4 |  |
-| [`editor_heroRoadEditor_groundmodel`](ge/extensions/editor/heroRoadEditor/groundmodel.md) | 14 |  |
-| [`editor_heroRoadEditor_groupMgr`](ge/extensions/editor/heroRoadEditor/groupMgr.md) | 58 |  |
-| [`editor_heroRoadEditor_heatmap`](ge/extensions/editor/heroRoadEditor/heatmap.md) | 2 |  |
-| [`editor_heroRoadEditor_import`](ge/extensions/editor/heroRoadEditor/import.md) | 2 |  |
-| [`editor_heroRoadEditor_layerMgr`](ge/extensions/editor/heroRoadEditor/layerMgr.md) | 44 |  |
-| [`editor_heroRoadEditor_mesh`](ge/extensions/editor/heroRoadEditor/mesh.md) | 8 |  |
-| [`editor_heroRoadEditor_meshRefine`](ge/extensions/editor/heroRoadEditor/meshRefine.md) | 2 |  |
-| [`editor_heroRoadEditor_placeablesUI`](ge/extensions/editor/heroRoadEditor/placeablesUI.md) | 2 |  |
-| [`editor_heroRoadEditor_profile`](ge/extensions/editor/heroRoadEditor/profile.md) | 3 |  |
-| [`editor_heroRoadEditor_repairMgr`](ge/extensions/editor/heroRoadEditor/repairMgr.md) | 2 |  |
-| [`editor_heroRoadEditor_sidewalkMgr`](ge/extensions/editor/heroRoadEditor/sidewalkMgr.md) | 4 |  |
-| [`editor_iconOverview`](ge/extensions/editor/iconOverview.md) | 6 |  |
-| [`editor_iesEditor`](ge/extensions/editor/iesEditor.md) | 3 |  |
-| [`editor_imguiCDemo`](ge/extensions/editor/imguiCDemo.md) | 2 |  |
-| [`editor_inspector`](ge/extensions/editor/inspector.md) | 20 |  |
-| [`editor_layoutManager`](ge/extensions/editor/layoutManager.md) | 7 |  |
-| [`editor_levelSettings`](ge/extensions/editor/levelSettings.md) | 3 |  |
-| [`editor_levelValidator`](ge/extensions/editor/levelValidator.md) | 17 |  |
-| [`editor_lightClassConverter`](ge/extensions/editor/lightClassConverter.md) | 1 |  |
-| [`editor_logHelper`](ge/extensions/editor/logHelper.md) | 1 |  |
-| [`editor_logger`](ge/extensions/editor/logger.md) | 2 |  |
-| [`editor_main`](ge/extensions/editor/main.md) | 30 |  |
-| [`editor_mainMenu`](ge/extensions/editor/mainMenu.md) | 12 |  |
-| [`editor_mainToolbar`](ge/extensions/editor/mainToolbar.md) | 6 |  |
-| [`editor_mainUpdate`](ge/extensions/editor/mainUpdate.md) | 3 |  |
-| [`editor_mapJsonEditor`](ge/extensions/editor/mapJsonEditor.md) | 10 |  |
-| [`editor_masterSpline`](ge/extensions/editor/masterSpline.md) | 7 |  |
-| [`editor_masterSpline_autoRoadGen`](ge/extensions/editor/masterSpline/autoRoadGen.md) | 5 |  |
-| [`editor_masterSpline_burn`](ge/extensions/editor/masterSpline/burn.md) | 2 |  |
-| [`editor_masterSpline_homologation`](ge/extensions/editor/masterSpline/homologation.md) | 3 |  |
-| [`editor_masterSpline_jumpTables`](ge/extensions/editor/masterSpline/jumpTables.md) | 0 |  |
-| [`editor_masterSpline_layerMgr`](ge/extensions/editor/masterSpline/layerMgr.md) | 10 |  |
-| [`editor_masterSpline_splineMgr`](ge/extensions/editor/masterSpline/splineMgr.md) | 36 |  |
-| [`editor_materialEditor`](ge/extensions/editor/materialEditor.md) | 18 |  |
-| [`editor_measuresInspectorHeader`](ge/extensions/editor/measuresInspectorHeader.md) | 3 |  |
-| [`editor_meshEditor`](ge/extensions/editor/meshEditor.md) | 14 |  |
-| [`editor_meshRoadEditor`](ge/extensions/editor/meshRoadEditor.md) | 2 |  |
-| [`editor_meshSpline`](ge/extensions/editor/meshSpline.md) | 9 |  |
-| [`editor_meshSpline_import`](ge/extensions/editor/meshSpline/import.md) | 3 |  |
-| [`editor_meshSpline_populate`](ge/extensions/editor/meshSpline/populate.md) | 8 |  |
-| [`editor_meshSpline_populationEngine`](ge/extensions/editor/meshSpline/populationEngine.md) | 4 |  |
-| [`editor_meshSpline_splineMgr`](ge/extensions/editor/meshSpline/splineMgr.md) | 39 |  |
-| [`editor_missionEditor`](ge/extensions/editor/missionEditor.md) | 15 |  |
-| [`editor_missionEditor_additionalAttributes`](ge/extensions/editor/missionEditor/additionalAttributes.md) | 7 |  |
-| [`editor_missionEditor_careerSetup`](ge/extensions/editor/missionEditor/careerSetup.md) | 10 |  |
-| [`editor_missionEditor_conditions`](ge/extensions/editor/missionEditor/conditions.md) | 4 |  |
-| [`editor_missionEditor_dev`](ge/extensions/editor/missionEditor/dev.md) | 3 |  |
-| [`editor_missionEditor_general`](ge/extensions/editor/missionEditor/general.md) | 4 |  |
-| [`editor_missionEditor_genericTypeData`](ge/extensions/editor/missionEditor/genericTypeData.md) | 13 |  |
-| [`editor_missionEditor_issues`](ge/extensions/editor/missionEditor/issues.md) | 6 |  |
-| [`editor_missionEditor_layers`](ge/extensions/editor/missionEditor/layers.md) | 4 |  |
-| [`editor_missionEditor_objectives`](ge/extensions/editor/missionEditor/objectives.md) | 14 |  |
-| [`editor_missionEditor_playbookUtils`](ge/extensions/editor/missionEditor/playbookUtils.md) | 3 |  |
-| [`editor_missionEditor_prefabs`](ge/extensions/editor/missionEditor/prefabs.md) | 3 |  |
-| [`editor_missionEditor_previewChecker`](ge/extensions/editor/missionEditor/previewChecker.md) | 5 |  |
-| [`editor_missionEditor_progressMulti`](ge/extensions/editor/missionEditor/progressMulti.md) | 3 |  |
-| [`editor_missionEditor_progressSetup`](ge/extensions/editor/missionEditor/progressSetup.md) | 3 |  |
-| [`editor_missionEditor_progressSingle`](ge/extensions/editor/missionEditor/progressSingle.md) | 4 |  |
-| [`editor_missionEditor_setupModules`](ge/extensions/editor/missionEditor/setupModules.md) | 6 |  |
-| [`editor_missionEditor_startTrigger`](ge/extensions/editor/missionEditor/startTrigger.md) | 4 |  |
-| [`editor_missionPlaybook`](ge/extensions/editor/missionPlaybook.md) | 7 |  |
-| [`editor_missionPlaybook_attributeViewer`](ge/extensions/editor/missionPlaybook/attributeViewer.md) | 4 |  |
-| [`editor_missionPlaybook_missionTreeViewer`](ge/extensions/editor/missionPlaybook/missionTreeViewer.md) | 4 |  |
-| [`editor_missionPlaybook_unlockedMissionsViewer`](ge/extensions/editor/missionPlaybook/unlockedMissionsViewer.md) | 4 |  |
-| [`editor_missionStartPositionEditor`](ge/extensions/editor/missionStartPositionEditor.md) | 2 |  |
-| [`editor_multiSpawnManager`](ge/extensions/editor/multiSpawnManager.md) | 6 |  |
-| [`editor_navMeshEditor`](ge/extensions/editor/navMeshEditor.md) | 6 |  |
-| [`editor_newsMessage`](ge/extensions/editor/newsMessage.md) | 3 |  |
-| [`editor_objectScreenSizeViz`](ge/extensions/editor/objectScreenSizeViz.md) | 2 |  |
-| [`editor_objectToSplineEditor`](ge/extensions/editor/objectToSplineEditor.md) | 2 |  |
-| [`editor_objectTool`](ge/extensions/editor/objectTool.md) | 13 |  |
-| [`editor_particleEditor`](ge/extensions/editor/particleEditor.md) | 5 |  |
-| [`editor_particleEditor2`](ge/extensions/editor/particleEditor2.md) | 7 |  |
-| [`editor_perfProfiler`](ge/extensions/editor/perfProfiler.md) | 4 |  |
-| [`editor_prefabInstanceEditor`](ge/extensions/editor/prefabInstanceEditor.md) | 2 |  |
-| [`editor_preferences`](ge/extensions/editor/preferences.md) | 11 |  |
-| [`editor_raceEditor`](ge/extensions/editor/raceEditor.md) | 19 |  |
-| [`editor_raceEditor_pacenotes`](ge/extensions/editor/raceEditor/pacenotes.md) | 16 |  |
-| [`editor_raceEditor_pathnodes`](ge/extensions/editor/raceEditor/pathnodes.md) | 23 |  |
-| [`editor_raceEditor_segments`](ge/extensions/editor/raceEditor/segments.md) | 15 |  |
-| [`editor_raceEditor_startPositions`](ge/extensions/editor/raceEditor/startPositions.md) | 16 |  |
-| [`editor_raceEditor_testing`](ge/extensions/editor/raceEditor/testing.md) | 10 |  |
-| [`editor_raceEditor_timeTrials`](ge/extensions/editor/raceEditor/timeTrials.md) | 11 |  |
-| [`editor_raceEditor_tools`](ge/extensions/editor/raceEditor/tools.md) | 12 |  |
-| [`editor_raceEditor_trackLayout`](ge/extensions/editor/raceEditor/trackLayout.md) | 11 |  |
-| [`editor_rallyEditor`](ge/extensions/editor/rallyEditor.md) | 76 |  |
-| [`editor_rallyEditor_aiCompetitorsEditorModel`](ge/extensions/editor/rallyEditor/aiCompetitorsEditorModel.md) | 9 |  |
-| [`editor_rallyEditor_aiCompetitorsEditorPlot`](ge/extensions/editor/rallyEditor/aiCompetitorsEditorPlot.md) | 2 |  |
-| [`editor_rallyEditor_aiCompetitorsEditorPreview`](ge/extensions/editor/rallyEditor/aiCompetitorsEditorPreview.md) | 2 |  |
-| [`editor_rallyEditor_aiCompetitorsEditorTexts`](ge/extensions/editor/rallyEditor/aiCompetitorsEditorTexts.md) | 0 |  |
-| [`editor_rallyEditor_aiCompetitorsTab`](ge/extensions/editor/rallyEditor/aiCompetitorsTab.md) | 14 |  |
-| [`editor_rallyEditor_drivelineEditSurface`](ge/extensions/editor/rallyEditor/drivelineEditSurface.md) | 9 |  |
-| [`editor_rallyEditor_drivelineTab`](ge/extensions/editor/rallyEditor/drivelineTab.md) | 36 |  |
-| [`editor_rallyEditor_ghostNotebook`](ge/extensions/editor/rallyEditor/ghostNotebook.md) | 11 |  |
-| [`editor_rallyEditor_ghostNotebook_ghostRenderer`](ge/extensions/editor/rallyEditor/ghostNotebook/ghostRenderer.md) | 5 |  |
-| [`editor_rallyEditor_measurementsTab`](ge/extensions/editor/rallyEditor/measurementsTab.md) | 26 |  |
-| [`editor_rallyEditor_missionTab`](ge/extensions/editor/rallyEditor/missionTab.md) | 5 |  |
-| [`editor_rallyEditor_notebookInfo`](ge/extensions/editor/rallyEditor/notebookInfo.md) | 11 |  |
-| [`editor_rallyEditor_pacenotes`](ge/extensions/editor/rallyEditor/pacenotes.md) | 99 |  |
-| [`editor_rallyEditor_pacenotes_calibrationAnalysisExport`](ge/extensions/editor/rallyEditor/pacenotes/calibrationAnalysisExport.md) | 6 |  |
-| [`editor_rallyEditor_pacenotes_calibrationMetadataForm`](ge/extensions/editor/rallyEditor/pacenotes/calibrationMetadataForm.md) | 1 |  |
-| [`editor_rallyEditor_pacenotes_calibrationWindow`](ge/extensions/editor/rallyEditor/pacenotes/calibrationWindow.md) | 1 |  |
-| [`editor_rallyEditor_pacenotes_customAudioList`](ge/extensions/editor/rallyEditor/pacenotes/customAudioList.md) | 1 |  |
-| [`editor_rallyEditor_pacenotes_customForm`](ge/extensions/editor/rallyEditor/pacenotes/customForm.md) | 2 |  |
-| [`editor_rallyEditor_pacenotes_measurementsForm`](ge/extensions/editor/rallyEditor/pacenotes/measurementsForm.md) | 2 |  |
-| [`editor_rallyEditor_pacenotes_pacenoteForm`](ge/extensions/editor/rallyEditor/pacenotes/pacenoteForm.md) | 4 |  |
-| [`editor_rallyEditor_pacenotes_selectedPacenoteUtility`](ge/extensions/editor/rallyEditor/pacenotes/selectedPacenoteUtility.md) | 1 |  |
-| [`editor_rallyEditor_pacenotes_structuredForm`](ge/extensions/editor/rallyEditor/pacenotes/structuredForm.md) | 2 |  |
-| [`editor_rallyEditor_recceTab`](ge/extensions/editor/rallyEditor/recceTab.md) | 11 |  |
-| [`editor_rallyEditor_stageLoaderModal`](ge/extensions/editor/rallyEditor/stageLoaderModal.md) | 1 |  |
-| [`editor_rallyEditor_systemPacenotesTab`](ge/extensions/editor/rallyEditor/systemPacenotesTab.md) | 6 |  |
-| [`editor_rallyEditor_testTab`](ge/extensions/editor/rallyEditor/testTab.md) | 7 |  |
-| [`editor_rallyEditor_voicepacksTab`](ge/extensions/editor/rallyEditor/voicepacksTab.md) | 8 |  |
-| [`editor_rallyEditor_zSnap`](ge/extensions/editor/rallyEditor/zSnap.md) | 12 |  |
-| [`editor_rayCastTest`](ge/extensions/editor/rayCastTest.md) | 5 |  |
-| [`editor_renderTest`](ge/extensions/editor/renderTest.md) | 0 |  |
-| [`editor_renderViewBuffers`](ge/extensions/editor/renderViewBuffers.md) | 2 |  |
-| [`editor_rendererComponents`](ge/extensions/editor/rendererComponents.md) | 3 |  |
-| [`editor_resourceChecker`](ge/extensions/editor/resourceChecker.md) | 7 |  |
-| [`editor_resourceChecker_resourceUtil`](ge/extensions/editor/resourceChecker/resourceUtil.md) | 29 |  |
-| [`editor_riverEditor`](ge/extensions/editor/riverEditor.md) | 2 |  |
-| [`editor_roadArchitect`](ge/extensions/editor/roadArchitect.md) | 4 |  |
-| [`editor_roadArchitect_clothoid`](ge/extensions/editor/roadArchitect/clothoid.md) | 1 | Copyright (c) 2024, Enrico Bertolazzi, Marco Frego and BeamNG |
-| [`editor_roadArchitect_decals`](ge/extensions/editor/roadArchitect/decals.md) | 4 |  |
-| [`editor_roadArchitect_geometry`](ge/extensions/editor/roadArchitect/geometry.md) | 1 |  |
-| [`editor_roadArchitect_groups`](ge/extensions/editor/roadArchitect/groups.md) | 19 |  |
-| [`editor_roadArchitect_importFile`](ge/extensions/editor/roadArchitect/importFile.md) | 4 |  |
-| [`editor_roadArchitect_junctions`](ge/extensions/editor/roadArchitect/junctions.md) | 34 |  |
-| [`editor_roadArchitect_link`](ge/extensions/editor/roadArchitect/link.md) | 4 |  |
-| [`editor_roadArchitect_networkImport`](ge/extensions/editor/roadArchitect/networkImport.md) | 2 |  |
-| [`editor_roadArchitect_openDriveExport`](ge/extensions/editor/roadArchitect/openDriveExport.md) | 1 |  |
-| [`editor_roadArchitect_openDriveImport`](ge/extensions/editor/roadArchitect/openDriveImport.md) | 2 |  |
-| [`editor_roadArchitect_osmImport`](ge/extensions/editor/roadArchitect/osmImport.md) | 0 |  |
-| [`editor_roadArchitect_overlays`](ge/extensions/editor/roadArchitect/overlays.md) | 7 |  |
-| [`editor_roadArchitect_profiles`](ge/extensions/editor/roadArchitect/profiles.md) | 60 |  |
-| [`editor_roadArchitect_render`](ge/extensions/editor/roadArchitect/render.md) | 1 |  |
-| [`editor_roadArchitect_roadMesh`](ge/extensions/editor/roadArchitect/roadMesh.md) | 5 |  |
-| [`editor_roadArchitect_roads`](ge/extensions/editor/roadArchitect/roads.md) | 53 |  |
-| [`editor_roadArchitect_staticMesh`](ge/extensions/editor/roadArchitect/staticMesh.md) | 2 |  |
-| [`editor_roadArchitect_staticMeshMgr`](ge/extensions/editor/roadArchitect/staticMeshMgr.md) | 7 |  |
-| [`editor_roadArchitect_sumoImport`](ge/extensions/editor/roadArchitect/sumoImport.md) | 0 |  |
-| [`editor_roadArchitect_terraform`](ge/extensions/editor/roadArchitect/terraform.md) | 5 |  |
-| [`editor_roadArchitect_tunnelMesh`](ge/extensions/editor/roadArchitect/tunnelMesh.md) | 2 |  |
-| [`editor_roadArchitect_utilities`](ge/extensions/editor/roadArchitect/utilities.md) | 43 |  |
-| [`editor_roadDecorations`](ge/extensions/editor/roadDecorations.md) | 2 |  |
-| [`editor_roadEditor`](ge/extensions/editor/roadEditor.md) | 8 |  |
-| [`editor_roadNetworkExporter`](ge/extensions/editor/roadNetworkExporter.md) | 3 |  |
-| [`editor_roadRiverCacheHandler`](ge/extensions/editor/roadRiverCacheHandler.md) | 2 |  |
-| [`editor_roadRiverGui`](ge/extensions/editor/roadRiverGui.md) | 1 |  |
-| [`editor_roadSpline`](ge/extensions/editor/roadSpline.md) | 8 |  |
-| [`editor_roadSpline_groupMgr`](ge/extensions/editor/roadSpline/groupMgr.md) | 35 |  |
-| [`editor_roadSpline_import`](ge/extensions/editor/roadSpline/import.md) | 2 |  |
-| [`editor_roadSpline_layerMgr`](ge/extensions/editor/roadSpline/layerMgr.md) | 43 |  |
-| [`editor_roadTemplateEditor`](ge/extensions/editor/roadTemplateEditor.md) | 3 |  |
-| [`editor_roadUtils`](ge/extensions/editor/roadUtils.md) | 7 |  |
-| [`editor_roofServices`](ge/extensions/editor/roofServices.md) | 0 |  |
-| [`editor_sceneTree`](ge/extensions/editor/sceneTree.md) | 25 |  |
-| [`editor_sceneView`](ge/extensions/editor/sceneView.md) | 4 |  |
-| [`editor_screenshotCreatorBootstrap`](ge/extensions/editor/screenshotCreatorBootstrap.md) | 1 |  |
-| [`editor_scriptAIEditor`](ge/extensions/editor/scriptAIEditor.md) | 6 |  |
-| [`editor_scriptAIManager`](ge/extensions/editor/scriptAIManager.md) | 10 |  |
-| [`editor_shapeEditor`](ge/extensions/editor/shapeEditor.md) | 10 |  |
-| [`editor_shortcutLegend`](ge/extensions/editor/shortcutLegend.md) | 4 |  |
-| [`editor_sitesEditor`](ge/extensions/editor/sitesEditor.md) | 16 |  |
-| [`editor_sitesEditor_locations`](ge/extensions/editor/sitesEditor/locations.md) | 11 |  |
-| [`editor_sitesEditor_parkingSpots`](ge/extensions/editor/sitesEditor/parkingSpots.md) | 12 |  |
-| [`editor_sitesEditor_sortedListDisplay`](ge/extensions/editor/sitesEditor/sortedListDisplay.md) | 13 |  |
-| [`editor_sitesEditor_tags`](ge/extensions/editor/sitesEditor/tags.md) | 7 |  |
-| [`editor_sitesEditor_zones`](ge/extensions/editor/sitesEditor/zones.md) | 15 |  |
-| [`editor_suspensionAudioDebug`](ge/extensions/editor/suspensionAudioDebug.md) | 6 |  |
-| [`editor_terraform_fetchSources`](ge/extensions/editor/terraform/fetchSources.md) | 2 |  |
-| [`editor_terraform_terraform`](ge/extensions/editor/terraform/terraform.md) | 18 |  |
-| [`editor_terraformTool`](ge/extensions/editor/terraformTool.md) | 17 |  |
-| [`editor_terrainAndRoadImporter`](ge/extensions/editor/terrainAndRoadImporter.md) | 7 |  |
-| [`editor_terrainEditor`](ge/extensions/editor/terrainEditor.md) | 46 |  |
-| [`editor_terrainMaterialsEditor`](ge/extensions/editor/terrainMaterialsEditor.md) | 3 |  |
-| [`editor_textEditor`](ge/extensions/editor/textEditor.md) | 4 |  |
-| [`editor_toolShortcuts`](ge/extensions/editor/toolShortcuts.md) | 3 |  |
-| [`editor_toolUtilities_aabbPick`](ge/extensions/editor/toolUtilities/aabbPick.md) | 2 |  |
-| [`editor_toolUtilities_bake`](ge/extensions/editor/toolUtilities/bake.md) | 6 |  |
-| [`editor_toolUtilities_cameraRig`](ge/extensions/editor/toolUtilities/cameraRig.md) | 6 |  |
-| [`editor_toolUtilities_cornerHandles`](ge/extensions/editor/toolUtilities/cornerHandles.md) | 5 |  |
-| [`editor_toolUtilities_curveWiden`](ge/extensions/editor/toolUtilities/curveWiden.md) | 6 |  |
-| [`editor_toolUtilities_daeExport`](ge/extensions/editor/toolUtilities/daeExport.md) | 7 |  |
-| [`editor_toolUtilities_deckSweep`](ge/extensions/editor/toolUtilities/deckSweep.md) | 1 |  |
-| [`editor_toolUtilities_dice`](ge/extensions/editor/toolUtilities/dice.md) | 2 |  |
-| [`editor_toolUtilities_edgeHandles`](ge/extensions/editor/toolUtilities/edgeHandles.md) | 6 |  |
-| [`editor_toolUtilities_engineeredGeom`](ge/extensions/editor/toolUtilities/engineeredGeom.md) | 9 |  |
-| [`editor_toolUtilities_fenceStyles`](ge/extensions/editor/toolUtilities/fenceStyles.md) | 3 |  |
-| [`editor_toolUtilities_fitPoly`](ge/extensions/editor/toolUtilities/fitPoly.md) | 1 |  |
-| [`editor_toolUtilities_foliagePicker`](ge/extensions/editor/toolUtilities/foliagePicker.md) | 4 |  |
-| [`editor_toolUtilities_foliageScatter`](ge/extensions/editor/toolUtilities/foliageScatter.md) | 18 |  |
-| [`editor_toolUtilities_geom`](ge/extensions/editor/toolUtilities/geom.md) | 113 |  |
-| [`editor_toolUtilities_gizmo`](ge/extensions/editor/toolUtilities/gizmo.md) | 2 |  |
-| [`editor_toolUtilities_gridCap`](ge/extensions/editor/toolUtilities/gridCap.md) | 2 |  |
-| [`editor_toolUtilities_groundBounds`](ge/extensions/editor/toolUtilities/groundBounds.md) | 6 |  |
-| [`editor_toolUtilities_groundClaims`](ge/extensions/editor/toolUtilities/groundClaims.md) | 7 |  |
-| [`editor_toolUtilities_groundPanel`](ge/extensions/editor/toolUtilities/groundPanel.md) | 3 |  |
-| [`editor_toolUtilities_groundPass`](ge/extensions/editor/toolUtilities/groundPass.md) | 13 |  |
-| [`editor_toolUtilities_kerbSpec`](ge/extensions/editor/toolUtilities/kerbSpec.md) | 1 |  |
-| [`editor_toolUtilities_kitPlacer`](ge/extensions/editor/toolUtilities/kitPlacer.md) | 27 |  |
-| [`editor_toolUtilities_marchingCubes`](ge/extensions/editor/toolUtilities/marchingCubes.md) | 1 |  |
-| [`editor_toolUtilities_matCombo`](ge/extensions/editor/toolUtilities/matCombo.md) | 1 |  |
-| [`editor_toolUtilities_materialSelectionMgr`](ge/extensions/editor/toolUtilities/materialSelectionMgr.md) | 5 |  |
-| [`editor_toolUtilities_meshAuditionMgr`](ge/extensions/editor/toolUtilities/meshAuditionMgr.md) | 11 |  |
-| [`editor_toolUtilities_meshPart`](ge/extensions/editor/toolUtilities/meshPart.md) | 20 |  |
-| [`editor_toolUtilities_meshStats`](ge/extensions/editor/toolUtilities/meshStats.md) | 4 |  |
-| [`editor_toolUtilities_networkState`](ge/extensions/editor/toolUtilities/networkState.md) | 15 |  |
-| [`editor_toolUtilities_noise`](ge/extensions/editor/toolUtilities/noise.md) | 3 |  |
-| [`editor_toolUtilities_occupancy`](ge/extensions/editor/toolUtilities/occupancy.md) | 23 |  |
-| [`editor_toolUtilities_panCamera`](ge/extensions/editor/toolUtilities/panCamera.md) | 7 |  |
-| [`editor_toolUtilities_perlin`](ge/extensions/editor/toolUtilities/perlin.md) | 1 |  |
-| [`editor_toolUtilities_polyBool`](ge/extensions/editor/toolUtilities/polyBool.md) | 3 |  |
-| [`editor_toolUtilities_polyOffset`](ge/extensions/editor/toolUtilities/polyOffset.md) | 4 |  |
-| [`editor_toolUtilities_polygon`](ge/extensions/editor/toolUtilities/polygon.md) | 10 |  |
-| [`editor_toolUtilities_polygonPaint`](ge/extensions/editor/toolUtilities/polygonPaint.md) | 6 |  |
-| [`editor_toolUtilities_profileSweep`](ge/extensions/editor/toolUtilities/profileSweep.md) | 2 |  |
-| [`editor_toolUtilities_rdp`](ge/extensions/editor/toolUtilities/rdp.md) | 6 |  |
-| [`editor_toolUtilities_regionStyles`](ge/extensions/editor/toolUtilities/regionStyles.md) | 1 |  |
-| [`editor_toolUtilities_render_graph`](ge/extensions/editor/toolUtilities/render/graph.md) | 7 |  |
-| [`editor_toolUtilities_render_lines`](ge/extensions/editor/toolUtilities/render/lines.md) | 29 |  |
-| [`editor_toolUtilities_render_markup`](ge/extensions/editor/toolUtilities/render/markup.md) | 48 |  |
-| [`editor_toolUtilities_render_spheres`](ge/extensions/editor/toolUtilities/render/spheres.md) | 30 |  |
-| [`editor_toolUtilities_render_spline`](ge/extensions/editor/toolUtilities/render/spline.md) | 13 |  |
-| [`editor_toolUtilities_render_transport`](ge/extensions/editor/toolUtilities/render/transport.md) | 12 |  |
-| [`editor_toolUtilities_render_tris`](ge/extensions/editor/toolUtilities/render/tris.md) | 6 |  |
-| [`editor_toolUtilities_ribbonInput`](ge/extensions/editor/toolUtilities/ribbonInput.md) | 2 |  |
-| [`editor_toolUtilities_roadDesignStandards`](ge/extensions/editor/toolUtilities/roadDesignStandards.md) | 2 |  |
-| [`editor_toolUtilities_roadPlaceables`](ge/extensions/editor/toolUtilities/roadPlaceables.md) | 15 |  |
-| [`editor_toolUtilities_roadsideProps`](ge/extensions/editor/toolUtilities/roadsideProps.md) | 12 |  |
-| [`editor_toolUtilities_session`](ge/extensions/editor/toolUtilities/session.md) | 14 |  |
-| [`editor_toolUtilities_simplex`](ge/extensions/editor/toolUtilities/simplex.md) | 1 |  |
-| [`editor_toolUtilities_simplex3`](ge/extensions/editor/toolUtilities/simplex3.md) | 1 |  |
-| [`editor_toolUtilities_siteAssets`](ge/extensions/editor/toolUtilities/siteAssets.md) | 16 |  |
-| [`editor_toolUtilities_siteBake`](ge/extensions/editor/toolUtilities/siteBake.md) | 12 |  |
-| [`editor_toolUtilities_siteDecals`](ge/extensions/editor/toolUtilities/siteDecals.md) | 8 |  |
-| [`editor_toolUtilities_siteLibrary`](ge/extensions/editor/toolUtilities/siteLibrary.md) | 1 |  |
-| [`editor_toolUtilities_siteLights`](ge/extensions/editor/toolUtilities/siteLights.md) | 4 |  |
-| [`editor_toolUtilities_siteMarks`](ge/extensions/editor/toolUtilities/siteMarks.md) | 5 |  |
-| [`editor_toolUtilities_sitePad`](ge/extensions/editor/toolUtilities/sitePad.md) | 14 |  |
-| [`editor_toolUtilities_siteSpots`](ge/extensions/editor/toolUtilities/siteSpots.md) | 4 |  |
-| [`editor_toolUtilities_siteView`](ge/extensions/editor/toolUtilities/siteView.md) | 13 |  |
-| [`editor_toolUtilities_siteWater`](ge/extensions/editor/toolUtilities/siteWater.md) | 5 |  |
-| [`editor_toolUtilities_skeleton`](ge/extensions/editor/toolUtilities/skeleton.md) | 4 |  |
-| [`editor_toolUtilities_splineInput`](ge/extensions/editor/toolUtilities/splineInput.md) | 8 |  |
-| [`editor_toolUtilities_splineLock`](ge/extensions/editor/toolUtilities/splineLock.md) | 7 |  |
-| [`editor_toolUtilities_splineMaskExport`](ge/extensions/editor/toolUtilities/splineMaskExport.md) | 1 |  |
-| [`editor_toolUtilities_statsFooter`](ge/extensions/editor/toolUtilities/statsFooter.md) | 2 |  |
-| [`editor_toolUtilities_style`](ge/extensions/editor/toolUtilities/style.md) | 2 |  |
-| [`editor_toolUtilities_surfaceKit`](ge/extensions/editor/toolUtilities/surfaceKit.md) | 12 |  |
-| [`editor_toolUtilities_sweep`](ge/extensions/editor/toolUtilities/sweep.md) | 20 |  |
-| [`editor_toolUtilities_terrainPainter`](ge/extensions/editor/toolUtilities/terrainPainter.md) | 4 |  |
-| [`editor_toolUtilities_terrainPolyPaint`](ge/extensions/editor/toolUtilities/terrainPolyPaint.md) | 6 |  |
-| [`editor_toolUtilities_toolCamera`](ge/extensions/editor/toolUtilities/toolCamera.md) | 7 |  |
-| [`editor_toolUtilities_triLive`](ge/extensions/editor/toolUtilities/triLive.md) | 5 |  |
-| [`editor_toolUtilities_uiRows`](ge/extensions/editor/toolUtilities/uiRows.md) | 8 |  |
-| [`editor_toolUtilities_util`](ge/extensions/editor/toolUtilities/util.md) | 45 |  |
-| [`editor_toolUtilities_walkRibbon`](ge/extensions/editor/toolUtilities/walkRibbon.md) | 5 |  |
-| [`editor_trafficDebug`](ge/extensions/editor/trafficDebug.md) | 4 |  |
-| [`editor_trafficGatedRoadsEditor`](ge/extensions/editor/trafficGatedRoadsEditor.md) | 10 |  |
-| [`editor_trafficManager`](ge/extensions/editor/trafficManager.md) | 13 |  |
-| [`editor_trafficSignalsEditor`](ge/extensions/editor/trafficSignalsEditor.md) | 11 |  |
-| [`editor_treeSpline`](ge/extensions/editor/treeSpline.md) | 9 |  |
-| [`editor_treeSpline_populate`](ge/extensions/editor/treeSpline/populate.md) | 4 |  |
-| [`editor_treeSpline_splineMgr`](ge/extensions/editor/treeSpline/splineMgr.md) | 33 |  |
-| [`editor_undoHistory`](ge/extensions/editor/undoHistory.md) | 3 |  |
-| [`editor_util_customFieldsUtil`](ge/extensions/editor/util/customFieldsUtil.md) | 9 |  |
-| [`editor_util_editorElementHelper`](ge/extensions/editor/util/editorElementHelper.md) | 36 |  |
-| [`editor_util_plotHelperUtil`](ge/extensions/editor/util/plotHelperUtil.md) | 26 |  |
-| [`editor_util_searchUtil`](ge/extensions/editor/util/searchUtil.md) | 13 |  |
-| [`editor_util_transformUtil`](ge/extensions/editor/util/transformUtil.md) | 34 |  |
-| [`editor_util_vehicleFilterUtil`](ge/extensions/editor/util/vehicleFilterUtil.md) | 4 |  |
-| [`editor_util_vehicleSelectUtil`](ge/extensions/editor/util/vehicleSelectUtil.md) | 16 |  |
-| [`editor_util_zoneSelectorUtil`](ge/extensions/editor/util/zoneSelectorUtil.md) | 4 |  |
-| [`editor_veMain`](ge/extensions/editor/veMain.md) | 11 |  |
-| [`editor_vehicleBridgeTest`](ge/extensions/editor/vehicleBridgeTest.md) | 3 |  |
-| [`editor_vehicleDetailViewer`](ge/extensions/editor/vehicleDetailViewer.md) | 7 |  |
-| [`editor_vehicleEditor_api_nodeTransformer`](ge/extensions/editor/vehicleEditor/api/nodeTransformer.md) | 1 |  |
-| [`editor_vehicleEditor_api_powerTrainUtils`](ge/extensions/editor/vehicleEditor/api/powerTrainUtils.md) | 4 |  |
-| [`editor_vehicleEditor_liveEditor_veAeroDebug`](ge/extensions/editor/vehicleEditor/liveEditor/veAeroDebug.md) | 7 |  |
-| [`editor_vehicleEditor_liveEditor_veCrashTester`](ge/extensions/editor/vehicleEditor/liveEditor/veCrashTester.md) | 4 |  |
-| [`editor_vehicleEditor_liveEditor_veFlexbodyDebug`](ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.md) | 7 |  |
-| [`editor_vehicleEditor_liveEditor_veGeneralData`](ge/extensions/editor/vehicleEditor/liveEditor/veGeneralData.md) | 4 |  |
-| [`editor_vehicleEditor_liveEditor_veJBeamPicker`](ge/extensions/editor/vehicleEditor/liveEditor/veJBeamPicker.md) | 8 |  |
-| [`editor_vehicleEditor_liveEditor_veLightsDebug`](ge/extensions/editor/vehicleEditor/liveEditor/veLightsDebug.md) | 5 |  |
-| [`editor_vehicleEditor_liveEditor_veNodeTriSelfCollisionDetector`](ge/extensions/editor/vehicleEditor/liveEditor/veNodeTriSelfCollisionDetector.md) | 5 |  |
-| [`editor_vehicleEditor_liveEditor_vePowerTrain`](ge/extensions/editor/vehicleEditor/liveEditor/vePowerTrain.md) | 6 |  |
-| [`editor_vehicleEditor_liveEditor_vePropTransformer`](ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.md) | 7 |  |
-| [`editor_vehicleEditor_liveEditor_veRawData`](ge/extensions/editor/vehicleEditor/liveEditor/veRawData.md) | 4 |  |
-| [`editor_vehicleEditor_liveEditor_veTCSDebug`](ge/extensions/editor/vehicleEditor/liveEditor/veTCSDebug.md) | 6 |  |
-| [`editor_vehicleEditor_liveEditor_veVehicleSpawner`](ge/extensions/editor/vehicleEditor/liveEditor/veVehicleSpawner.md) | 5 |  |
-| [`editor_vehicleEditor_liveEditor_veView`](ge/extensions/editor/vehicleEditor/liveEditor/veView.md) | 4 |  |
-| [`editor_vehicleEditor_staticEditor_veJBeamBeautifier`](ge/extensions/editor/vehicleEditor/staticEditor/veJBeamBeautifier.md) | 4 |  |
-| [`editor_vehicleEditor_staticEditor_veJBeamModifierLeakVis`](ge/extensions/editor/vehicleEditor/staticEditor/veJBeamModifierLeakVis.md) | 4 |  |
-| [`editor_vehicleEditor_staticEditor_veJBeamSpellchecker`](ge/extensions/editor/vehicleEditor/staticEditor/veJBeamSpellchecker.md) | 4 |  |
-| [`editor_vehicleEditor_staticEditor_veJBeamTableVis`](ge/extensions/editor/vehicleEditor/staticEditor/veJBeamTableVis.md) | 4 |  |
-| [`editor_vehicleEditor_staticEditor_veJBeamVariablesChecker`](ge/extensions/editor/vehicleEditor/staticEditor/veJBeamVariablesChecker.md) | 4 |  |
-| [`editor_vehicleEditor_staticEditor_vePartList`](ge/extensions/editor/vehicleEditor/staticEditor/vePartList.md) | 5 |  |
-| [`editor_vehicleEditor_staticEditor_vePartPropertyView`](ge/extensions/editor/vehicleEditor/staticEditor/vePartPropertyView.md) | 3 |  |
-| [`editor_vehicleEditor_staticEditor_vePartTextView`](ge/extensions/editor/vehicleEditor/staticEditor/vePartTextView.md) | 3 |  |
-| [`editor_vehicleEditor_staticEditor_vePartTree`](ge/extensions/editor/vehicleEditor/staticEditor/vePartTree.md) | 4 |  |
-| [`editor_vehicleEditor_staticEditor_veStaticRenderView`](ge/extensions/editor/vehicleEditor/staticEditor/veStaticRenderView.md) | 14 |  |
-| [`editor_vehicleEditor_veToolbar`](ge/extensions/editor/vehicleEditor/veToolbar.md) | 2 |  |
-| [`editor_vehicleUiTextureDebug`](ge/extensions/editor/vehicleUiTextureDebug.md) | 2 |  |
-| [`editor_visualization`](ge/extensions/editor/visualization.md) | 4 |  |
-| [`editor_vizHelper`](ge/extensions/editor/vizHelper.md) | 9 |  |
-| [`editor_waterObjectHelper`](ge/extensions/editor/waterObjectHelper.md) | 1 |  |
-| [`editor_windows`](ge/extensions/editor/windows.md) | 2 |  |
-| [`flowgraph_baseModule`](ge/extensions/flowgraph/baseModule.md) | 8 |  |
-| [`flowgraph_baseStateNode`](ge/extensions/flowgraph/baseStateNode.md) | 5 |  |
-| [`flowgraph_basenode`](ge/extensions/flowgraph/basenode.md) | 81 |  |
-| [`flowgraph_builder`](ge/extensions/flowgraph/builder.md) | 18 |  |
-| [`flowgraph_graph`](ge/extensions/flowgraph/graph.md) | 42 |  |
-| [`flowgraph_groupHelper`](ge/extensions/flowgraph/groupHelper.md) | 9 |  |
-| [`flowgraph_link`](ge/extensions/flowgraph/link.md) | 10 |  |
-| [`flowgraph_manager`](ge/extensions/flowgraph/manager.md) | 83 |  |
-| [`flowgraph_modules_actionModule`](ge/extensions/flowgraph/modules/actionModule.md) | 9 |  |
-| [`flowgraph_modules_aiRecordingModule`](ge/extensions/flowgraph/modules/aiRecordingModule.md) | 11 |  |
-| [`flowgraph_modules_buttonModule`](ge/extensions/flowgraph/modules/buttonModule.md) | 10 |  |
-| [`flowgraph_modules_cameraModule`](ge/extensions/flowgraph/modules/cameraModule.md) | 17 |  |
-| [`flowgraph_modules_driftModule`](ge/extensions/flowgraph/modules/driftModule.md) | 11 |  |
-| [`flowgraph_modules_fileModule`](ge/extensions/flowgraph/modules/fileModule.md) | 9 |  |
-| [`flowgraph_modules_foreachModule`](ge/extensions/flowgraph/modules/foreachModule.md) | 5 |  |
-| [`flowgraph_modules_levelModule`](ge/extensions/flowgraph/modules/levelModule.md) | 8 |  |
-| [`flowgraph_modules_missionModule`](ge/extensions/flowgraph/modules/missionModule.md) | 10 |  |
-| [`flowgraph_modules_missionReplayModule`](ge/extensions/flowgraph/modules/missionReplayModule.md) | 18 |  |
-| [`flowgraph_modules_prefabModule`](ge/extensions/flowgraph/modules/prefabModule.md) | 14 |  |
-| [`flowgraph_modules_threadModule`](ge/extensions/flowgraph/modules/threadModule.md) | 9 |  |
-| [`flowgraph_modules_timerModule`](ge/extensions/flowgraph/modules/timerModule.md) | 15 |  |
-| [`flowgraph_modules_trafficModule`](ge/extensions/flowgraph/modules/trafficModule.md) | 10 |  |
-| [`flowgraph_modules_uiModule`](ge/extensions/flowgraph/modules/uiModule.md) | 30 |  |
-| [`flowgraph_modules_vehicleModule`](ge/extensions/flowgraph/modules/vehicleModule.md) | 27 |  |
-| [`flowgraph_newNodeTemplate`](ge/extensions/flowgraph/newNodeTemplate.md) | 1 |  |
-| [`flowgraph_nodes_activity_activityAttempt`](ge/extensions/flowgraph/nodes/activity/activityAttempt.md) | 3 |  |
-| [`flowgraph_nodes_activity_activityFlow`](ge/extensions/flowgraph/nodes/activity/activityFlow.md) | 11 |  |
-| [`flowgraph_nodes_activity_activityHook`](ge/extensions/flowgraph/nodes/activity/activityHook.md) | 2 |  |
-| [`flowgraph_nodes_activity_activityResetPrefabs`](ge/extensions/flowgraph/nodes/activity/activityResetPrefabs.md) | 1 |  |
-| [`flowgraph_nodes_activity_activityStop`](ge/extensions/flowgraph/nodes/activity/activityStop.md) | 2 |  |
-| [`flowgraph_nodes_activity_aggregateAttempt`](ge/extensions/flowgraph/nodes/activity/aggregateAttempt.md) | 2 |  |
-| [`flowgraph_nodes_activity_attemptStars`](ge/extensions/flowgraph/nodes/activity/attemptStars.md) | 2 |  |
-| [`flowgraph_nodes_activity_attemptVehicle`](ge/extensions/flowgraph/nodes/activity/attemptVehicle.md) | 2 |  |
-| [`flowgraph_nodes_activity_autoStarGoals`](ge/extensions/flowgraph/nodes/activity/autoStarGoals.md) | 2 |  |
-| [`flowgraph_nodes_activity_getProgress`](ge/extensions/flowgraph/nodes/activity/getProgress.md) | 2 |  |
-| [`flowgraph_nodes_activity_missionAttemptStars`](ge/extensions/flowgraph/nodes/activity/missionAttemptStars.md) | 2 |  |
-| [`flowgraph_nodes_activity_requestAbandon`](ge/extensions/flowgraph/nodes/activity/requestAbandon.md) | 7 |  |
-| [`flowgraph_nodes_activity_starsActive`](ge/extensions/flowgraph/nodes/activity/starsActive.md) | 3 |  |
-| [`flowgraph_nodes_audio_fade`](ge/extensions/flowgraph/nodes/audio/fade.md) | 4 |  |
-| [`flowgraph_nodes_audio_fadeIn`](ge/extensions/flowgraph/nodes/audio/fadeIn.md) | 6 |  |
-| [`flowgraph_nodes_audio_fadeOut`](ge/extensions/flowgraph/nodes/audio/fadeOut.md) | 6 |  |
-| [`flowgraph_nodes_audio_playOnce`](ge/extensions/flowgraph/nodes/audio/playOnce.md) | 4 |  |
-| [`flowgraph_nodes_career_addToInventory`](ge/extensions/flowgraph/nodes/career/addToInventory.md) | 2 |  |
-| [`flowgraph_nodes_career_careerVehicleSelect`](ge/extensions/flowgraph/nodes/career/careerVehicleSelect.md) | 13 |  |
-| [`flowgraph_nodes_career_completeQuest`](ge/extensions/flowgraph/nodes/career/completeQuest.md) | 1 |  |
-| [`flowgraph_nodes_career_customTowAction`](ge/extensions/flowgraph/nodes/career/customTowAction.md) | 3 |  |
-| [`flowgraph_nodes_career_garageComputerUtil`](ge/extensions/flowgraph/nodes/career/garageComputerUtil.md) | 8 |  |
-| [`flowgraph_nodes_career_garageTutorialUtil`](ge/extensions/flowgraph/nodes/career/garageTutorialUtil.md) | 3 |  |
-| [`flowgraph_nodes_career_logbookEntry`](ge/extensions/flowgraph/nodes/career/logbookEntry.md) | 1 |  |
-| [`flowgraph_nodes_career_menuClosed`](ge/extensions/flowgraph/nodes/career/menuClosed.md) | 3 |  |
-| [`flowgraph_nodes_career_onGarageEvent`](ge/extensions/flowgraph/nodes/career/onGarageEvent.md) | 5 |  |
-| [`flowgraph_nodes_career_onIntroPopupCareerClosed`](ge/extensions/flowgraph/nodes/career/onIntroPopupCareerClosed.md) | 4 |  |
-| [`flowgraph_nodes_career_onMissionPromptShown`](ge/extensions/flowgraph/nodes/career/onMissionPromptShown.md) | 4 |  |
-| [`flowgraph_nodes_career_onMissionRunstateChanged`](ge/extensions/flowgraph/nodes/career/onMissionRunstateChanged.md) | 4 |  |
-| [`flowgraph_nodes_career_onRefueling`](ge/extensions/flowgraph/nodes/career/onRefueling.md) | 6 |  |
-| [`flowgraph_nodes_career_onTestDriveChanged`](ge/extensions/flowgraph/nodes/career/onTestDriveChanged.md) | 4 |  |
-| [`flowgraph_nodes_career_onVehicleShoppingEvent`](ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.md) | 8 |  |
-| [`flowgraph_nodes_career_playerAttribute`](ge/extensions/flowgraph/nodes/career/playerAttribute.md) | 3 |  |
-| [`flowgraph_nodes_career_setFuelLevel`](ge/extensions/flowgraph/nodes/career/setFuelLevel.md) | 5 |  |
-| [`flowgraph_nodes_career_tasklistHeader`](ge/extensions/flowgraph/nodes/career/tasklistHeader.md) | 1 |  |
-| [`flowgraph_nodes_career_vehicleGroupByClass`](ge/extensions/flowgraph/nodes/career/vehicleGroupByClass.md) | 1 |  |
-| [`flowgraph_nodes_debug_aiDebug`](ge/extensions/flowgraph/nodes/debug/aiDebug.md) | 4 |  |
-| [`flowgraph_nodes_debug_cameraMouseRayCast`](ge/extensions/flowgraph/nodes/debug/cameraMouseRayCast.md) | 1 |  |
-| [`flowgraph_nodes_debug_comment`](ge/extensions/flowgraph/nodes/debug/comment.md) | 9 |  |
-| [`flowgraph_nodes_debug_debugCylinder`](ge/extensions/flowgraph/nodes/debug/debugCylinder.md) | 2 |  |
-| [`flowgraph_nodes_debug_debugLine`](ge/extensions/flowgraph/nodes/debug/debugLine.md) | 2 |  |
-| [`flowgraph_nodes_debug_debugPrism`](ge/extensions/flowgraph/nodes/debug/debugPrism.md) | 2 |  |
-| [`flowgraph_nodes_debug_debugSphere`](ge/extensions/flowgraph/nodes/debug/debugSphere.md) | 2 |  |
-| [`flowgraph_nodes_debug_debugText`](ge/extensions/flowgraph/nodes/debug/debugText.md) | 2 |  |
-| [`flowgraph_nodes_debug_display`](ge/extensions/flowgraph/nodes/debug/display.md) | 2 |  |
-| [`flowgraph_nodes_debug_displayFlow`](ge/extensions/flowgraph/nodes/debug/displayFlow.md) | 4 |  |
-| [`flowgraph_nodes_debug_drawGraph`](ge/extensions/flowgraph/nodes/debug/drawGraph.md) | 10 |  |
-| [`flowgraph_nodes_debug_flowButton`](ge/extensions/flowgraph/nodes/debug/flowButton.md) | 5 |  |
-| [`flowgraph_nodes_debug_log`](ge/extensions/flowgraph/nodes/debug/log.md) | 5 |  |
-| [`flowgraph_nodes_debug_miniGraph`](ge/extensions/flowgraph/nodes/debug/miniGraph.md) | 3 |  |
-| [`flowgraph_nodes_debug_multiFlow`](ge/extensions/flowgraph/nodes/debug/multiFlow.md) | 3 |  |
-| [`flowgraph_nodes_debug_numberSlider`](ge/extensions/flowgraph/nodes/debug/numberSlider.md) | 6 |  |
-| [`flowgraph_nodes_debug_pauseManager`](ge/extensions/flowgraph/nodes/debug/pauseManager.md) | 1 |  |
-| [`flowgraph_nodes_debug_restartManager`](ge/extensions/flowgraph/nodes/debug/restartManager.md) | 1 |  |
-| [`flowgraph_nodes_debug_stopManager`](ge/extensions/flowgraph/nodes/debug/stopManager.md) | 1 |  |
-| [`flowgraph_nodes_debug_testDynamic`](ge/extensions/flowgraph/nodes/debug/testDynamic.md) | 6 |  |
-| [`flowgraph_nodes_environment_directionalGravity`](ge/extensions/flowgraph/nodes/environment/directionalGravity.md) | 6 |  |
-| [`flowgraph_nodes_environment_getCloud`](ge/extensions/flowgraph/nodes/environment/getCloud.md) | 1 |  |
-| [`flowgraph_nodes_environment_getFogDensity`](ge/extensions/flowgraph/nodes/environment/getFogDensity.md) | 1 |  |
-| [`flowgraph_nodes_environment_getGravity`](ge/extensions/flowgraph/nodes/environment/getGravity.md) | 1 |  |
-| [`flowgraph_nodes_environment_getPause`](ge/extensions/flowgraph/nodes/environment/getPause.md) | 1 |  |
-| [`flowgraph_nodes_environment_getPhotomode`](ge/extensions/flowgraph/nodes/environment/getPhotomode.md) | 1 |  |
-| [`flowgraph_nodes_environment_getScatterySky`](ge/extensions/flowgraph/nodes/environment/getScatterySky.md) | 1 |  |
-| [`flowgraph_nodes_environment_getTimeOfDay`](ge/extensions/flowgraph/nodes/environment/getTimeOfDay.md) | 1 |  |
-| [`flowgraph_nodes_environment_pauseGame`](ge/extensions/flowgraph/nodes/environment/pauseGame.md) | 3 |  |
-| [`flowgraph_nodes_environment_planet`](ge/extensions/flowgraph/nodes/environment/planet.md) | 12 |  |
-| [`flowgraph_nodes_environment_randomTimeOfDay`](ge/extensions/flowgraph/nodes/environment/randomTimeOfDay.md) | 2 |  |
-| [`flowgraph_nodes_environment_setBulletTime`](ge/extensions/flowgraph/nodes/environment/setBulletTime.md) | 3 |  |
-| [`flowgraph_nodes_environment_setCloud`](ge/extensions/flowgraph/nodes/environment/setCloud.md) | 7 |  |
-| [`flowgraph_nodes_environment_setFogDensity`](ge/extensions/flowgraph/nodes/environment/setFogDensity.md) | 7 |  |
-| [`flowgraph_nodes_environment_setGravity`](ge/extensions/flowgraph/nodes/environment/setGravity.md) | 5 |  |
-| [`flowgraph_nodes_environment_setScatterSky`](ge/extensions/flowgraph/nodes/environment/setScatterSky.md) | 6 |  |
-| [`flowgraph_nodes_environment_setTimeOfDay`](ge/extensions/flowgraph/nodes/environment/setTimeOfDay.md) | 7 |  |
-| [`flowgraph_nodes_environment_setWind`](ge/extensions/flowgraph/nodes/environment/setWind.md) | 4 |  |
-| [`flowgraph_nodes_environment_simplePlanet`](ge/extensions/flowgraph/nodes/environment/simplePlanet.md) | 4 |  |
-| [`flowgraph_nodes_events_controlsAction`](ge/extensions/flowgraph/nodes/events/controlsAction.md) | 6 |  |
-| [`flowgraph_nodes_events_controlsReset`](ge/extensions/flowgraph/nodes/events/controlsReset.md) | 8 |  |
-| [`flowgraph_nodes_events_customizedTriggerBox`](ge/extensions/flowgraph/nodes/events/customizedTriggerBox.md) | 10 |  |
-| [`flowgraph_nodes_events_onBeamNGTrigger`](ge/extensions/flowgraph/nodes/events/onBeamNGTrigger.md) | 4 |  |
-| [`flowgraph_nodes_events_onMissionEnded`](ge/extensions/flowgraph/nodes/events/onMissionEnded.md) | 3 |  |
-| [`flowgraph_nodes_events_onUpdate`](ge/extensions/flowgraph/nodes/events/onUpdate.md) | 5 |  |
-| [`flowgraph_nodes_gameplay_allowWalking`](ge/extensions/flowgraph/nodes/gameplay/allowWalking.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_blacklistWalking`](ge/extensions/flowgraph/nodes/gameplay/blacklistWalking.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_canEnterFromWalking`](ge/extensions/flowgraph/nodes/gameplay/canEnterFromWalking.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_careerActive`](ge/extensions/flowgraph/nodes/gameplay/careerActive.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_completeScenario`](ge/extensions/flowgraph/nodes/gameplay/completeScenario.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_countdown`](ge/extensions/flowgraph/nodes/gameplay/countdown.md) | 10 |  |
-| [`flowgraph_nodes_gameplay_crash_onCrashDetected`](ge/extensions/flowgraph/nodes/gameplay/crash/onCrashDetected.md) | 6 |  |
-| [`flowgraph_nodes_gameplay_crash_removeTrackedVehicleCrash`](ge/extensions/flowgraph/nodes/gameplay/crash/removeTrackedVehicleCrash.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_crash_trackMultipleVehiclesCrash`](ge/extensions/flowgraph/nodes/gameplay/crash/trackMultipleVehiclesCrash.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_crash_trackVehicleCrash`](ge/extensions/flowgraph/nodes/gameplay/crash/trackVehicleCrash.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_crawl_applyPenalty`](ge/extensions/flowgraph/nodes/gameplay/crawl/applyPenalty.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_crawl_getCrawlData`](ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlData.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_crawl_getCrawlResults`](ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlResults.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_crawl_getCrawlStartTransform`](ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlStartTransform.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_crawl_getDynamicObjects`](ge/extensions/flowgraph/nodes/gameplay/crawl/getDynamicObjects.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_crawl_resetCrawl`](ge/extensions/flowgraph/nodes/gameplay/crawl/resetCrawl.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_crawl_setupCrawl`](ge/extensions/flowgraph/nodes/gameplay/crawl/setupCrawl.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_crawl_startCrawl`](ge/extensions/flowgraph/nodes/gameplay/crawl/startCrawl.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_crawl_stopCrawl`](ge/extensions/flowgraph/nodes/gameplay/crawl/stopCrawl.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_decalCircle`](ge/extensions/flowgraph/nodes/gameplay/decalCircle.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_decalLine`](ge/extensions/flowgraph/nodes/gameplay/decalLine.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_decalPath`](ge/extensions/flowgraph/nodes/gameplay/decalPath.md) | 5 |  |
-| [`flowgraph_nodes_gameplay_decalSingle`](ge/extensions/flowgraph/nodes/gameplay/decalSingle.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_delivery_abandonDelivery`](ge/extensions/flowgraph/nodes/gameplay/delivery/abandonDelivery.md) | 5 |  |
-| [`flowgraph_nodes_gameplay_delivery_deliveryFinished`](ge/extensions/flowgraph/nodes/gameplay/delivery/deliveryFinished.md) | 4 |  |
-| [`flowgraph_nodes_gameplay_delivery_getDeliveryResults`](ge/extensions/flowgraph/nodes/gameplay/delivery/getDeliveryResults.md) | 4 |  |
-| [`flowgraph_nodes_gameplay_delivery_loadDelivery`](ge/extensions/flowgraph/nodes/gameplay/delivery/loadDelivery.md) | 6 |  |
-| [`flowgraph_nodes_gameplay_delivery_resetDelivery`](ge/extensions/flowgraph/nodes/gameplay/delivery/resetDelivery.md) | 6 |  |
-| [`flowgraph_nodes_gameplay_delivery_startDelivery`](ge/extensions/flowgraph/nodes/gameplay/delivery/startDelivery.md) | 4 |  |
-| [`flowgraph_nodes_gameplay_dragRace_dragRaceState`](ge/extensions/flowgraph/nodes/gameplay/dragRace/dragRaceState.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_dragRace_dragTimes`](ge/extensions/flowgraph/nodes/gameplay/dragRace/dragTimes.md) | 4 |  |
-| [`flowgraph_nodes_gameplay_dragRace_generateDragOpponents`](ge/extensions/flowgraph/nodes/gameplay/dragRace/generateDragOpponents.md) | 12 |  |
-| [`flowgraph_nodes_gameplay_dragRace_getDragWinners`](ge/extensions/flowgraph/nodes/gameplay/dragRace/getDragWinners.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_dragRace_getRacerData`](ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerData.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_dragRace_getRacerSpawnPoint`](ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerSpawnPoint.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_dragRace_getRacerStatus`](ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerStatus.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_dragRace_loadDragData`](ge/extensions/flowgraph/nodes/gameplay/dragRace/loadDragData.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_dragRace_resetDragRace`](ge/extensions/flowgraph/nodes/gameplay/dragRace/resetDragRace.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_dragRace_setDragVehicle`](ge/extensions/flowgraph/nodes/gameplay/dragRace/setDragVehicle.md) | 8 |  |
-| [`flowgraph_nodes_gameplay_dragRace_setRacerDial`](ge/extensions/flowgraph/nodes/gameplay/dragRace/setRacerDial.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_dragRace_startDragRace`](ge/extensions/flowgraph/nodes/gameplay/dragRace/startDragRace.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_drift_driftClear`](ge/extensions/flowgraph/nodes/gameplay/drift/driftClear.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_drift_driftDonut`](ge/extensions/flowgraph/nodes/gameplay/drift/driftDonut.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_drift_driftInformation`](ge/extensions/flowgraph/nodes/gameplay/drift/driftInformation.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_drift_driftReset`](ge/extensions/flowgraph/nodes/gameplay/drift/driftReset.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_drift_driftScore`](ge/extensions/flowgraph/nodes/gameplay/drift/driftScore.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_drift_driftTightDrift`](ge/extensions/flowgraph/nodes/gameplay/drift/driftTightDrift.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_drift_driftVeh`](ge/extensions/flowgraph/nodes/gameplay/drift/driftVeh.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_drift_setDriftBounds`](ge/extensions/flowgraph/nodes/gameplay/drift/setDriftBounds.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_drift_setDriftChallengeMode`](ge/extensions/flowgraph/nodes/gameplay/drift/setDriftChallengeMode.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_drift_setDriftContext`](ge/extensions/flowgraph/nodes/gameplay/drift/setDriftContext.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_drift_setDriftData`](ge/extensions/flowgraph/nodes/gameplay/drift/setDriftData.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_drift_setDriftRacePath`](ge/extensions/flowgraph/nodes/gameplay/drift/setDriftRacePath.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_getWalkingBlacklist`](ge/extensions/flowgraph/nodes/gameplay/getWalkingBlacklist.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_groundmarkerDistance`](ge/extensions/flowgraph/nodes/gameplay/groundmarkerDistance.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_groundmarkers`](ge/extensions/flowgraph/nodes/gameplay/groundmarkers.md) | 5 |  |
-| [`flowgraph_nodes_gameplay_isWalking`](ge/extensions/flowgraph/nodes/gameplay/isWalking.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_isWalkingEnabled`](ge/extensions/flowgraph/nodes/gameplay/isWalkingEnabled.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_missionDefaults`](ge/extensions/flowgraph/nodes/gameplay/missionDefaults.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_multiseat`](ge/extensions/flowgraph/nodes/gameplay/multiseat.md) | 4 |  |
-| [`flowgraph_nodes_gameplay_playerMoves`](ge/extensions/flowgraph/nodes/gameplay/playerMoves.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_pointsBarSetPoints`](ge/extensions/flowgraph/nodes/gameplay/pointsBarSetPoints.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_pointsBarSetThresholds`](ge/extensions/flowgraph/nodes/gameplay/pointsBarSetThresholds.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_race_filePath`](ge/extensions/flowgraph/nodes/gameplay/race/filePath.md) | 6 |  |
-| [`flowgraph_nodes_gameplay_race_fileRace`](ge/extensions/flowgraph/nodes/gameplay/race/fileRace.md) | 10 |  |
-| [`flowgraph_nodes_gameplay_race_imRaceTimes`](ge/extensions/flowgraph/nodes/gameplay/race/imRaceTimes.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_race_moveVehicleToStartposition`](ge/extensions/flowgraph/nodes/gameplay/race/moveVehicleToStartposition.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_race_pathDefaultStartTransform`](ge/extensions/flowgraph/nodes/gameplay/race/pathDefaultStartTransform.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_race_pathEndTransform`](ge/extensions/flowgraph/nodes/gameplay/race/pathEndTransform.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_race_raceAiParameters`](ge/extensions/flowgraph/nodes/gameplay/race/raceAiParameters.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_race_raceCpLapChange`](ge/extensions/flowgraph/nodes/gameplay/race/raceCpLapChange.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_race_raceData`](ge/extensions/flowgraph/nodes/gameplay/race/raceData.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_race_raceDisqualify`](ge/extensions/flowgraph/nodes/gameplay/race/raceDisqualify.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_race_raceEndScreen`](ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.md) | 18 |  |
-| [`flowgraph_nodes_gameplay_race_raceHighscoresComplete`](ge/extensions/flowgraph/nodes/gameplay/race/raceHighscoresComplete.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_race_raceHighscoresLap`](ge/extensions/flowgraph/nodes/gameplay/race/raceHighscoresLap.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_race_raceMarkers`](ge/extensions/flowgraph/nodes/gameplay/race/raceMarkers.md) | 7 |  |
-| [`flowgraph_nodes_gameplay_race_raceNodeReached`](ge/extensions/flowgraph/nodes/gameplay/race/raceNodeReached.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_race_racePacenoteReached`](ge/extensions/flowgraph/nodes/gameplay/race/racePacenoteReached.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_race_raceRecoveryAvailable`](ge/extensions/flowgraph/nodes/gameplay/race/raceRecoveryAvailable.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_race_raceRecoveryUsed`](ge/extensions/flowgraph/nodes/gameplay/race/raceRecoveryUsed.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_race_raceRequestRecovery`](ge/extensions/flowgraph/nodes/gameplay/race/raceRequestRecovery.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_race_raceSuspend`](ge/extensions/flowgraph/nodes/gameplay/race/raceSuspend.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_rally_aiCompetitorsLeaderboard`](ge/extensions/flowgraph/nodes/gameplay/rally/aiCompetitorsLeaderboard.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_createRallyGroundMarker`](ge/extensions/flowgraph/nodes/gameplay/rally/createRallyGroundMarker.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_finish`](ge/extensions/flowgraph/nodes/gameplay/rally/finish.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_fireRallyEvent`](ge/extensions/flowgraph/nodes/gameplay/rally/fireRallyEvent.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_handleLapChange`](ge/extensions/flowgraph/nodes/gameplay/rally/handleLapChange.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_loop_advanceLoopSchedule`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/advanceLoopSchedule.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_loop_getCurrentRacePath`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/getCurrentRacePath.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_loop_getLoopServiceOutTC`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/getLoopServiceOutTC.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_loop_getRallyLoopAiCompetitorsInputs`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopAiCompetitorsInputs.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_loop_getRallyLoopInfo`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopInfo.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_loop_getRallyLoopTrafficEnabled`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopTrafficEnabled.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_loop_loopChainedMissionSetup`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/loopChainedMissionSetup.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_rally_loop_loopInit`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/loopInit.md) | 4 |  |
-| [`flowgraph_nodes_gameplay_rally_loop_rallyClock`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyClock.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_rally_loop_rallyExcludeTraffic`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyExcludeTraffic.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_loop_rallyPositionGetter`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyPositionGetter.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_rally_loop_recordTimeCardEntry`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/recordTimeCardEntry.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_loop_routeAfterRoadSection`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/routeAfterRoadSection.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_loop_saveRallyLoopAttempt`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/saveRallyLoopAttempt.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_raceEditorPath`](ge/extensions/flowgraph/nodes/gameplay/rally/raceEditorPath.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_rally_rallyDebugNode`](ge/extensions/flowgraph/nodes/gameplay/rally/rallyDebugNode.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_rallyEndScreenResults`](ge/extensions/flowgraph/nodes/gameplay/rally/rallyEndScreenResults.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_rallyMoveVehicleTo`](ge/extensions/flowgraph/nodes/gameplay/rally/rallyMoveVehicleTo.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_rallyRouteData`](ge/extensions/flowgraph/nodes/gameplay/rally/rallyRouteData.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_rallyStageCountdownSetup`](ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageCountdownSetup.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_rallyStageInfoPanel`](ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.md) | 9 |  |
-| [`flowgraph_nodes_gameplay_rally_rallyStageStars`](ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageStars.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_rallyStageSuperCountdown`](ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageSuperCountdown.md) | 33 |  |
-| [`flowgraph_nodes_gameplay_rally_rallySuperCountdown`](ge/extensions/flowgraph/nodes/gameplay/rally/rallySuperCountdown.md) | 47 |  |
-| [`flowgraph_nodes_gameplay_rally_recoverInPlace`](ge/extensions/flowgraph/nodes/gameplay/rally/recoverInPlace.md) | 7 |  |
-| [`flowgraph_nodes_gameplay_rally_recoverToRouteDeparture`](ge/extensions/flowgraph/nodes/gameplay/rally/recoverToRouteDeparture.md) | 7 |  |
-| [`flowgraph_nodes_gameplay_rally_registerRace`](ge/extensions/flowgraph/nodes/gameplay/rally/registerRace.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_resyncAfterTeleport`](ge/extensions/flowgraph/nodes/gameplay/rally/resyncAfterTeleport.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_sessionStart`](ge/extensions/flowgraph/nodes/gameplay/rally/sessionStart.md) | 5 |  |
-| [`flowgraph_nodes_gameplay_rally_setNoteSearch`](ge/extensions/flowgraph/nodes/gameplay/rally/setNoteSearch.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_stageComplete`](ge/extensions/flowgraph/nodes/gameplay/rally/stageComplete.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_stageRuntimeState`](ge/extensions/flowgraph/nodes/gameplay/rally/stageRuntimeState.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_rally_trackRecovery`](ge/extensions/flowgraph/nodes/gameplay/rally/trackRecovery.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_rally_trackStageTime`](ge/extensions/flowgraph/nodes/gameplay/rally/trackStageTime.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_rally_trackVehicleDistanceToPos`](ge/extensions/flowgraph/nodes/gameplay/rally/trackVehicleDistanceToPos.md) | 5 |  |
-| [`flowgraph_nodes_gameplay_rally_vehicleStoppedNearPlane`](ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPlane.md) | 11 |  |
-| [`flowgraph_nodes_gameplay_rally_vehicleStoppedNearPos`](ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.md) | 10 |  |
-| [`flowgraph_nodes_gameplay_recoveryPrompt_getRecoveryPromptButtonLimitAndCount`](ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/getRecoveryPromptButtonLimitAndCount.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_recoveryPrompt_onRecoveryPromptAction`](ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/onRecoveryPromptAction.md) | 6 |  |
-| [`flowgraph_nodes_gameplay_recoveryPrompt_setRecoveryPromptActive`](ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptActive.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_recoveryPrompt_setRecoveryPromptButton`](ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptButton.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_recoveryPrompt_setRecoveryPromptButtonEnabled`](ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptButtonEnabled.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_recoveryPrompt_setRecoveryPromptEnabled`](ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptEnabled.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_recoveryPrompt_setRecoveryPromptLimit`](ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptLimit.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_removeOtherVehicles`](ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.md) | 6 |  |
-| [`flowgraph_nodes_gameplay_sites_fileSites`](ge/extensions/flowgraph/nodes/gameplay/sites/fileSites.md) | 6 |  |
-| [`flowgraph_nodes_gameplay_sites_location`](ge/extensions/flowgraph/nodes/gameplay/sites/location.md) | 8 |  |
-| [`flowgraph_nodes_gameplay_sites_locationByName`](ge/extensions/flowgraph/nodes/gameplay/sites/locationByName.md) | 5 |  |
-| [`flowgraph_nodes_gameplay_sites_locationsByTag`](ge/extensions/flowgraph/nodes/gameplay/sites/locationsByTag.md) | 6 |  |
-| [`flowgraph_nodes_gameplay_sites_parkingspot`](ge/extensions/flowgraph/nodes/gameplay/sites/parkingspot.md) | 8 |  |
-| [`flowgraph_nodes_gameplay_sites_parkingspotByName`](ge/extensions/flowgraph/nodes/gameplay/sites/parkingspotByName.md) | 5 |  |
-| [`flowgraph_nodes_gameplay_sites_posInZone`](ge/extensions/flowgraph/nodes/gameplay/sites/posInZone.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_sites_zoneByName`](ge/extensions/flowgraph/nodes/gameplay/sites/zoneByName.md) | 5 |  |
-| [`flowgraph_nodes_gameplay_timers_createTimer`](ge/extensions/flowgraph/nodes/gameplay/timers/createTimer.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_timers_getTimer`](ge/extensions/flowgraph/nodes/gameplay/timers/getTimer.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_timers_setTimerProperty`](ge/extensions/flowgraph/nodes/gameplay/timers/setTimerProperty.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_timers_simpleTimer`](ge/extensions/flowgraph/nodes/gameplay/timers/simpleTimer.md) | 5 |  |
-| [`flowgraph_nodes_gameplay_toggleWalking`](ge/extensions/flowgraph/nodes/gameplay/toggleWalking.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_traffic_addVehicle`](ge/extensions/flowgraph/nodes/gameplay/traffic/addVehicle.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_traffic_drivingStats`](ge/extensions/flowgraph/nodes/gameplay/traffic/drivingStats.md) | 4 |  |
-| [`flowgraph_nodes_gameplay_traffic_fileVehicleGroup`](ge/extensions/flowgraph/nodes/gameplay/traffic/fileVehicleGroup.md) | 5 |  |
-| [`flowgraph_nodes_gameplay_traffic_getTrafficState`](ge/extensions/flowgraph/nodes/gameplay/traffic/getTrafficState.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_traffic_getVehicle`](ge/extensions/flowgraph/nodes/gameplay/traffic/getVehicle.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_traffic_getVehicleData`](ge/extensions/flowgraph/nodes/gameplay/traffic/getVehicleData.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_traffic_parkingParams`](ge/extensions/flowgraph/nodes/gameplay/traffic/parkingParams.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_traffic_parkingTrackVehicle`](ge/extensions/flowgraph/nodes/gameplay/traffic/parkingTrackVehicle.md) | 4 |  |
-| [`flowgraph_nodes_gameplay_traffic_pursuitInformation`](ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitInformation.md) | 5 |  |
-| [`flowgraph_nodes_gameplay_traffic_pursuitMode`](ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitMode.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_traffic_pursuitParams`](ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitParams.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_traffic_pursuitRoadblock`](ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitRoadblock.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_traffic_removeVehicle`](ge/extensions/flowgraph/nodes/gameplay/traffic/removeVehicle.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_traffic_setVehicleData`](ge/extensions/flowgraph/nodes/gameplay/traffic/setVehicleData.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_traffic_setVehicleFlowgraph`](ge/extensions/flowgraph/nodes/gameplay/traffic/setVehicleFlowgraph.md) | 4 |  |
-| [`flowgraph_nodes_gameplay_traffic_setupParkedCars`](ge/extensions/flowgraph/nodes/gameplay/traffic/setupParkedCars.md) | 4 |  |
-| [`flowgraph_nodes_gameplay_traffic_setupPursuitGameplay`](ge/extensions/flowgraph/nodes/gameplay/traffic/setupPursuitGameplay.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_traffic_signals_controller`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/controller.md) | 7 |  |
-| [`flowgraph_nodes_gameplay_traffic_signals_controllerByName`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/controllerByName.md) | 4 |  |
-| [`flowgraph_nodes_gameplay_traffic_signals_fileTrafficSignals`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/fileTrafficSignals.md) | 6 |  |
-| [`flowgraph_nodes_gameplay_traffic_signals_instance`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instance.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_traffic_signals_instanceByName`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceByName.md) | 4 |  |
-| [`flowgraph_nodes_gameplay_traffic_signals_instanceSettings`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceSettings.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_traffic_signals_instanceState`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceState.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_traffic_signals_sequence`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequence.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_traffic_signals_sequenceAdvance`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequenceAdvance.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_traffic_signals_sequenceByName`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequenceByName.md) | 4 |  |
-| [`flowgraph_nodes_gameplay_traffic_signals_sequenceSettings`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequenceSettings.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_traffic_signals_trafficSignalsSettings`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/trafficSignalsSettings.md) | 2 |  |
-| [`flowgraph_nodes_gameplay_traffic_trafficActivate`](ge/extensions/flowgraph/nodes/gameplay/traffic/trafficActivate.md) | 5 |  |
-| [`flowgraph_nodes_gameplay_traffic_trafficCustomGroup`](ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.md) | 11 |  |
-| [`flowgraph_nodes_gameplay_traffic_trafficMoveGroup`](ge/extensions/flowgraph/nodes/gameplay/traffic/trafficMoveGroup.md) | 6 |  |
-| [`flowgraph_nodes_gameplay_traffic_trafficParams`](ge/extensions/flowgraph/nodes/gameplay/traffic/trafficParams.md) | 3 |  |
-| [`flowgraph_nodes_gameplay_traffic_trafficScatter`](ge/extensions/flowgraph/nodes/gameplay/traffic/trafficScatter.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_traffic_trafficSpawnGroup`](ge/extensions/flowgraph/nodes/gameplay/traffic/trafficSpawnGroup.md) | 7 |  |
-| [`flowgraph_nodes_gameplay_vehiclePool_activateAll`](ge/extensions/flowgraph/nodes/gameplay/vehiclePool/activateAll.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_vehiclePool_activateByDistance`](ge/extensions/flowgraph/nodes/gameplay/vehiclePool/activateByDistance.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_vehiclePool_activateVehicle`](ge/extensions/flowgraph/nodes/gameplay/vehiclePool/activateVehicle.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_vehiclePool_addGroup`](ge/extensions/flowgraph/nodes/gameplay/vehiclePool/addGroup.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_vehiclePool_addVehicle`](ge/extensions/flowgraph/nodes/gameplay/vehiclePool/addVehicle.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_vehiclePool_createPool`](ge/extensions/flowgraph/nodes/gameplay/vehiclePool/createPool.md) | 5 |  |
-| [`flowgraph_nodes_gameplay_vehiclePool_cyclePool`](ge/extensions/flowgraph/nodes/gameplay/vehiclePool/cyclePool.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_vehiclePool_managePool`](ge/extensions/flowgraph/nodes/gameplay/vehiclePool/managePool.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_vehiclePool_removeVehicle`](ge/extensions/flowgraph/nodes/gameplay/vehiclePool/removeVehicle.md) | 1 |  |
-| [`flowgraph_nodes_gameplay_zone`](ge/extensions/flowgraph/nodes/gameplay/zone.md) | 2 |  |
-| [`flowgraph_nodes_gfx_blur`](ge/extensions/flowgraph/nodes/gfx/blur.md) | 4 |  |
-| [`flowgraph_nodes_gfx_dof`](ge/extensions/flowgraph/nodes/gfx/dof.md) | 5 |  |
-| [`flowgraph_nodes_input_blacklistAction`](ge/extensions/flowgraph/nodes/input/blacklistAction.md) | 8 |  |
-| [`flowgraph_nodes_input_blacklistActionFilter`](ge/extensions/flowgraph/nodes/input/blacklistActionFilter.md) | 6 |  |
-| [`flowgraph_nodes_input_getActionControl`](ge/extensions/flowgraph/nodes/input/getActionControl.md) | 1 |  |
-| [`flowgraph_nodes_logic_and`](ge/extensions/flowgraph/nodes/logic/and.md) | 6 |  |
-| [`flowgraph_nodes_logic_booleanExpression`](ge/extensions/flowgraph/nodes/logic/booleanExpression.md) | 10 |  |
-| [`flowgraph_nodes_logic_branch`](ge/extensions/flowgraph/nodes/logic/branch.md) | 1 |  |
-| [`flowgraph_nodes_logic_bundle`](ge/extensions/flowgraph/nodes/logic/bundle.md) | 1 |  |
-| [`flowgraph_nodes_logic_chainFlowBranch`](ge/extensions/flowgraph/nodes/logic/chainFlowBranch.md) | 1 |  |
-| [`flowgraph_nodes_logic_compare`](ge/extensions/flowgraph/nodes/logic/compare.md) | 8 |  |
-| [`flowgraph_nodes_logic_edgeDetect`](ge/extensions/flowgraph/nodes/logic/edgeDetect.md) | 2 |  |
-| [`flowgraph_nodes_logic_flowSwitch`](ge/extensions/flowgraph/nodes/logic/flowSwitch.md) | 7 |  |
-| [`flowgraph_nodes_logic_frameDelay`](ge/extensions/flowgraph/nodes/logic/frameDelay.md) | 7 |  |
-| [`flowgraph_nodes_logic_once`](ge/extensions/flowgraph/nodes/logic/once.md) | 3 |  |
-| [`flowgraph_nodes_logic_rateLimit`](ge/extensions/flowgraph/nodes/logic/rateLimit.md) | 4 |  |
-| [`flowgraph_nodes_logic_select`](ge/extensions/flowgraph/nodes/logic/select.md) | 8 |  |
-| [`flowgraph_nodes_logic_sequencer`](ge/extensions/flowgraph/nodes/logic/sequencer.md) | 9 |  |
-| [`flowgraph_nodes_logic_switchcase`](ge/extensions/flowgraph/nodes/logic/switchcase.md) | 8 |  |
-| [`flowgraph_nodes_logic_timedTrigger`](ge/extensions/flowgraph/nodes/logic/timedTrigger.md) | 7 |  |
-| [`flowgraph_nodes_logic_wait`](ge/extensions/flowgraph/nodes/logic/wait.md) | 6 |  |
-| [`flowgraph_nodes_logic_xor`](ge/extensions/flowgraph/nodes/logic/xor.md) | 1 |  |
-| [`flowgraph_nodes_macro_foreach`](ge/extensions/flowgraph/nodes/macro/foreach.md) | 4 |  |
-| [`flowgraph_nodes_macro_getForeach`](ge/extensions/flowgraph/nodes/macro/getForeach.md) | 3 |  |
-| [`flowgraph_nodes_macro_integrated`](ge/extensions/flowgraph/nodes/macro/integrated.md) | 15 |  |
-| [`flowgraph_nodes_macro_io`](ge/extensions/flowgraph/nodes/macro/io.md) | 6 |  |
-| [`flowgraph_nodes_math_accumulator`](ge/extensions/flowgraph/nodes/math/accumulator.md) | 6 |  |
-| [`flowgraph_nodes_math_ease`](ge/extensions/flowgraph/nodes/math/ease.md) | 6 |  |
-| [`flowgraph_nodes_math_increaser`](ge/extensions/flowgraph/nodes/math/increaser.md) | 4 |  |
-| [`flowgraph_nodes_math_math`](ge/extensions/flowgraph/nodes/math/math.md) | 10 |  |
-| [`flowgraph_nodes_math_quaternion_direction`](ge/extensions/flowgraph/nodes/math/quaternion/direction.md) | 2 |  |
-| [`flowgraph_nodes_math_quaternion_lookAt`](ge/extensions/flowgraph/nodes/math/quaternion/lookAt.md) | 2 |  |
-| [`flowgraph_nodes_math_smoothers_linear`](ge/extensions/flowgraph/nodes/math/smoothers/linear.md) | 5 |  |
-| [`flowgraph_nodes_math_smoothers_nonLinear`](ge/extensions/flowgraph/nodes/math/smoothers/nonLinear.md) | 4 |  |
-| [`flowgraph_nodes_math_smoothers_sigmoid`](ge/extensions/flowgraph/nodes/math/smoothers/sigmoid.md) | 4 |  |
-| [`flowgraph_nodes_math_smoothers_spring`](ge/extensions/flowgraph/nodes/math/smoothers/spring.md) | 4 |  |
-| [`flowgraph_nodes_math_vector_merge`](ge/extensions/flowgraph/nodes/math/vector/merge.md) | 2 |  |
-| [`flowgraph_nodes_math_vector_split`](ge/extensions/flowgraph/nodes/math/vector/split.md) | 2 |  |
-| [`flowgraph_nodes_mission_ARunForLife`](ge/extensions/flowgraph/nodes/mission/ARunForLife.md) | 33 |  |
-| [`flowgraph_nodes_mission_UpdateDisplayDragRace`](ge/extensions/flowgraph/nodes/mission/UpdateDisplayDragRace.md) | 6 |  |
-| [`flowgraph_nodes_mission_blacklistParkingSpots`](ge/extensions/flowgraph/nodes/mission/blacklistParkingSpots.md) | 10 |  |
-| [`flowgraph_nodes_mission_clearLightsDragRace`](ge/extensions/flowgraph/nodes/mission/clearLightsDragRace.md) | 5 |  |
-| [`flowgraph_nodes_mission_countdownLightsController`](ge/extensions/flowgraph/nodes/mission/countdownLightsController.md) | 4 |  |
-| [`flowgraph_nodes_mission_getCustomVehicleData`](ge/extensions/flowgraph/nodes/mission/getCustomVehicleData.md) | 3 |  |
-| [`flowgraph_nodes_mission_getSetupData`](ge/extensions/flowgraph/nodes/mission/getSetupData.md) | 1 |  |
-| [`flowgraph_nodes_mission_goToStartLine`](ge/extensions/flowgraph/nodes/mission/goToStartLine.md) | 3 |  |
-| [`flowgraph_nodes_mission_knockAwayCheck`](ge/extensions/flowgraph/nodes/mission/knockAwayCheck.md) | 7 |  |
-| [`flowgraph_nodes_mission_lightsController`](ge/extensions/flowgraph/nodes/mission/lightsController.md) | 4 |  |
-| [`flowgraph_nodes_mission_postClean`](ge/extensions/flowgraph/nodes/mission/postClean.md) | 1 |  |
-| [`flowgraph_nodes_mission_preClean`](ge/extensions/flowgraph/nodes/mission/preClean.md) | 1 |  |
-| [`flowgraph_nodes_mission_prepareVehicle`](ge/extensions/flowgraph/nodes/mission/prepareVehicle.md) | 1 |  |
-| [`flowgraph_nodes_mission_removeStashedPlayerVehicle`](ge/extensions/flowgraph/nodes/mission/removeStashedPlayerVehicle.md) | 1 |  |
-| [`flowgraph_nodes_mission_selectGarage2GarageVehicle`](ge/extensions/flowgraph/nodes/mission/selectGarage2GarageVehicle.md) | 5 |  |
-| [`flowgraph_nodes_mission_selectGarage2GarageZones`](ge/extensions/flowgraph/nodes/mission/selectGarage2GarageZones.md) | 6 |  |
-| [`flowgraph_nodes_mission_selectGarageSpots`](ge/extensions/flowgraph/nodes/mission/selectGarageSpots.md) | 6 |  |
-| [`flowgraph_nodes_mission_selectHeistMissionSpots`](ge/extensions/flowgraph/nodes/mission/selectHeistMissionSpots.md) | 4 |  |
-| [`flowgraph_nodes_mission_stageLightsDragRace`](ge/extensions/flowgraph/nodes/mission/stageLightsDragRace.md) | 5 |  |
-| [`flowgraph_nodes_recording_playReplay`](ge/extensions/flowgraph/nodes/recording/playReplay.md) | 1 |  |
-| [`flowgraph_nodes_recording_recordCamera`](ge/extensions/flowgraph/nodes/recording/recordCamera.md) | 5 |  |
-| [`flowgraph_nodes_recording_recordReplay`](ge/extensions/flowgraph/nodes/recording/recordReplay.md) | 6 |  |
-| [`flowgraph_nodes_recording_startAutoReplay`](ge/extensions/flowgraph/nodes/recording/startAutoReplay.md) | 1 |  |
-| [`flowgraph_nodes_recording_stopAutoReplay`](ge/extensions/flowgraph/nodes/recording/stopAutoReplay.md) | 1 |  |
-| [`flowgraph_nodes_recording_stopReplay`](ge/extensions/flowgraph/nodes/recording/stopReplay.md) | 1 |  |
-| [`flowgraph_nodes_scene_camera_cameraAngle`](ge/extensions/flowgraph/nodes/scene/camera/cameraAngle.md) | 2 |  |
-| [`flowgraph_nodes_scene_camera_cameraAutoRotate`](ge/extensions/flowgraph/nodes/scene/camera/cameraAutoRotate.md) | 1 |  |
-| [`flowgraph_nodes_scene_camera_cameraCircle`](ge/extensions/flowgraph/nodes/scene/camera/cameraCircle.md) | 4 |  |
-| [`flowgraph_nodes_scene_camera_cameraPath`](ge/extensions/flowgraph/nodes/scene/camera/cameraPath.md) | 8 |  |
-| [`flowgraph_nodes_scene_camera_getCamPath`](ge/extensions/flowgraph/nodes/scene/camera/getCamPath.md) | 5 |  |
-| [`flowgraph_nodes_scene_camera_getCameraFOV`](ge/extensions/flowgraph/nodes/scene/camera/getCameraFOV.md) | 2 |  |
-| [`flowgraph_nodes_scene_camera_getCameraMode`](ge/extensions/flowgraph/nodes/scene/camera/getCameraMode.md) | 1 |  |
-| [`flowgraph_nodes_scene_camera_procedural_procCamPathPosRot`](ge/extensions/flowgraph/nodes/scene/camera/procedural/procCamPathPosRot.md) | 1 |  |
-| [`flowgraph_nodes_scene_camera_procedural_procDirectPath`](ge/extensions/flowgraph/nodes/scene/camera/procedural/procDirectPath.md) | 1 |  |
-| [`flowgraph_nodes_scene_camera_restartCamPath`](ge/extensions/flowgraph/nodes/scene/camera/restartCamPath.md) | 2 |  |
-| [`flowgraph_nodes_scene_camera_returnToVehicle`](ge/extensions/flowgraph/nodes/scene/camera/returnToVehicle.md) | 1 |  |
-| [`flowgraph_nodes_scene_camera_setCameraFOV`](ge/extensions/flowgraph/nodes/scene/camera/setCameraFOV.md) | 4 |  |
-| [`flowgraph_nodes_scene_camera_setCameraMode`](ge/extensions/flowgraph/nodes/scene/camera/setCameraMode.md) | 1 |  |
-| [`flowgraph_nodes_scene_camera_setCameraPosition`](ge/extensions/flowgraph/nodes/scene/camera/setCameraPosition.md) | 7 |  |
-| [`flowgraph_nodes_scene_camera_setCameraRotation`](ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.md) | 7 |  |
-| [`flowgraph_nodes_scene_camera_startCamPath`](ge/extensions/flowgraph/nodes/scene/camera/startCamPath.md) | 5 |  |
-| [`flowgraph_nodes_scene_camera_stopCamPath`](ge/extensions/flowgraph/nodes/scene/camera/stopCamPath.md) | 2 |  |
-| [`flowgraph_nodes_scene_collectionMarker`](ge/extensions/flowgraph/nodes/scene/collectionMarker.md) | 6 |  |
-| [`flowgraph_nodes_scene_customLuaCommand`](ge/extensions/flowgraph/nodes/scene/customLuaCommand.md) | 4 |  |
-| [`flowgraph_nodes_scene_getObjectField`](ge/extensions/flowgraph/nodes/scene/getObjectField.md) | 1 |  |
-| [`flowgraph_nodes_scene_getPlayerVehicle`](ge/extensions/flowgraph/nodes/scene/getPlayerVehicle.md) | 2 |  |
-| [`flowgraph_nodes_scene_getPointOnDecalroad`](ge/extensions/flowgraph/nodes/scene/getPointOnDecalroad.md) | 3 |  |
-| [`flowgraph_nodes_scene_hide`](ge/extensions/flowgraph/nodes/scene/hide.md) | 2 |  |
-| [`flowgraph_nodes_scene_idByName`](ge/extensions/flowgraph/nodes/scene/idByName.md) | 6 |  |
-| [`flowgraph_nodes_scene_keepPrefab`](ge/extensions/flowgraph/nodes/scene/keepPrefab.md) | 2 |  |
-| [`flowgraph_nodes_scene_particleEmitter`](ge/extensions/flowgraph/nodes/scene/particleEmitter.md) | 11 |  |
-| [`flowgraph_nodes_scene_pointOnDecalroad`](ge/extensions/flowgraph/nodes/scene/pointOnDecalroad.md) | 3 |  |
-| [`flowgraph_nodes_scene_raceLineParking`](ge/extensions/flowgraph/nodes/scene/raceLineParking.md) | 15 |  |
-| [`flowgraph_nodes_scene_raycast`](ge/extensions/flowgraph/nodes/scene/raycast.md) | 2 |  |
-| [`flowgraph_nodes_scene_rectMarker`](ge/extensions/flowgraph/nodes/scene/rectMarker.md) | 15 |  |
-| [`flowgraph_nodes_scene_reloadCollision`](ge/extensions/flowgraph/nodes/scene/reloadCollision.md) | 1 |  |
-| [`flowgraph_nodes_scene_reloadNavGraph`](ge/extensions/flowgraph/nodes/scene/reloadNavGraph.md) | 1 |  |
-| [`flowgraph_nodes_scene_removePrefab`](ge/extensions/flowgraph/nodes/scene/removePrefab.md) | 2 |  |
-| [`flowgraph_nodes_scene_resetPrefab`](ge/extensions/flowgraph/nodes/scene/resetPrefab.md) | 1 |  |
-| [`flowgraph_nodes_scene_setObjectField`](ge/extensions/flowgraph/nodes/scene/setObjectField.md) | 1 |  |
-| [`flowgraph_nodes_scene_sevensegmentDisplay`](ge/extensions/flowgraph/nodes/scene/sevensegmentDisplay.md) | 10 |  |
-| [`flowgraph_nodes_scene_singleMarker`](ge/extensions/flowgraph/nodes/scene/singleMarker.md) | 12 |  |
-| [`flowgraph_nodes_scene_spawnLight`](ge/extensions/flowgraph/nodes/scene/spawnLight.md) | 7 |  |
-| [`flowgraph_nodes_scene_spawnPrefab`](ge/extensions/flowgraph/nodes/scene/spawnPrefab.md) | 8 |  |
-| [`flowgraph_nodes_scene_spawnTSStatic`](ge/extensions/flowgraph/nodes/scene/spawnTSStatic.md) | 8 |  |
-| [`flowgraph_nodes_scene_storeStatics`](ge/extensions/flowgraph/nodes/scene/storeStatics.md) | 13 |  |
-| [`flowgraph_nodes_scene_trackPrefab`](ge/extensions/flowgraph/nodes/scene/trackPrefab.md) | 2 |  |
-| [`flowgraph_nodes_states_stateEntry`](ge/extensions/flowgraph/nodes/states/stateEntry.md) | 0 |  |
-| [`flowgraph_nodes_states_stateExit`](ge/extensions/flowgraph/nodes/states/stateExit.md) | 5 |  |
-| [`flowgraph_nodes_states_stateNode`](ge/extensions/flowgraph/nodes/states/stateNode.md) | 14 |  |
-| [`flowgraph_nodes_states_transition`](ge/extensions/flowgraph/nodes/states/transition.md) | 9 |  |
-| [`flowgraph_nodes_states_transitionStack`](ge/extensions/flowgraph/nodes/states/transitionStack.md) | 8 |  |
-| [`flowgraph_nodes_string_format`](ge/extensions/flowgraph/nodes/string/format.md) | 8 |  |
-| [`flowgraph_nodes_string_match`](ge/extensions/flowgraph/nodes/string/match.md) | 3 |  |
-| [`flowgraph_nodes_string_stringconcat`](ge/extensions/flowgraph/nodes/string/stringconcat.md) | 8 |  |
-| [`flowgraph_nodes_string_subString`](ge/extensions/flowgraph/nodes/string/subString.md) | 3 |  |
-| [`flowgraph_nodes_thread_loadProject`](ge/extensions/flowgraph/nodes/thread/loadProject.md) | 5 |  |
-| [`flowgraph_nodes_thread_receiveMessage`](ge/extensions/flowgraph/nodes/thread/receiveMessage.md) | 5 |  |
-| [`flowgraph_nodes_thread_sendMessage`](ge/extensions/flowgraph/nodes/thread/sendMessage.md) | 4 |  |
-| [`flowgraph_nodes_timetrials_onRaceCheckpoint`](ge/extensions/flowgraph/nodes/timetrials/onRaceCheckpoint.md) | 5 |  |
-| [`flowgraph_nodes_timetrials_onRaceComplete`](ge/extensions/flowgraph/nodes/timetrials/onRaceComplete.md) | 5 |  |
-| [`flowgraph_nodes_timetrials_onRaceConfig`](ge/extensions/flowgraph/nodes/timetrials/onRaceConfig.md) | 4 |  |
-| [`flowgraph_nodes_timetrials_onRaceRestarted`](ge/extensions/flowgraph/nodes/timetrials/onRaceRestarted.md) | 4 |  |
-| [`flowgraph_nodes_timetrials_onRaceStart`](ge/extensions/flowgraph/nodes/timetrials/onRaceStart.md) | 5 |  |
-| [`flowgraph_nodes_types_bool`](ge/extensions/flowgraph/nodes/types/bool.md) | 3 |  |
-| [`flowgraph_nodes_types_color`](ge/extensions/flowgraph/nodes/types/color.md) | 7 |  |
-| [`flowgraph_nodes_types_genericValue`](ge/extensions/flowgraph/nodes/types/genericValue.md) | 7 |  |
-| [`flowgraph_nodes_types_getVariable`](ge/extensions/flowgraph/nodes/types/getVariable.md) | 10 |  |
-| [`flowgraph_nodes_types_number`](ge/extensions/flowgraph/nodes/types/number.md) | 5 |  |
-| [`flowgraph_nodes_types_quat`](ge/extensions/flowgraph/nodes/types/quat.md) | 5 |  |
-| [`flowgraph_nodes_types_setVariable`](ge/extensions/flowgraph/nodes/types/setVariable.md) | 10 |  |
-| [`flowgraph_nodes_types_string`](ge/extensions/flowgraph/nodes/types/string.md) | 7 |  |
-| [`flowgraph_nodes_types_transform`](ge/extensions/flowgraph/nodes/types/transform.md) | 16 |  |
-| [`flowgraph_nodes_types_vec3`](ge/extensions/flowgraph/nodes/types/vec3.md) | 5 |  |
-| [`flowgraph_nodes_ui_autoMedal`](ge/extensions/flowgraph/nodes/ui/autoMedal.md) | 1 |  |
-| [`flowgraph_nodes_ui_buttons_createButton`](ge/extensions/flowgraph/nodes/ui/buttons/createButton.md) | 2 |  |
-| [`flowgraph_nodes_ui_buttons_getButton`](ge/extensions/flowgraph/nodes/ui/buttons/getButton.md) | 1 |  |
-| [`flowgraph_nodes_ui_buttons_getMultipleButtons`](ge/extensions/flowgraph/nodes/ui/buttons/getMultipleButtons.md) | 7 |  |
-| [`flowgraph_nodes_ui_buttons_setButtonProperty`](ge/extensions/flowgraph/nodes/ui/buttons/setButtonProperty.md) | 2 |  |
-| [`flowgraph_nodes_ui_buttons_setMultipleButtonsProperty`](ge/extensions/flowgraph/nodes/ui/buttons/setMultipleButtonsProperty.md) | 7 |  |
-| [`flowgraph_nodes_ui_buttons_simpleButton`](ge/extensions/flowgraph/nodes/ui/buttons/simpleButton.md) | 5 |  |
-| [`flowgraph_nodes_ui_buttons_simpleMultipleButtons`](ge/extensions/flowgraph/nodes/ui/buttons/simpleMultipleButtons.md) | 10 |  |
-| [`flowgraph_nodes_ui_clearMessage`](ge/extensions/flowgraph/nodes/ui/clearMessage.md) | 1 |  |
-| [`flowgraph_nodes_ui_contextTranslation`](ge/extensions/flowgraph/nodes/ui/contextTranslation.md) | 3 |  |
-| [`flowgraph_nodes_ui_convertUnit`](ge/extensions/flowgraph/nodes/ui/convertUnit.md) | 1 |  |
-| [`flowgraph_nodes_ui_cornerTimer`](ge/extensions/flowgraph/nodes/ui/cornerTimer.md) | 2 |  |
-| [`flowgraph_nodes_ui_customButtonTEST`](ge/extensions/flowgraph/nodes/ui/customButtonTEST.md) | 9 |  |
-| [`flowgraph_nodes_ui_customUiLayout`](ge/extensions/flowgraph/nodes/ui/customUiLayout.md) | 8 |  |
-| [`flowgraph_nodes_ui_endScreen`](ge/extensions/flowgraph/nodes/ui/endScreen.md) | 17 |  |
-| [`flowgraph_nodes_ui_endStats`](ge/extensions/flowgraph/nodes/ui/endStats.md) | 8 |  |
-| [`flowgraph_nodes_ui_fadeFromBlack`](ge/extensions/flowgraph/nodes/ui/fadeFromBlack.md) | 6 |  |
-| [`flowgraph_nodes_ui_fadeSequence`](ge/extensions/flowgraph/nodes/ui/fadeSequence.md) | 7 |  |
-| [`flowgraph_nodes_ui_fadeToBlack`](ge/extensions/flowgraph/nodes/ui/fadeToBlack.md) | 6 |  |
-| [`flowgraph_nodes_ui_flashMessage`](ge/extensions/flowgraph/nodes/ui/flashMessage.md) | 2 |  |
-| [`flowgraph_nodes_ui_genericMissionDataText`](ge/extensions/flowgraph/nodes/ui/genericMissionDataText.md) | 3 |  |
-| [`flowgraph_nodes_ui_getGamestate`](ge/extensions/flowgraph/nodes/ui/getGamestate.md) | 2 |  |
-| [`flowgraph_nodes_ui_hideEditor`](ge/extensions/flowgraph/nodes/ui/hideEditor.md) | 2 |  |
-| [`flowgraph_nodes_ui_hideGameUI`](ge/extensions/flowgraph/nodes/ui/hideGameUI.md) | 1 |  |
-| [`flowgraph_nodes_ui_imgui_elemental_imBegin`](ge/extensions/flowgraph/nodes/ui/imgui/elemental/imBegin.md) | 3 |  |
-| [`flowgraph_nodes_ui_imgui_elemental_imButton`](ge/extensions/flowgraph/nodes/ui/imgui/elemental/imButton.md) | 2 |  |
-| [`flowgraph_nodes_ui_imgui_elemental_imCheckbox`](ge/extensions/flowgraph/nodes/ui/imgui/elemental/imCheckbox.md) | 3 |  |
-| [`flowgraph_nodes_ui_imgui_elemental_imColor`](ge/extensions/flowgraph/nodes/ui/imgui/elemental/imColor.md) | 2 |  |
-| [`flowgraph_nodes_ui_imgui_elemental_imEnd`](ge/extensions/flowgraph/nodes/ui/imgui/elemental/imEnd.md) | 1 |  |
-| [`flowgraph_nodes_ui_imgui_elemental_imNumbers`](ge/extensions/flowgraph/nodes/ui/imgui/elemental/imNumbers.md) | 6 |  |
-| [`flowgraph_nodes_ui_imgui_elemental_imSeparator`](ge/extensions/flowgraph/nodes/ui/imgui/elemental/imSeparator.md) | 4 |  |
-| [`flowgraph_nodes_ui_imgui_elemental_imText`](ge/extensions/flowgraph/nodes/ui/imgui/elemental/imText.md) | 2 |  |
-| [`flowgraph_nodes_ui_imgui_imDialogue`](ge/extensions/flowgraph/nodes/ui/imgui/imDialogue.md) | 10 |  |
-| [`flowgraph_nodes_ui_imgui_imSimpleBox`](ge/extensions/flowgraph/nodes/ui/imgui/imSimpleBox.md) | 2 |  |
-| [`flowgraph_nodes_ui_imgui_imVehicleSelect`](ge/extensions/flowgraph/nodes/ui/imgui/imVehicleSelect.md) | 7 |  |
-| [`flowgraph_nodes_ui_listDescription`](ge/extensions/flowgraph/nodes/ui/listDescription.md) | 7 |  |
-| [`flowgraph_nodes_ui_message`](ge/extensions/flowgraph/nodes/ui/message.md) | 5 |  |
-| [`flowgraph_nodes_ui_missionControlHint`](ge/extensions/flowgraph/nodes/ui/missionControlHint.md) | 7 |  |
-| [`flowgraph_nodes_ui_missionEndScreen`](ge/extensions/flowgraph/nodes/ui/missionEndScreen.md) | 17 |  |
-| [`flowgraph_nodes_ui_missionPopup`](ge/extensions/flowgraph/nodes/ui/missionPopup.md) | 12 |  |
-| [`flowgraph_nodes_ui_monologue`](ge/extensions/flowgraph/nodes/ui/monologue.md) | 9 |  |
-| [`flowgraph_nodes_ui_multiDescription`](ge/extensions/flowgraph/nodes/ui/multiDescription.md) | 8 |  |
-| [`flowgraph_nodes_ui_onBigmapPoiSelected`](ge/extensions/flowgraph/nodes/ui/onBigmapPoiSelected.md) | 4 |  |
-| [`flowgraph_nodes_ui_onBigmapStateChange`](ge/extensions/flowgraph/nodes/ui/onBigmapStateChange.md) | 5 |  |
-| [`flowgraph_nodes_ui_raceCheckpoints`](ge/extensions/flowgraph/nodes/ui/raceCheckpoints.md) | 1 |  |
-| [`flowgraph_nodes_ui_raceLaps`](ge/extensions/flowgraph/nodes/ui/raceLaps.md) | 1 |  |
-| [`flowgraph_nodes_ui_raceRecoveriesUsed`](ge/extensions/flowgraph/nodes/ui/raceRecoveriesUsed.md) | 1 |  |
-| [`flowgraph_nodes_ui_rtMessage`](ge/extensions/flowgraph/nodes/ui/rtMessage.md) | 3 |  |
-| [`flowgraph_nodes_ui_selectButtons`](ge/extensions/flowgraph/nodes/ui/selectButtons.md) | 15 |  |
-| [`flowgraph_nodes_ui_setUILayout`](ge/extensions/flowgraph/nodes/ui/setUILayout.md) | 7 |  |
-| [`flowgraph_nodes_ui_showApps`](ge/extensions/flowgraph/nodes/ui/showApps.md) | 3 |  |
-| [`flowgraph_nodes_ui_showMonitor`](ge/extensions/flowgraph/nodes/ui/showMonitor.md) | 1 |  |
-| [`flowgraph_nodes_ui_startScreen`](ge/extensions/flowgraph/nodes/ui/startScreen.md) | 16 |  |
-| [`flowgraph_nodes_ui_tasklistClear`](ge/extensions/flowgraph/nodes/ui/tasklistClear.md) | 1 |  |
-| [`flowgraph_nodes_ui_tasklistMessage`](ge/extensions/flowgraph/nodes/ui/tasklistMessage.md) | 1 |  |
-| [`flowgraph_nodes_ui_tasklistTask`](ge/extensions/flowgraph/nodes/ui/tasklistTask.md) | 1 |  |
-| [`flowgraph_nodes_ui_threeElementSelect`](ge/extensions/flowgraph/nodes/ui/threeElementSelect.md) | 13 |  |
-| [`flowgraph_nodes_ui_updatedUI_endScreenAiCompetitorsLeaderboard`](ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenAiCompetitorsLeaderboard.md) | 1 |  |
-| [`flowgraph_nodes_ui_updatedUI_endScreenBegin`](ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenBegin.md) | 16 |  |
-| [`flowgraph_nodes_ui_updatedUI_endScreenDriftStats`](ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenDriftStats.md) | 1 |  |
-| [`flowgraph_nodes_ui_updatedUI_endScreenLapTimesPanel`](ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenLapTimesPanel.md) | 1 |  |
-| [`flowgraph_nodes_ui_updatedUI_endScreenResults`](ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenResults.md) | 2 |  |
-| [`flowgraph_nodes_ui_updatedUI_endScreenTimeSlip`](ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenTimeSlip.md) | 2 |  |
-| [`flowgraph_nodes_ui_updatedUI_endScreenWhole`](ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenWhole.md) | 17 |  |
-| [`flowgraph_nodes_ui_updatedUI_startScreenBegin`](ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenBegin.md) | 8 |  |
-| [`flowgraph_nodes_ui_updatedUI_startScreenCrashAnalysisStepDetails`](ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenCrashAnalysisStepDetails.md) | 1 |  |
-| [`flowgraph_nodes_ui_updatedUI_startScreenDial`](ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenDial.md) | 3 |  |
-| [`flowgraph_nodes_ui_updatedUI_startScreenFinish`](ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenFinish.md) | 1 |  |
-| [`flowgraph_nodes_ui_updatedUI_startScreenIntro`](ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenIntro.md) | 1 |  |
-| [`flowgraph_nodes_ui_updatedUI_startScreenMainHeader`](ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenMainHeader.md) | 1 |  |
-| [`flowgraph_nodes_ui_updatedUI_startScreenRallySettings`](ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.md) | 15 |  |
-| [`flowgraph_nodes_ui_updatedUI_startScreenText`](ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenText.md) | 2 |  |
-| [`flowgraph_nodes_ui_vehicleSelector`](ge/extensions/flowgraph/nodes/ui/vehicleSelector.md) | 15 |  |
-| [`flowgraph_nodes_util_closestPath`](ge/extensions/flowgraph/nodes/util/closestPath.md) | 7 |  |
-| [`flowgraph_nodes_util_closestRoad`](ge/extensions/flowgraph/nodes/util/closestRoad.md) | 4 |  |
-| [`flowgraph_nodes_util_customLua`](ge/extensions/flowgraph/nodes/util/customLua.md) | 11 |  |
-| [`flowgraph_nodes_util_distanceBetween`](ge/extensions/flowgraph/nodes/util/distanceBetween.md) | 2 |  |
-| [`flowgraph_nodes_util_distanceRemaining`](ge/extensions/flowgraph/nodes/util/distanceRemaining.md) | 1 |  |
-| [`flowgraph_nodes_util_file_loadData`](ge/extensions/flowgraph/nodes/util/file/loadData.md) | 3 |  |
-| [`flowgraph_nodes_util_file_saveData`](ge/extensions/flowgraph/nodes/util/file/saveData.md) | 2 |  |
-| [`flowgraph_nodes_util_fileExists`](ge/extensions/flowgraph/nodes/util/fileExists.md) | 1 |  |
-| [`flowgraph_nodes_util_firstElement`](ge/extensions/flowgraph/nodes/util/firstElement.md) | 4 |  |
-| [`flowgraph_nodes_util_getLevelData`](ge/extensions/flowgraph/nodes/util/getLevelData.md) | 1 |  |
-| [`flowgraph_nodes_util_getMapObjectsDynField`](ge/extensions/flowgraph/nodes/util/getMapObjectsDynField.md) | 4 |  |
-| [`flowgraph_nodes_util_getTableValueByKey`](ge/extensions/flowgraph/nodes/util/getTableValueByKey.md) | 1 |  |
-| [`flowgraph_nodes_util_ghost`](ge/extensions/flowgraph/nodes/util/ghost.md) | 5 |  |
-| [`flowgraph_nodes_util_hideLoadingScreen`](ge/extensions/flowgraph/nodes/util/hideLoadingScreen.md) | 3 |  |
-| [`flowgraph_nodes_util_hsvColor`](ge/extensions/flowgraph/nodes/util/hsvColor.md) | 3 |  |
-| [`flowgraph_nodes_util_linePointFromXnorm`](ge/extensions/flowgraph/nodes/util/linePointFromXnorm.md) | 1 |  |
-| [`flowgraph_nodes_util_loadLevel`](ge/extensions/flowgraph/nodes/util/loadLevel.md) | 6 |  |
-| [`flowgraph_nodes_util_loadProject`](ge/extensions/flowgraph/nodes/util/loadProject.md) | 4 |  |
-| [`flowgraph_nodes_util_onMenu`](ge/extensions/flowgraph/nodes/util/onMenu.md) | 3 |  |
-| [`flowgraph_nodes_util_perlinNoise`](ge/extensions/flowgraph/nodes/util/perlinNoise.md) | 10 |  |
-| [`flowgraph_nodes_util_popActionMap`](ge/extensions/flowgraph/nodes/util/popActionMap.md) | 2 |  |
-| [`flowgraph_nodes_util_project`](ge/extensions/flowgraph/nodes/util/project.md) | 2 |  |
-| [`flowgraph_nodes_util_pushActionMap`](ge/extensions/flowgraph/nodes/util/pushActionMap.md) | 4 |  |
-| [`flowgraph_nodes_util_randomColor`](ge/extensions/flowgraph/nodes/util/randomColor.md) | 1 |  |
-| [`flowgraph_nodes_util_randomNumber`](ge/extensions/flowgraph/nodes/util/randomNumber.md) | 1 |  |
-| [`flowgraph_nodes_util_randomQuaternion`](ge/extensions/flowgraph/nodes/util/randomQuaternion.md) | 1 |  |
-| [`flowgraph_nodes_util_randomVector`](ge/extensions/flowgraph/nodes/util/randomVector.md) | 1 |  |
-| [`flowgraph_nodes_util_roadSegment`](ge/extensions/flowgraph/nodes/util/roadSegment.md) | 3 |  |
-| [`flowgraph_nodes_util_routePointToPoint`](ge/extensions/flowgraph/nodes/util/routePointToPoint.md) | 1 |  |
-| [`flowgraph_nodes_util_routePosition`](ge/extensions/flowgraph/nodes/util/routePosition.md) | 4 |  |
-| [`flowgraph_nodes_util_template`](ge/extensions/flowgraph/nodes/util/template.md) | 12 |  |
-| [`flowgraph_nodes_util_time`](ge/extensions/flowgraph/nodes/util/time.md) | 3 |  |
-| [`flowgraph_nodes_util_timedSequence`](ge/extensions/flowgraph/nodes/util/timedSequence.md) | 11 |  |
-| [`flowgraph_nodes_util_tonumber`](ge/extensions/flowgraph/nodes/util/tonumber.md) | 1 |  |
-| [`flowgraph_nodes_util_tostring`](ge/extensions/flowgraph/nodes/util/tostring.md) | 1 |  |
-| [`flowgraph_nodes_util_worldEditorOpen`](ge/extensions/flowgraph/nodes/util/worldEditorOpen.md) | 3 |  |
-| [`flowgraph_nodes_vehicle_ai_aiParams`](ge/extensions/flowgraph/nodes/vehicle/ai/aiParams.md) | 2 |  |
-| [`flowgraph_nodes_vehicle_ai_arrive`](ge/extensions/flowgraph/nodes/vehicle/ai/arrive.md) | 6 |  |
-| [`flowgraph_nodes_vehicle_ai_chase`](ge/extensions/flowgraph/nodes/vehicle/ai/chase.md) | 1 |  |
-| [`flowgraph_nodes_vehicle_ai_directlyTo`](ge/extensions/flowgraph/nodes/vehicle/ai/directlyTo.md) | 8 |  |
-| [`flowgraph_nodes_vehicle_ai_disable`](ge/extensions/flowgraph/nodes/vehicle/ai/disable.md) | 2 |  |
-| [`flowgraph_nodes_vehicle_ai_flee`](ge/extensions/flowgraph/nodes/vehicle/ai/flee.md) | 1 |  |
-| [`flowgraph_nodes_vehicle_ai_follow`](ge/extensions/flowgraph/nodes/vehicle/ai/follow.md) | 1 |  |
-| [`flowgraph_nodes_vehicle_ai_followWaypoints`](ge/extensions/flowgraph/nodes/vehicle/ai/followWaypoints.md) | 7 |  |
-| [`flowgraph_nodes_vehicle_ai_getAIMode`](ge/extensions/flowgraph/nodes/vehicle/ai/getAIMode.md) | 5 |  |
-| [`flowgraph_nodes_vehicle_ai_goToEndLine`](ge/extensions/flowgraph/nodes/vehicle/ai/goToEndLine.md) | 5 |  |
-| [`flowgraph_nodes_vehicle_ai_random`](ge/extensions/flowgraph/nodes/vehicle/ai/random.md) | 1 |  |
-| [`flowgraph_nodes_vehicle_ai_scriptAI_followPath`](ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/followPath.md) | 12 |  |
-| [`flowgraph_nodes_vehicle_ai_scriptAI_pathFromFile`](ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/pathFromFile.md) | 7 |  |
-| [`flowgraph_nodes_vehicle_ai_scriptAI_pathStored`](ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/pathStored.md) | 8 |  |
-| [`flowgraph_nodes_vehicle_ai_scriptAI_playRecording`](ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/playRecording.md) | 8 |  |
-| [`flowgraph_nodes_vehicle_ai_simpleFollowDecalroad`](ge/extensions/flowgraph/nodes/vehicle/ai/simpleFollowDecalroad.md) | 8 |  |
-| [`flowgraph_nodes_vehicle_ai_stop`](ge/extensions/flowgraph/nodes/vehicle/ai/stop.md) | 6 |  |
-| [`flowgraph_nodes_vehicle_ai_traffic`](ge/extensions/flowgraph/nodes/vehicle/ai/traffic.md) | 1 |  |
-| [`flowgraph_nodes_vehicle_alignForCoupling`](ge/extensions/flowgraph/nodes/vehicle/alignForCoupling.md) | 3 |  |
-| [`flowgraph_nodes_vehicle_applyVelocity`](ge/extensions/flowgraph/nodes/vehicle/applyVelocity.md) | 1 |  |
-| [`flowgraph_nodes_vehicle_beamstate_beamstate`](ge/extensions/flowgraph/nodes/vehicle/beamstate/beamstate.md) | 6 |  |
-| [`flowgraph_nodes_vehicle_beamstate_breakgroup`](ge/extensions/flowgraph/nodes/vehicle/beamstate/breakgroup.md) | 1 |  |
-| [`flowgraph_nodes_vehicle_beamstate_couple`](ge/extensions/flowgraph/nodes/vehicle/beamstate/couple.md) | 3 |  |
-| [`flowgraph_nodes_vehicle_beamstate_reload`](ge/extensions/flowgraph/nodes/vehicle/beamstate/reload.md) | 1 |  |
-| [`flowgraph_nodes_vehicle_beamstate_reset`](ge/extensions/flowgraph/nodes/vehicle/beamstate/reset.md) | 1 |  |
-| [`flowgraph_nodes_vehicle_boost`](ge/extensions/flowgraph/nodes/vehicle/boost.md) | 3 |  |
-| [`flowgraph_nodes_vehicle_bus_busControls`](ge/extensions/flowgraph/nodes/vehicle/bus/busControls.md) | 3 |  |
-| [`flowgraph_nodes_vehicle_bus_isBus`](ge/extensions/flowgraph/nodes/vehicle/bus/isBus.md) | 1 |  |
-| [`flowgraph_nodes_vehicle_bus_registerBusData`](ge/extensions/flowgraph/nodes/vehicle/bus/registerBusData.md) | 1 |  |
-| [`flowgraph_nodes_vehicle_colors`](ge/extensions/flowgraph/nodes/vehicle/colors.md) | 2 |  |
-| [`flowgraph_nodes_vehicle_customPartsConfigProvider`](ge/extensions/flowgraph/nodes/vehicle/customPartsConfigProvider.md) | 8 |  |
-| [`flowgraph_nodes_vehicle_enterVehicle`](ge/extensions/flowgraph/nodes/vehicle/enterVehicle.md) | 3 |  |
-| [`flowgraph_nodes_vehicle_fire_fire`](ge/extensions/flowgraph/nodes/vehicle/fire/fire.md) | 7 |  |
-| [`flowgraph_nodes_vehicle_flipUpright`](ge/extensions/flowgraph/nodes/vehicle/flipUpright.md) | 3 |  |
-| [`flowgraph_nodes_vehicle_freeze`](ge/extensions/flowgraph/nodes/vehicle/freeze.md) | 2 |  |
-| [`flowgraph_nodes_vehicle_gForce`](ge/extensions/flowgraph/nodes/vehicle/gForce.md) | 5 |  |
-| [`flowgraph_nodes_vehicle_generateLicensePlate`](ge/extensions/flowgraph/nodes/vehicle/generateLicensePlate.md) | 1 |  |
-| [`flowgraph_nodes_vehicle_getActive`](ge/extensions/flowgraph/nodes/vehicle/getActive.md) | 1 |  |
-| [`flowgraph_nodes_vehicle_getElectricsValue`](ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.md) | 8 |  |
-| [`flowgraph_nodes_vehicle_getGearboxMode`](ge/extensions/flowgraph/nodes/vehicle/getGearboxMode.md) | 5 |  |
-| [`flowgraph_nodes_vehicle_getPowertrainData`](ge/extensions/flowgraph/nodes/vehicle/getPowertrainData.md) | 5 |  |
-| [`flowgraph_nodes_vehicle_groundDistance`](ge/extensions/flowgraph/nodes/vehicle/groundDistance.md) | 2 |  |
-| [`flowgraph_nodes_vehicle_hasCouplerTag`](ge/extensions/flowgraph/nodes/vehicle/hasCouplerTag.md) | 2 |  |
-| [`flowgraph_nodes_vehicle_isCoupled`](ge/extensions/flowgraph/nodes/vehicle/isCoupled.md) | 1 |  |
-| [`flowgraph_nodes_vehicle_isPlayerUsable`](ge/extensions/flowgraph/nodes/vehicle/isPlayerUsable.md) | 2 |  |
-| [`flowgraph_nodes_vehicle_keep`](ge/extensions/flowgraph/nodes/vehicle/keep.md) | 2 |  |
-| [`flowgraph_nodes_vehicle_moveTo`](ge/extensions/flowgraph/nodes/vehicle/moveTo.md) | 3 |  |
-| [`flowgraph_nodes_vehicle_onCannonFired`](ge/extensions/flowgraph/nodes/vehicle/onCannonFired.md) | 3 |  |
-| [`flowgraph_nodes_vehicle_onVehicleDestroyed`](ge/extensions/flowgraph/nodes/vehicle/onVehicleDestroyed.md) | 5 |  |
-| [`flowgraph_nodes_vehicle_onVehicleReset`](ge/extensions/flowgraph/nodes/vehicle/onVehicleReset.md) | 5 |  |
-| [`flowgraph_nodes_vehicle_onVehicleSpawned`](ge/extensions/flowgraph/nodes/vehicle/onVehicleSpawned.md) | 5 |  |
-| [`flowgraph_nodes_vehicle_onVehicleSwitched`](ge/extensions/flowgraph/nodes/vehicle/onVehicleSwitched.md) | 5 |  |
-| [`flowgraph_nodes_vehicle_playerUsable`](ge/extensions/flowgraph/nodes/vehicle/playerUsable.md) | 2 |  |
-| [`flowgraph_nodes_vehicle_randomConfigProvider`](ge/extensions/flowgraph/nodes/vehicle/randomConfigProvider.md) | 7 |  |
-| [`flowgraph_nodes_vehicle_recoverInPlace`](ge/extensions/flowgraph/nodes/vehicle/recoverInPlace.md) | 2 |  |
-| [`flowgraph_nodes_vehicle_removeVehicle`](ge/extensions/flowgraph/nodes/vehicle/removeVehicle.md) | 1 |  |
-| [`flowgraph_nodes_vehicle_replay`](ge/extensions/flowgraph/nodes/vehicle/replay.md) | 7 |  |
-| [`flowgraph_nodes_vehicle_setActive`](ge/extensions/flowgraph/nodes/vehicle/setActive.md) | 1 |  |
-| [`flowgraph_nodes_vehicle_setGearbox`](ge/extensions/flowgraph/nodes/vehicle/setGearbox.md) | 6 |  |
-| [`flowgraph_nodes_vehicle_setIgnition`](ge/extensions/flowgraph/nodes/vehicle/setIgnition.md) | 3 |  |
-| [`flowgraph_nodes_vehicle_setLicensePlate`](ge/extensions/flowgraph/nodes/vehicle/setLicensePlate.md) | 3 |  |
-| [`flowgraph_nodes_vehicle_setLightbar`](ge/extensions/flowgraph/nodes/vehicle/setLightbar.md) | 3 |  |
-| [`flowgraph_nodes_vehicle_setLights`](ge/extensions/flowgraph/nodes/vehicle/setLights.md) | 3 |  |
-| [`flowgraph_nodes_vehicle_shiftToGearIndex`](ge/extensions/flowgraph/nodes/vehicle/shiftToGearIndex.md) | 1 |  |
-| [`flowgraph_nodes_vehicle_spawnVehicle`](ge/extensions/flowgraph/nodes/vehicle/spawnVehicle.md) | 9 |  |
-| [`flowgraph_nodes_vehicle_special_customVehicleGetter`](ge/extensions/flowgraph/nodes/vehicle/special/customVehicleGetter.md) | 6 |  |
-| [`flowgraph_nodes_vehicle_special_customVlua`](ge/extensions/flowgraph/nodes/vehicle/special/customVlua.md) | 3 |  |
-| [`flowgraph_nodes_vehicle_special_customVlua_string`](ge/extensions/flowgraph/nodes/vehicle/special/customVlua_string.md) | 3 |  |
-| [`flowgraph_nodes_vehicle_special_vehicleAction`](ge/extensions/flowgraph/nodes/vehicle/special/vehicleAction.md) | 7 |  |
-| [`flowgraph_nodes_vehicle_special_wheelDistance`](ge/extensions/flowgraph/nodes/vehicle/special/wheelDistance.md) | 4 |  |
-| [`flowgraph_nodes_vehicle_states`](ge/extensions/flowgraph/nodes/vehicle/states.md) | 1 |  |
-| [`flowgraph_nodes_vehicle_teleportToLastRoad`](ge/extensions/flowgraph/nodes/vehicle/teleportToLastRoad.md) | 2 |  |
-| [`flowgraph_nodes_vehicle_toShowroom`](ge/extensions/flowgraph/nodes/vehicle/toShowroom.md) | 2 |  |
-| [`flowgraph_nodes_vehicle_toggleVehicleControls`](ge/extensions/flowgraph/nodes/vehicle/toggleVehicleControls.md) | 3 |  |
-| [`flowgraph_nodes_vehicle_touching`](ge/extensions/flowgraph/nodes/vehicle/touching.md) | 2 |  |
-| [`flowgraph_nodes_vehicle_touchingProps`](ge/extensions/flowgraph/nodes/vehicle/touchingProps.md) | 2 |  |
-| [`flowgraph_nodes_vehicle_touchingStatic`](ge/extensions/flowgraph/nodes/vehicle/touchingStatic.md) | 6 |  |
-| [`flowgraph_nodes_vehicle_trackVehicle`](ge/extensions/flowgraph/nodes/vehicle/trackVehicle.md) | 3 |  |
-| [`flowgraph_nodes_vehicle_trailerRespawn`](ge/extensions/flowgraph/nodes/vehicle/trailerRespawn.md) | 2 |  |
-| [`flowgraph_nodes_vehicle_vehicleConfigProvider`](ge/extensions/flowgraph/nodes/vehicle/vehicleConfigProvider.md) | 6 |  |
-| [`flowgraph_nodes_vehicle_vehicleData`](ge/extensions/flowgraph/nodes/vehicle/vehicleData.md) | 2 |  |
-| [`flowgraph_nodes_vehicle_vehicleMapData`](ge/extensions/flowgraph/nodes/vehicle/vehicleMapData.md) | 2 |  |
-| [`flowgraph_nodes_vehicle_vehicleOOBB`](ge/extensions/flowgraph/nodes/vehicle/vehicleOOBB.md) | 2 |  |
-| [`flowgraph_nodes_vehicle_vehiclePing`](ge/extensions/flowgraph/nodes/vehicle/vehiclePing.md) | 5 |  |
-| [`flowgraph_nodes_vehicle_vehicleWheels`](ge/extensions/flowgraph/nodes/vehicle/vehicleWheels.md) | 2 |  |
-| [`flowgraph_pin`](ge/extensions/flowgraph/pin.md) | 18 |  |
-| [`flowgraph_states`](ge/extensions/flowgraph/states.md) | 26 |  |
-| [`flowgraph_utils`](ge/extensions/flowgraph/utils.md) | 4 |  |
-| [`flowgraph_variableStorage`](ge/extensions/flowgraph/variableStorage.md) | 27 |  |
+| [✍ `debug_vehicleDebug`](ge/extensions/debug/vehicleDebug.md) | 7 | Affichage de debug au-dessus de chaque véhicule actif : quand il est activé, onUpdate dessine avec debugDrawer l'id du véhicule, sa position |
+| [✍ `editor_aiTests`](ge/extensions/editor/aiTests.md) | 3 | Outil de l'éditeur « Vehicle AI Path/Plan Debug » (menu Debug des fenêtres de l'éditeur). Deux onglets : « Route » permet de définir un dépa |
+| [✍ `editor_aiViz`](ge/extensions/editor/aiViz.md) | 4 | Visualisation du navgraph de l'IA dans l'éditeur. Quand un mode de dessin est actif, dessine les nœuds de la carte de navigation (map.getMap |
+| [✍ `editor_api_aiPath`](ge/extensions/editor/api/aiPath.md) | 1 | Module d'API de l'éditeur « aiPath » : coquille vide. Il mémorise seulement l'instance de l'éditeur reçue à l'initialisation et ne définit a |
+| [✍ `editor_api_assets`](ge/extensions/editor/api/assets.md) | 3 | API de l'éditeur pour le glisser-déposer d'assets (chemins de fichiers sous forme de chaînes) entre fenêtres ImGui. À l'initialisation, ajou |
+| [✍ `editor_api_camera`](ge/extensions/editor/api/camera.md) | 28 | API de caméra de l'éditeur. initialize(editorInstance) installe sur l'objet editor les constantes de type de caméra (CameraType_Game = 1, Ca |
+| [✍ `editor_api_colorTemperatureUI`](ge/extensions/editor/api/colorTemperatureUI.md) | 3 | Widget ImGui de l'éditeur pour choisir une température de couleur de lumière en Kelvin, avec presets (bougie, sodium, LED, xénon…), type de  |
+| [✍ `editor_api_core`](ge/extensions/editor/api/core.md) | 51 | Noyau de l'objet editor du World Editor : initialize(editor) y installe les constantes (FloatMin/Max, IntMin/Max, AuxControl_*), l'état (his |
+| [✍ `editor_api_dataBlock`](ge/extensions/editor/api/dataBlock.md) | 9 | API de l'éditeur pour gérer les datablocks du moteur (objets de données partagés : sons, particules, matériaux physiques…). initialize(edito |
+| [✍ `editor_api_decal`](ge/extensions/editor/api/decal.md) | 18 | API de l'éditeur pour les decals de terrain/objets (Engine.Render.DecalMgr) : création et suppression de templates (DecalData), ajout/suppre |
+| [✍ `editor_api_dynamicDecals`](ge/extensions/editor/api/dynamicDecals.md) | 204 | API du système de decals dynamiques (peinture de livrée sur le véhicule joueur) utilisé par l'outil Dynamic Decals de l'éditeur. Il gère une |
+| [✍ `editor_api_dynamicDecals_sidecarFileMigration`](ge/extensions/editor/api/dynamicDecals/sidecarFileMigration.md) | 1 | Migration des fichiers « sidecar » des textures de decals dynamiques. Passe un sidecar de la version 1 à la version 2 : supprime le champ pa |
+| [✍ `editor_api_dynamicDecals_textures`](ge/extensions/editor/api/dynamicDecals/textures.md) | 14 | Gestion des textures du système de decals dynamiques de l'éditeur. Scanne /art/dynamicDecals/textures (*.jpg et *.png), lit/écrit pour chacu |
+| [✍ `editor_api_easeCurveUI`](ge/extensions/editor/api/easeCurveUI.md) | 1 | Widget ImGui de l'éditeur pour éditer une courbe d'easing (type EaseF du moteur). La valeur est une chaîne "dir type param0 param1". Le widg |
+| [✍ `editor_api_forest`](ge/extensions/editor/api/forest.md) | 8 | API de l'éditeur pour manipuler les éléments de forêt (arbres, rochers… instanciés via ForestData). initialize(editor) ajoute sur editor des |
+| [✍ `editor_api_forestItemTools`](ge/extensions/editor/api/forestItemTools.md) | 19 | Outils partagés de l'éditeur pour placer, sélectionner, déplacer et annuler des items de forêt (Forest / ForestData), extraits de forestEdit |
+| [✍ `editor_api_genericInspector`](ge/extensions/editor/api/genericInspector.md) | 3 | Inspecteur ImGui générique de l'éditeur : affiche une liste de champs (nom, type, valeur, groupe, id) sous forme de groupes repliables avec  |
+| [✍ `editor_api_gizmo`](ge/extensions/editor/api/gizmo.md) | 30 | API de l'éditeur pour le gizmo d'axes 3D (déplacer / tourner / mettre à l'échelle) et pour les icônes d'objets dans la vue monde. Il envelop |
+| [✍ `editor_api_gui`](ge/extensions/editor/api/gui.md) | 124 | Coeur de l'interface ImGui de l'éditeur de niveau : gestion des fenêtres d'outils (enregistrement, affichage/masquage, groupes, modales, sau |
+| [✍ `editor_api_guiInstancer`](ge/extensions/editor/api/guiInstancer.md) | 5 | Petite classe utilitaire de l'éditeur qui gère une liste d'instances d'une fenêtre GUI (par ex. plusieurs copies d'un même panneau). Chaque  |
+| [✍ `editor_api_guiTheme`](ge/extensions/editor/api/guiTheme.md) | 0 | Fichier de l'éditeur : définit la palette de couleurs ImGui partagée par les outils de l'éditeur. Il n'exporte pas de table : il ajoute seul |
+| [✍ `editor_api_history`](ge/extensions/editor/api/history.md) | 11 | Pile annuler/rétablir (undo/redo) de l'éditeur. Chaque action a un nom, une table de données et deux fonctions undo/redo qui reçoivent cette |
+| [✍ `editor_api_iesImporter`](ge/extensions/editor/api/iesImporter.md) | 14 | Convertisseur de fichiers photométriques IES (profil de distribution lumineuse d'un luminaire) en texture « cookie » PNG pour les SpotLight  |
+| [✍ `editor_api_material`](ge/extensions/editor/api/material.md) | 8 | API de l'éditeur pour manipuler les matériaux (objets `Material`, fichiers materials.json) : création, copie, déplacement vers un autre fich |
+| [✍ `editor_api_navigation`](ge/extensions/editor/api/navigation.md) | 10 | Module d'API de l'éditeur prévu pour gérer les maillages de navigation (NavMesh), les liens hors-maillage et les couvertures (cover) pour l' |
+| [✍ `editor_api_object`](ge/extensions/editor/api/object.md) | 65 | API de l'éditeur pour manipuler les objets de la scène : sélection (par id, référence, type, masque de nom, rectangle écran), lecture/écritu |
+| [✍ `editor_api_objectHistoryActions`](ge/extensions/editor/api/objectHistoryActions.md) | 27 | Actions annulables (undo/redo) de l'éditeur de niveau pour les objets de la scène : création, suppression (objet ou groupe entier, restauré  |
+| [✍ `editor_api_preferencesRegistry`](ge/extensions/editor/api/preferencesRegistry.md) | 25 | Registre des préférences de l'éditeur : organise les préférences en catégorie > sous-catégorie > item (chemin "categorie.souscategorie.item" |
+| [✍ `editor_api_proceduralContentGenerator`](ge/extensions/editor/api/proceduralContentGenerator.md) | 40 | Générateur de contenu procédural (PCG) pour l'éditeur : on construit un graphe de nœuds (générateurs de points, transformations, spawners) p |
+| [✍ `editor_api_roadRiver`](ge/extensions/editor/api/roadRiver.md) | 19 | API de l'éditeur pour créer, modifier et supprimer des routes (DecalRoad) et des maillages à nœuds comme les rivières (River, via createMesh |
+| [✍ `editor_api_selectabilityPresets`](ge/extensions/editor/api/selectabilityPresets.md) | 11 | Gère des préréglages (presets) de « sélectionnabilité » des types d'objets dans l'éditeur du monde : quelles classes d'objets (TSStatic, Pre |
+| [✍ `editor_api_sketch`](ge/extensions/editor/api/sketch.md) | 4 | Module d'API de l'éditeur pour les « sketches » (croquis dans le monde). Dans cette version il n'est qu'une coquille : initialize(editor) aj |
+| [✍ `editor_api_terrain`](ge/extensions/editor/api/terrain.md) | 48 | Squelette d'API de l'éditeur pour le terrain (sculpture, peinture de matériaux, feuillage). initialize(editor) ajoute 46 fonctions à l'objet |
+| [✍ `editor_api_valueInspector`](ge/extensions/editor/api/valueInspector.md) | 8 | Widget ImGui de l'inspecteur de champs de l'éditeur : affiche un champ (nom + valeur) sur deux colonnes et fournit l'éditeur adapté à son ty |
+| [✍ `editor_assemblySpline`](ge/extensions/editor/assemblySpline.md) | 9 | Outil « Assembly Spline » de l'éditeur du monde : on trace une spline et l'outil y place automatiquement des meshes TSStatic issus d'un « ki |
+| [✍ `editor_assemblySpline_distribution`](ge/extensions/editor/assemblySpline/distribution.md) | 1 | Calcule, pour l'outil Assembly Spline, quel mesh placer à chaque emplacement le long de la spline pour chaque composant rigide et chaque pon |
+| [✍ `editor_assemblySpline_import`](ge/extensions/editor/assemblySpline/import.md) | 4 | Import pour l'outil Assembly Spline : convertit des objets TSStatic déjà posés dans le niveau (compatibles avec le kit d'assemblage, c'est-à |
+| [✍ `editor_assemblySpline_molecule`](ge/extensions/editor/assemblySpline/molecule.md) | 15 | Modèle de « molécule » de l'outil Assembly Spline. Un kit d'assemblage est un dossier de fichiers .dae (noms contenant 'root', 'bridge', 'sa |
+| [✍ `editor_assemblySpline_populate`](ge/extensions/editor/assemblySpline/populate.md) | 5 | Place dans le niveau les meshes TSStatic d'une assembly spline : à partir de la géométrie de la spline (divPoints, tangentes, normales), de  |
+| [✍ `editor_assemblySpline_splineMgr`](ge/extensions/editor/assemblySpline/splineMgr.md) | 37 | Gestionnaire de données de l'outil Assembly Spline : tient la liste des assembly splines (assemblySplines) et la table id -> index (splineMa |
+| [✍ `editor_assetBrowser`](ge/extensions/editor/assetBrowser.md) | 13 | Fenêtre « Asset Browser » de l'éditeur de monde : explore l'arborescence des assets du niveau courant (dossier du niveau), de art/ commun et |
+| [✍ `editor_assetDeduplicator`](ge/extensions/editor/assetDeduplicator.md) | 5 | Outil d'éditeur « Asset Deduplicator » (menu Window > Assets) : repère les fichiers en double du niveau courant et propose de les remplacer  |
+| [✍ `editor_assetManagementTool`](ge/extensions/editor/assetManagementTool.md) | 4 | Outil d'éditeur « Asset Management Tool » (menu Window > Assets, fenêtre 1200x900) destiné à la gestion des fichiers assets et des fichiers  |
+| [✍ `editor_audioEventsList`](ge/extensions/editor/audioEventsList.md) | 5 | Fenêtre d'éditeur « SFX Previewer » (menu Audio) qui liste tous les événements sonores (FMOD « event:>... » et fichiers son) du jeu et perme |
+| [✍ `editor_audioForestEditor`](ge/extensions/editor/audioForestEditor.md) | 4 | Mode d'édition « Audio Forest Editor » de l'éditeur de niveaux : configure un son d'ambiance de forêt à partir des arbres de l'objet Forest. |
+| [✍ `editor_audioRibbonEditor`](ge/extensions/editor/audioRibbonEditor.md) | 3 | Mode d'édition « Audio Ribbon Editor » de l'éditeur de niveaux : crée et modifie des « rubans » sonores (rivières, etc.) stockés dans le mod |
+| [✍ `editor_autoSave`](ge/extensions/editor/autoSave.md) | 4 | Sauvegarde automatique de l'éditeur de niveaux. Un minuteur (preference files.autoSave.interval, 120 s par défaut) appelle editor.autoSaveLe |
+| [✍ `editor_barriersEditor`](ge/extensions/editor/barriersEditor.md) | 5 | Fenêtre « Barriers Selector » (menu Gameplay > Barriers Editor) pour choisir les prefabs de barrières d'un niveau. Elle cherche dans /levels |
+| [✍ `editor_biomeTool`](ge/extensions/editor/biomeTool.md) | 12 | Outil « Biome Tool » (mode d'édition « Edit Biome ») de l'éditeur de niveaux : génère de la végétation (objets Forest) et peint des matériau |
+| [✍ `editor_bulkRename`](ge/extensions/editor/bulkRename.md) | 5 | Fenêtre « Bulk Rename » (menu Assets) de l'éditeur de niveaux : renomme en lot les objets de la scène. On choisit le champ à renommer (name  |
+| [✍ `editor_camPathEditor`](ge/extensions/editor/camPathEditor.md) | 7 | Éditeur de chemins de caméra du World Editor (fenêtre « Path Camera Tool », mode d'édition « Edit Camera Paths »). Il édite les chemins géré |
+| [✍ `editor_cameraBookmarks`](ge/extensions/editor/cameraBookmarks.md) | 3 | Fenêtre d'éditeur « Camera Bookmarks » (menu Camera). Permet de créer, copier, coller, rejoindre et supprimer des signets de caméra (objets  |
+| [✍ `editor_cameraTransform`](ge/extensions/editor/cameraTransform.md) | 4 | Petite fenêtre d'éditeur « Camera Transform » (menu Camera). Elle lit la position/rotation de la caméra en JSON (commands.getCameraTransform |
+| [✍ `editor_cameraV2`](ge/extensions/editor/cameraV2.md) | 10 | Extension de l'éditeur qui active « Camera V2 », un jeu alternatif de contrôles souris pour la caméra libre du World Editor (panoramique, or |
+| [✍ `editor_cameraV2_controller`](ge/extensions/editor/cameraV2/controller.md) | 11 | Contrôleur de Camera V2 : traite l'entrée souris routée vers Camera V2 et l'applique à la caméra libre existante (core_camera, caméra global |
+| [✍ `editor_cameraV2_orbit`](ge/extensions/editor/cameraV2/orbit.md) | 13 | Regard à la souris de Camera V2, de type éditeur : soit rotation sur place depuis la position actuelle de la caméra (mode 0), soit orbite au |
+| [✍ `editor_cameraV2_validation`](ge/extensions/editor/cameraV2/validation.md) | 12 | Contrôles partagés de Camera V2 pour rejeter les NaN, infinis et coordonnées extrêmes issus de raycasts ou de calculs de caméra défaillants, |
+| [✍ `editor_cameraV2_zoom`](ge/extensions/editor/cameraV2/zoom.md) | 5 | Zoom de Camera V2 : remplace le mouvement de molette standard par un dolly lissé le long du centre de la vue. Chaque cran de molette change  |
+| [✍ `editor_cefHelper`](ge/extensions/editor/cefHelper.md) | 2 | Petit outil prévu pour masquer l'interface CEF (scenetree.maincef) quand l'éditeur imgui est actif. Dans la version 0.40.5 le code est comme |
+| [✍ `editor_copyToSelected`](ge/extensions/editor/copyToSelected.md) | 2 | Outil d'éditeur « Copy To Selected » : choisit un objet de base et une liste d'objets cibles (sélection courante, même classe ou même mesh T |
+| [✍ `editor_crawlEditor`](ge/extensions/editor/crawlEditor.md) | 27 | Éditeur de données de « crawl » (escalade/rock crawling) du World Editor, fenêtre « Crawl Data Editor » (menu Gameplay). Il charge, édite et |
+| [✍ `editor_crawlEditor_boundaries`](ge/extensions/editor/crawlEditor/boundaries.md) | 18 | Sous-outil « Boundaries » de l'éditeur de crawl : édite les zones-frontières (objets gameplay/sites/zone) d'un niveau ou d'une mission. Le m |
+| [✍ `editor_crawlEditor_input`](ge/extensions/editor/crawlEditor/input.md) | 2 | Aide de l'éditeur de crawl pour la souris : à chaque appel de updateMouseInfo, calcule le rayon caméra-souris, le raycast sur la scène (forê |
+| [✍ `editor_crawlEditor_missionPortTool`](ge/extensions/editor/crawlEditor/missionPortTool.md) | 3 | Outil de migration de l'éditeur de crawl : convertit d'anciennes missions crawl (dossier /gameplay/missions/<niveau>/crawl/<mission>/ conten |
+| [✍ `editor_crawlEditor_paths`](ge/extensions/editor/crawlEditor/paths.md) | 27 | Sous-outil « Paths » de l'éditeur de crawl : édite les chemins (table {name, description, nodes}) formés de nœuds (pathnodes) {name, pos, ro |
+| [✍ `editor_crawlEditor_presets`](ge/extensions/editor/crawlEditor/presets.md) | 43 | Gestionnaire de presets et de composants de l'éditeur Crawl (trails, frontières/boundaries, chemins/pathnodes). Le module renvoie une classe |
+| [✍ `editor_crawlEditor_startingPositions`](ge/extensions/editor/crawlEditor/startingPositions.md) | 15 | Sous-outil de l'éditeur Crawl pour éditer les positions de départ (starting positions). Le module renvoie un constructeur de classe C. Une p |
+| [✍ `editor_crawlEditor_trails`](ge/extensions/editor/crawlEditor/trails.md) | 11 | Sous-outil « Trails » de l'éditeur Crawl. Le module renvoie un constructeur de classe C. Un trail relie un chemin (pathId), une frontière (b |
+| [✍ `editor_crawlEditor_waypoints`](ge/extensions/editor/crawlEditor/waypoints.md) | 20 | Sous-outil « Pathnodes » (points de passage) de l'éditeur Crawl. Le module renvoie un constructeur de classe C. Il édite les nœuds d'un chem |
+| [✍ `editor_createObjectTool`](ge/extensions/editor/createObjectTool.md) | 15 | Outil « Create Object(s) » du World Editor : barre d'outils de création d'objets de niveau (SimObjects). Il définit les groupes de boutons ( |
+| [✍ `editor_cubemapEditor`](ge/extensions/editor/cubemapEditor.md) | 3 | Éditeur de cubemaps du World Editor (menu Assets > « Cubemap Editor », fenêtre « cubemapEditor »). Il liste les objets de classe CubemapData |
+| [✍ `editor_dataBlockEditor`](ge/extensions/editor/dataBlockEditor.md) | 6 | Éditeur de DataBlocks (SimDataBlock) du World Editor, accessible par le menu Assets > « DataBlock Editor ». Fenêtre à deux onglets : « Exist |
+| [✍ `editor_decalEditor`](ge/extensions/editor/decalEditor.md) | 7 | Éditeur de decals du World Editor (mode d'édition « Edit Decal », fenêtre « Decal Editor », action map « DecalEditor »). Deux onglets : « Te |
+| [✍ `editor_decalSpline`](ge/extensions/editor/decalSpline.md) | 8 | Outil « Decal Spline » du World Editor : on trace une spline (nœuds, largeur par défaut 10 m) le long de laquelle des decals sont posés auto |
+| [✍ `editor_decalSpline_populate`](ge/extensions/editor/decalSpline/populate.md) | 7 | Module qui peuple une spline de decals avec des instances de decals (DecalData + instances du moteur) le long de sa longueur, pour l'outil D |
+| [✍ `editor_decalSpline_splineMgr`](ge/extensions/editor/decalSpline/splineMgr.md) | 32 | Gestionnaire des splines de l'outil Decal Spline de l'éditeur (préfixe « Decal Spline », mode d'édition decalSplineEditMode) : une spline de |
+| [✍ `editor_documentationHelper`](ge/extensions/editor/documentationHelper.md) | 3 | Petite extension de l'éditeur qui ajoute à la table globale `editor` deux fonctions pour ouvrir la documentation en ligne de BeamNG dans le  |
+| [✍ `editor_dragRaceEditor`](ge/extensions/editor/dragRaceEditor.md) | 5 | Fenêtre principale de l'éditeur de drag race (menu Gameplay > Drag Race Editor). Elle assemble les sous-modules dragRaceEditor/* : liste des |
+| [✍ `editor_dragRaceEditor_constants`](ge/extensions/editor/dragRaceEditor/constants.md) | 0 | Constantes partagées par l'éditeur de drag race : nom et taille de la fenêtre, extension des fichiers de réglages, types de course, phases,  |
+| [✍ `editor_dragRaceEditor_dragSettings`](ge/extensions/editor/dragRaceEditor/dragSettings.md) | 17 | Gère les fichiers de réglages de drag (*.dragSettings.json) dans l'éditeur de drag race. Un réglage décrit une course : id, stripId, dragTyp |
+| [✍ `editor_dragRaceEditor_facilities`](ge/extensions/editor/dragRaceEditor/facilities.md) | 14 | Gère les facilities (installations de drag) dans l'éditeur de drag race : liste chargée via gameplay_drag_saveSystem, sélection, création, s |
+| [✍ `editor_dragRaceEditor_input`](ge/extensions/editor/dragRaceEditor/input.md) | 2 | Gère l'entrée souris de l'éditeur de drag race pour l'édition de zones : à chaque mise à jour, calcule le rayon caméra-souris, le raycast su |
+| [✍ `editor_dragRaceEditor_lanes`](ge/extensions/editor/dragRaceEditor/lanes.md) | 13 | Gère la liste des voies (lanes) du drag race dans l'éditeur : chargement depuis gameplay_drag_saveSystem, sélection, ajout, suppression, sau |
+| [✍ `editor_dragRaceEditor_state`](ge/extensions/editor/dragRaceEditor/state.md) | 36 | État partagé de l'éditeur de drag race : une seule table locale State (données de course, fichier courant, index de sélection voie/facility/ |
+| [✍ `editor_dragRaceEditor_strips`](ge/extensions/editor/dragRaceEditor/strips.md) | 23 | Gère les strips (pistes de drag) dans l'éditeur de drag race. Un strip est un fichier <id>.strip.json du dossier dragstrips du niveau : id,  |
+| [✍ `editor_dragRaceEditor_utils`](ge/extensions/editor/dragRaceEditor/utils.md) | 15 | Utilitaires de l'éditeur de drag race : affichage des erreurs, drapeau de modifications non sauvées, pile undo/redo sur dragRaceData, valida |
+| [✍ `editor_dragRaceEditor_zones`](ge/extensions/editor/dragRaceEditor/zones.md) | 16 | Éditeur de zones du drag race (zone d'un strip ou zone d'une voie), sur le même principe que les frontières du crawl editor. Il s'appuie sur |
+| [✍ `editor_driftDataEditor`](ge/extensions/editor/driftDataEditor.md) | 10 | Drift Data Editor (menu Gameplay > Drift Data Editor) : fenêtre à deux onglets pour les données du mode drift. « Drift stunt zones editor »  |
+| [✍ `editor_drivePathEditor`](ge/extensions/editor/drivePathEditor.md) | 7 | Drive Path Editor de l'éditeur de monde : outil pour dessiner des trajets (splines) que des véhicules IA suivent, en mode libre (nœuds posés |
+| [✍ `editor_drivePathEditor_playback`](ge/extensions/editor/drivePathEditor/playback.md) | 4 | Lecture des chemins (splines) du Drive Path Editor : associe chaque véhicule à sa spline liée, le replace au départ, puis, une fois le délai |
+| [✍ `editor_drivePathEditor_record`](ge/extensions/editor/drivePathEditor/record.md) | 4 | Enregistrement d'un trajet pour le Drive Path Editor : pendant que le joueur conduit un véhicule, le module échantillonne sa position et sa  |
+| [✍ `editor_drivePathEditor_splineMgr`](ge/extensions/editor/drivePathEditor/splineMgr.md) | 32 | Gestionnaire des splines du Drive Path Editor (préfixe « Drive Path Spline », mode d'édition drivePathSplineEditMode). Une spline de chemin  |
+| [✍ `editor_dynamicDecals_browser`](ge/extensions/editor/dynamicDecals/browser.md) | 8 | Fenêtre « Dynamic Decals Tool - Browser » de l'outil de livrées dynamiques de l'éditeur : un point central à onglets (Textures, Brushes, Fon |
+| [✍ `editor_dynamicDecals_brushes`](ge/extensions/editor/dynamicDecals/brushes.md) | 7 | Gestion des brosses (brushes) de l'outil Dynamic Decals : un preset enregistre l'état courant des propriétés de decal (textures color/alpha/ |
+| [✍ `editor_dynamicDecals_camera`](ge/extensions/editor/dynamicDecals/camera.md) | 3 | Section « Camera » de l'outil Dynamic Decals de l'éditeur. Affiche un bouton par preset de caméra (default, front, back, left, right, top) q |
+| [✍ `editor_dynamicDecals_colorHistory`](ge/extensions/editor/dynamicDecals/colorHistory.md) | 5 | Section « Color History » de l'outil Dynamic Decals. Garde en préférence editor (`dynamicDecalsTool.colorHistory.history`) la liste des dern |
+| [✍ `editor_dynamicDecals_colorPresets`](ge/extensions/editor/dynamicDecals/colorPresets.md) | 4 | Section « Color Presets » de l'outil Dynamic Decals. Liste des couleurs nommées stockées dans la préférence `dynamicDecalsTool.colorPresets. |
+| [✍ `editor_dynamicDecals_debugSection`](ge/extensions/editor/dynamicDecals/debugSection.md) | 3 | Section « Debug » (ordre 1010) de l'outil Dynamic Decals : une série de boutons de test pour développeurs. Ils appellent l'API editor_api_dy |
+| [✍ `editor_dynamicDecals_debugTextures`](ge/extensions/editor/dynamicDecals/debugTextures.md) | 3 | Section de debug « Debug Textures » de l'outil Dynamic Decals. Affiche, dans des en-têtes repliables, les textures internes de l'API editor_ |
+| [✍ `editor_dynamicDecals_docs`](ge/extensions/editor/dynamicDecals/docs.md) | 11 | Fenêtre de documentation intégrée à l'outil Dynamic Decals (table des matières + contenu). Chaque module de l'outil y enregistre une page av |
+| [✍ `editor_dynamicDecals_export`](ge/extensions/editor/dynamicDecals/export.md) | 3 | Section « Export » de l'outil Dynamic Decals. Deux blocs : « Export Skin » (nom du véhicule du joueur + nom de skin, appelle api.exportSkin  |
+| [✍ `editor_dynamicDecals_fonts`](ge/extensions/editor/dynamicDecals/fonts.md) | 6 | Gestion des polices de l'outil Dynamic Decals. Génère, via FontRasterizer.createFontBitmap, des atlas de glyphes (bitmaps de 256 px de haut, |
+| [✍ `editor_dynamicDecals_gizmo`](ge/extensions/editor/dynamicDecals/gizmo.md) | 11 | Gère le gizmo d'axes (déplacement / rotation / échelle) de l'outil Dynamic Decals. Les autres modules (decal, path, group…) choisissent le m |
+| [✍ `editor_dynamicDecals_helper`](ge/extensions/editor/dynamicDecals/helper.md) | 10 | Petites fonctions utilitaires ImGui et de chaînes partagées par les sections de l'outil Dynamic Decals : texte centré, aperçu d'image avec s |
+| [✍ `editor_dynamicDecals_history`](ge/extensions/editor/dynamicDecals/history.md) | 3 | Section « History » de l'outil Dynamic Decals. Affiche les piles d'annulation (Undo) et de rétablissement (Redo) de l'objet d'historique de  |
+| [✍ `editor_dynamicDecals_inspector`](ge/extensions/editor/dynamicDecals/inspector.md) | 6 | Inspecteur de l'outil Dynamic Decals : affiche et permet de modifier toutes les propriétés des calques (layers) sélectionnés (`editor.select |
+| [✍ `editor_dynamicDecals_inspector_utils`](ge/extensions/editor/dynamicDecals/inspector/utils.md) | 6 | Widgets ImGui réutilisables par les GUI de calques de l'inspecteur Dynamic Decals : sélecteur de texture (champ en lecture seule, bouton dos |
+| [✍ `editor_dynamicDecals_layerStack`](ge/extensions/editor/dynamicDecals/layerStack.md) | 4 | Section « Decal Stack / Layers » (ordre 140) de l'outil Dynamic Decals : liste hiérarchique de tous les calques du design, avec icône coloré |
+| [✍ `editor_dynamicDecals_layerTypes_brushStroke`](ge/extensions/editor/dynamicDecals/layerTypes/brushStroke.md) | 3 | Type de calque « Brush Stroke » de l'outil Dynamic Decals : un coup de pinceau virtuel qui pose un decal à chaque frame pendant le déplaceme |
+| [✍ `editor_dynamicDecals_layerTypes_decal`](ge/extensions/editor/dynamicDecals/layerTypes/decal.md) | 8 | Type de calque « Decal » de l'outil Dynamic Decals, le plus important : un decal unique avec couleur, textures (color, alpha, metallic, norm |
+| [✍ `editor_dynamicDecals_layerTypes_fill`](ge/extensions/editor/dynamicDecals/layerTypes/fill.md) | 4 | Type de calque « Fill » de l'outil Dynamic Decals : remplit tout le véhicule avec une couleur unie, utile comme base d'un design. Fournit la |
+| [✍ `editor_dynamicDecals_layerTypes_group`](ge/extensions/editor/dynamicDecals/layerTypes/group.md) | 4 | Type de calque « Group » de l'outil Dynamic Decals : un calque conteneur qui regroupe d'autres calques ; le désactiver masque tous ses enfan |
+| [✍ `editor_dynamicDecals_layerTypes_linkedSet`](ge/extensions/editor/dynamicDecals/layerTypes/linkedSet.md) | 4 | Type de calque « Linked Set » de l'outil Dynamic Decals : se comporte comme un groupe, mais on peut lui ajouter dans l'inspecteur des propri |
+| [✍ `editor_dynamicDecals_layerTypes_path`](ge/extensions/editor/dynamicDecals/layerTypes/path.md) | 3 | Type de calque « Path » de l'outil Dynamic Decals : des decals posés le long d'un chemin (points de contrôle interpolés en linéaire ou en co |
+| [✍ `editor_dynamicDecals_layerTypes_textureFill`](ge/extensions/editor/dynamicDecals/layerTypes/textureFill.md) | 4 | Type de calque « Texture Fill » de l'outil Dynamic Decals : remplit le véhicule avec un motif basé sur une texture d'entrée, avec couleur (o |
+| [✍ `editor_dynamicDecals_loadSave`](ge/extensions/editor/dynamicDecals/loadSave.md) | 8 | Section « Load/Save » de l'outil Dynamic Decals. Permet d'enregistrer la pile de calques dans un fichier projet `.dyndecals.json` (« Save as |
+| [✍ `editor_dynamicDecals_meshes`](ge/extensions/editor/dynamicDecals/meshes.md) | 3 | Module (expérimental, désactivé) de l'outil Dynamic Decals pour changer le fichier de forme (.dae) sur lequel les decals sont projetés. Le c |
+| [✍ `editor_dynamicDecals_news`](ge/extensions/editor/dynamicDecals/news.md) | 4 | Fenêtre « Vehicle Livery Creator - News » (nom public de l'outil Dynamic Decals) : message de bienvenue, lien vers le fil du forum BeamNG et |
+| [✍ `editor_dynamicDecals_notification`](ge/extensions/editor/dynamicDecals/notification.md) | 5 | Fenêtre de notifications de l'outil Dynamic Decals (« Dynamic Decals - Notifications »). Les autres modules appellent add(section, titre, me |
+| [✍ `editor_dynamicDecals_selection`](ge/extensions/editor/dynamicDecals/selection.md) | 5 | Gère la sélection des calques (layers) de l'outil Dynamic Decals. selectLayer copie le calque dans `editor.selection["dynamicDecalLayer"][ui |
+| [✍ `editor_dynamicDecals_settings`](ge/extensions/editor/dynamicDecals/settings.md) | 5 | Section « Settings » (ordre 1040) de l'outil Dynamic Decals. Permet d'activer/désactiver l'API de decals, de choisir la position du curseur  |
+| [✍ `editor_dynamicDecals_textures`](ge/extensions/editor/dynamicDecals/textures.md) | 6 | Navigateur de textures de decals de l'outil Dynamic Decals (interface). Ajoute dans le navigateur les onglets « Textures » (ordre 10) et « T |
+| [✍ `editor_dynamicDecals_vehicleColorPalette`](ge/extensions/editor/dynamicDecals/vehicleColorPalette.md) | 6 | Section « Vehicle Color Palette » de l'outil Dynamic Decals : permet de changer les couleurs du véhicule joueur (color, colorPalette0, color |
+| [✍ `editor_dynamicDecals_widgets`](ge/extensions/editor/dynamicDecals/widgets.md) | 6 | Bibliothèque de widgets imgui de l'outil Dynamic Decals. draw() affiche une propriété (nom, infobulle de description, éventuel choix du type |
+| [✍ `editor_dynamicDecalsTool`](ge/extensions/editor/dynamicDecalsTool.md) | 31 | Fenêtre principale de l'outil Dynamic Decals de l'éditeur (peinture de décalcomanies sur le véhicule). Charge ses 33 sous-modules via M.depe |
+| [✍ `editor_editorRenderSettings`](ge/extensions/editor/editorRenderSettings.md) | 7 | Fenêtre « Editor Render Settings » de l'éditeur : permet d'utiliser dans l'éditeur des réglages graphiques différents de ceux du jeu (anti-a |
+| [✍ `editor_engineAudioDebug`](ge/extensions/editor/engineAudioDebug.md) | 8 | Fenêtre d'éditeur « Engine Audio Debug » (menu Audio) pour régler en direct le son moteur du véhicule joueur. Elle récupère les données de s |
+| [✍ `editor_extensionsDebug`](ge/extensions/editor/extensionsDebug.md) | 3 | Fenêtre de debug de l'éditeur (menu Window > Debug > Extensions Debug) qui liste les extensions Lua chargées (extensions.getLoadedExtensions |
+| [✍ `editor_extensionsEditor`](ge/extensions/editor/extensionsEditor.md) | 4 | Fenêtre « Extensions Editor » de l'éditeur : liste toutes les extensions d'éditeur (editor.allExtensionNames) et permet d'activer/désactiver |
+| [✍ `editor_ezObjectSelect`](ge/extensions/editor/ezObjectSelect.md) | 17 | Point d'entrée de l'outil « Easy Select » de l'éditeur. Enregistre un mode d'édition (editor.editModes.ezObjectSelect, nom « Easy Select »,  |
+| [✍ `editor_ezObjectSelect_cameraBookmarks`](ge/extensions/editor/ezObjectSelect/cameraBookmarks.md) | 1 | Panneau imgui de signets de caméra pour l'outil Easy Select. Permet d'ajouter la position/rotation courante de la caméra (core_camera.getPos |
+| [✍ `editor_ezObjectSelect_controller`](ge/extensions/editor/ezObjectSelect/controller.md) | 44 | Contrôleur de l'outil « Easy Select » de l'éditeur (M.id = "ezObjectSelect", label « Easy Select »). Remplace la sélection d'objets classiqu |
+| [✍ `editor_ezObjectSelect_modalOperatorCommon`](ge/extensions/editor/ezObjectSelect/modalOperatorCommon.md) | 15 | Fonctions communes aux opérateurs modaux (rotate, scale, translate) de l'outil Easy Select : démarrage d'une session de transformation sur l |
+| [✍ `editor_ezObjectSelect_nativeGizmo`](ge/extensions/editor/ezObjectSelect/nativeGizmo.md) | 4 | Enveloppe de l'outil Easy Select autour du gizmo d'axes natif de l'éditeur (editor.updateAxisGizmo / drawAxisGizmo). Capture les transformat |
+| [✍ `editor_ezObjectSelect_objectBoxAnchors`](ge/extensions/editor/ezObjectSelect/objectBoxAnchors.md) | 3 | Calcule des points d'ancrage sur le bas de la boîte englobante d'un objet pour l'outil Easy Select. Trois motifs sont produits : shortEdge ( |
+| [✍ `editor_ezObjectSelect_rotateOperator`](ge/extensions/editor/ezObjectSelect/rotateOperator.md) | 8 | Opérateur modal « Rotate » (touche R) de l'outil Easy Select. Ouvre une session de transformation (historique « EasySelectRotate ») et fait  |
+| [✍ `editor_ezObjectSelect_scaleOperator`](ge/extensions/editor/ezObjectSelect/scaleOperator.md) | 8 | Opérateur modal « Scale » (touche S) de l'outil Easy Select. Au démarrage il ouvre une session de transformation (modalOperatorCommon.begin, |
+| [✍ `editor_ezObjectSelect_selectionCache`](ge/extensions/editor/ezObjectSelect/selectionCache.md) | 5 | Cache de sélection de l'outil Easy Select. Il ne reconstruit les données de sélection (liste de « proxies » projetés) qu'une fois la caméra  |
+| [✍ `editor_ezObjectSelect_selectionDebug`](ge/extensions/editor/ezObjectSelect/selectionDebug.md) | 3 | Dessin de debug et de retour visuel de l'outil Easy Select dans le monde 3D (debugDrawer) : boîtes des objets découverts, de la pile de cand |
+| [✍ `editor_ezObjectSelect_selectionGeometry`](ge/extensions/editor/ezObjectSelect/selectionGeometry.md) | 10 | Géométrie de la sélection de l'outil Easy Select : validation de boîtes, calcul des 8 coins monde d'un objet (boîte orientée via getObjBox + |
+| [✍ `editor_ezObjectSelect_selectionLabelOverlay`](ge/extensions/editor/ezObjectSelect/selectionLabelOverlay.md) | 1 | Dessine les étiquettes (panneaux sombres à bordure colorée) de l'outil Easy Select avec la drawList imgui. Les étiquettes « followMouse » so |
+| [✍ `editor_ezObjectSelect_selectionLabels`](ge/extensions/editor/ezObjectSelect/selectionLabels.md) | 1 | Petit utilitaire de l'outil Easy Select : calcule le texte affiché pour nommer un objet de la scène. Priorité : nom de l'objet, nom interne, |
+| [✍ `editor_ezObjectSelect_selectionModel`](ge/extensions/editor/ezObjectSelect/selectionModel.md) | 8 | Modèle de sélection de l'outil « Easy Object Select » de l'éditeur. À chaque frame il interroge selectionQuery.gather, regroupe les candidat |
+| [✍ `editor_ezObjectSelect_selectionQuery`](ge/extensions/editor/ezObjectSelect/selectionQuery.md) | 5 | Requête de sélection de l'outil Easy Object Select. À partir de la position de la souris et de la caméra, il collecte les objets de la scène |
+| [✍ `editor_ezObjectSelect_selectionScreenDebug`](ge/extensions/editor/ezObjectSelect/selectionScreenDebug.md) | 2 | Dessin en surcouche ImGui (plein écran, sans entrées) de la sélection de l'outil Easy Object Select : contours/enveloppes convexes et rempli |
+| [✍ `editor_ezObjectSelect_stats`](ge/extensions/editor/ezObjectSelect/stats.md) | 6 | Statistiques d'usage affichées dans le panneau de l'outil Easy Object Select : nombre de sélections, distance transformée, nombre de transla |
+| [✍ `editor_ezObjectSelect_subtools_fence_anchors`](ge/extensions/editor/ezObjectSelect/subtools/fence/anchors.md) | 2 | Découverte automatique d'une clôture dans l'outil Easy Object Select. À partir d'un TSStatic de départ (dont le mesh figure dans la liste d' |
+| [✍ `editor_ezObjectSelect_subtools_fence_controller`](ge/extensions/editor/ezObjectSelect/subtools/fence/controller.md) | 4 | Panneau ImGui du sous-outil « Fence » d'Easy Object Select. Permet de choisir le mesh de clôture (sélection de l'Asset Browser ou objet séle |
+| [✍ `editor_ezObjectSelect_subtools_fence_session`](ge/extensions/editor/ezObjectSelect/subtools/fence/session.md) | 14 | Session d'édition de clôture d'Easy Object Select. begin() découvre une clôture existante à partir de l'objet sélectionné (fence/anchors) ou |
+| [✍ `editor_ezObjectSelect_transformGizmo`](ge/extensions/editor/ezObjectSelect/transformGizmo.md) | 4 | Guides visuels 3D de l'outil Easy Object Select pendant une translation, une mise à l'échelle ou une rotation. Dessinés avec debugDrawer : f |
+| [✍ `editor_ezObjectSelect_transformNumericInput`](ge/extensions/editor/ezObjectSelect/transformNumericInput.md) | 4 | Petit tampon de saisie numérique au clavier pour les opérations de transformation d'Easy Object Select (comme dans Blender : taper « 2.5 » p |
+| [✍ `editor_ezObjectSelect_transformOperator`](ge/extensions/editor/ezObjectSelect/transformOperator.md) | 9 | Opérateur de translation « modal » d'Easy Object Select, façon Blender : la touche G démarre le déplacement de la sélection, X/Y/Z contraign |
+| [✍ `editor_ezObjectSelect_transformSession`](ge/extensions/editor/ezObjectSelect/transformSession.md) | 13 | Session de transformation (déplacement, rotation, échelle) des objets sélectionnés pour Easy Object Select. begin() mémorise la transformati |
+| [✍ `editor_ezObjectSelect_viewportOrientationGizmo`](ge/extensions/editor/ezObjectSelect/viewportOrientationGizmo.md) | 1 | Petit gizmo d'orientation 2D dessiné dans un coin de la vue de l'éditeur (ImGui, foreground draw list) pour Easy Object Select : trois axes  |
+| [✍ `editor_ffiptrleaktest`](ge/extensions/editor/ffiptrleaktest.md) | 2 | Extension de test interne de l'éditeur (fuites de pointeurs FFI avec ImGui). Elle ouvre une fenêtre « ffi ptr leak test » avec des widgets d |
+| [✍ `editor_fileDialog`](ge/extensions/editor/fileDialog.md) | 8 | Boîte de dialogue de fichiers ImGui de l'éditeur (ouvrir / enregistrer un fichier ou choisir un dossier) sur le système de fichiers virtuel  |
+| [✍ `editor_flowgraph_basewindow`](ge/extensions/editor/flowgraph/basewindow.md) | 13 | Classe de base des fenêtres de l'éditeur Flowgraph (legend, history, events, garbageDebug, examples, execution, main…). Elle encapsule Begin |
+| [✍ `editor_flowgraph_events`](ge/extensions/editor/flowgraph/events.md) | 7 | Fenêtre « Event Log » (fg_events) de l'éditeur Flowgraph : journal des évènements du projet (niveaux Debug, Info, Warning, Error, States) av |
+| [✍ `editor_flowgraph_examples`](ge/extensions/editor/flowgraph/examples.md) | 19 | Fenêtre « Examples » (fg_examples) de l'éditeur Flowgraph. Elle charge (une fois, mise en cache) tous les fichiers *flow.json du dossier /lu |
+| [✍ `editor_flowgraph_execution`](ge/extensions/editor/flowgraph/execution.md) | 5 | Fenêtre « Task Manager » (fg_execution) de l'éditeur Flowgraph : liste tous les projets flowgraph chargés (core_flowgraphManager.getAllManag |
+| [✍ `editor_flowgraph_garbageDebug`](ge/extensions/editor/flowgraph/garbageDebug.md) | 10 | Fenêtre « Garbage Debug » (fg_garbage) de l'éditeur Flowgraph : analyse l'allocation mémoire (garbage) par graphe et par nœud d'un projet ap |
+| [✍ `editor_flowgraph_history`](ge/extensions/editor/flowgraph/history.md) | 5 | Fenêtre « History » (fg_history) de l'éditeur Flowgraph : boutons Undo/Redo et liste des actions (mgr.history) de la plus récente à la plus  |
+| [✍ `editor_flowgraph_legend`](ge/extensions/editor/flowgraph/legend.md) | 5 | Fenêtre « Legend Test » (fg_legend) de l'éditeur Flowgraph. C'est un squelette de test : quatre onglets A, B, C, D réordonnables et fermable |
+| [✍ `editor_flowgraph_main`](ge/extensions/editor/flowgraph/main.md) | 13 | Fenêtre principale (fg_main, « Main view ») de l'éditeur Flowgraph : barre de menus (File : nouveau projet, chargement via editor_fileDialog |
+| [✍ `editor_flowgraph_missionVariableHelper`](ge/extensions/editor/flowgraph/missionVariableHelper.md) | 2 | Utilitaire partagé qui applique à un projet flowgraph les variables de la mission sélectionnée dans le Mission Editor (missionTypeData), et  |
+| [✍ `editor_flowgraph_nodePreview`](ge/extensions/editor/flowgraph/nodePreview.md) | 6 | Aperçu en infobulle de l'éditeur Flowgraph : affiche, dans un petit éditeur de nœuds dédié (200x200), un nœud de la bibliothèque, une macro  |
+| [✍ `editor_flowgraph_nodelibrary`](ge/extensions/editor/flowgraph/nodelibrary.md) | 43 | Bibliothèque de nœuds (« Node library », fg_nodelib) de l'éditeur Flowgraph, également utilisée comme contenu du menu contextuel « CreateNod |
+| [✍ `editor_flowgraph_overview`](ge/extensions/editor/flowgraph/overview.md) | 9 | Fenêtre « Overview » (fg_treeview) de l'éditeur Flowgraph : arborescence des graphes du projet (et des macros) avec un filtre texte. Le filt |
+| [✍ `editor_flowgraph_projectSettings`](ge/extensions/editor/flowgraph/projectSettings.md) | 5 | Fenêtre « Project Settings » (projectSettings) de l'éditeur Flowgraph. Elle édite les métadonnées du projet courant : nom, description (512  |
+| [✍ `editor_flowgraph_properties`](ge/extensions/editor/flowgraph/properties.md) | 17 | Fenêtre « Properties » (fg_properties) de l'éditeur Flowgraph : inspecteur du nœud sélectionné (ou du graphe courant). Elle affiche un en-tê |
+| [✍ `editor_flowgraph_references`](ge/extensions/editor/flowgraph/references.md) | 15 | Fenêtre « References » (fg_references) de l'éditeur Flowgraph : statistiques d'utilisation des types de nœuds. Au clic sur « Load Data », el |
+| [✍ `editor_flowgraph_search`](ge/extensions/editor/flowgraph/search.md) | 17 | Fenêtre « Search » (fg_search) de l'éditeur Flowgraph : recherche floue dans le projet courant des nœuds, des graphes et des pins, via edito |
+| [✍ `editor_flowgraph_stateView`](ge/extensions/editor/flowgraph/stateView.md) | 5 | Fenêtre « State View » (fg_stateView) de l'éditeur Flowgraph. Elle liste, graphe par graphe (récursivement à partir de mgr.stateGraph), les  |
+| [✍ `editor_flowgraph_variables`](ge/extensions/editor/flowgraph/variables.md) | 10 | Fenêtre « Variables » (fg_variables) de l'éditeur Flowgraph. Elle montre les variables du graphe courant (mgr.graph.variables) et celles du  |
+| [✍ `editor_flowgraph_welcome`](ge/extensions/editor/flowgraph/welcome.md) | 8 | Fenêtre d'accueil « Welcome » (fg_welcome) de l'éditeur Flowgraph. Affiche une image d'en-tête (welcomeHeader.png), une image latérale (welc |
+| [✍ `editor_flowgraphEditor`](ge/extensions/editor/flowgraphEditor.md) | 37 | Extension de l'éditeur de jeu qui héberge l'éditeur Flowgraph (éditeur visuel de graphes de nœuds pour le gameplay, les scénarios et les mis |
+| [✍ `editor_forestEditor`](ge/extensions/editor/forestEditor.md) | 20 | Outil « Edit Forest » de l'éditeur de monde : peinture et édition des objets de la forêt (ForestItem) avec des pinceaux (brosses de ForestBr |
+| [✍ `editor_forestTsstaticMover`](ge/extensions/editor/forestTsstaticMover.md) | 2 | Outil d'éditeur « Forest TSStatic Mover » (menu Window > Terrain) qui convertit des instances entre la forêt (ForestItem) et des objets TSSt |
+| [✍ `editor_forestView`](ge/extensions/editor/forestView.md) | 3 | Fenêtre « Forest View » de l'éditeur, destinée à lister les ForestItemData de la forêt (« theForest ») sous forme de boutons triés par nom.  |
+| [✍ `editor_gizmoHelper`](ge/extensions/editor/gizmoHelper.md) | 3 | Petit utilitaire pour savoir si le gizmo d'axes de l'éditeur est dessiné. Un outil appelle gizmoDrawCalled() chaque frame où il dessine le g |
+| [✍ `editor_groundCoverEditor`](ge/extensions/editor/groundCoverEditor.md) | 4 | Éditeur de GroundCover (herbe, cailloux, billboards répartis sur le terrain) de l'éditeur de monde. Fenêtre « Ground Cover Editor » en deux  |
+| [✍ `editor_groundModelDebugHelper`](ge/extensions/editor/groundModelDebugHelper.md) | 1 | Ajoute à l'éditeur l'entrée de menu Window > Debug > « GroundModel Debug », qui ouvre la fenêtre de l'extension util_groundModelDebug (exten |
+| [✍ `editor_headlessEditorTest`](ge/extensions/editor/headlessEditorTest.md) | 0 | Exemple de développement du mode « headless » de l'éditeur (masque menus et barres d'outils pour n'afficher que son propre outil). Le module |
+| [✍ `editor_heroRoadEditor`](ge/extensions/editor/heroRoadEditor.md) | 7 | Éditeur « Hero Road » : création et édition de routes par splines (groupes de routes avec nœuds, profils, couches, mesh, trottoirs, barrière |
+| [✍ `editor_heroRoadEditor_barrierMgr`](ge/extensions/editor/heroRoadEditor/barrierMgr.md) | 4 | Gestionnaire du mobilier de bord de route (glissières, clôtures, lampadaires) d'un groupe du Hero Road Editor. Il lit les bords de maillage  |
+| [✍ `editor_heroRoadEditor_exportMgr`](ge/extensions/editor/heroRoadEditor/exportMgr.md) | 4 | Cuisson (bake) en fichiers DAE et gestion de l'état Edit/Live d'un groupe du Hero Road Editor. Le bake écrit le maillage de conduite du grou |
+| [✍ `editor_heroRoadEditor_groundmodel`](ge/extensions/editor/heroRoadEditor/groundmodel.md) | 14 | Mode de peinture des groundmodels (sec, mouillé, neige, glace…) du Hero Road Editor. L'artiste peint à la souris sur la chaussée ; la peintu |
+| [✍ `editor_heroRoadEditor_groupMgr`](ge/extensions/editor/heroRoadEditor/groupMgr.md) | 58 | Gestionnaire central des « groupes » (routes) du Hero Road Editor. Un groupe est une table Lua décrivant une route : nœuds/largeurs/normales |
+| [✍ `editor_heroRoadEditor_heatmap`](ge/extensions/editor/heroRoadEditor/heatmap.md) | 2 | Carte de chaleur de conformité (pente et rayon de virage) du Hero Road Editor. compute() note chaque station de la ligne centrale du groupe  |
+| [✍ `editor_heroRoadEditor_import`](ge/extensions/editor/heroRoadEditor/import.md) | 2 | Import de DecalRoads existants dans un nouveau groupe Hero Road. À partir d'une sélection de DecalRoad (ou d'un polygone de sélection), le m |
+| [✍ `editor_heroRoadEditor_layerMgr`](ge/extensions/editor/heroRoadEditor/layerMgr.md) | 44 | Gestion des calques de marquage et de détail d'une route Hero Road. Un calque (group.layers[i]) décrit une bande de décalque posée sur la ch |
+| [✍ `editor_heroRoadEditor_mesh`](ge/extensions/editor/heroRoadEditor/mesh.md) | 8 | Génération du maillage de conduite procédural d'un groupe du Hero Road Editor. Balaye les coupes de profile.lua le long de la ligne centrale |
+| [✍ `editor_heroRoadEditor_meshRefine`](ge/extensions/editor/heroRoadEditor/meshRefine.md) | 2 | Décimation de maillage pour le Hero Road Editor, par l'algorithme de Ramer-Douglas-Peucker (RDP). decimateStations réduit le nombre de stati |
+| [✍ `editor_heroRoadEditor_placeablesUI`](ge/extensions/editor/heroRoadEditor/placeablesUI.md) | 2 | Interface ImGui de l'onglet Features du Hero Road Editor, pour les éléments posables sur la route : passages piétons, amas de réparations, n |
+| [✍ `editor_heroRoadEditor_profile`](ge/extensions/editor/heroRoadEditor/profile.md) | 3 | Profil en travers d'un groupe du Hero Road Editor. Transforme les paramètres de voie, de bombé (crown) et d'accotement en une coupe 2D par s |
+| [✍ `editor_heroRoadEditor_repairMgr`](ge/extensions/editor/heroRoadEditor/repairMgr.md) | 2 | Rendu des amas de réparations (patchs d'asphalte) d'une route du Hero Road Editor. Chaque amas group.repairs[i] (créé dans l'onglet Features |
+| [✍ `editor_heroRoadEditor_sidewalkMgr`](ge/extensions/editor/heroRoadEditor/sidewalkMgr.md) | 4 | Trottoirs/bordures procéduraux d'un groupe du Hero Road Editor. Fine couche au-dessus du balayage partagé toolUtilities/walkRibbon : lit les |
+| [✍ `editor_iconOverview`](ge/extensions/editor/iconOverview.md) | 6 | Fenêtre d'éditeur « Available Icons » (menu Window > Debug) qui liste toutes les icônes de editor.icons dans une grille filtrable, avec info |
+| [✍ `editor_iesEditor`](ge/extensions/editor/iesEditor.md) | 3 | Fenêtre d'éditeur « IES Cookie Importer (WIP) » (menu Window > Experimental). Elle lit un fichier photométrique IES, affiche ses métadonnées |
+| [✍ `editor_imguiCDemo`](ge/extensions/editor/imguiCDemo.md) | 2 | Extension de l'éditeur qui ajoute l'entrée de menu « ImGui Demo » (groupe Debug du menu Window). Elle ouvre la fenêtre de démonstration inté |
+| [✍ `editor_inspector`](ge/extensions/editor/inspector.md) | 20 | Fenêtre Inspector du World Editor : affiche et modifie les champs (statiques, dynamiques, tableaux) de l'objet ou des objets sélectionnés, a |
+| [✍ `editor_layoutManager`](ge/extensions/editor/layoutManager.md) | 7 | Gestion des dispositions (layouts) de fenêtres de l'éditeur. Chaque layout est un dossier settings/<outil>/layouts/<nom>/ contenant windowsS |
+| [✍ `editor_levelSettings`](ge/extensions/editor/levelSettings.md) | 3 | Extension d'éditeur minimale : enregistre un gestionnaire d'inspecteur pour le type de sélection « level_settings » (qui n'affiche que le te |
+| [✍ `editor_levelValidator`](ge/extensions/editor/levelValidator.md) | 17 | Outil « Level Validator » de l'éditeur (menu Window > Debug). Le bouton « Find issues » lance un job qui cherche dans le niveau les objets d |
+| [✍ `editor_lightClassConverter`](ge/extensions/editor/lightClassConverter.md) | 1 | Ajoute un bouton « Convert To Spot Light / Point Light » en haut de l'inspecteur quand la sélection ne contient que des PointLight ou que de |
+| [✍ `editor_logHelper`](ge/extensions/editor/logHelper.md) | 1 | Extension d'éditeur qui affiche dans la barre de menu principale de l'éditeur le compteur d'erreurs (rouge, suffixe E) et d'avertissements ( |
+| [✍ `editor_logger`](ge/extensions/editor/logger.md) | 2 | Extension d'éditeur vide (squelette). Elle déclare onEditorGui et onExtensionLoaded sans aucun code : aucune fenêtre ni aucun comportement n |
+| [✍ `editor_main`](ge/extensions/editor/main.md) | 30 | Cœur du World Editor : définit la globale `editor` (editor = M). Il charge toutes les extensions de lua/ge/extensions/editor/ (celles qui co |
+| [✍ `editor_mainMenu`](ge/extensions/editor/mainMenu.md) | 12 | Barre de menu principale du World Editor : menus File, Edit, Camera, Object, View, Window, Help, plus titre du niveau, mode d'édition couran |
+| [✍ `editor_mainToolbar`](ge/extensions/editor/mainToolbar.md) | 6 | Barre d'outils principale (fenêtre « Main Toolbar ») du World Editor. Elle contient les boutons généraux (nouveau/ouvrir/sauvegarder niveau… |
+| [✍ `editor_mainUpdate`](ge/extensions/editor/mainUpdate.md) | 3 | Boucle de mise à jour de l'éditeur, appelée à chaque frame via onUpdate quand l'éditeur est actif. Elle met à jour et dessine les icônes d'o |
+| [✍ `editor_mapJsonEditor`](ge/extensions/editor/mapJsonEditor.md) | 10 | Éditeur du fichier navgraph levels/<niveau>/map.json (menu Window > Roads > Map Json Editor). Ce fichier contient des segments de route manu |
+| [✍ `editor_masterSpline`](ge/extensions/editor/masterSpline.md) | 7 | Outil Master Spline de l'éditeur de monde (mode d'édition « masterSpline »). Une Master Spline est une courbe maîtresse (nœuds, largeurs, no |
+| [✍ `editor_masterSpline_autoRoadGen`](ge/extensions/editor/masterSpline/autoRoadGen.md) | 5 | Génération automatique de routes de l'outil Master Spline : entre chaque paire de nœuds consécutifs, une recherche de chemin sur grille (8 d |
+| [✍ `editor_masterSpline_burn`](ge/extensions/editor/masterSpline/burn.md) | 2 | Verrouillage (« burn » = lock) d'une Master Spline de l'éditeur. Une Master Spline possède une pile de splines enfants liées (mesh, assembly |
+| [✍ `editor_masterSpline_homologation`](ge/extensions/editor/masterSpline/homologation.md) | 3 | Utilitaire de l'outil Master Spline pour « homologuer » une spline par rapport à un preset de standard routier (roadDesignStandards) : il me |
+| [✍ `editor_masterSpline_jumpTables`](ge/extensions/editor/masterSpline/jumpTables.md) | 0 | Module utilitaire de l'outil Master Spline : regroupe des tables de dispatch indexées par le type de lien d'une couche (préfixe d'outil de m |
+| [✍ `editor_masterSpline_layerMgr`](ge/extensions/editor/masterSpline/layerMgr.md) | 10 | Gestionnaire des couches (layers) d'une Master Spline. Une couche relie la Master Spline à une spline enfant d'un autre outil (mesh, assembl |
+| [✍ `editor_masterSpline_splineMgr`](ge/extensions/editor/masterSpline/splineMgr.md) | 36 | Gestionnaire de données de l'outil Master Spline de l'éditeur. Il stocke la liste des Master Splines (nodes, widths, nmls, layers, mode de g |
+| [✍ `editor_materialEditor`](ge/extensions/editor/materialEditor.md) | 18 | Éditeur de matériaux du monde (fenêtre « materialEditor » de l'éditeur de niveau). Il liste les matériaux du niveau et de art/, permet de mo |
+| [✍ `editor_measuresInspectorHeader`](ge/extensions/editor/measuresInspectorHeader.md) | 3 | Petite extension de l'éditeur qui ajoute une ligne « Size: X x Y x Z » dans l'en-tête de l'inspecteur d'objets. Elle affiche la taille (boît |
+| [✍ `editor_meshEditor`](ge/extensions/editor/meshEditor.md) | 14 | Code commun aux éditeurs d'objets à nœuds de type « mesh » (MeshRoad et River) du world editor. Ce n'est pas une extension chargée par exten |
+| [✍ `editor_meshRoadEditor`](ge/extensions/editor/meshRoadEditor.md) | 2 | Extension du world editor qui fournit le mode « Edit MeshRoad » (routes en mesh). Elle charge editor/meshEditor.lua avec dofile(), lui fixe  |
+| [✍ `editor_meshSpline`](ge/extensions/editor/meshSpline.md) | 9 | Outil Mesh Spline du world editor : on trace une spline (nœuds, largeurs, normales) le long de laquelle des meshes statiques (TSStatic) sont |
+| [✍ `editor_meshSpline_import`](ge/extensions/editor/meshSpline/import.md) | 3 | Import dans l'outil Mesh Spline : transforme des objets TSStatic déjà placés dans le niveau en une mesh spline équivalente. Les TSStatic son |
+| [✍ `editor_meshSpline_populate`](ge/extensions/editor/meshSpline/populate.md) | 8 | Placement des meshes statiques le long d'une mesh spline. À partir de la géométrie de la spline, il échantillonne des positions (période = l |
+| [✍ `editor_meshSpline_populationEngine`](ge/extensions/editor/meshSpline/populationEngine.md) | 4 | Petit moteur de géométrie utilisé par l'outil Mesh Spline : il calcule la géométrie dérivée d'une spline (points subdivisés, largeurs, tange |
+| [✍ `editor_meshSpline_splineMgr`](ge/extensions/editor/meshSpline/splineMgr.md) | 39 | Gestionnaire d'état de l'outil Mesh Spline : détient la liste des mesh splines (meshSplines) et la table id vers indice (splineMap). Il crée |
+| [✍ `editor_missionEditor`](ge/extensions/editor/missionEditor.md) | 15 | Fenêtre « Mission Editor » du world editor pour créer et modifier les missions du jeu (info.json de chaque dossier de mission). Elle liste l |
+| [✍ `editor_missionEditor_additionalAttributes`](ge/extensions/editor/missionEditor/additionalAttributes.md) | 7 | Section « AdditionalInfo » du Mission Editor : édite l'auteur, la date de création ou de mise à jour (timestamp Unix), les options « As Scen |
+| [✍ `editor_missionEditor_careerSetup`](ge/extensions/editor/missionEditor/careerSetup.md) | 10 | Section de configuration carrière du Mission Editor (mission.careerSetup) : choix des modes où la mission apparaît (Freeroam, Career), compé |
+| [✍ `editor_missionEditor_conditions`](ge/extensions/editor/missionEditor/conditions.md) | 4 | Éditeur de conditions du Mission Editor, utilisé deux fois par missionEditor.lua : « Start Condition » (champ startCondition) et « Visibilit |
+| [✍ `editor_missionEditor_dev`](ge/extensions/editor/missionEditor/dev.md) | 3 | Section « Dev Notes » du Mission Editor : édite mission.devNotes (texte libre, mode silent/info/warning/error, case « Dev Mission » qui cach |
+| [✍ `editor_missionEditor_general`](ge/extensions/editor/missionEditor/general.md) | 4 | Section « General » du Mission Editor : édite le nom et la description de la mission (champs texte ImGui) et affiche une icône de traduction |
+| [✍ `editor_missionEditor_genericTypeData`](ge/extensions/editor/missionEditor/genericTypeData.md) | 13 | Panneau de l'éditeur de missions qui édite le champ missionTypeData d'une mission. Il liste les types de mission (gameplay_missions_missions |
+| [✍ `editor_missionEditor_issues`](ge/extensions/editor/missionEditor/issues.md) | 6 | Panneau « Issues » de l'éditeur de missions. Il agrège les problèmes détectés par les autres panneaux (méthode getMissionIssues de chaque fe |
+| [✍ `editor_missionEditor_layers`](ge/extensions/editor/missionEditor/layers.md) | 4 | Panneau « Layers » de l'éditeur de missions. Une mission cherche ses fichiers dans une liste ordonnée de dossiers (mission.layers, chacun av |
+| [✍ `editor_missionEditor_objectives`](ge/extensions/editor/missionEditor/objectives.md) | 14 | Panneau « Objectives / Career Setup » de l'éditeur de missions. Il configure les étoiles de la mission (starsActive, defaultStarKeys pour le |
+| [✍ `editor_missionEditor_playbookUtils`](ge/extensions/editor/missionEditor/playbookUtils.md) | 3 | Onglet « Playbook Utils » de l'éditeur de missions. Il propose des boutons qui ajoutent à editor_missionPlaybook.book.instructions des instr |
+| [✍ `editor_missionEditor_prefabs`](ge/extensions/editor/missionEditor/prefabs.md) | 3 | Panneau « Prefabs » de l'éditeur de missions. Il édite la liste mission.prefabs (chemins de fichiers .prefab / .prefab.json) et le booléen p |
+| [✍ `editor_missionEditor_previewChecker`](ge/extensions/editor/missionEditor/previewChecker.md) | 5 | Panneau « Preview » de l'éditeur de missions. Il vérifie la présence et la taille de l'image d'aperçu (preview.png/jpg/jpeg, attendue en 192 |
+| [✍ `editor_missionEditor_progressMulti`](ge/extensions/editor/missionEditor/progressMulti.md) | 3 | Onglet « Progress Multi » de l'éditeur de missions : affiche la progression sauvegardée d'une mission à progression multiple. Il lit gamepla |
+| [✍ `editor_missionEditor_progressSetup`](ge/extensions/editor/missionEditor/progressSetup.md) | 3 | Onglet « Progress » (configuration de progression) de l'éditeur de missions. Il récupère la définition de progression du type de mission (ga |
+| [✍ `editor_missionEditor_progressSingle`](ge/extensions/editor/missionEditor/progressSingle.md) | 4 | Onglet « Progress Single » de l'éditeur de missions : montre la progression sauvegardée d'une mission (étoiles débloquées par défaut et au t |
+| [✍ `editor_missionEditor_setupModules`](ge/extensions/editor/missionEditor/setupModules.md) | 6 | Panneau « SetupModules » de l'éditeur de missions. Il édite mission.setupModules, trois modules activables : vehicles (véhicules proposés, v |
+| [✍ `editor_missionEditor_startTrigger`](ge/extensions/editor/missionEditor/startTrigger.md) | 4 | Panneau « StartTrigger » de l'éditeur de missions. Il édite mission.startTrigger : type « coordinates » (niveau + position, rotation et rayo |
+| [✍ `editor_missionPlaybook`](ge/extensions/editor/missionPlaybook.md) | 7 | Extension d'éditeur « Mission Playbook » (menu Missions). Un playbook est une liste d'instructions (book.instructions) rejouées sur un slot  |
+| [✍ `editor_missionPlaybook_attributeViewer`](ge/extensions/editor/missionPlaybook/attributeViewer.md) | 4 | Fenêtre « Playbook Attribute Viewer » associée à editor_missionPlaybook. À chaque étape du playbook, elle enregistre les attributs du joueur |
+| [✍ `editor_missionPlaybook_missionTreeViewer`](ge/extensions/editor/missionPlaybook/missionTreeViewer.md) | 4 | Fenêtre « Playbook Mission Tree Viewer » associée à editor_missionPlaybook. Elle dessine, avec l'éditeur de nœuds du flowgraph (ui_flowgraph |
+| [✍ `editor_missionPlaybook_unlockedMissionsViewer`](ge/extensions/editor/missionPlaybook/unlockedMissionsViewer.md) | 4 | Fenêtre « Playbook Unlocked Missions Viewer » associée à editor_missionPlaybook. Après chaque étape du playbook, elle classe les missions de |
+| [✍ `editor_missionStartPositionEditor`](ge/extensions/editor/missionStartPositionEditor.md) | 2 | Mode d'édition « Edit Mission Start Position » du World Editor (icône drapeau). Il dessine avec debugDrawer une sphère et le nom pour chaque |
+| [✍ `editor_multiSpawnManager`](ge/extensions/editor/multiSpawnManager.md) | 6 | Outil d'éditeur « Vehicle Groups Manager » (menu Gameplay) pour créer, éditer, charger et sauvegarder des groupes de véhicules (fichiers .ve |
+| [✍ `editor_navMeshEditor`](ge/extensions/editor/navMeshEditor.md) | 6 | Éditeur du navmesh Recast (maillage de navigation de l'IA) dans le World Editor, modelé sur l'éditeur de rivières : un mode d'édition « Navi |
+| [✍ `editor_newsMessage`](ge/extensions/editor/newsMessage.md) | 3 | Extension d'éditeur qui affiche une fenêtre modale « World Editor News » avec les notes de version importantes, une seule fois par version d |
+| [✍ `editor_objectScreenSizeViz`](ge/extensions/editor/objectScreenSizeViz.md) | 2 | Outil de débogage « Object Screen Size » (menu Debug) du World Editor. Pour les objets (editor.selection.object) et éléments de forêt (edito |
+| [✍ `editor_objectToSplineEditor`](ge/extensions/editor/objectToSplineEditor.md) | 2 | Outil « Object To Spline Editor » du World Editor : copie un objet (TSStatic ou BeamNGVehicle) le long d'une spline guide (DecalRoad ou Mesh |
+| [✍ `editor_objectTool`](ge/extensions/editor/objectTool.md) | 13 | Mode d'édition principal du World Editor, « Manipulate Object(s) » (editor.editModes.objectSelect, icône crayon). Il gère la sélection d'obj |
+| [✍ `editor_particleEditor`](ge/extensions/editor/particleEditor.md) | 5 | Éditeur de particules (mode d'édition « Particle Editor ») de l'éditeur de monde. Il ajoute un en-tête à l'inspecteur avec un onglet Emitter |
+| [✍ `editor_particleEditor2`](ge/extensions/editor/particleEditor2.md) | 7 | Seconde version, expérimentale, de l'éditeur de particules : une fenêtre d'outil « Particle Editor 2 » (menu Fenêtre > Experimental) avec, à |
+| [✍ `editor_perfProfiler`](ge/extensions/editor/perfProfiler.md) | 4 | Fenêtre de l'éditeur « CameraProfiler » (menu Debug > Performance Recorder) pour enregistrer et comparer des performances. Elle lance un enr |
+| [✍ `editor_prefabInstanceEditor`](ge/extensions/editor/prefabInstanceEditor.md) | 2 | Ajoute une section « PrefabInstance » en tête de l'inspecteur de l'éditeur quand tous les objets sélectionnés sont des PrefabInstance. Si au |
+| [✍ `editor_preferences`](ge/extensions/editor/preferences.md) | 11 | Fenêtre « Preferences » de l'éditeur de monde. Elle affiche à gauche la liste des pages (catégories du registre editor.preferencesRegistry)  |
+| [✍ `editor_raceEditor`](ge/extensions/editor/raceEditor.md) | 19 | Fenêtre principale « Race Tool » de l'éditeur de courses/chemins (menu Gameplay > Race/Path Editor, mode d'édition « Edit Races »). Elle gèr |
+| [✍ `editor_raceEditor_pacenotes`](ge/extensions/editor/raceEditor/pacenotes.md) | 16 | Sous-fenêtre « Pacenotes » de l'éditeur de course (raceEditor). Elle permet de lister, sélectionner, créer (Shift + glisser dans le monde po |
+| [✍ `editor_raceEditor_pathnodes`](ge/extensions/editor/raceEditor/pathnodes.md) | 23 | Sous-fenêtre « Pathnodes » de l'éditeur de course (raceEditor) : édite les nœuds de chemin (path.pathnodes) du chemin courant. On peut créer |
+| [✍ `editor_raceEditor_segments`](ge/extensions/editor/raceEditor/segments.md) | 15 | Sous-fenêtre « Segments » de l'éditeur de course (raceEditor). Un segment relie deux pathnodes (From/To) et a un mode : waypoint, capsules o |
+| [✍ `editor_raceEditor_startPositions`](ge/extensions/editor/raceEditor/startPositions.md) | 16 | Sous-fenêtre « Start Positions » de l'éditeur de course (raceEditor). Elle liste, crée (Shift + glisser : position et orientation), sélectio |
+| [✍ `editor_raceEditor_testing`](ge/extensions/editor/raceEditor/testing.md) | 10 | Fenêtre « Race Test » de l'éditeur de course : permet d'essayer la course en cours d'édition. Elle crée un objet gameplay/race/race à partir |
+| [✍ `editor_raceEditor_timeTrials`](ge/extensions/editor/raceEditor/timeTrials.md) | 11 | Sous-fenêtre « Time Trials » de l'éditeur de course : métadonnées du circuit (nom, description, auteurs, difficulté Easy/Medium/Hard/Very Ha |
+| [✍ `editor_raceEditor_tools`](ge/extensions/editor/raceEditor/tools.md) | 12 | Sous-fenêtre « Tools » de l'éditeur de course (raceEditor). Section « Side Decorators » : génère des décorations (TSStatic .dae ou prefab) d |
+| [✍ `editor_raceEditor_trackLayout`](ge/extensions/editor/raceEditor/trackLayout.md) | 11 | Sous-fenêtre « Track Layout » de l'éditeur de course (raceEditor). Elle règle le nombre de tours par défaut (defaultLaps, minimum 1), les nœ |
+| [✍ `editor_rallyEditor`](ge/extensions/editor/rallyEditor.md) | 76 | Fenêtre principale « Rally Editor » de l'éditeur de monde (menu Gameplay > Rally Editor, mode d'édition « Rally Editor » / notebookEditMode, |
+| [✍ `editor_rallyEditor_aiCompetitorsEditorModel`](ge/extensions/editor/rallyEditor/aiCompetitorsEditorModel.md) | 9 | Modèle de données de l'onglet « AI Competitors » de l'éditeur de rallye. Il lit et écrit le fichier JSON gameplay/rally/aiCompetitorsConfig. |
+| [✍ `editor_rallyEditor_aiCompetitorsEditorPlot`](ge/extensions/editor/rallyEditor/aiCompetitorsEditorPlot.md) | 2 | Tracé ImGui (via la draw list) de l'aperçu de la distribution des temps d'arrivée dans l'onglet « AI Competitors » de l'éditeur de rallye. d |
+| [✍ `editor_rallyEditor_aiCompetitorsEditorPreview`](ge/extensions/editor/rallyEditor/aiCompetitorsEditorPreview.md) | 2 | Calcul des données d'aperçu de l'onglet « AI Competitors » de l'éditeur de rallye. À partir des paramètres généraux, du temps de référence e |
+| [✍ `editor_rallyEditor_aiCompetitorsEditorTexts`](ge/extensions/editor/rallyEditor/aiCompetitorsEditorTexts.md) | 0 | Table de textes (libellés, titres de sections, infobulles) en anglais de l'onglet « AI Competitors » de l'éditeur de rallye. Aucun code : le |
+| [✍ `editor_rallyEditor_aiCompetitorsTab`](ge/extensions/editor/rallyEditor/aiCompetitorsTab.md) | 14 | Onglet « AI Competitors Configuration » de l'éditeur de rallye. Il permet de régler les paramètres globaux du modèle de résultats des concur |
+| [✍ `editor_rallyEditor_drivelineEditSurface`](ge/extensions/editor/rallyEditor/drivelineEditSurface.md) | 9 | Boîte à outils d'édition de la spline de driveline (ligne de conduite de rallye) pour l'éditeur de rallye. Toutes les fonctions prennent un  |
+| [✍ `editor_rallyEditor_drivelineTab`](ge/extensions/editor/rallyEditor/drivelineTab.md) | 36 | Onglet « Driveline Editor » de l'éditeur de rallye. Il charge la ligne de conduite (driveline) d'une mission depuis un enregistrement brut,  |
+| [✍ `editor_rallyEditor_ghostNotebook`](ge/extensions/editor/rallyEditor/ghostNotebook.md) | 11 | Gère le « carnet fantôme » de l'éditeur de rallye : un second carnet (ou les métadonnées de calibration du carnet actif) dont les notes sont |
+| [✍ `editor_rallyEditor_ghostNotebook_ghostRenderer`](ge/extensions/editor/rallyEditor/ghostNotebook/ghostRenderer.md) | 5 | Dessine dans la vue 3D les libellés du carnet fantôme de l'éditeur de rallye. Pour chaque pacenote du carnet fantôme, il projette le début d |
+| [✍ `editor_rallyEditor_measurementsTab`](ge/extensions/editor/rallyEditor/measurementsTab.md) | 26 | Onglet « Measurements » de l'éditeur de rallye : outil de mesure de distances le long de la route (snaproad). L'utilisateur crée des mesures |
+| [✍ `editor_rallyEditor_missionTab`](ge/extensions/editor/rallyEditor/missionTab.md) | 5 | Onglet « Mission » de l'éditeur de rallye. Il affiche en lecture seule le nom, l'identifiant et le dossier de la mission courante (avec un b |
+| [✍ `editor_rallyEditor_notebookInfo`](ge/extensions/editor/rallyEditor/notebookInfo.md) | 11 | Onglet « Notebook » de l'éditeur de rallye. Il affiche les informations du carnet courant (id, fichier, issues de validation) et permet de m |
+| [✍ `editor_rallyEditor_pacenotes`](ge/extensions/editor/rallyEditor/pacenotes.md) | 99 | Onglet « Pacenotes » de l'éditeur de rallye, le plus important de l'éditeur : il gère la sélection de pacenotes et de waypoints (corner star |
+| [✍ `editor_rallyEditor_pacenotes_calibrationAnalysisExport`](ge/extensions/editor/rallyEditor/pacenotes/calibrationAnalysisExport.md) | 6 | Exporte les données de calibration des virages d'un carnet de rallye vers un fichier JSON destiné à être analysé (par exemple par un LLM) po |
+| [✍ `editor_rallyEditor_pacenotes_calibrationMetadataForm`](ge/extensions/editor/rallyEditor/pacenotes/calibrationMetadataForm.md) | 1 | Formulaire imgui « Calibration Metadata » affiché dans l'éditeur de pacenotes. Il permet de choisir, pour le pacenote sélectionné, cinq vale |
+| [✍ `editor_rallyEditor_pacenotes_calibrationWindow`](ge/extensions/editor/rallyEditor/pacenotes/calibrationWindow.md) | 1 | Fenêtre imgui flottante « Pacenote Calibration » de l'éditeur de rallye, avec trois onglets. « Calibration » : édition des bornes (seuils) d |
+| [✍ `editor_rallyEditor_pacenotes_customAudioList`](ge/extensions/editor/rallyEditor/pacenotes/customAudioList.md) | 1 | Liste imgui des clips audio personnalisés d'un carnet de rallye, utilisée dans l'éditeur de pacenotes (mode audio custom). Elle affiche tous |
+| [✍ `editor_rallyEditor_pacenotes_customForm`](ge/extensions/editor/rallyEditor/pacenotes/customForm.md) | 2 | Formulaire imgui de l'éditeur de pacenotes pour les pacenotes en mode audio « custom » (fichiers audio personnalisés). Il affiche la case «  |
+| [✍ `editor_rallyEditor_pacenotes_measurementsForm`](ge/extensions/editor/rallyEditor/pacenotes/measurementsForm.md) | 2 | Section « Measurements » de l'éditeur de pacenotes de rallye : repliable au clic sur son titre. Elle affiche pour le pacenote sélectionné le |
+| [✍ `editor_rallyEditor_pacenotes_pacenoteForm`](ge/extensions/editor/rallyEditor/pacenotes/pacenoteForm.md) | 4 | Formulaire principal d'édition d'un pacenote dans l'éditeur de rallye. Il affiche le nom, les actions (Place Vehicle, TODO, Done, Delete..., |
+| [✍ `editor_rallyEditor_pacenotes_selectedPacenoteUtility`](ge/extensions/editor/rallyEditor/pacenotes/selectedPacenoteUtility.md) | 1 | Petite fenêtre flottante bleue « Selected Pacenote Utility » de l'éditeur de rallye. Pour le pacenote sélectionné, elle affiche trois blocs  |
+| [✍ `editor_rallyEditor_pacenotes_structuredForm`](ge/extensions/editor/rallyEditor/pacenotes/structuredForm.md) | 2 | Formulaire d'édition « structuré » d'un pacenote dans l'éditeur de rallye. Il affiche un aperçu du texte et des fichiers audio, puis les sec |
+| [✍ `editor_rallyEditor_recceTab`](ge/extensions/editor/rallyEditor/recceTab.md) | 11 | Onglet « Recce » de l'éditeur de rallye. Il charge l'enregistrement de reconnaissance de la mission (driveline + « cuts », via gameplay/rall |
+| [✍ `editor_rallyEditor_stageLoaderModal`](ge/extensions/editor/rallyEditor/stageLoaderModal.md) | 1 | Fenêtre modale « Open Rally Stage » de l'éditeur de rallye. Elle liste les missions de type rallyStage du niveau courant (gameplay_missions_ |
+| [✍ `editor_rallyEditor_systemPacenotesTab`](ge/extensions/editor/rallyEditor/systemPacenotesTab.md) | 6 | Onglet « System Pacenotes » de l'éditeur de rallye : tableau en lecture seule des pacenotes système (usage interne, par ex. compte à rebours |
+| [✍ `editor_rallyEditor_testTab`](ge/extensions/editor/rallyEditor/testTab.md) | 7 | Onglet « Test » de l'éditeur de rallye (outil de debug). Le module renvoie un constructeur de classe C. Il propose un bouton « Test 1 » (aff |
+| [✍ `editor_rallyEditor_voicepacksTab`](ge/extensions/editor/rallyEditor/voicepacksTab.md) | 8 | Onglet « Voicepacks » de l'éditeur de rallye. Il permet de choisir le voicepack et le notebook associé (menus déroulants), et liste les voic |
+| [✍ `editor_rallyEditor_zSnap`](ge/extensions/editor/rallyEditor/zSnap.md) | 12 | Aide de l'éditeur de rallye pour « coller » la hauteur (z) d'un point au terrain. Trois méthodes : aucune, hauteur du terrain (core_terrain. |
+| [✍ `editor_rayCastTest`](ge/extensions/editor/rayCastTest.md) | 5 | Outil de debug de l'éditeur (menu Debug > Raycast Test) pour comparer deux types de lancers de rayon. Mode 0 « Gameengine Raycast » : un giz |
+| [✍ `editor_renderTest`](ge/extensions/editor/renderTest.md) | 0 | Outil de debug de l'éditeur (fenêtre « Render test ») destiné à afficher une vue de la scène rendue dans une texture (vues dessus/dessous/ga |
+| [✍ `editor_renderViewBuffers`](ge/extensions/editor/renderViewBuffers.md) | 2 | Outil de debug de l'éditeur (menu Debug > « NamedTextureTarget Viewer ») pour prévisualiser les render buffers (NamedTexTargets) avec imgui  |
+| [✍ `editor_rendererComponents`](ge/extensions/editor/rendererComponents.md) | 3 | Fenêtre « Renderer Components » de l'éditeur (menu Debug) pour régler en direct les effets de rendu : profondeur de champ (DOF), HDR, SSAO,  |
+| [✍ `editor_resourceChecker`](ge/extensions/editor/resourceChecker.md) | 7 | Fenêtre « Resources Checker » de l'éditeur (menu Assets) pour auditer les ressources du niveau courant. Trois onglets : « Materials Verifica |
+| [✍ `editor_resourceChecker_resourceUtil`](ge/extensions/editor/resourceChecker/resourceUtil.md) | 29 | Moteur de l'outil Resource Checker de l'éditeur : analyse les matériaux, textures, meshes et assets d'un niveau ou d'un véhicule (versions d |
+| [✍ `editor_riverEditor`](ge/extensions/editor/riverEditor.md) | 2 | Mode d'édition « River » de l'éditeur de monde. Ce fichier est une fine enveloppe : il charge la logique générique de meshEditor.lua (via do |
+| [✍ `editor_roadArchitect`](ge/extensions/editor/roadArchitect.md) | 4 | Fenêtre principale de l'éditeur Road Architect du world editor : outil de création de routes, profils, groupes de prefabs, jonctions (dont a |
+| [✍ `editor_roadArchitect_clothoid`](ge/extensions/editor/roadArchitect/clothoid.md) | 1 | Évaluation de clothoïdes (spirales d'Euler, courbure variant linéairement avec l'abscisse) pour Road Architect. Le code est largement basé s |
+| [✍ `editor_roadArchitect_decals`](ge/extensions/editor/roadArchitect/decals.md) | 4 | Gestion des decals de Road Architect. Pour une route donnée, crée un « jeu de decals » : DecalRoad invisibles (matériau road_invisible) par  |
+| [✍ `editor_roadArchitect_geometry`](ge/extensions/editor/roadArchitect/geometry.md) | 1 | Module de géométrie de l'éditeur Road Architect (GE). Il transforme les nœuds de référence d'une route en points discrétisés le long d'une s |
+| [✍ `editor_roadArchitect_groups`](ge/extensions/editor/roadArchitect/groups.md) | 19 | Gestion des groupes de Road Architect (éditeur GE). Deux notions coexistent : les groupes prefab (modèles de routes réutilisables, comme car |
+| [✍ `editor_roadArchitect_importFile`](ge/extensions/editor/roadArchitect/importFile.md) | 4 | Utilitaires d'import de fichiers pour Road Architect, pensés pour un usage sans interface (pont tech/BeamNGpy). Ils lisent un fichier depuis |
+| [✍ `editor_roadArchitect_junctions`](ge/extensions/editor/roadArchitect/junctions.md) | 34 | Gestion des jonctions de l'éditeur Road Architect : passage piéton, carrefour en croix, T, Y, rond-point, transitions rural/urbain et autoro |
+| [✍ `editor_roadArchitect_link`](ge/extensions/editor/roadArchitect/link.md) | 4 | Module de l'éditeur Road Architect qui relie des routes entre elles. Il détecte si l'extrémité d'une route peut être raccordée à celle d'une |
+| [✍ `editor_roadArchitect_networkImport`](ge/extensions/editor/roadArchitect/networkImport.md) | 2 | Import partagé OpenStreetMap (.osm) et SUMO (.nod.xml/.edg.xml) vers Road Architect. Chaque way OSM ou arête SUMO devient une route Road Arc |
+| [✍ `editor_roadArchitect_openDriveExport`](ge/extensions/editor/roadArchitect/openDriveExport.md) | 1 | Export du réseau Road Architect au format OpenDRIVE 1.8 (.xodr). Chaque route (hors superpositions) est convertie en géométrie OpenDRIVE : l |
+| [✍ `editor_roadArchitect_openDriveImport`](ge/extensions/editor/roadArchitect/openDriveImport.md) | 2 | Import OpenDRIVE (.xodr) dans Road Architect. Le fichier XML est analysé (routes : planView avec line/arc/spiral/poly3/paramPoly3, elevation |
+| [✍ `editor_roadArchitect_osmImport`](ge/extensions/editor/roadArchitect/osmImport.md) | 0 | Petit module d'alias de Road Architect : il charge editor/roadArchitect/networkImport et réexporte sa fonction importOsmFromFile sous le nom |
+| [✍ `editor_roadArchitect_overlays`](ge/extensions/editor/roadArchitect/overlays.md) | 7 | Génération des routes de superposition (overlays) des jonctions de Road Architect : lignes de trajectoire fictives qui traversent la jonctio |
+| [✍ `editor_roadArchitect_profiles`](ge/extensions/editor/roadArchitect/profiles.md) | 60 | Gestion des profils latéraux (coupes en travers) des routes de Road Architect. Un profil est une table indexée par numéro de voie : les clés |
+| [✍ `editor_roadArchitect_render`](ge/extensions/editor/roadArchitect/render.md) | 1 | Rendu de debug (utils/debugDraw et debugDrawer) de tout ce que Road Architect affiche dans la vue 3D : surface et contour des routes, ligne  |
+| [✍ `editor_roadArchitect_roadMesh`](ge/extensions/editor/roadArchitect/roadMesh.md) | 5 | Crée les maillages procéduraux (objets de scène ProceduralMesh) du Road Architect : trottoirs avec bordures (kerbs) à gauche ou à droite de  |
+| [✍ `editor_roadArchitect_roads`](ge/extensions/editor/roadArchitect/roads.md) | 53 | Conteneur central du Road Architect : il stocke la liste des routes de la session (chaque route = nœuds, profil latéral, options d'affichage |
+| [✍ `editor_roadArchitect_staticMesh`](ge/extensions/editor/roadArchitect/staticMesh.md) | 2 | Place des objets TSStatic (fichiers .dae) le long des routes du Road Architect, à partir des couches (layers) du profil latéral. Deux types  |
+| [✍ `editor_roadArchitect_staticMeshMgr`](ge/extensions/editor/roadArchitect/staticMeshMgr.md) | 7 | Gère l'« audition » des maillages statiques dans le Road Architect : il liste les fichiers .dae disponibles (dossiers art/shapes/objects et  |
+| [✍ `editor_roadArchitect_sumoImport`](ge/extensions/editor/roadArchitect/sumoImport.md) | 0 | Petit module d'aiguillage pour l'import SUMO (fichiers .nod.xml / .edg.xml) dans le Road Architect. Il ne contient pas de logique : il réexp |
+| [✍ `editor_roadArchitect_terraform`](ge/extensions/editor/roadArchitect/terraform.md) | 5 | Modifie le terrain (TerrainBlock) pour l'adapter aux routes du Road Architect : aplanit le terrain sous une route ou un réseau de routes (av |
+| [✍ `editor_roadArchitect_tunnelMesh`](ge/extensions/editor/roadArchitect/tunnelMesh.md) | 2 | Génère les tunnels automatiques du Road Architect : un maillage procédural (ProceduralMesh) en forme de tube autour de la route, et il perce |
+| [✍ `editor_roadArchitect_utilities`](ge/extensions/editor/roadArchitect/utilities.md) | 43 | Boîte à outils du Road Architect : dessin de sphères/lignes de debug, détection de la souris sur le terrain ou sur un nœud, calculs de boîte |
+| [✍ `editor_roadDecorations`](ge/extensions/editor/roadDecorations.md) | 2 | Place automatiquement des objets décoratifs (TSStatic, par exemple des réflecteurs ou des poteaux) de chaque côté d'un DecalRoad, à interval |
+| [✍ `editor_roadEditor`](ge/extensions/editor/roadEditor.md) | 8 | Éditeur de routes en décalque (DecalRoad) du World Editor : mode d'édition « Edit Road » (icône create_road_decal) pour créer des routes (Al |
+| [✍ `editor_roadNetworkExporter`](ge/extensions/editor/roadNetworkExporter.md) | 3 | Fenêtre d'éditeur « Road Network Import/Exporter » (menu Window > Tech), visible uniquement avec une licence tech (ResearchVerifier.isTechLi |
+| [✍ `editor_roadRiverCacheHandler`](ge/extensions/editor/roadRiverCacheHandler.md) | 2 | Petit gestionnaire de l'éditeur qui maintient le cache des sommets des DecalRoad : il l'initialise pour tous les DecalRoad du niveau au déma |
+| [✍ `editor_roadRiverGui`](ge/extensions/editor/roadRiverGui.md) | 1 | Éléments d'interface partagés par les éditeurs de routes (DecalRoad) et de rivières : palette de couleurs de surbrillance (survol, sélection |
+| [✍ `editor_roadSpline`](ge/extensions/editor/roadSpline.md) | 8 | Outil « Road Spline » de l'éditeur de niveaux : on trace une spline (nœuds + largeurs) et l'outil génère automatiquement des DecalRoads empi |
+| [✍ `editor_roadSpline_groupMgr`](ge/extensions/editor/roadSpline/groupMgr.md) | 35 | Gestionnaire des « groupes » de l'outil Road Spline : un groupe = une route (nœuds, largeurs, normales, couches, options de couches automati |
+| [✍ `editor_roadSpline_import`](ge/extensions/editor/roadSpline/import.md) | 2 | Import de DecalRoads existants dans l'outil Road Spline. Estime une ligne centrale de référence (nœuds, largeurs, normales) à partir des rou |
+| [✍ `editor_roadSpline_layerMgr`](ge/extensions/editor/roadSpline/layerMgr.md) | 43 | Gestionnaire des couches d'un groupe Road Spline. Une couche (layer) est une bande décalée le long de la route, matérialisée par un ou plusi |
+| [✍ `editor_roadTemplateEditor`](ge/extensions/editor/roadTemplateEditor.md) | 3 | Éditeur de modèles de routes (menu Fenêtre > Roads > « Road Template Editor »). Permet de choisir, sauvegarder (« Save », « Save as... »), c |
+| [✍ `editor_roadUtils`](ge/extensions/editor/roadUtils.md) | 7 | Utilitaires des modèles de routes (road templates) de l'éditeur. Lit les fichiers levels/<niveau>/roadtemplates/*.road.json, mémorise matéri |
+| [✍ `editor_roofServices`](ge/extensions/editor/roofServices.md) | 0 | Fichier vide dans BeamNG.drive 0.40.5 (0 ligne) : aucun code, aucune fonction exportée. Probablement un emplacement réservé pour un futur ou |
+| [✍ `editor_sceneTree`](ge/extensions/editor/sceneTree.md) | 25 | Fenêtre « Scene Tree » de l'éditeur de niveaux : affiche la hiérarchie des objets de la scène (MissionGroup, SimGroups, objets) sous forme d |
+| [✍ `editor_sceneView`](ge/extensions/editor/sceneView.md) | 4 | Vues de scène supplémentaires de l'éditeur : chaque « Scene view N » est une fenêtre ImGui qui affiche le monde via un ImguiRenderViewContro |
+| [✍ `editor_screenshotCreatorBootstrap`](ge/extensions/editor/screenshotCreatorBootstrap.md) | 1 | Petit amorçage de l'éditeur : ajoute l'entrée de menu Fenêtre > Vehicles > « Vehicle Screenshot Creator » qui ouvre la fenêtre de l'extensio |
+| [✍ `editor_scriptAIEditor`](ge/extensions/editor/scriptAIEditor.md) | 6 | Éditeur de scénarios ScriptAI : mode d'édition 'Edit ScriptAI Scenario' (icône BNGMicrochip de la barre d'outils) pour créer, éditer et exéc |
+| [✍ `editor_scriptAIManager`](ge/extensions/editor/scriptAIManager.md) | 10 | Fenêtre 'Script AI Manager' (menu Gameplay) : enregistre, rejoue et sauvegarde la conduite des véhicules de la scène pour les concepteurs de |
+| [✍ `editor_shapeEditor`](ge/extensions/editor/shapeEditor.md) | 10 | Éditeur de formes (Shape Editor) de l'éditeur de monde : fenêtre qui prévisualise un modèle 3D (.dae et autres) via l'objet C++ ShapePreview |
+| [✍ `editor_shortcutLegend`](ge/extensions/editor/shortcutLegend.md) | 4 | Fenêtre de l'éditeur de monde (sans barre de titre) qui affiche une légende des raccourcis du mode d'édition actif. Elle lit soit editor.edi |
+| [✍ `editor_sitesEditor`](ge/extensions/editor/sitesEditor.md) | 16 | Éditeur des fichiers de 'sites' (*.sites.json) : lieux (locations), zones et places de parking (parkingSpots), avec leurs tags. Il ouvre la  |
+| [✍ `editor_sitesEditor_locations`](ge/extensions/editor/sitesEditor/locations.md) | 11 | Sous-éditeur 'Locations' de l'éditeur de sites. Le module renvoie un constructeur de classe C (appelé avec sitesEditor et la clé 'locations' |
+| [✍ `editor_sitesEditor_parkingSpots`](ge/extensions/editor/sitesEditor/parkingSpots.md) | 12 | Sous-éditeur 'Parking Spots' de l'éditeur de sites. Le module renvoie un constructeur de classe C. Une place est une boîte orientée (pos, ro |
+| [✍ `editor_sitesEditor_sortedListDisplay`](ge/extensions/editor/sitesEditor/sortedListDisplay.md) | 13 | Affichage générique d'une liste triée d'éléments de sites (lieux, zones, places de parking), utilisé comme onglet par l'éditeur de sites. Le |
+| [✍ `editor_sitesEditor_tags`](ge/extensions/editor/sitesEditor/tags.md) | 7 | Onglet 'Tags' de l'éditeur de sites (Location Tags, Zone Tags, Parking Spot Tags selon la clé). Le module renvoie un constructeur de classe  |
+| [✍ `editor_sitesEditor_zones`](ge/extensions/editor/sitesEditor/zones.md) | 15 | Sous-éditeur 'Zones' de l'éditeur de sites. Le module renvoie un constructeur de classe C. Une zone est un polygone de sommets (vertices) av |
+| [✍ `editor_suspensionAudioDebug`](ge/extensions/editor/suspensionAudioDebug.md) | 6 | Petite fenêtre de débogage de l'éditeur (menu Audio) qui trace les sons de suspension du véhicule joueur. À chaque frame elle demande au véh |
+| [✍ `editor_terraform_fetchSources`](ge/extensions/editor/terraform/fetchSources.md) | 2 | Récupère les 'sources' que l'outil Terraform sait suivre : routes MeshRoad de la scène, routes RAT (Road Architect), splines mesh, splines d |
+| [✍ `editor_terraform_terraform`](ge/extensions/editor/terraform/terraform.md) | 18 | Moteur de terraformage du terrain de l'éditeur. Il modifie la heightmap du TerrainBlock pour l'aligner sur des 'sources' (bandes de route :  |
+| [✍ `editor_terraformTool`](ge/extensions/editor/terraformTool.md) | 17 | Façade de l'outil Terraform de l'éditeur de monde. Elle stocke cinq réglages (domaine d'influence, marge, falloff, rugosité, échelle de brui |
+| [✍ `editor_terrainAndRoadImporter`](ge/extensions/editor/terrainAndRoadImporter.md) | 7 | Outil de l'éditeur « Terrain And Road Importer » : importe un terrain depuis un PNG 16 bits en niveaux de gris (hauteur = valeur/65535 x zMa |
+| [✍ `editor_terrainEditor`](ge/extensions/editor/terrainEditor.md) | 46 | Éditeur de terrain du World Editor (mode d'édition « Terrain Tools », terrainToolsEditMode). Il gère les pinceaux de sculpture, de peinture  |
+| [✍ `editor_terrainMaterialsEditor`](ge/extensions/editor/terrainMaterialsEditor.md) | 3 | Fenêtre « Terrain Material Library » du World Editor : liste, édite, duplique, supprime et importe depuis un autre niveau les matériaux de t |
+| [✍ `editor_textEditor`](ge/extensions/editor/textEditor.md) | 4 | Extension de l'éditeur qui fournit une fenêtre « Text Editor » multiligne pour modifier le contenu texte d'un champ d'objet de la scène (ex. |
+| [✍ `editor_toolShortcuts`](ge/extensions/editor/toolShortcuts.md) | 3 | Fenêtre « Edit Mode Shortcuts » de l'éditeur : permet d'assigner un mode d'édition (editor.editModes) à chacune des touches F2 à F10 (9 empl |
+| [✍ `editor_toolUtilities_aabbPick`](ge/extensions/editor/toolUtilities/aabbPick.md) | 2 | Utilitaire de sélection par rayon contre des boîtes alignées sur les axes (AABB), sans allocation. Sert aux outils de l'éditeur qui doivent  |
+| [✍ `editor_toolUtilities_bake`](ge/extensions/editor/toolUtilities/bake.md) | 6 | Aide partagée « Bake » des outils de splines de l'éditeur. Tant qu'une spline appartient à son outil, ses objets générés (TSStatic, DecalRoa |
+| [✍ `editor_toolUtilities_cameraRig`](ge/extensions/editor/toolUtilities/cameraRig.md) | 6 | Rig de caméra réutilisable pour les outils de l'éditeur : état de panoramique (pan, vue quasi aérienne nord en haut) et d'orbite avec inerti |
+| [✍ `editor_toolUtilities_cornerHandles`](ge/extensions/editor/toolUtilities/cornerHandles.md) | 5 | Poignées dans le viewport pour les virages de la géométrie « engineered » des outils de route de l'éditeur : un bouton de rayon (à l'extérie |
+| [✍ `editor_toolUtilities_curveWiden`](ge/extensions/editor/toolUtilities/curveWiden.md) | 6 | Élargissement de chaussée dans les virages pour les routes « engineered » des outils de route de l'éditeur. Calcule, par station de la ligne |
+| [✍ `editor_toolUtilities_daeExport`](ge/extensions/editor/toolUtilities/daeExport.md) | 7 | Exporteur COLLADA (.dae 1.4.1) pour les pièces de kit « baked » des outils de l'éditeur. Sérialise des meshParts ({ verts, normals, uvs, fac |
+| [✍ `editor_toolUtilities_deckSweep`](ge/extensions/editor/toolUtilities/deckSweep.md) | 1 | « Deck sweep » : balaie une dalle bombée le long d'une ligne centrale quelconque pour produire UN mesh unique. La section (chaussée bombée à |
+| [✍ `editor_toolUtilities_dice`](ge/extensions/editor/toolUtilities/dice.md) | 2 | Tirage pseudo-aléatoire déterministe pour les outils de l'éditeur : à partir d'une graine (seed), d'un sel (salt) qui distingue plusieurs dé |
+| [✍ `editor_toolUtilities_edgeHandles`](ge/extensions/editor/toolUtilities/edgeHandles.md) | 6 | Utilitaire d'outils d'éditeur pour des poignées « portes » (gates) déplaçables le long du contour d'un polygone (ring : liste de points {x,y |
+| [✍ `editor_toolUtilities_engineeredGeom`](ge/extensions/editor/toolUtilities/engineeredGeom.md) | 9 | Géométrie de route « d'ingénieur » pour les outils d'édition de splines de l'éditeur : transforme la polyligne des noeuds d'une spline en ax |
+| [✍ `editor_toolUtilities_fenceStyles`](ge/extensions/editor/toolUtilities/fenceStyles.md) | 3 | Styles de clôture déclaratifs pour les outils de l'éditeur (clôtures, rambardes). Chaque style donne la hauteur de poteau (qui choisit la fo |
+| [✍ `editor_toolUtilities_fitPoly`](ge/extensions/editor/toolUtilities/fitPoly.md) | 1 | Utilitaire qui ordonne un ensemble non ordonné d'objets en une polyligne. Pour chaque point de départ possible, il construit un chemin glout |
+| [✍ `editor_toolUtilities_foliagePicker`](ge/extensions/editor/toolUtilities/foliagePicker.md) | 4 | Sélecteur imgui partagé d'espèces (ForestItemData du niveau) pour les outils de végétation de l'éditeur. Affiche une liste à cocher avec un  |
+| [✍ `editor_toolUtilities_foliageScatter`](ge/extensions/editor/toolUtilities/foliageScatter.md) | 18 | Moteur de plantation de végétation (objets Forest, ForestItemData) pour les outils de l'éditeur. Il disperse des instances dans un polygone  |
+| [✍ `editor_toolUtilities_geom`](ge/extensions/editor/toolUtilities/geom.md) | 113 | Bibliothèque géométrique des outils d'édition de splines de l'éditeur (routes, rails, clôtures, bâtiments) : interpolation de splines Catmul |
+| [✍ `editor_toolUtilities_gizmo`](ge/extensions/editor/toolUtilities/gizmo.md) | 2 | Gestion partagée du gizmo d'axes pour les outils d'édition de splines de l'éditeur. Place le gizmo sur le noeud sélectionné (ou sur une posi |
+| [✍ `editor_toolUtilities_gridCap`](ge/extensions/editor/toolUtilities/gridCap.md) | 2 | Construit un « chapeau » (capot) de triangles sur un contour qui doit suivre un champ de hauteur : une grille carrée alignée sur le fil (gra |
+| [✍ `editor_toolUtilities_groundBounds`](ge/extensions/editor/toolUtilities/groundBounds.md) | 6 | Répond aux questions que tout outil de l'éditeur posant une surface sur un contour dessiné au sol doit se poser : qu'est-ce qui est déjà là  |
+| [✍ `editor_toolUtilities_groundClaims`](ge/extensions/editor/toolUtilities/groundClaims.md) | 7 | Registre partagé des « revendications de terrain » entre les outils de l'éditeur qui posent des surfaces sur le terrain. Chaque outil publie |
+| [✍ `editor_toolUtilities_groundPanel`](ge/extensions/editor/toolUtilities/groundPanel.md) | 3 | Panneau imgui des réglages du terraformage partagé (groundPass), dessiné à l'identique dans l'onglet Terrain de chaque outil de l'éditeur. I |
+| [✍ `editor_toolUtilities_groundPass`](ge/extensions/editor/toolUtilities/groundPass.md) | 13 | Le terraformage unique du terrain sur lequel les outils de l'éditeur posent leurs objets. Les réseaux routier et ferré sont creusés ensemble |
+| [✍ `editor_toolUtilities_kerbSpec`](ge/extensions/editor/toolUtilities/kerbSpec.md) | 1 | Section unique de bordure (kerb) et de trottoir (footway) à laquelle tous les outils de l'éditeur construisent, et pierre dont elles sont ta |
+| [✍ `editor_toolUtilities_kitPlacer`](ge/extensions/editor/toolUtilities/kitPlacer.md) | 27 | Placeur partagé de pièces de kit (fichiers .dae cuits) pour les outils de construction de l'éditeur (rues, bâtiments, ponts). Une pièce peut |
+| [✍ `editor_toolUtilities_marchingCubes`](ge/extensions/editor/toolUtilities/marchingCubes.md) | 1 | Extraction de surface par marching cubes (Lorensen & Cline 1987, tables d'après Paul Bourke) : produit un maillage de triangles à partir d'u |
+| [✍ `editor_toolUtilities_matCombo`](ge/extensions/editor/toolUtilities/matCombo.md) | 1 | Sélecteur imgui de couche de matériau de terrain (liste déroulante) pour les outils de l'éditeur. Les couches sont indexées à partir de 0, c |
+| [✍ `editor_toolUtilities_materialSelectionMgr`](ge/extensions/editor/toolUtilities/materialSelectionMgr.md) | 5 | Fenêtre imgui « Material Selector » (300 x 500) pour choisir un matériau, avec vignettes et barre de recherche. Utilisée par les outils de d |
+| [✍ `editor_toolUtilities_meshAuditionMgr`](ge/extensions/editor/toolUtilities/meshAuditionMgr.md) | 11 | Utilitaire d'« audition » de meshes statiques et fenêtre imgui de sélection, partagé entre outils de l'éditeur. Il liste les fichiers .dae ( |
+| [✍ `editor_toolUtilities_meshPart`](ge/extensions/editor/toolUtilities/meshPart.md) | 20 | Assemblage générique de « parts » de maillage pour les pièces de kit cuites (bridgeKit, islandKit, etc.). Une part est { verts, normals, uvs |
+| [✍ `editor_toolUtilities_meshStats`](ge/extensions/editor/toolUtilities/meshStats.md) | 4 | Diagnostic du poids de maillage lors d'un import (importeur de ville/réseau de l'éditeur). Distingue la géométrie UNIQUE (ProceduralMesh : b |
+| [✍ `editor_toolUtilities_networkState`](ge/extensions/editor/toolUtilities/networkState.md) | 15 | Tableau d'échange entre le réseau routier de l'éditeur et les outils qui construisent contre lui (parcelles, trottoirs, parkings). Le réseau |
+| [✍ `editor_toolUtilities_noise`](ge/extensions/editor/toolUtilities/noise.md) | 3 | Bruit fractal partagé en coordonnées monde pour les outils de terrain et de maillage de l'éditeur (terraform, éditeur de route héros). Sourc |
+| [✍ `editor_toolUtilities_occupancy`](ge/extensions/editor/toolUtilities/occupancy.md) | 23 | Grille d'occupation 2D grossière (cellules de 1 m) partagée par l'écartement des piles de pont et celui de la végétation. Les routes (groupe |
+| [✍ `editor_toolUtilities_panCamera`](ge/extensions/editor/toolUtilities/panCamera.md) | 7 | Caméra « pan » partagée par les outils de splines de l'éditeur. Elle prend la main sur la caméra libre de l'éditeur (via toolCamera), passe  |
+| [✍ `editor_toolUtilities_perlin`](ge/extensions/editor/toolUtilities/perlin.md) | 1 | Bruit de Perlin 2D classique (table de permutation fixe de 256 entrées, courbe fade de Perlin améliorée), déterministe. Sert aux outils de l |
+| [✍ `editor_toolUtilities_polyBool`](ge/extensions/editor/toolUtilities/polyBool.md) | 3 | Booléens 2D sur polygones (union, différence), maison, de type Martinez, adaptés de l'approche polybooljs (MIT). Un polygone est une table { |
+| [✍ `editor_toolUtilities_polyOffset`](ge/extensions/editor/toolUtilities/polyOffset.md) | 4 | Décalage latéral d'une polyligne 2D dont chaque arête porte une normale sortante. Gère les coins par jonction en onglet (miter), en chanfrei |
+| [✍ `editor_toolUtilities_polygon`](ge/extensions/editor/toolUtilities/polygon.md) | 10 | Utilitaire de l'éditeur pour dessiner et modifier à la souris un polygone défini par l'utilisateur sur la carte (posé sur le terrain). Un se |
+| [✍ `editor_toolUtilities_polygonPaint`](ge/extensions/editor/toolUtilities/polygonPaint.md) | 6 | Outil de polygone à main levée pour l'éditeur : l'utilisateur maintient le clic gauche et glisse sur le terrain pour poser des points, relâc |
+| [✍ `editor_toolUtilities_profileSweep`](ge/extensions/editor/toolUtilities/profileSweep.md) | 2 | Balayage de profil : des bandes 2D ouvertes (latéral y, hauteur z) sont balayées le long d'une suite de stations portant chacune leur repère |
+| [✍ `editor_toolUtilities_rdp`](ge/extensions/editor/toolUtilities/rdp.md) | 6 | Implémentation optimisée de l'algorithme de Ramer-Douglas-Peucker (RDP) pour simplifier des polylignes ayant trop de points. Utilise la dist |
+| [✍ `editor_toolUtilities_regionStyles`](ge/extensions/editor/toolUtilities/regionStyles.md) | 1 | Style de peinture de marquage routier pour une région. Pour l'instant une seule région est définie : USA (circulation à droite). Donne les m |
+| [✍ `editor_toolUtilities_render_graph`](ge/extensions/editor/toolUtilities/render/graph.md) | 7 | Rendu des barres de vitesse et du graphe de navigation IA (lignée roadArchitect / drivePath) : barres et courbe de vitesses, sélection de nœ |
+| [✍ `editor_toolUtilities_render_lines`](ge/extensions/editor/toolUtilities/render/lines.md) | 29 | Dessin de lignes de debug pour les outils d'édition de splines de l'éditeur (issu de l'ancien render.lua monolithique). Chaque fonction trac |
+| [✍ `editor_toolUtilities_render_markup`](ge/extensions/editor/toolUtilities/render/markup.md) | 48 | Étiquettes de texte en 3D pour les outils d'édition de splines (issu de l'ancien render.lua). Fournit les primitives de texte (filtré ou non |
+| [✍ `editor_toolUtilities_render_spheres`](ge/extensions/editor/toolUtilities/render/spheres.md) | 30 | Dessin de sphères et de poignées de debug pour les outils d'édition de splines (issu de l'ancien render.lua). Module feuille : dépend de uti |
+| [✍ `editor_toolUtilities_render_spline`](ge/extensions/editor/toolUtilities/render/spline.md) | 13 | Rendu fil de fer et surfaces des splines et couches pour les outils d'édition de splines (l'essentiel de l'ancien render.lua). Module compos |
+| [✍ `editor_toolUtilities_render_transport`](ge/extensions/editor/toolUtilities/render/transport.md) | 12 | Rendu propre aux réseaux de transport et à l'éditeur de routes : centres de jonction, extrémités liées, fil de fer du ruban de route, candid |
+| [✍ `editor_toolUtilities_render_tris`](ge/extensions/editor/toolUtilities/render/tris.md) | 6 | Dessin de triangles pleins pour les outils d'édition de splines (issu de l'ancien render.lua). Triangles filtrés à 600 m de la caméra, rempl |
+| [✍ `editor_toolUtilities_ribbonInput`](ge/extensions/editor/toolUtilities/ribbonInput.md) | 2 | Gestion des événements souris et clavier pour les splines « ruban » des outils d'édition de l'éditeur. Un ruban est une spline posée en pair |
+| [✍ `editor_toolUtilities_roadDesignStandards`](ge/extensions/editor/toolUtilities/roadDesignStandards.md) | 2 | Normes de conception routière partagées par plusieurs outils de l'éditeur. Définit six préréglages ordonnés, du plus rigoureux au plus rusti |
+| [✍ `editor_toolUtilities_roadPlaceables`](ge/extensions/editor/toolUtilities/roadPlaceables.md) | 15 | Contrôleur partagé d'éléments « posables » pour les outils de route à splines de l'éditeur : placer, sélectionner, glisser et éditer des élé |
+| [✍ `editor_toolUtilities_roadsideProps`](ge/extensions/editor/toolUtilities/roadsideProps.md) | 12 | Placeur partagé de lignes d'objets en bord de route (glissières, barrières, clôtures, lampadaires, bornes, poubelles, abri-bus…). Une table  |
+| [✍ `editor_toolUtilities_session`](ge/extensions/editor/toolUtilities/session.md) | 14 | Aide partagée de sauvegarde et chargement de session pour les outils personnalisés de splines et de zones de l'éditeur. Elle gère ce qui est |
+| [✍ `editor_toolUtilities_simplex`](ge/extensions/editor/toolUtilities/simplex.md) | 1 | Bruit simplex 2D (grille simpliciale de Perlin) avec table de permutation fixe, donc déterministe. Optimisé pour des millions d'échantillons |
+| [✍ `editor_toolUtilities_simplex3`](ge/extensions/editor/toolUtilities/simplex3.md) | 1 | Bruit simplex 3D (grille simpliciale de Ken Perlin, d'après la référence de Stefan Gustavson). Déterministe, continu avec dérivée première c |
+| [✍ `editor_toolUtilities_siteAssets`](ge/extensions/editor/toolUtilities/siteAssets.md) | 16 | Les « étagères » (bibliothèque sur disque) d'où viennent les sites posés : bâtiments, espaces ouverts, parkings. Trois éditeurs y cuisent le |
+| [✍ `editor_toolUtilities_siteBake`](ge/extensions/editor/toolUtilities/siteBake.md) | 12 | Transforme ce qu'un éditeur vient de construire dans le monde en ce que porte un manifeste de site. Un site est conçu à un endroit de la car |
+| [✍ `editor_toolUtilities_siteDecals`](ge/extensions/editor/toolUtilities/siteDecals.md) | 8 | Décalques estampillés tels qu'un site les porte : flèches de circulation, texte EXIT peint, rustines de réparation d'asphalte. Ce sont des g |
+| [✍ `editor_toolUtilities_siteLibrary`](ge/extensions/editor/toolUtilities/siteLibrary.md) | 1 | Save, Save As et Open pour les outils de site à document unique. Un bâtiment massing, un espace ouvert et un parking sont chacun UN document |
+| [✍ `editor_toolUtilities_siteLights`](ge/extensions/editor/toolUtilities/siteLights.md) | 4 | Un seul endroit qui transforme un enregistrement de lumière en objet de scène, pour tous les outils de la suite. Chaque lumière est une lumi |
+| [✍ `editor_toolUtilities_siteMarks`](ge/extensions/editor/toolUtilities/siteMarks.md) | 5 | Marquages routiers tels qu'un site les porte : lignes de places, hachures, barres de cédez-le-passage, lignes d'axe d'allée, traces d'usure  |
+| [✍ `editor_toolUtilities_sitePad`](ge/extensions/editor/toolUtilities/sitePad.md) | 14 | Une plate-forme de terrain plane (« pad ») sur laquelle un outil de site peut dessiner, et le sol propre du site taillé dedans. enter aplati |
+| [✍ `editor_toolUtilities_siteSpots`](ge/extensions/editor/toolUtilities/siteSpots.md) | 4 | Places de stationnement telles qu'un site les porte et telles que le niveau les relit dans son fichier de sites. Une place n'est ni de la gé |
+| [✍ `editor_toolUtilities_siteView`](ge/extensions/editor/toolUtilities/siteView.md) | 13 | Gère la caméra des outils d'éditeur à contour (open space editor, parking lot editor) : quelle étape d'édition est affichée (Footprint ou De |
+| [✍ `editor_toolUtilities_siteWater`](ge/extensions/editor/toolUtilities/siteWater.md) | 5 | Eau stagnante et en chute d'un « site » (open space editor) : bassins d'une cascade, nappes qui débordent entre eux, jets, gerbes et jets d' |
+| [✍ `editor_toolUtilities_skeleton`](ge/extensions/editor/toolUtilities/skeleton.md) | 4 | Suite d'utilitaires pour squelettiser et vectoriser des masques binaires. La fonction principale getPathsFromPng convertit un PNG en masque, |
+| [✍ `editor_toolUtilities_splineInput`](ge/extensions/editor/toolUtilities/splineInput.md) | 8 | Gestion partagée de la souris et du clavier pour tous les outils d'édition de splines de l'éditeur (une spline est une polyligne éditable le |
+| [✍ `editor_toolUtilities_splineLock`](ge/extensions/editor/toolUtilities/splineLock.md) | 7 | État de verrouillage partagé par les outils de splines personnalisés de l'éditeur. Une spline verrouillée (isEnabled == false) reste dans so |
+| [✍ `editor_toolUtilities_splineMaskExport`](ge/extensions/editor/toolUtilities/splineMaskExport.md) | 1 | Exporte des surfaces de rubans (splines) sous forme de masque PNG 16 bits (GFXFormatR16) à la taille de la grille du terrain. Chaque texel v |
+| [✍ `editor_toolUtilities_statsFooter`](ge/extensions/editor/toolUtilities/statsFooter.md) | 2 | Pied de page de statistiques partagé par les outils « kit » de l'éditeur : affiche des stats « Libellé N » en ImGui et la ligne dynamique de |
+| [✍ `editor_toolUtilities_style`](ge/extensions/editor/toolUtilities/style.md) | 2 | Réglages de style des outils de splines de l'éditeur : couleurs 3D (curseur, nœuds, jonctions, splines, poignées, fils de prévisualisation)  |
+| [✍ `editor_toolUtilities_surfaceKit`](ge/extensions/editor/toolUtilities/surfaceKit.md) | 12 | Kit partagé pour peindre des groundmodels (physique) sur des routes en mesh (mode groundmodel du Hero Road Editor). Le groundmodel est dédui |
+| [✍ `editor_toolUtilities_sweep`](ge/extensions/editor/toolUtilities/sweep.md) | 20 | Géométrie par balayage (loft) pour les outils de bâtiment de l'éditeur : une pièce est une section (polygone 2D en coordonnées (s, t)) et un |
+| [✍ `editor_toolUtilities_terrainPainter`](ge/extensions/editor/toolUtilities/terrainPainter.md) | 4 | Peint le matériau de terrain sous une spline (route) et permet d'annuler. Calcule l'emprise de la route (bord réel du tablier pour les route |
+| [✍ `editor_toolUtilities_terrainPolyPaint`](ge/extensions/editor/toolUtilities/terrainPolyPaint.md) | 6 | Peinture de matériau de terrain sur un anneau polygonal (remplissage par lignes de balayage) ou sur une liste de cellules, avec un enregistr |
+| [✍ `editor_toolUtilities_toolCamera`](ge/extensions/editor/toolUtilities/toolCamera.md) | 7 | Caméra d'outil réutilisable : prend la main sur la caméra de l'éditeur avec la caméra pilotée par script 'scriptedFree' de BeamNG, la pilote |
+| [✍ `editor_toolUtilities_triLive`](ge/extensions/editor/toolUtilities/triLive.md) | 5 | Compteur de triangles réellement dessinés par un « kit » (pièces instanciées), vu depuis la caméra : chaque instance est comptée au LOD qu'e |
+| [✍ `editor_toolUtilities_uiRows`](ge/extensions/editor/toolUtilities/uiRows.md) | 8 | Formes de lignes ImGui dont sont faits les panneaux des outils d'éditeur : un slider précédé de son bouton de réinitialisation, un libellé d |
+| [✍ `editor_toolUtilities_util`](ge/extensions/editor/toolUtilities/util.md) | 45 | Boîte à outils commune aux outils de splines et de « sites » de l'éditeur : souris et raycasts (position sur la carte, sur le terrain, sur u |
+| [✍ `editor_toolUtilities_walkRibbon`](ge/extensions/editor/toolUtilities/walkRibbon.md) | 5 | Génère un trottoir bordé (bordure et dalles) balayé le long de deux rails, sous forme d'un seul mesh unique, pour les outils de routes de l' |
+| [✍ `editor_trafficDebug`](ge/extensions/editor/trafficDebug.md) | 4 | Fenêtre d'éditeur « Traffic Debug » (menu Window > Debug) pour inspecter et régler le système de trafic de gameplay_traffic. Deux onglets :  |
+| [✍ `editor_trafficGatedRoadsEditor`](ge/extensions/editor/trafficGatedRoadsEditor.md) | 10 | Éditeur « Traffic Gated Roads » (menu Traffic) : place des sphères (affichées comme des cylindres verticaux de 20 m de haut, rayon réglable) |
+| [✍ `editor_trafficManager`](ge/extensions/editor/trafficManager.md) | 13 | Éditeur « Traffic Manager » : permet de composer une session de trafic (véhicules et props placés sur la carte, feux de signalisation, panne |
+| [✍ `editor_trafficSignalsEditor`](ge/extensions/editor/trafficSignalsEditor.md) | 11 | Éditeur de feux de signalisation (fenêtre « Traffic Signals Editor », menu Window > Gameplay, mode d'édition signalsEditMode). Permet de cré |
+| [✍ `editor_treeSpline`](ge/extensions/editor/treeSpline.md) | 9 | Outil Tree Spline de l'éditeur : on dessine une polyligne éditable sur le terrain et l'outil plante une rangée régulière d'arbres/arbustes ( |
+| [✍ `editor_treeSpline_populate`](ge/extensions/editor/treeSpline/populate.md) | 4 | Sous-module de l'outil Tree Spline de l'éditeur : plante ou retire les arbres (instances Forest) le long d'une spline. S'appuie sur editor/t |
+| [✍ `editor_treeSpline_splineMgr`](ge/extensions/editor/treeSpline/splineMgr.md) | 33 | Gestionnaire de données de l'outil Tree Spline : détient la liste des splines d'arbres (treeSplines) et la table id -> index (splineMap), cr |
+| [✍ `editor_undoHistory`](ge/extensions/editor/undoHistory.md) | 3 | Fenêtre d'éditeur « Undo History » : affiche côte à côte la pile d'annulation (editor.history.undoStack) et la pile de rétablissement (redoS |
+| [✍ `editor_util_customFieldsUtil`](ge/extensions/editor/util/customFieldsUtil.md) | 9 | Aide d'éditeur : widget imgui pour éditer des tags et des champs personnalisés (nom, valeur, type) d'un objet de type gameplay/util/customFi |
+| [✍ `editor_util_editorElementHelper`](ge/extensions/editor/util/editorElementHelper.md) | 36 | Aide d'éditeur qui construit des formulaires imgui pilotés par des « éléments » déclarés (numérique, texte, booléen, transform 3D, modèle/co |
+| [✍ `editor_util_plotHelperUtil`](ge/extensions/editor/util/plotHelperUtil.md) | 26 | Aide d'éditeur : graphique 2D imgui (grille, axes, points, courbe Catmull-Rom optionnelle, réticule, annotations verticales) avec déplacemen |
+| [✍ `editor_util_searchUtil`](ge/extensions/editor/util/searchUtil.md) | 13 | Aide d'éditeur pour la recherche floue avec classement « frecency » (fréquence/récence d'usage). Le module renvoie un constructeur : require |
+| [✍ `editor_util_transformUtil`](ge/extensions/editor/util/transformUtil.md) | 34 | Classe utilitaire de l'éditeur : un « assistant de transformation » (position vec3, rotation quat, échelle vec3 ou nombre) avec gizmo d'axes |
+| [✍ `editor_util_vehicleFilterUtil`](ge/extensions/editor/util/vehicleFilterUtil.md) | 4 | Élément d'interface de l'éditeur de missions (via editorElementHelper) pour définir un filtre de véhicules : un filtre de base (whiteList/bl |
+| [✍ `editor_util_vehicleSelectUtil`](ge/extensions/editor/util/vehicleSelectUtil.md) | 16 | Classe utilitaire imgui de l'éditeur : un sélecteur de véhicule en cascade Type > Modèle > Config, avec en option jusqu'à 3 peintures (paint |
+| [✍ `editor_util_zoneSelectorUtil`](ge/extensions/editor/util/zoneSelectorUtil.md) | 4 | Élément d'interface de l'éditeur de missions (via editorElementHelper) pour choisir des zones de garage : « Initial Zones » (où le joueur pe |
+| [✍ `editor_veMain`](ge/extensions/editor/veMain.md) | 11 | Noyau du Vehicle Editor (éditeur de véhicule, modes statique et live). L'extension s'enregistre aussi comme globale `vEditor` : elle y stock |
+| [✍ `editor_vehicleBridgeTest`](ge/extensions/editor/vehicleBridgeTest.md) | 3 | Petite fenêtre de test de `core_vehicleBridge` dans l'éditeur (menu Window > Vehicles > 'Vehicle Bridge Test'). On choisit un véhicule (ID o |
+| [✍ `editor_vehicleDetailViewer`](ge/extensions/editor/vehicleDetailViewer.md) | 7 | Outil d'éditeur « Vehicle Detail Viewer » (menu Window > Vehicles, aussi F11 > Window > Experimental). Ouvre des fenêtres imgui qui affichen |
+| [✍ `editor_vehicleEditor_api_nodeTransformer`](ge/extensions/editor/vehicleEditor/api/nodeTransformer.md) | 1 | Aide du Vehicle Editor pour déplacer les nœuds sélectionnés (vEditor.selectedNodes) avec le gizmo d'axes de l'éditeur. Le gizmo est centré s |
+| [✍ `editor_vehicleEditor_api_powerTrainUtils`](ge/extensions/editor/vehicleEditor/api/powerTrainUtils.md) | 4 | Fonctions d'affichage imgui partagées par l'inspecteur de transmission du Vehicle Editor (vePowerTrain). Elles montrent les données jbeam d' |
+| [✍ `editor_vehicleEditor_liveEditor_veAeroDebug`](ge/extensions/editor/vehicleEditor/liveEditor/veAeroDebug.md) | 7 | Fenêtre 'Vehicle Aero Debug' du Vehicle Editor live. Active l'extension véhicule `aeroDebug` (extensions.aeroDebug.enable()), lit getAeroDat |
+| [✍ `editor_vehicleEditor_liveEditor_veCrashTester`](ge/extensions/editor/vehicleEditor/liveEditor/veCrashTester.md) | 4 | Outil 'Other/Crash Tester' du Vehicle Editor live. On choisit un point de départ sur le terrain (molette = rotation par pas de 5°), un nombr |
+| [✍ `editor_vehicleEditor_liveEditor_veFlexbodyDebug`](ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.md) | 7 | Fenêtre 'Flexbody Debug' du Vehicle Editor live, pour diagnostiquer les flexbodies (meshes déformables) du véhicule. Onglet 'Single Flexmesh |
+| [✍ `editor_vehicleEditor_liveEditor_veGeneralData`](ge/extensions/editor/vehicleEditor/liveEditor/veGeneralData.md) | 4 | Fenêtre 'General Data' du Vehicle Editor live. Chaque frame, elle envoie au VM du véhicule une commande qui renvoie (via obj:queueGameEngine |
+| [✍ `editor_vehicleEditor_liveEditor_veJBeamPicker`](ge/extensions/editor/vehicleEditor/liveEditor/veJBeamPicker.md) | 8 | Fenêtre 'JBeam Picker' du Vehicle Editor live : permet de choisir des nœuds et des poutres du véhicule (à la souris, ou par saisie d'ID/nom  |
+| [✍ `editor_vehicleEditor_liveEditor_veLightsDebug`](ge/extensions/editor/vehicleEditor/liveEditor/veLightsDebug.md) | 5 | Fenêtre 'Lights Debug' du Vehicle Editor live. Dessine avec debugDrawer les props lumineux du véhicule (vdata.props dont mesh vaut SPOTLIGHT |
+| [✍ `editor_vehicleEditor_liveEditor_veNodeTriSelfCollisionDetector`](ge/extensions/editor/vehicleEditor/liveEditor/veNodeTriSelfCollisionDetector.md) | 5 | Fenêtre 'Node Triangle Self Collision Detector' du Vehicle Editor live. Le bouton 'Start Analysis' teste, pour chaque triangle collidable, q |
+| [✍ `editor_vehicleEditor_liveEditor_vePowerTrain`](ge/extensions/editor/vehicleEditor/liveEditor/vePowerTrain.md) | 6 | Fenêtre 'Powertrain' (Powertrain Inspector) du Vehicle Editor live. Chaque frame elle demande au véhicule powertrain.serializeDevicesInfo()  |
+| [✍ `editor_vehicleEditor_liveEditor_vePropTransformer`](ge/extensions/editor/vehicleEditor/liveEditor/vePropTransformer.md) | 7 | Fenêtre 'Prop Transformer' du Vehicle Editor live : permet de choisir un prop (pièce visuelle comme un rétroviseur ou une lampe) du véhicule |
+| [✍ `editor_vehicleEditor_liveEditor_veRawData`](ge/extensions/editor/vehicleEditor/liveEditor/veRawData.md) | 4 | Fenêtre 'Raw Vehicle Data' du Vehicle Editor live : affiche sous forme d'arbre imgui récursif toute la table vEditor.vehData (données du véh |
+| [✍ `editor_vehicleEditor_liveEditor_veTCSDebug`](ge/extensions/editor/vehicleEditor/liveEditor/veTCSDebug.md) | 6 | Fenêtre 'TCS Debug' du Vehicle Editor live : trace en temps réel (600 points d'historique) les données de contrôle de traction du premier co |
+| [✍ `editor_vehicleEditor_liveEditor_veVehicleSpawner`](ge/extensions/editor/vehicleEditor/liveEditor/veVehicleSpawner.md) | 5 | Outil 'Other/Vehicle Spawner' du Vehicle Editor live. Au chargement de l'éditeur il mémorise jusqu'à 20 véhicules (Car ou Truck) de core_veh |
+| [✍ `editor_vehicleEditor_liveEditor_veView`](ge/extensions/editor/vehicleEditor/liveEditor/veView.md) | 4 | Vues de scène multiples de l'éditeur de véhicule en mode Live. Chaque « Scene View N » est une fenêtre ImGui qui affiche une caméra de rendu |
+| [✍ `editor_vehicleEditor_staticEditor_veJBeamBeautifier`](ge/extensions/editor/vehicleEditor/staticEditor/veJBeamBeautifier.md) | 4 | Application « JBeam Beautifier » du Static Editor. Elle reformate des fichiers .jbeam (un fichier ou un dossier entier) en alignant en colon |
+| [✍ `editor_vehicleEditor_staticEditor_veJBeamModifierLeakVis`](ge/extensions/editor/vehicleEditor/staticEditor/veJBeamModifierLeakVis.md) | 4 | Application « JBeam Modifier Leaking Visualizer » du Static Editor. En JBeam, un modificateur (par exemple beamSpring, nodeWeight, frictionC |
+| [✍ `editor_vehicleEditor_staticEditor_veJBeamSpellchecker`](ge/extensions/editor/vehicleEditor/staticEditor/veJBeamSpellchecker.md) | 4 | Application « JBeam Spellchecker » du Static Editor. Le bouton « Start Analysis » parcourt tous les fichiers *.jbeam du dossier vehicles et  |
+| [✍ `editor_vehicleEditor_staticEditor_veJBeamTableVis`](ge/extensions/editor/vehicleEditor/staticEditor/veJBeamTableVis.md) | 4 | Application « JBeam Table Visualizer » du Static Editor de l'éditeur de véhicule. Elle charge un fichier .jbeam choisi via un sélecteur de f |
+| [✍ `editor_vehicleEditor_staticEditor_veJBeamVariablesChecker`](ge/extensions/editor/vehicleEditor/staticEditor/veJBeamVariablesChecker.md) | 4 | Application « JBeam Variables Checker » du Static Editor. Le bouton « Start Analysis » parcourt tous les dossiers de véhicules, lit leurs fi |
+| [✍ `editor_vehicleEditor_staticEditor_vePartList`](ge/extensions/editor/vehicleEditor/staticEditor/vePartList.md) | 5 | Fenêtre « Part List » du Static Editor de l'éditeur de véhicule. Elle liste les parties JBeam disponibles du véhicule chargé (ou seulement l |
+| [✍ `editor_vehicleEditor_staticEditor_vePartPropertyView`](ge/extensions/editor/vehicleEditor/staticEditor/vePartPropertyView.md) | 3 | Fenêtre « Part Properties » du Static Editor. Elle affiche dans un inspecteur générique les propriétés scalaires (hors tables) de la table s |
+| [✍ `editor_vehicleEditor_staticEditor_vePartTextView`](ge/extensions/editor/vehicleEditor/staticEditor/vePartTextView.md) | 3 | Fenêtre « Part Text View » du Static Editor. Elle affiche le fichier JBeam de la partie sélectionnée comme une suite de nœuds d'arbre syntax |
+| [✍ `editor_vehicleEditor_staticEditor_vePartTree`](ge/extensions/editor/vehicleEditor/staticEditor/vePartTree.md) | 4 | Fenêtre « Part Tree » du Static Editor. Elle lit le fichier JBeam de la partie sélectionnée, le parse en AST (json-ast, avec les données Lua |
+| [✍ `editor_vehicleEditor_staticEditor_veStaticRenderView`](ge/extensions/editor/vehicleEditor/staticEditor/veStaticRenderView.md) | 14 | Vues de rendu du Static Editor de l'éditeur de véhicule. Chaque fenêtre « Static Render View##N » possède deux RenderViews (la vue principal |
+| [✍ `editor_vehicleEditor_veToolbar`](ge/extensions/editor/vehicleEditor/veToolbar.md) | 2 | Barre d'outils de l'éditeur de véhicule (Vehicle Editor). Elle affiche deux onglets, « Static Editor » et « Live Editor » (un clic change vE |
+| [✍ `editor_vehicleUiTextureDebug`](ge/extensions/editor/vehicleUiTextureDebug.md) | 2 | Outil de debug de l'éditeur (menu Window > Vehicles > « Vehicle UI Textures »). Il liste les véhicules, puis les tags de textures UI HTML (é |
+| [✍ `editor_visualization`](ge/extensions/editor/visualization.md) | 4 | Fenêtre « Visualization » de l'éditeur de monde. Trois onglets : Debug (cases à cocher pour les types de visualisation enregistrés : wirefra |
+| [✍ `editor_vizHelper`](ge/extensions/editor/vizHelper.md) | 9 | Petit outil pour les level designers (menu Debug > « Viz Helper ») : il pose des décalcomanies (decals) dynamiques d'images prises dans art/ |
+| [✍ `editor_waterObjectHelper`](ge/extensions/editor/waterObjectHelper.md) | 1 | Petite extension de l'éditeur de monde : quand on modifie dans l'inspecteur un champ de texture d'un objet d'eau, elle recharge les textures |
+| [✍ `editor_windows`](ge/extensions/editor/windows.md) | 2 | Fenêtre « Windows » de l'éditeur (menu Window > Window Position Reset...). Elle liste toutes les fenêtres enregistrées de l'éditeur (editor. |
+| [✍ `flowgraph_baseModule`](ge/extensions/flowgraph/baseModule.md) | 8 | Classe de base des modules du gestionnaire flowgraph (les « modules » attachés au manager, par opposition aux nœuds). Elle définit une class |
+| [✍ `flowgraph_baseStateNode`](ge/extensions/flowgraph/baseStateNode.md) | 5 | Classe de base des nœuds d'un graphe d'états (state graph) du flowgraph. Elle étend flowgraph/basenode en ajoutant huit pins de type « trans |
+| [✍ `flowgraph_basenode`](ge/extensions/flowgraph/basenode.md) | 81 | Classe de base de tous les nœuds flowgraph. Elle crée les pins à partir de C.pinSchema du nœud dérivé, gère les comportements (once, duratio |
+| [✍ `flowgraph_builder`](ge/extensions/flowgraph/builder.md) | 18 | Constructeur de nœuds de l'éditeur flowgraph (portage Lua en cours d'une classe C++ de l'exemple blueprints de imgui-node-editor). Il organi |
+| [✍ `flowgraph_graph`](ge/extensions/flowgraph/graph.md) | 42 | Classe 'graph' du flowgraph : un graphe de nœuds et de liens appartenant à un manager (self.mgr). Un graphe a un type ('graph', 'macro' ou ' |
+| [✍ `flowgraph_groupHelper`](ge/extensions/flowgraph/groupHelper.md) | 9 | Aide de l'éditeur flowgraph pour grouper et dégrouper des nœuds sélectionnés. Pour un graphe de flux, le groupe devient un sous-graphe (ou s |
+| [✍ `flowgraph_link`](ge/extensions/flowgraph/link.md) | 10 | Classe 'link' du flowgraph : un lien entre une pin de sortie (sourcePin) et une pin d'entrée (targetPin) de deux nœuds d'un graphe. À la cré |
+| [✍ `flowgraph_manager`](ge/extensions/flowgraph/manager.md) | 83 | Classe 'manager' du flowgraph : un manager représente UN projet flowgraph (graphes, macros, variables, modules, historique, état d'exécution |
+| [✍ `flowgraph_modules_actionModule`](ge/extensions/flowgraph/modules/actionModule.md) | 18 | Module flowgraph (moduleOrder 0) qui bloque ou autorise des actions d'entrée (input actions) pendant l'exécution d'un projet flowgraph. Il g |
+| [✍ `flowgraph_modules_aiRecordingModule`](ge/extensions/flowgraph/modules/aiRecordingModule.md) | 22 | Module flowgraph (moduleOrder 1, après missionReplayModule) qui enregistre ou rejoue le parcours IA (script AI) du véhicule joueur pour les  |
+| [✍ `flowgraph_modules_buttonModule`](ge/extensions/flowgraph/modules/buttonModule.md) | 20 | Module flowgraph (moduleOrder 0) qui gère des boutons personnalisés affichés dans l'interface pendant un projet flowgraph. Chaque bouton a u |
+| [✍ `flowgraph_modules_cameraModule`](ge/extensions/flowgraph/modules/cameraModule.md) | 34 | Module flowgraph (moduleOrder -500, donc l'un des premiers) qui gère les trajectoires de caméra (camPath) pendant un projet. Il charge un fi |
+| [✍ `flowgraph_modules_driftModule`](ge/extensions/flowgraph/modules/driftModule.md) | 22 | Module flowgraph (moduleOrder 0, dépend de gameplay_drift_general) qui relaie les évènements du gameplay de drift vers les nœuds flowgraph.  |
+| [✍ `flowgraph_modules_fileModule`](ge/extensions/flowgraph/modules/fileModule.md) | 18 | Module flowgraph (moduleOrder 0) qui lit et écrit de petits fichiers de sauvegarde JSON propres aux projets flowgraph. Les fichiers sont sto |
+| [✍ `flowgraph_modules_foreachModule`](ge/extensions/flowgraph/modules/foreachModule.md) | 10 | Module flowgraph (moduleOrder 1000, donc exécuté en dernier) réservé aux graphes enfants créés par une boucle foreach. Il ne contient que le |
+| [✍ `flowgraph_modules_levelModule`](ge/extensions/flowgraph/modules/levelModule.md) | 16 | Module flowgraph (moduleOrder 100) qui synchronise les actions d'un projet avec le chargement d'un niveau. Il permet de différer une fonctio |
+| [✍ `flowgraph_modules_missionModule`](ge/extensions/flowgraph/modules/missionModule.md) | 20 | Module flowgraph (moduleOrder -100) qui lie un projet flowgraph à la mission qui l'a lancé (self.mgr.activity). Il gère les véhicules de mis |
+| [✍ `flowgraph_modules_missionReplayModule`](ge/extensions/flowgraph/modules/missionReplayModule.md) | 36 | Module flowgraph (moduleOrder 0) qui enregistre automatiquement des replays de missions (fichiers .rpl). Il applique les limites de stockage |
+| [✍ `flowgraph_modules_prefabModule`](ge/extensions/flowgraph/modules/prefabModule.md) | 28 | Module flowgraph (moduleOrder 50) qui fait apparaître, suit et supprime des prefabs (groupes d'objets de scène .prefab.json) pendant un proj |
+| [✍ `flowgraph_modules_threadModule`](ge/extensions/flowgraph/modules/threadModule.md) | 18 | Module flowgraph (moduleOrder 1000) qui permet à un projet flowgraph d'en lancer d'autres (projets enfants) et d'échanger des messages avec  |
+| [✍ `flowgraph_modules_timerModule`](ge/extensions/flowgraph/modules/timerModule.md) | 30 | Module flowgraph (moduleOrder 0) qui gère des minuteurs. Il tient trois horloges globales cumulées (real, sim, raw) mises à jour par onUpdat |
+| [✍ `flowgraph_modules_trafficModule`](ge/extensions/flowgraph/modules/trafficModule.md) | 20 | Module flowgraph (moduleOrder 0) qui enveloppe gameplay_traffic et gameplay_parking pour les nœuds de trafic. Il retient si le flowgraph a l |
+| [✍ `flowgraph_modules_uiModule`](ge/extensions/flowgraph/modules/uiModule.md) | 30 | Module flowgraph (moduleOrder 1000) qui construit les écrans de début et de fin de mission (« mission.control »). Les nœuds flowgraph appell |
+| [✍ `flowgraph_modules_vehicleModule`](ge/extensions/flowgraph/modules/vehicleModule.md) | 27 | Module flowgraph (moduleOrder -150) qui suit les véhicules utilisés par un graphe : ceux qu'il fait apparaître ou qu'on lui déclare avec add |
+| [✍ `flowgraph_newNodeTemplate`](ge/extensions/flowgraph/newNodeTemplate.md) | 1 | Modèle de départ pour écrire un nouveau nœud flowgraph (nom « New Node Template »). Il montre comment déclarer name, description, couleur/ic |
+| [✍ `flowgraph_nodes_activity_activityAttempt`](ge/extensions/flowgraph/nodes/activity/activityAttempt.md) | 3 | Nœud flowgraph « Activity Attempt » (catégorie once_instant, tags activity/mission). Crée une tentative de mission via gameplay_missions_pro |
+| [✍ `flowgraph_nodes_activity_activityFlow`](ge/extensions/flowgraph/nodes/activity/activityFlow.md) | 11 | Nœud flowgraph « Activity Flow » (catégorie logic, tag activity). Point d'entrée d'un graphe de mission : sort du flux une fois au démarrage |
+| [✍ `flowgraph_nodes_activity_activityHook`](ge/extensions/flowgraph/nodes/activity/activityHook.md) | 2 | Nœud flowgraph « Activity Hook Trigger » (catégorie once_instant, tag activity). Déclenche un hook de mission nommé par data.eventName (« st |
+| [✍ `flowgraph_nodes_activity_activityResetPrefabs`](ge/extensions/flowgraph/nodes/activity/activityResetPrefabs.md) | 1 | Nœud flowgraph « Activity Reset Prefab » (catégorie once_p_duration, tag activity). Remet à leur position d'origine les véhicules contenus d |
+| [✍ `flowgraph_nodes_activity_activityStop`](ge/extensions/flowgraph/nodes/activity/activityStop.md) | 2 | Nœud flowgraph « Finish Mission » (tag activity). Arrête la mission en cours : quand le flux arrive, il arrête l'exécution du graphe (mgr:se |
+| [✍ `flowgraph_nodes_activity_aggregateAttempt`](ge/extensions/flowgraph/nodes/activity/aggregateAttempt.md) | 2 | Nœud flowgraph « Aggregate Attempt » (catégorie once_p_duration, tags activity/mission). Intègre une tentative à la progression de la missio |
+| [✍ `flowgraph_nodes_activity_attemptStars`](ge/extensions/flowgraph/nodes/activity/attemptStars.md) | 2 | Nœud flowgraph « Activity Attempt Stars » (catégorie once_instant, tags activity/mission). Ajoute à une tentative les étoiles remplies : cha |
+| [✍ `flowgraph_nodes_activity_attemptVehicle`](ge/extensions/flowgraph/nodes/activity/attemptVehicle.md) | 2 | Nœud flowgraph « Activity Attempt Vehicle » (catégorie once_instant, tag activity). Ajoute à une tentative les informations d'un véhicule (m |
+| [✍ `flowgraph_nodes_activity_autoStarGoals`](ge/extensions/flowgraph/nodes/activity/autoStarGoals.md) | 2 | Nœud flowgraph « Auto Star Goals » (catégorie once_instant, tag activity). Crée automatiquement les objectifs de l'app Tasklist à partir des |
+| [✍ `flowgraph_nodes_activity_getProgress`](ge/extensions/flowgraph/nodes/activity/getProgress.md) | 2 | Nœud flowgraph « Get Progress » (catégorie once_p_duration, tag activity). Lit la progression agrégée de la mission pour la clé de progressi |
+| [✍ `flowgraph_nodes_activity_missionAttemptStars`](ge/extensions/flowgraph/nodes/activity/missionAttemptStars.md) | 2 | Nœud flowgraph « Mission Attempt Stars » (catégorie once_instant, tags activity/mission). Ajoute des étoiles à une tentative « via le constr |
+| [✍ `flowgraph_nodes_activity_requestAbandon`](ge/extensions/flowgraph/nodes/activity/requestAbandon.md) | 7 | Nœud flowgraph « Request Abandon » (catégorie logic, tag input). Laisse passer le flux, une seule fois, quand le joueur demande d'abandonner |
+| [✍ `flowgraph_nodes_activity_starsActive`](ge/extensions/flowgraph/nodes/activity/starsActive.md) | 3 | Nœud flowgraph « Stars Active » (catégorie repeat_instant, tags activity/mission). Chaque pin de sortie flow personnalisé (le nom du pin = c |
+| [✍ `flowgraph_nodes_audio_fade`](ge/extensions/flowgraph/nodes/audio/fade.md) | 4 | Nœud flowgraph « Audio Channel Fade » (tags sound/audio/volume, icône audiotrack). Fait un fondu du volume d'un canal audio FMOD (par défaut |
+| [✍ `flowgraph_nodes_audio_fadeIn`](ge/extensions/flowgraph/nodes/audio/fadeIn.md) | 6 | Nœud flowgraph « Audio Fade In » (catégorie once_f_duration, tags sound/audio/volume). Fait remonter le volume global : fixe les paramètres  |
+| [✍ `flowgraph_nodes_audio_fadeOut`](ge/extensions/flowgraph/nodes/audio/fadeOut.md) | 6 | Nœud flowgraph « Audio Fade Out » (catégorie once_f_duration, tags sound/audio/volume). Fait descendre le volume global jusqu'au silence : f |
+| [✍ `flowgraph_nodes_audio_playOnce`](ge/extensions/flowgraph/nodes/audio/playOnce.md) | 4 | Nœud flowgraph « Play Sound » (catégorie dynamic_p_duration, mode dynamique 'repeat', tags sound/audio/volume). Joue un échantillon audio av |
+| [✍ `flowgraph_nodes_career_addToInventory`](ge/extensions/flowgraph/nodes/career/addToInventory.md) | 2 | Nœud flowgraph « Add To Inventory » (catégorie once_instant, couleur/icône career). Ajoute le véhicule d'id donné à l'inventaire du joueur v |
+| [✍ `flowgraph_nodes_career_careerVehicleSelect`](ge/extensions/flowgraph/nodes/career/careerVehicleSelect.md) | 13 | Nœud flowgraph « Career Vehicle Select » (behaviour once + singleActive, dépend de core_input_bindings). Ouvre le menu carrière 'menu.career |
+| [✍ `flowgraph_nodes_career_completeQuest`](ge/extensions/flowgraph/nodes/career/completeQuest.md) | 1 | Nœud flowgraph « Complete Quest » (catégorie once_instant, couleur/icône career). Termine la quête associée au flowgraph via career_modules_ |
+| [✍ `flowgraph_nodes_career_customTowAction`](ge/extensions/flowgraph/nodes/career/customTowAction.md) | 3 | Nœud flowgraph « On Custom Tow » (catégorie repeat_instant, couleur/icône career). Détecte quand le joueur utilise une action de remorquage  |
+| [✍ `flowgraph_nodes_career_garageComputerUtil`](ge/extensions/flowgraph/nodes/career/garageComputerUtil.md) | 8 | Nœud flowgraph « Garage Computer Util » (catégorie repeat_instant, couleur/icône ui), aide pour le tutoriel du garage. Impulsions de sortie  |
+| [✍ `flowgraph_nodes_career_garageTutorialUtil`](ge/extensions/flowgraph/nodes/career/garageTutorialUtil.md) | 3 | Nœud flowgraph « Garage Tutorial Util » (catégorie repeat_instant, couleur/icône ui), aide pour le tutoriel du garage. Sorties bool : parked |
+| [✍ `flowgraph_nodes_career_logbookEntry`](ge/extensions/flowgraph/nodes/career/logbookEntry.md) | 1 | Nœud flowgraph « Logbook Entry » (catégorie once_instant, couleur/icône career). Ajoute une entrée au journal de bord de la carrière (career |
+| [✍ `flowgraph_nodes_career_menuClosed`](ge/extensions/flowgraph/nodes/career/menuClosed.md) | 3 | Nœud flowgraph « Menu Closed » (catégorie repeat_instant, couleur/icône ui). Impulsion d'une frame sur la sortie menuClosed quand un menu a  |
+| [✍ `flowgraph_nodes_career_onGarageEvent`](ge/extensions/flowgraph/nodes/career/onGarageEvent.md) | 5 | Nœud flowgraph « On Garage Event » (catégorie repeat_instant, couleur/icône ui). Impulsions d'une frame sur les évènements de garage de la c |
+| [✍ `flowgraph_nodes_career_onIntroPopupCareerClosed`](ge/extensions/flowgraph/nodes/career/onIntroPopupCareerClosed.md) | 4 | Nœud flowgraph « On introPopupCareerClosed » (catégorie repeat_instant, couleur/icône ui). Détecte la fermeture de la fenêtre d'intro de la  |
+| [✍ `flowgraph_nodes_career_onMissionPromptShown`](ge/extensions/flowgraph/nodes/career/onMissionPromptShown.md) | 4 | Nœud flowgraph « On Poi Prompt Shown » (catégorie repeat_instant, couleur/icône ui). Détecte que le joueur s'est arrêté sur un point d'intér |
+| [✍ `flowgraph_nodes_career_onMissionRunstateChanged`](ge/extensions/flowgraph/nodes/career/onMissionRunstateChanged.md) | 4 | Nœud flowgraph « On Mission Start/Stop » (catégorie repeat_instant, couleur/icône ui). Détecte quand le joueur démarre (hook onMissionStartW |
+| [✍ `flowgraph_nodes_career_onRefueling`](ge/extensions/flowgraph/nodes/career/onRefueling.md) | 6 | Nœud flowgraph « On Refueling » (catégorie repeat_instant, couleur/icône ui). Détecte les évènements de ravitaillement en carrière. Sorties  |
+| [✍ `flowgraph_nodes_career_onTestDriveChanged`](ge/extensions/flowgraph/nodes/career/onTestDriveChanged.md) | 4 | Nœud flowgraph « On Testdrive Changed » (catégorie repeat_instant, couleur/icône ui). Détecte le début (hook onTestDriveStarted) et la fin a |
+| [✍ `flowgraph_nodes_career_onVehicleShoppingEvent`](ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.md) | 8 | Nœud flowgraph « On Vehicle Shopping Event » (catégorie repeat_instant, couleur/icône ui). Détecte les évènements d'achat de véhicule en car |
+| [✍ `flowgraph_nodes_career_playerAttribute`](ge/extensions/flowgraph/nodes/career/playerAttribute.md) | 3 | Nœud flowgraph « Add Or Remove Player Attribute » (catégorie once_instant, couleur/icône career). Ajoute ou retire une quantité d'un attribu |
+| [✍ `flowgraph_nodes_career_setFuelLevel`](ge/extensions/flowgraph/nodes/career/setFuelLevel.md) | 5 | Nœud flowgraph « Set Fuel Level » (catégorie once_f_duration, couleur/icône career). Règle le niveau de carburant d'un véhicule au même pour |
+| [✍ `flowgraph_nodes_career_tasklistHeader`](ge/extensions/flowgraph/nodes/career/tasklistHeader.md) | 1 | Nœud flowgraph « Tasklist Header » (catégorie once_instant, tags goal/goals, couleur/icône ui). Définit l'en-tête et le sous-texte de la lis |
+| [✍ `flowgraph_nodes_career_vehicleGroupByClass`](ge/extensions/flowgraph/nodes/career/vehicleGroupByClass.md) | 1 | Nœud flowgraph « Vehicle Group by Performance Class » (catégorie once_instant, auteur BeamNG, tags career/race/class/vehicle). Génère un gro |
+| [✍ `flowgraph_nodes_debug_aiDebug`](ge/extensions/flowgraph/nodes/debug/aiDebug.md) | 4 | Nœud flowgraph « AI Debug Display » (catégorie dynamic_p_duration, tags target/trajectory/route/debug). Affiche ou masque les visualisations |
+| [✍ `flowgraph_nodes_debug_cameraMouseRayCast`](ge/extensions/flowgraph/nodes/debug/cameraMouseRayCast.md) | 1 | Nœud flowgraph « Camera Mouse Raycast » (catégorie repeat_instant, tags util/click). Tire un rayon depuis la caméra vers la position de la s |
+| [✍ `flowgraph_nodes_debug_comment`](ge/extensions/flowgraph/nodes/debug/comment.md) | 9 | Nœud flowgraph « Comment » (catégorie logic, tag group, aucun pin). Place un commentaire dans le graphe, sous forme de cadre de groupe redim |
+| [✍ `flowgraph_nodes_debug_debugCylinder`](ge/extensions/flowgraph/nodes/debug/debugCylinder.md) | 2 | Nœud flowgraph « Debug Cylinder » (catégorie repeat_instant, tags util/draw). Dessine chaque frame un cylindre de débogage (debugDrawer:draw |
+| [✍ `flowgraph_nodes_debug_debugLine`](ge/extensions/flowgraph/nodes/debug/debugLine.md) | 2 | Nœud flowgraph « Debug Line » (catégorie repeat_instant, tags util/draw). Dessine chaque frame une ligne de débogage (debugDrawer:drawLine)  |
+| [✍ `flowgraph_nodes_debug_debugPrism`](ge/extensions/flowgraph/nodes/debug/debugPrism.md) | 2 | Nœud flowgraph « Debug Prism » (catégorie repeat_instant, tags util/draw). Dessine chaque frame un prisme à base carrée/rectangulaire (debug |
+| [✍ `flowgraph_nodes_debug_debugSphere`](ge/extensions/flowgraph/nodes/debug/debugSphere.md) | 2 | Nœud flowgraph « Debug Sphere » (catégorie repeat_instant, tags util/draw). Dessine chaque frame une sphère de débogage (debugDrawer:drawSph |
+| [✍ `flowgraph_nodes_debug_debugText`](ge/extensions/flowgraph/nodes/debug/debugText.md) | 2 | Nœud flowgraph « Debug Text » (catégorie repeat_instant, tags util/draw). Dessine chaque frame un texte en 3D à une position (debugDrawer:dr |
+| [✍ `flowgraph_nodes_debug_display`](ge/extensions/flowgraph/nodes/debug/display.md) | 2 | Nœud flowgraph « Display Value » (type simple, catégorie repeat_instant, tag util). Affiche dans le corps du nœud la valeur reçue sur le pin |
+| [✍ `flowgraph_nodes_debug_displayFlow`](ge/extensions/flowgraph/nodes/debug/displayFlow.md) | 4 | Nœud flowgraph « Display Flow » (type simple, catégorie logic, tag util). Affiche une case cochée verte quand le flux atteint le nœud (consi |
+| [✍ `flowgraph_nodes_debug_drawGraph`](ge/extensions/flowgraph/nodes/debug/drawGraph.md) | 10 | Nœud flowgraph « Multi Graph » (catégorie repeat_instant, tags util/draw/table/data). Trace plusieurs courbes dans un même graphe dans le co |
+| [✍ `flowgraph_nodes_debug_flowButton`](ge/extensions/flowgraph/nodes/debug/flowButton.md) | 5 | Nœud flowgraph « Flow Button » (type simple, catégorie logic, tag input). Un bouton dans le nœud : un clic (uniquement quand le graphe tourn |
+| [✍ `flowgraph_nodes_debug_log`](ge/extensions/flowgraph/nodes/debug/log.md) | 5 | Nœud flowgraph « Log » (catégorie dynamic_instant, tags util/print). Écrit la valeur reçue dans la console du jeu (log) et dans le journal d |
+| [✍ `flowgraph_nodes_debug_miniGraph`](ge/extensions/flowgraph/nodes/debug/miniGraph.md) | 3 | Nœud flowgraph « Mini Graph » (catégorie repeat_instant, tags util/draw/table/data). Petit graphe (200x60) dans le nœud qui trace une seule  |
+| [✍ `flowgraph_nodes_debug_multiFlow`](ge/extensions/flowgraph/nodes/debug/multiFlow.md) | 3 | Nœud flowgraph « Multi Flow » (type simple, catégorie logic), nœud de test avec quatre entrées flow a, b, c, d. Affiche dans le nœud une cas |
+| [✍ `flowgraph_nodes_debug_numberSlider`](ge/extensions/flowgraph/nodes/debug/numberSlider.md) | 6 | Nœud flowgraph « Number Slider » (catégorie provider, tag util). Fournit jusqu'à cinq nombres réglables à la souris, avec des plages différe |
+| [✍ `flowgraph_nodes_debug_pauseManager`](ge/extensions/flowgraph/nodes/debug/pauseManager.md) | 1 | Nœud flowgraph « Pause Execution » (catégorie logic). Met en pause l'exécution du projet flowgraph (graph.mgr:setPaused(true)) tant qu'il re |
+| [✍ `flowgraph_nodes_debug_restartManager`](ge/extensions/flowgraph/nodes/debug/restartManager.md) | 1 | Nœud flowgraph « Restart Project » (catégorie logic, behaviour duration). Redémarre le projet flowgraph : appelle graph.mgr:queueForRestart( |
+| [✍ `flowgraph_nodes_debug_stopManager`](ge/extensions/flowgraph/nodes/debug/stopManager.md) | 1 | Nœud flowgraph « Stop Project » (catégorie logic). Arrête l'exécution du projet flowgraph (graph.mgr:setRunning(false)) quand l'entrée flow  |
+| [✍ `flowgraph_nodes_debug_testDynamic`](ge/extensions/flowgraph/nodes/debug/testDynamic.md) | 6 | Nœud flowgraph « Category Test » (catégorie once_f_duration), nœud de test de cette catégorie : au flux, passe à l'état de durée « started » |
+| [✍ `flowgraph_nodes_environment_directionalGravity`](ge/extensions/flowgraph/nodes/environment/directionalGravity.md) | 6 | Nœud flowgraph « Directional Gravity » (catégorie dynamic_p_duration, couleur/icône vehicle). Donne à un véhicule une gravité directionnelle |
+| [✍ `flowgraph_nodes_environment_getCloud`](ge/extensions/flowgraph/nodes/environment/getCloud.md) | 1 | Nœud flowgraph « Get Clouds » (catégorie repeat_instant, tags environment/weather/cloud). Lit les paramètres d'un objet nuage via core_envir |
+| [✍ `flowgraph_nodes_environment_getFogDensity`](ge/extensions/flowgraph/nodes/environment/getFogDensity.md) | 1 | Nœud flowgraph « Get Fog » (catégorie provider, tags environment/tod). Lit les paramètres de brouillard actuels : sorties density (core_envi |
+| [✍ `flowgraph_nodes_environment_getGravity`](ge/extensions/flowgraph/nodes/environment/getGravity.md) | 1 | Nœud flowgraph « Get Gravity » (catégorie provider, tag environment). Sort la gravité globale actuelle en m/s² (core_environment.getGravity) |
+| [✍ `flowgraph_nodes_environment_getPause`](ge/extensions/flowgraph/nodes/environment/getPause.md) | 1 | Nœud flowgraph « Get Pause » (catégorie provider, auteur BeamNG, tags pause/freeze/halt/stop/interrupt). Sort un bool « value » indiquant si |
+| [✍ `flowgraph_nodes_environment_getPhotomode`](ge/extensions/flowgraph/nodes/environment/getPhotomode.md) | 1 | Nœud flowgraph « Get Photomode » (catégorie provider, auteur BeamNG, tags photomode/photo/camera/screenshot/capture). Sort un bool « value » |
+| [✍ `flowgraph_nodes_environment_getScatterySky`](ge/extensions/flowgraph/nodes/environment/getScatterySky.md) | 1 | Nœud flowgraph « Get ScatterSky » (catégorie provider, tags environment/tod). Lit les paramètres actuels du ciel ScatterSky via core_environ |
+| [✍ `flowgraph_nodes_environment_getTimeOfDay`](ge/extensions/flowgraph/nodes/environment/getTimeOfDay.md) | 1 | Nœud flowgraph « Get Time of Day » (catégorie provider, tags environment/tod). Sort l'heure du jour actuelle (core_environment.getTimeOfDay) |
+| [✍ `flowgraph_nodes_environment_pauseGame`](ge/extensions/flowgraph/nodes/environment/pauseGame.md) | 3 | Nœud flowgraph « Pause Game » (catégorie once_p_duration, auteur BeamNG, tags pause/freeze/halt/stop/interrupt). Met la simulation en pause  |
+| [✍ `flowgraph_nodes_environment_planet`](ge/extensions/flowgraph/nodes/environment/planet.md) | 12 | Nœud flowgraph « Planet » (catégorie once_p_duration, couleur/icône vehicle). Donne à un véhicule une gravité planétaire (obj:setPlanets ave |
+| [✍ `flowgraph_nodes_environment_randomTimeOfDay`](ge/extensions/flowgraph/nodes/environment/randomTimeOfDay.md) | 2 | Nœud flowgraph « Random Time of Day » (catégorie repeat_instant, tags environment/tod/random). Tire une heure aléatoire entre deux heures (0 |
+| [✍ `flowgraph_nodes_environment_setBulletTime`](ge/extensions/flowgraph/nodes/environment/setBulletTime.md) | 3 | Nœud flowgraph « Bullet Time » (catégorie repeat_instant). Ralentit ou met en pause le temps de simulation via simTimeAuthority. Pins d'entr |
+| [✍ `flowgraph_nodes_environment_setCloud`](ge/extensions/flowgraph/nodes/environment/setCloud.md) | 7 | Nœud flowgraph « Set Clouds » (catégorie dynamic_instant). Règle les paramètres des nuages. Pins d'entrée : objectId (id optionnel d'un obje |
+| [✍ `flowgraph_nodes_environment_setFogDensity`](ge/extensions/flowgraph/nodes/environment/setFogDensity.md) | 7 | Nœud flowgraph « Set Fog » (catégorie dynamic_instant). Règle la densité du brouillard (density, 0 à 1) et la hauteur atmosphérique du broui |
+| [✍ `flowgraph_nodes_environment_setGravity`](ge/extensions/flowgraph/nodes/environment/setGravity.md) | 5 | Nœud flowgraph « Set Gravity » (catégorie dynamic_instant). Règle la gravité globale (pin value, en m/s², 0 par défaut) via core_environment |
+| [✍ `flowgraph_nodes_environment_setScatterSky`](ge/extensions/flowgraph/nodes/environment/setScatterSky.md) | 6 | Nœud flowgraph « Set ScatterSky » (catégorie dynamic_instant). Règle la luminosité du ciel (skyBrightness) et les textures de gradient du Sc |
+| [✍ `flowgraph_nodes_environment_setTimeOfDay`](ge/extensions/flowgraph/nodes/environment/setTimeOfDay.md) | 7 | Nœud flowgraph « Set Time of Day » (catégorie dynamic_instant). Règle l'heure du jour via core_environment.setTimeOfDay. Pins d'entrée : flo |
+| [✍ `flowgraph_nodes_environment_setWind`](ge/extensions/flowgraph/nodes/environment/setWind.md) | 4 | Nœud flowgraph « Set Wind » (catégorie once_p_duration). Applique un vent à un véhicule ou à tous. Pins d'entrée : vehId (vide = tous les vé |
+| [✍ `flowgraph_nodes_environment_simplePlanet`](ge/extensions/flowgraph/nodes/environment/simplePlanet.md) | 4 | Nœud flowgraph « Simple Planet » (catégorie once_p_duration). Crée une source de gravité sphérique pour un véhicule en envoyant obj:setPlane |
+| [✍ `flowgraph_nodes_events_controlsAction`](ge/extensions/flowgraph/nodes/events/controlsAction.md) | 6 | Nœud flowgraph « Controls Action » (catégorie logic, événement). Laisse passer le flux quand l'action (Ctrl + Space) est pressée. Pousse aut |
+| [✍ `flowgraph_nodes_events_controlsReset`](ge/extensions/flowgraph/nodes/events/controlsReset.md) | 8 | Nœud flowgraph « Controls Reset » (catégorie logic, événement). Laisse passer le flux quand le joueur appuie sur Reset. Quand il est utilisé |
+| [✍ `flowgraph_nodes_events_customizedTriggerBox`](ge/extensions/flowgraph/nodes/events/customizedTriggerBox.md) | 10 | Nœud flowgraph « Custom Trigger » (catégorie repeat_instant, événement). Crée une zone de déclenchement (boîte ou sphère/ellipsoïde) pendant |
+| [✍ `flowgraph_nodes_events_onBeamNGTrigger`](ge/extensions/flowgraph/nodes/events/onBeamNGTrigger.md) | 4 | Nœud flowgraph « on BeamNGTrigger » (catégorie repeat_instant, événement). Écoute le hook onBeamNGTrigger et laisse passer le flux selon l'é |
+| [✍ `flowgraph_nodes_events_onMissionEnded`](ge/extensions/flowgraph/nodes/events/onMissionEnded.md) | 3 | Nœud flowgraph « on Level End » (catégorie logic, événement). Émet une impulsion de flux une fois quand le niveau courant est déchargé (hook |
+| [✍ `flowgraph_nodes_events_onUpdate`](ge/extensions/flowgraph/nodes/events/onUpdate.md) | 5 | Nœud flowgraph « on Update » (catégorie logic, événement). Émet du flux à chaque frame. Pins de sortie : enterState (impulsion à l'entrée da |
+| [✍ `flowgraph_nodes_gameplay_allowWalking`](ge/extensions/flowgraph/nodes/gameplay/allowWalking.md) | 1 | Nœud flowgraph « Allow Walking » (catégorie par défaut, dépend de gameplay_walk). Autorise ou interdit le mode marche, donc l'entrée et la s |
+| [✍ `flowgraph_nodes_gameplay_blacklistWalking`](ge/extensions/flowgraph/nodes/gameplay/blacklistWalking.md) | 2 | Nœud flowgraph « Blacklist Walking » (dépend de gameplay_walk). Autorise ou interdit l'entrée dans un véhicule depuis le mode marche, via la |
+| [✍ `flowgraph_nodes_gameplay_canEnterFromWalking`](ge/extensions/flowgraph/nodes/gameplay/canEnterFromWalking.md) | 2 | Nœud flowgraph « Can Enter From Walking » (catégorie repeat_instant, dépend de gameplay_walk). Vérifie que le joueur marche et est près d'un |
+| [✍ `flowgraph_nodes_gameplay_careerActive`](ge/extensions/flowgraph/nodes/gameplay/careerActive.md) | 2 | Nœud flowgraph « Career Active » (catégorie repeat_instant). Teste si le mode carrière est actif via career_career.isActive(). Sorties : ena |
+| [✍ `flowgraph_nodes_gameplay_completeScenario`](ge/extensions/flowgraph/nodes/gameplay/completeScenario.md) | 2 | Nœud flowgraph « Complete Scenario » (catégorie once_instant). Termine le scénario courant via scenario_scenarios.finish. Pins d'entrée : re |
+| [✍ `flowgraph_nodes_gameplay_countdown`](ge/extensions/flowgraph/nodes/gameplay/countdown.md) | 10 | Nœud flowgraph « Countdown » (tag scenario). Gère un compte à rebours affiché à l'écran via le hook ScenarioFlashMessage (et Message si data |
+| [✍ `flowgraph_nodes_gameplay_crash_onCrashDetected`](ge/extensions/flowgraph/nodes/gameplay/crash/onCrashDetected.md) | 6 | Nœud flowgraph « On Crash Detected » (catégorie repeat_instant). Émet un flux quand un véhicule suivi commence ou finit un crash (hooks onVe |
+| [✍ `flowgraph_nodes_gameplay_crash_removeTrackedVehicleCrash`](ge/extensions/flowgraph/nodes/gameplay/crash/removeTrackedVehicleCrash.md) | 1 | Nœud flowgraph « Remove Tracked Vehicle Crash » (catégorie repeat_instant). Retire un véhicule (pin vehId) du suivi des crashs via gameplay_ |
+| [✍ `flowgraph_nodes_gameplay_crash_trackMultipleVehiclesCrash`](ge/extensions/flowgraph/nodes/gameplay/crash/trackMultipleVehiclesCrash.md) | 1 | Nœud flowgraph « Track Multiple Vehicles Crash » (catégorie repeat_instant). Ajoute plusieurs véhicules (pin vehIds, table d'ids) au suivi d |
+| [✍ `flowgraph_nodes_gameplay_crash_trackVehicleCrash`](ge/extensions/flowgraph/nodes/gameplay/crash/trackVehicleCrash.md) | 1 | Nœud flowgraph « Track Vehicle Crash » (catégorie repeat_instant). Ajoute un véhicule (pin vehId) au suivi des crashs via gameplay_util_cras |
+| [✍ `flowgraph_nodes_gameplay_crawl_applyPenalty`](ge/extensions/flowgraph/nodes/gameplay/crawl/applyPenalty.md) | 3 | Nœud flowgraph « Apply Penalty » (catégorie impulse, crawl). Applique manuellement des points de pénalité au crawl actif, en choisissant un  |
+| [✍ `flowgraph_nodes_gameplay_crawl_getCrawlData`](ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlData.md) | 2 | Nœud flowgraph « Get Crawl Data » (catégorie repeat_instant, crawl). Lit les données d'exécution du crawl actif via le bridge. Sorties : onC |
+| [✍ `flowgraph_nodes_gameplay_crawl_getCrawlResults`](ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlResults.md) | 2 | Nœud flowgraph « Get Crawl Results » (catégorie repeat_instant, crawl). Lit les résultats d'un crawl terminé (bridge.getCrawlEndData). Sorti |
+| [✍ `flowgraph_nodes_gameplay_crawl_getCrawlStartTransform`](ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlStartTransform.md) | 2 | Nœud flowgraph « Get Crawl Start Transform » (catégorie repeat_instant, crawl). Donne la position (startPosition, vec3) et la rotation (star |
+| [✍ `flowgraph_nodes_gameplay_crawl_getDynamicObjects`](ge/extensions/flowgraph/nodes/gameplay/crawl/getDynamicObjects.md) | 2 | Nœud flowgraph « Get Dynamic Objects » (catégorie repeat_instant, crawl). Récupère les objets d'un prefab ayant un champ dynamique donné. Pi |
+| [✍ `flowgraph_nodes_gameplay_crawl_resetCrawl`](ge/extensions/flowgraph/nodes/gameplay/crawl/resetCrawl.md) | 2 | Nœud flowgraph « Reset Crawl » (catégorie once_instant, crawl). Remet à zéro le crawl actif : téléporte le véhicule au départ et réinitialis |
+| [✍ `flowgraph_nodes_gameplay_crawl_setupCrawl`](ge/extensions/flowgraph/nodes/gameplay/crawl/setupCrawl.md) | 2 | Nœud flowgraph « Setup Crawl » (catégorie once_instant, crawl). Prépare un parcours crawl : charge le trail, téléporte le véhicule au départ |
+| [✍ `flowgraph_nodes_gameplay_crawl_startCrawl`](ge/extensions/flowgraph/nodes/gameplay/crawl/startCrawl.md) | 2 | Nœud flowgraph « Start Crawl » (catégorie once_instant, crawl). Démarre la course et le timer du crawl ; nécessite que Setup Crawl ait été e |
+| [✍ `flowgraph_nodes_gameplay_crawl_stopCrawl`](ge/extensions/flowgraph/nodes/gameplay/crawl/stopCrawl.md) | 2 | Nœud flowgraph « Stop Crawl » (catégorie once_instant, crawl). Arrête le crawl actif. Sorties : success, failed (aucun crawl actif) et isAct |
+| [✍ `flowgraph_nodes_gameplay_decalCircle`](ge/extensions/flowgraph/nodes/gameplay/decalCircle.md) | 3 | Nœud flowgraph « Decal Circle » (catégorie repeat_instant, util/draw). Dessine un cercle de décalques au sol, comme une barre de chargement  |
+| [✍ `flowgraph_nodes_gameplay_decalLine`](ge/extensions/flowgraph/nodes/gameplay/decalLine.md) | 3 | Nœud flowgraph « Decal Line » (catégorie repeat_instant, util/draw). Dessine une ligne de décalques du point posA au point posB, comme une b |
+| [✍ `flowgraph_nodes_gameplay_decalPath`](ge/extensions/flowgraph/nodes/gameplay/decalPath.md) | 5 | Nœud flowgraph « Decal Path » (catégorie repeat_instant, util/draw/route). Dessine des décalques animés (flèches de groundmarker) le long d' |
+| [✍ `flowgraph_nodes_gameplay_decalSingle`](ge/extensions/flowgraph/nodes/gameplay/decalSingle.md) | 2 | Nœud flowgraph « Decal Single » (catégorie repeat_instant, util/draw). Dessine un décalque unique dans le monde. Pins d'entrée : pos, rot (q |
+| [✍ `flowgraph_nodes_gameplay_delivery_abandonDelivery`](ge/extensions/flowgraph/nodes/gameplay/delivery/abandonDelivery.md) | 5 | Nœud flowgraph « Abandon Delivery » (catégorie once_instant, tags delivery/mission). Abandonne la livraison en cours et démonte le système ( |
+| [✍ `flowgraph_nodes_gameplay_delivery_deliveryFinished`](ge/extensions/flowgraph/nodes/gameplay/delivery/deliveryFinished.md) | 4 | Nœud flowgraph « Delivery Finished » (catégorie repeat_instant, livraison). Détecte la fin de la livraison (tous les objectifs atteints ou f |
+| [✍ `flowgraph_nodes_gameplay_delivery_getDeliveryResults`](ge/extensions/flowgraph/nodes/gameplay/delivery/getDeliveryResults.md) | 4 | Nœud flowgraph « Get Delivery Results » (catégorie provider, livraison). Fournit les résultats courants de la livraison sous forme de table  |
+| [✍ `flowgraph_nodes_gameplay_delivery_loadDelivery`](ge/extensions/flowgraph/nodes/gameplay/delivery/loadDelivery.md) | 6 | Nœud flowgraph « Load Delivery » (catégorie once_f_duration, livraison). Charge un fichier de livraison, prépare véhicules et routes et met  |
+| [✍ `flowgraph_nodes_gameplay_delivery_resetDelivery`](ge/extensions/flowgraph/nodes/gameplay/delivery/resetDelivery.md) | 6 | Nœud flowgraph « Reset Delivery » (catégorie once_f_duration, livraison). Réinitialise la livraison active ou terminée : véhicules remis à l |
+| [✍ `flowgraph_nodes_gameplay_delivery_startDelivery`](ge/extensions/flowgraph/nodes/gameplay/delivery/startDelivery.md) | 4 | Nœud flowgraph « Start Delivery » (catégorie once_instant, livraison). Démarre la livraison : objectifs, indices, marqueurs et liste de tâch |
+| [✍ `flowgraph_nodes_gameplay_dragRace_dragRaceState`](ge/extensions/flowgraph/nodes/gameplay/dragRace/dragRaceState.md) | 2 | Nœud flowgraph « Drag Race State » (catégorie repeat_instant). Nœud de surveillance pure de l'état de la course de dragster (données de game |
+| [✍ `flowgraph_nodes_gameplay_dragRace_dragTimes`](ge/extensions/flowgraph/nodes/gameplay/dragRace/dragTimes.md) | 4 | Nœud flowgraph « Get Drag Race Times » (catégorie repeat_instant). Donne en temps réel les chronos d'un véhicule (pin vehId) depuis gameplay |
+| [✍ `flowgraph_nodes_gameplay_dragRace_generateDragOpponents`](ge/extensions/flowgraph/nodes/gameplay/dragRace/generateDragOpponents.md) | 12 | Nœud flowgraph « Generate Drag Race Opponents » (catégorie once_instant, dépend de gameplay_drag_dragBridge). Génère une liste de configurat |
+| [✍ `flowgraph_nodes_gameplay_dragRace_getDragWinners`](ge/extensions/flowgraph/nodes/gameplay/dragRace/getDragWinners.md) | 2 | Nœud flowgraph « Get Drag Race Winner Data » (catégorie repeat_instant). Donne le résultat du joueur à la fin d'une course de dragster. Sort |
+| [✍ `flowgraph_nodes_gameplay_dragRace_getRacerData`](ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerData.md) | 2 | Nœud flowgraph « Get Drag Racer Data » (catégorie repeat_instant, LEGACY). Nœud de commodité qui donne l'état d'un pilote (vehId) : isPlayab |
+| [✍ `flowgraph_nodes_gameplay_dragRace_getRacerSpawnPoint`](ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerSpawnPoint.md) | 2 | Nœud flowgraph « Get Drag Racer Spawn Point » (catégorie repeat_instant). Donne la position et la rotation de spawn de la voie d'un pilote ( |
+| [✍ `flowgraph_nodes_gameplay_dragRace_getRacerStatus`](ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerStatus.md) | 2 | Nœud flowgraph « Get Drag Racer Status » (catégorie repeat_instant). Donne l'état d'un pilote (pin vehId) : isPlayable, lane, isDesqualified |
+| [✍ `flowgraph_nodes_gameplay_dragRace_loadDragData`](ge/extensions/flowgraph/nodes/gameplay/dragRace/loadDragData.md) | 1 | Nœud flowgraph « Load Drag Race Data » (catégorie once_instant). Charge et initialise les données de course de dragster depuis un fichier (p |
+| [✍ `flowgraph_nodes_gameplay_dragRace_resetDragRace`](ge/extensions/flowgraph/nodes/gameplay/dragRace/resetDragRace.md) | 1 | Nœud flowgraph « Reset Drag Race » (catégorie once_instant). Réinitialise la course de dragster (dragBridge.reset) et peut aussi vider les p |
+| [✍ `flowgraph_nodes_gameplay_dragRace_setDragVehicle`](ge/extensions/flowgraph/nodes/gameplay/dragRace/setDragVehicle.md) | 8 | Nœud flowgraph « Set Drag Vehicles » (catégorie once_instant). Enregistre les véhicules de la course dans gameplay_drag_dragBridge.setVehicl |
+| [✍ `flowgraph_nodes_gameplay_dragRace_setRacerDial`](ge/extensions/flowgraph/nodes/gameplay/dragRace/setRacerDial.md) | 1 | Nœud flowgraph « Set Drag Racer Dial » (catégorie once_instant). Règle le dial (temps annoncé) d'un ou plusieurs pilotes. Pin d'entrée : dia |
+| [✍ `flowgraph_nodes_gameplay_dragRace_startDragRace`](ge/extensions/flowgraph/nodes/gameplay/dragRace/startDragRace.md) | 1 | Nœud flowgraph « Start Drag Race » (catégorie once_instant). Démarre l'activité de course de dragster, à appeler après la mise en place des  |
+| [✍ `flowgraph_nodes_gameplay_drift_driftClear`](ge/extensions/flowgraph/nodes/gameplay/drift/driftClear.md) | 1 | Nœud flowgraph « Clear Drift » (tags gameplay/utils). Vide le système de drift : zones de cascade, scores et autres systèmes, via gameplay_d |
+| [✍ `flowgraph_nodes_gameplay_drift_driftDonut`](ge/extensions/flowgraph/nodes/gameplay/drift/driftDonut.md) | 1 | Nœud flowgraph « Drift Donut Detected » (catégorie repeat_instant, drift). Détecte les zones de donut : émet une impulsion donutDrift et le  |
+| [✍ `flowgraph_nodes_gameplay_drift_driftInformation`](ge/extensions/flowgraph/nodes/gameplay/drift/driftInformation.md) | 1 | Nœud flowgraph « Drift Information » (catégorie repeat_instant, drift). Donne l'état du drift du véhicule : drifting/notDrifting, impulsions |
+| [✍ `flowgraph_nodes_gameplay_drift_driftReset`](ge/extensions/flowgraph/nodes/gameplay/drift/driftReset.md) | 1 | Nœud flowgraph « Reset Drift » (catégorie repeat_instant, drift). Remet à zéro scores et systèmes : gameplay_drift_general.reset() puis mgr. |
+| [✍ `flowgraph_nodes_gameplay_drift_driftScore`](ge/extensions/flowgraph/nodes/gameplay/drift/driftScore.md) | 1 | Nœud flowgraph « Drift Score » (catégorie repeat_instant, drift). Donne les scores de drift de gameplay_drift_scoring.getScore() : score (to |
+| [✍ `flowgraph_nodes_gameplay_drift_driftTightDrift`](ge/extensions/flowgraph/nodes/gameplay/drift/driftTightDrift.md) | 1 | Nœud flowgraph « Drift Through Detected » (catégorie repeat_instant, drift). Détecte les zones de drift serré : émet tightDrift (impulsion)  |
+| [✍ `flowgraph_nodes_gameplay_drift_driftVeh`](ge/extensions/flowgraph/nodes/gameplay/drift/driftVeh.md) | 1 | Nœud flowgraph « Drift Veh » (catégorie repeat_instant, drift). Définit le véhicule de référence du module drift ; sans id précisé, le véhic |
+| [✍ `flowgraph_nodes_gameplay_drift_setDriftBounds`](ge/extensions/flowgraph/nodes/gameplay/drift/setDriftBounds.md) | 1 | Nœud flowgraph « Drift Bounds » (catégorie repeat_instant, drift). Utilise un fichier de sites (pin sitesPath) pour créer les limites de la  |
+| [✍ `flowgraph_nodes_gameplay_drift_setDriftChallengeMode`](ge/extensions/flowgraph/nodes/gameplay/drift/setDriftChallengeMode.md) | 1 | Nœud flowgraph « Set Drift Challenge Mode » (catégorie repeat_instant). Règle le mode de défi de drift via gameplay_drift_general.setChallen |
+| [✍ `flowgraph_nodes_gameplay_drift_setDriftContext`](ge/extensions/flowgraph/nodes/gameplay/drift/setDriftContext.md) | 1 | Nœud flowgraph « Set Drift Context » (catégorie repeat_instant). Définit le contexte de drift, qui fixe un jeu de règles et d'affichage, via |
+| [✍ `flowgraph_nodes_gameplay_drift_setDriftData`](ge/extensions/flowgraph/nodes/gameplay/drift/setDriftData.md) | 1 | Nœud flowgraph « Set Drift Data » (catégorie repeat_instant). Charge les données de drift (par exemple les zones de cascade) depuis un fichi |
+| [✍ `flowgraph_nodes_gameplay_drift_setDriftRacePath`](ge/extensions/flowgraph/nodes/gameplay/drift/setDriftRacePath.md) | 1 | Nœud flowgraph « Drift Race Path » (catégorie repeat_instant, drift). Utilise un chemin de course (pin racePath) pour définir checkpoints, d |
+| [✍ `flowgraph_nodes_gameplay_getWalkingBlacklist`](ge/extensions/flowgraph/nodes/gameplay/getWalkingBlacklist.md) | 1 | Nœud flowgraph « Is Walking Blacklisted » (catégorie repeat_instant, dépend de gameplay_walk). Indique si un véhicule (pin vehId) est autori |
+| [✍ `flowgraph_nodes_gameplay_groundmarkerDistance`](ge/extensions/flowgraph/nodes/gameplay/groundmarkerDistance.md) | 1 | Nœud flowgraph « Groundmarker Remaining Distance » (catégorie repeat_instant, dépend de core_groundMarkers). Donne la distance restante (m)  |
+| [✍ `flowgraph_nodes_gameplay_groundmarkers`](ge/extensions/flowgraph/nodes/gameplay/groundmarkers.md) | 5 | Nœud flowgraph « Groundmarkers » (catégorie repeat_instant, dépend de core_groundMarkers). Crée des marqueurs au sol qui montrent le chemin  |
+| [✍ `flowgraph_nodes_gameplay_isWalking`](ge/extensions/flowgraph/nodes/gameplay/isWalking.md) | 3 | Nœud flowgraph « Is Walking » (catégorie repeat_instant, couleur/icône « walking »). Il teste à chaque frame si le joueur est en mode marche |
+| [✍ `flowgraph_nodes_gameplay_isWalkingEnabled`](ge/extensions/flowgraph/nodes/gameplay/isWalkingEnabled.md) | 1 | Nœud flowgraph « Is Walking Enabled » (catégorie repeat_instant). Indique si le joueur a le droit d'entrer dans un véhicule ou d'en sortir l |
+| [✍ `flowgraph_nodes_gameplay_missionDefaults`](ge/extensions/flowgraph/nodes/gameplay/missionDefaults.md) | 2 | Nœud flowgraph « Mission Defaults » (catégorie provider). Fournit des valeurs par défaut communes aux missions : markerInactive (couleur RGB |
+| [✍ `flowgraph_nodes_gameplay_multiseat`](ge/extensions/flowgraph/nodes/gameplay/multiseat.md) | 4 | Nœud flowgraph « Multiseat » (catégorie once_instant, sans pin). Active le réglage 'multiseat' une fois (workOnce) en sauvegardant la valeur |
+| [✍ `flowgraph_nodes_gameplay_playerMoves`](ge/extensions/flowgraph/nodes/gameplay/playerMoves.md) | 3 | Nœud flowgraph « Detect Acceleration At Start » (catégorie repeat_instant, icône timer). Sert à démarrer une mission quand le joueur bouge p |
+| [✍ `flowgraph_nodes_gameplay_pointsBarSetPoints`](ge/extensions/flowgraph/nodes/gameplay/pointsBarSetPoints.md) | 1 | Nœud flowgraph « PointsBar Points » (catégorie repeat_instant, couleur/icône ui). Fixe les points et le libellé de l'app UI pointsBar via ui |
+| [✍ `flowgraph_nodes_gameplay_pointsBarSetThresholds`](ge/extensions/flowgraph/nodes/gameplay/pointsBarSetThresholds.md) | 1 | Nœud flowgraph « PointsBar Thresholds » (catégorie repeat_instant, couleur/icône ui). Définit les seuils bronze, silver et gold (entrées num |
+| [✍ `flowgraph_nodes_gameplay_race_filePath`](ge/extensions/flowgraph/nodes/gameplay/race/filePath.md) | 6 | Nœud flowgraph « File Path » (catégorie once_p_duration, tag scenario). Charge un chemin de course (fichier .race.json) en objet gameplay/ra |
+| [✍ `flowgraph_nodes_gameplay_race_fileRace`](ge/extensions/flowgraph/nodes/gameplay/race/fileRace.md) | 10 | Nœud flowgraph « File Race » (tag scenario, pas de catégorie définie). Gère une course complète à partir d'un pathData (nœud File Path) : cr |
+| [✍ `flowgraph_nodes_gameplay_race_imRaceTimes`](ge/extensions/flowgraph/nodes/gameplay/race/imRaceTimes.md) | 3 | Nœud flowgraph « im Race Times » (catégorie repeat_instant, tag scenario). Dessine en imgui les temps de course d'un véhicule en appelant ra |
+| [✍ `flowgraph_nodes_gameplay_race_moveVehicleToStartposition`](ge/extensions/flowgraph/nodes/gameplay/race/moveVehicleToStartposition.md) | 3 | Nœud flowgraph « Move Veh to Start Position » (catégorie repeat_instant, tags scenario et race). Déplace (et répare par défaut) un véhicule  |
+| [✍ `flowgraph_nodes_gameplay_race_pathDefaultStartTransform`](ge/extensions/flowgraph/nodes/gameplay/race/pathDefaultStartTransform.md) | 3 | Nœud flowgraph « Race Start Transform » (catégorie repeat_instant, tags scenario et race). Donne la transformation d'une position de départ  |
+| [✍ `flowgraph_nodes_gameplay_race_pathEndTransform`](ge/extensions/flowgraph/nodes/gameplay/race/pathEndTransform.md) | 3 | Nœud flowgraph « Race End Transform » (catégorie repeat_instant, tag scenario). Donne la transformation du pathnode de fin d'un pathData, ut |
+| [✍ `flowgraph_nodes_gameplay_race_raceAiParameters`](ge/extensions/flowgraph/nodes/gameplay/race/raceAiParameters.md) | 2 | Nœud flowgraph « Race AI Parameters » (catégorie once_instant, tags ai et race, auteur BeamNG). Règle une fois les paramètres de pilotage de |
+| [✍ `flowgraph_nodes_gameplay_race_raceCpLapChange`](ge/extensions/flowgraph/nodes/gameplay/race/raceCpLapChange.md) | 1 | Nœud flowgraph « Race CP/Lap Change » (catégorie repeat_instant). Laisse passer un flux (impulsion changed) quand le checkpoint ou le tour d |
+| [✍ `flowgraph_nodes_gameplay_race_raceData`](ge/extensions/flowgraph/nodes/gameplay/race/raceData.md) | 1 | Nœud flowgraph « Race Data » (catégorie repeat_instant, tag scenario). Expose des données de course pour un véhicule (raceData.states[vehId] |
+| [✍ `flowgraph_nodes_gameplay_race_raceDisqualify`](ge/extensions/flowgraph/nodes/gameplay/race/raceDisqualify.md) | 2 | Nœud flowgraph « Race Disqualify » (catégorie repeat_instant, tag scenario). Disqualifie un véhicule d'une course en appelant raceData:abort |
+| [✍ `flowgraph_nodes_gameplay_race_raceEndScreen`](ge/extensions/flowgraph/nodes/gameplay/race/raceEndScreen.md) | 18 | Nœud flowgraph « Race End Screen » (pas de catégorie définie). Affiche l'écran de fin de course (route UI scenario.quickrace.end) avec des b |
+| [✍ `flowgraph_nodes_gameplay_race_raceHighscoresComplete`](ge/extensions/flowgraph/nodes/gameplay/race/raceHighscoresComplete.md) | 2 | Nœud flowgraph « Race Highscores » (catégorie repeat_instant, tag scenario), variante « course complète ». Enregistre le temps du dernier pa |
+| [✍ `flowgraph_nodes_gameplay_race_raceHighscoresLap`](ge/extensions/flowgraph/nodes/gameplay/race/raceHighscoresLap.md) | 2 | Nœud flowgraph « Race Highscores » (catégorie repeat_instant, tag scenario), variante « tour ». Identique à raceHighscoresComplete mais enre |
+| [✍ `flowgraph_nodes_gameplay_race_raceMarkers`](ge/extensions/flowgraph/nodes/gameplay/race/raceMarkers.md) | 8 | Nœud flowgraph « Race Markers » (catégorie repeat_instant, tag scenario). Affiche en 3D (module scenario/race_marker) les marqueurs de cours |
+| [✍ `flowgraph_nodes_gameplay_race_raceNodeReached`](ge/extensions/flowgraph/nodes/gameplay/race/raceNodeReached.md) | 3 | Nœud flowgraph « Race Pathnode Reached » (catégorie logic, tag scenario). Laisse passer le flux quand un véhicule atteint un pathnode de la  |
+| [✍ `flowgraph_nodes_gameplay_race_racePacenoteReached`](ge/extensions/flowgraph/nodes/gameplay/race/racePacenoteReached.md) | 3 | Nœud flowgraph « Race Pacenote Reached » (catégorie logic, tag scenario). Laisse passer une impulsion quand un véhicule atteint une pacenote |
+| [✍ `flowgraph_nodes_gameplay_race_raceRecoveryAvailable`](ge/extensions/flowgraph/nodes/gameplay/race/raceRecoveryAvailable.md) | 1 | Nœud flowgraph « Race Recovery Available » (catégorie logic). Teste si un véhicule dispose d'un point de recovery (race:hasRecoveryPosition( |
+| [✍ `flowgraph_nodes_gameplay_race_raceRecoveryUsed`](ge/extensions/flowgraph/nodes/gameplay/race/raceRecoveryUsed.md) | 1 | Nœud flowgraph « Race Recovery Used » (catégorie logic, tag scenario). Signale quand un véhicule a utilisé un recovery dans la course (event |
+| [✍ `flowgraph_nodes_gameplay_race_raceRequestRecovery`](ge/extensions/flowgraph/nodes/gameplay/race/raceRequestRecovery.md) | 1 | Nœud flowgraph « Race Request Recovery » (catégorie repeat_instant, tag scenario). Tente de replacer le véhicule sur le dernier point de rec |
+| [✍ `flowgraph_nodes_gameplay_race_raceSuspend`](ge/extensions/flowgraph/nodes/gameplay/race/raceSuspend.md) | 2 | Nœud flowgraph « Race Suspend » (tag scenario, pas de catégorie définie). Suspend ou reprend une course : un flux sur la pin suspend appelle |
+| [✍ `flowgraph_nodes_gameplay_rally_aiCompetitorsLeaderboard`](ge/extensions/flowgraph/nodes/gameplay/rally/aiCompetitorsLeaderboard.md) | 1 | Nœud flowgraph « Rally AI Competitors Leaderboard » (catégorie once_instant, tag rally). Simule les temps de spéciale de concurrents IA à pa |
+| [✍ `flowgraph_nodes_gameplay_rally_createRallyGroundMarker`](ge/extensions/flowgraph/nodes/gameplay/rally/createRallyGroundMarker.md) | 1 | Nœud flowgraph « Rally Mode Create Ground Marker Route » (catégorie once_instant, tag rally). Crée la route de marqueurs au sol (core_ground |
+| [✍ `flowgraph_nodes_gameplay_rally_finish`](ge/extensions/flowgraph/nodes/gameplay/rally/finish.md) | 1 | Nœud flowgraph « Rally Mode Finish » (catégorie once_instant, tag rally, sans pin). Quand il reçoit du flux, déclenche une fois le hook exte |
+| [✍ `flowgraph_nodes_gameplay_rally_fireRallyEvent`](ge/extensions/flowgraph/nodes/gameplay/rally/fireRallyEvent.md) | 1 | Nœud flowgraph « Rally Mode Fire Rally Event » (catégorie once_instant, tag rally). Déclenche un évènement rally : appelle extensions.hook(' |
+| [✍ `flowgraph_nodes_gameplay_rally_handleLapChange`](ge/extensions/flowgraph/nodes/gameplay/rally/handleLapChange.md) | 1 | Nœud flowgraph « Rally Mode Handle Lap Change » (tag rally). Prévu pour mettre à jour les infos de tour. Entrées : lapChange (impulsion), cu |
+| [✍ `flowgraph_nodes_gameplay_rally_loop_advanceLoopSchedule`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/advanceLoopSchedule.md) | 1 | Nœud flowgraph « Rally Advance Loop Schedule » (catégorie once_instant, tag rally, sans pin). Demande au gestionnaire de la boucle rally (ga |
+| [✍ `flowgraph_nodes_gameplay_rally_loop_getCurrentRacePath`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/getCurrentRacePath.md) | 1 | Nœud flowgraph « Rally Get Current Race Path » (catégorie once_instant, tag rally). Lit rm:getCurrentRacePath() du gestionnaire de la boucle |
+| [✍ `flowgraph_nodes_gameplay_rally_loop_getLoopServiceOutTC`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/getLoopServiceOutTC.md) | 1 | Nœud flowgraph « Rally Loop Get Service Out TC » (catégorie once_instant, tag rally). Renvoie la position (pos, vec3) et la rotation (rot, q |
+| [✍ `flowgraph_nodes_gameplay_rally_loop_getRallyLoopAiCompetitorsInputs`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopAiCompetitorsInputs.md) | 1 | Nœud flowgraph « Rally Loop AI Competitors Inputs » (catégorie once_instant, tag rally). Prépare les entrées du nœud Rally AI Competitors Le |
+| [✍ `flowgraph_nodes_gameplay_rally_loop_getRallyLoopInfo`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopInfo.md) | 1 | Nœud flowgraph « Rally Loop Get Info » (catégorie once_instant, tag rally). Lit dans le gestionnaire de la boucle rally le nom du rally (rm: |
+| [✍ `flowgraph_nodes_gameplay_rally_loop_getRallyLoopTrafficEnabled`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/getRallyLoopTrafficEnabled.md) | 1 | Nœud flowgraph « Rally Get Traffic Enabled » (catégorie once_instant, tags rally et traffic). Indique dans trafficEnabled (bool) si le trafi |
+| [✍ `flowgraph_nodes_gameplay_rally_loop_loopChainedMissionSetup`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/loopChainedMissionSetup.md) | 2 | Nœud flowgraph « Rally Loop Chained Mission Setup » (catégorie once_instant, tag rally, sans pin). Prépare la mission suivante de la boucle  |
+| [✍ `flowgraph_nodes_gameplay_rally_loop_loopInit`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/loopInit.md) | 4 | Nœud flowgraph « Rally Loop Init » (catégorie once_instant, tag rally). Initialise la boucle rally : recharge l'extension de boucle (décharg |
+| [✍ `flowgraph_nodes_gameplay_rally_loop_rallyClock`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyClock.md) | 3 | Nœud flowgraph « Rally Clock » (catégorie repeat_instant, tag rally). Fournit l'heure courante de l'époque rally (currentEpochTime, secondes |
+| [✍ `flowgraph_nodes_gameplay_rally_loop_rallyExcludeTraffic`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyExcludeTraffic.md) | 1 | Nœud flowgraph « Rally Exclude Traffic » (catégorie once_instant, tag rally). Applique (enable = true, valeur par défaut) ou efface (false)  |
+| [✍ `flowgraph_nodes_gameplay_rally_loop_rallyPositionGetter`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyPositionGetter.md) | 2 | Nœud flowgraph « Rally Position Getter » (catégorie repeat_instant, tag rally). Cherche dans un pathData la position de départ portant le no |
+| [✍ `flowgraph_nodes_gameplay_rally_loop_recordTimeCardEntry`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/recordTimeCardEntry.md) | 1 | Nœud flowgraph « Rally Loop Record Time Card Entry » (catégorie once_instant, tag rally). Enregistre une entrée de carte de pointage (time c |
+| [✍ `flowgraph_nodes_gameplay_rally_loop_routeAfterRoadSection`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/routeAfterRoadSection.md) | 1 | Nœud flowgraph « Rally Route After Road Section » (catégorie once_instant, tag rally). Aiguille le flux après une section de route selon la  |
+| [✍ `flowgraph_nodes_gameplay_rally_loop_saveRallyLoopAttempt`](ge/extensions/flowgraph/nodes/gameplay/rally/loop/saveRallyLoopAttempt.md) | 1 | Nœud flowgraph « Rally Loop Save Attempt » (catégorie once_instant, tag rally). Enregistre la tentative de la boucle rally. Avec dnfType ren |
+| [✍ `flowgraph_nodes_gameplay_rally_raceEditorPath`](ge/extensions/flowgraph/nodes/gameplay/rally/raceEditorPath.md) | 3 | Nœud flowgraph « Rally Mode Race Editor Path » (catégorie once_instant, tag rally). Renvoie le nom de fichier de course à utiliser dans la p |
+| [✍ `flowgraph_nodes_gameplay_rally_rallyDebugNode`](ge/extensions/flowgraph/nodes/gameplay/rally/rallyDebugNode.md) | 1 | Nœud flowgraph « Rally Debug Draw » (catégorie repeat_instant, tag rally). Dessine à chaque frame des infos de debug pour un véhicule : sa b |
+| [✍ `flowgraph_nodes_gameplay_rally_rallyEndScreenResults`](ge/extensions/flowgraph/nodes/gameplay/rally/rallyEndScreenResults.md) | 1 | Nœud flowgraph « Rally End Screen Results » (catégorie repeat_instant, couleur rally, icône ui). Ajoute à l'écran de fin de mission des pann |
+| [✍ `flowgraph_nodes_gameplay_rally_rallyMoveVehicleTo`](ge/extensions/flowgraph/nodes/gameplay/rally/rallyMoveVehicleTo.md) | 1 | Nœud flowgraph « Rally Move Vehicle To » (catégorie repeat_instant, tag rally). Déplace un véhicule pour que le milieu de son pare-chocs ava |
+| [✍ `flowgraph_nodes_gameplay_rally_rallyRouteData`](ge/extensions/flowgraph/nodes/gameplay/rally/rallyRouteData.md) | 1 | Nœud flowgraph « Rally Route Data » (catégorie repeat_instant, tag rally). Lit le gestionnaire rally (gameplay_rally.getRallyManager()) et p |
+| [✍ `flowgraph_nodes_gameplay_rally_rallyStageCountdownSetup`](ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageCountdownSetup.md) | 1 | Nœud flowgraph « Rally Stage Countdown Setup » (catégorie once_instant, tag rally, sans pin). Prépare le flux UI du compte à rebours rally a |
+| [✍ `flowgraph_nodes_gameplay_rally_rallyStageInfoPanel`](ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageInfoPanel.md) | 9 | Nœud flowgraph « Rally Info Panel » (catégorie repeat_instant, tag rally/ui/start/screen, icône ui). Construit le panneau consolidé de l'écr |
+| [✍ `flowgraph_nodes_gameplay_rally_rallyStageStars`](ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageStars.md) | 1 | Nœud flowgraph « Rally Stage Stars » (catégorie once_instant, tags rally, mission, stars). Attribue les médailles bronze/argent/or d'une ten |
+| [✍ `flowgraph_nodes_gameplay_rally_rallyStageSuperCountdown`](ge/extensions/flowgraph/nodes/gameplay/rally/rallyStageSuperCountdown.md) | 33 | Nœud flowgraph « Rally Stage Super Countdown » (icône timer, tag rally, pas de catégorie). Compte à rebours autonome de départ de spéciale r |
+| [✍ `flowgraph_nodes_gameplay_rally_rallySuperCountdown`](ge/extensions/flowgraph/nodes/gameplay/rally/rallySuperCountdown.md) | 47 | Nœud flowgraph « Rally Super Countdown » (icône timer, tag rally, couleur rallyLoop). Système complet de ligne de départ de la boucle rally  |
+| [✍ `flowgraph_nodes_gameplay_rally_recoverInPlace`](ge/extensions/flowgraph/nodes/gameplay/rally/recoverInPlace.md) | 7 | Nœud flowgraph « Rally Mode Recover In Place » (catégorie repeat_p_duration, tags rally, recover, teleport). Récupère le véhicule sur place, |
+| [✍ `flowgraph_nodes_gameplay_rally_recoverToRouteDeparture`](ge/extensions/flowgraph/nodes/gameplay/rally/recoverToRouteDeparture.md) | 7 | Nœud flowgraph « Rally Mode Recover To Route Departure » (catégorie repeat_p_duration, tags rally, recover, teleport). Replace le véhicule a |
+| [✍ `flowgraph_nodes_gameplay_rally_registerRace`](ge/extensions/flowgraph/nodes/gameplay/rally/registerRace.md) | 1 | Nœud flowgraph « Rally Mode Register Race » (catégorie once_instant, tag rally). Transmet les données de course au mode rally en déclenchant |
+| [✍ `flowgraph_nodes_gameplay_rally_resyncAfterTeleport`](ge/extensions/flowgraph/nodes/gameplay/rally/resyncAfterTeleport.md) | 1 | Nœud flowgraph « Rally Mode Resync After Teleport » (catégorie repeat_instant, tag rally). Efface l'état d'exécution des pacenotes et resync |
+| [✍ `flowgraph_nodes_gameplay_rally_sessionStart`](ge/extensions/flowgraph/nodes/gameplay/rally/sessionStart.md) | 5 | Nœud flowgraph « Rally Mode Session Start » (catégorie once_instant, tag rally). Charge ce qu'il faut pour le mode rally : extensions gamepl |
+| [✍ `flowgraph_nodes_gameplay_rally_setNoteSearch`](ge/extensions/flowgraph/nodes/gameplay/rally/setNoteSearch.md) | 1 | Nœud flowgraph « Rally Mode Set NoteSearch » (tag rally, pas de catégorie). Prévu pour chercher les pacenotes les plus proches plutôt que la |
+| [✍ `flowgraph_nodes_gameplay_rally_stageComplete`](ge/extensions/flowgraph/nodes/gameplay/rally/stageComplete.md) | 1 | Nœud flowgraph « Rally Mode Stage Complete » (catégorie once_instant, tag rally, sans pin). Signale la fin de la spéciale (véhicule arrêté)  |
+| [✍ `flowgraph_nodes_gameplay_rally_stageRuntimeState`](ge/extensions/flowgraph/nodes/gameplay/rally/stageRuntimeState.md) | 3 | Nœud flowgraph « Rally Stage Runtime State » (catégorie repeat_instant, tag rally). Lit l'état d'exécution de la spéciale tenu par le RallyM |
+| [✍ `flowgraph_nodes_gameplay_rally_trackRecovery`](ge/extensions/flowgraph/nodes/gameplay/rally/trackRecovery.md) | 1 | Nœud flowgraph « Rally Mode Track Recovery » (catégorie repeat_instant, tag rally). Suit les retournements et recoveries : à chaque frame, c |
+| [✍ `flowgraph_nodes_gameplay_rally_trackStageTime`](ge/extensions/flowgraph/nodes/gameplay/rally/trackStageTime.md) | 2 | Nœud flowgraph « Rally Track Stage Time » (catégorie repeat, icône timer, tag rally). À chaque frame, émet le hook onRallyDataUpdated avec { |
+| [✍ `flowgraph_nodes_gameplay_rally_trackVehicleDistanceToPos`](ge/extensions/flowgraph/nodes/gameplay/rally/trackVehicleDistanceToPos.md) | 5 | Nœud flowgraph « Track Vehicle Distance to Position » (catégorie repeat, icône straighten, tag rally). Mesure la distance entre le centre av |
+| [✍ `flowgraph_nodes_gameplay_rally_vehicleStoppedNearPlane`](ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPlane.md) | 11 | Nœud flowgraph « Stopped Near Plane? » (catégorie repeat, icône timer, comportement once + duration, tag rally). Vérifie qu'un véhicule est  |
+| [✍ `flowgraph_nodes_gameplay_rally_vehicleStoppedNearPos`](ge/extensions/flowgraph/nodes/gameplay/rally/vehicleStoppedNearPos.md) | 10 | Nœud flowgraph « Stopped Near Position? » (catégorie repeat, icône timer, comportement once + duration, tag rally). Vérifie qu'un véhicule e |
+| [✍ `flowgraph_nodes_gameplay_recoveryPrompt_getRecoveryPromptButtonLimitAndCount`](ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/getRecoveryPromptButtonLimitAndCount.md) | 3 | Nœud flowgraph « Get Recovery Prompt Button Limit and Count » (catégorie once_instant, couleur/icône recoveryPrompt, dépend de gameplay_walk |
+| [✍ `flowgraph_nodes_gameplay_recoveryPrompt_onRecoveryPromptAction`](ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/onRecoveryPromptAction.md) | 6 | Nœud flowgraph « On Recovery Prompt Action » (catégorie logic). Laisse passer le flux quand un bouton du menu de récupération (recovery prom |
+| [✍ `flowgraph_nodes_gameplay_recoveryPrompt_setRecoveryPromptActive`](ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptActive.md) | 2 | Nœud flowgraph « Set Recovery Prompt Active » (catégorie once_instant). Active ou désactive le système de récupération des missions (core_re |
+| [✍ `flowgraph_nodes_gameplay_recoveryPrompt_setRecoveryPromptButton`](ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptButton.md) | 1 | Nœud flowgraph « Set Recovery Prompt Button » (catégorie once_instant). Crée ou modifie un bouton du recovery prompt via core_recoveryPrompt |
+| [✍ `flowgraph_nodes_gameplay_recoveryPrompt_setRecoveryPromptButtonEnabled`](ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptButtonEnabled.md) | 2 | Nœud flowgraph « Set Recovery Prompt Button Enabled » (catégorie once_instant). Active ou désactive un bouton du recovery prompt par id ; si |
+| [✍ `flowgraph_nodes_gameplay_recoveryPrompt_setRecoveryPromptEnabled`](ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptEnabled.md) | 2 | Nœud flowgraph « Set Recovery Prompt Enabled » (catégorie once_instant). Active ou désactive les boutons standard du recovery prompt ; un bo |
+| [✍ `flowgraph_nodes_gameplay_recoveryPrompt_setRecoveryPromptLimit`](ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptLimit.md) | 3 | Nœud flowgraph « Set Recovery Prompt Limits » (catégorie once_instant). Limite le nombre d'utilisations de chaque bouton du recovery prompt  |
+| [✍ `flowgraph_nodes_gameplay_removeOtherVehicles`](ge/extensions/flowgraph/nodes/gameplay/removeOtherVehicles.md) | 6 | Nœud flowgraph « Remove Other Vehicles » (catégorie once_instant). Supprime tous les véhicules sauf ceux dont l'id est donné sur les pins id |
+| [✍ `flowgraph_nodes_gameplay_sites_fileSites`](ge/extensions/flowgraph/nodes/gameplay/sites/fileSites.md) | 6 | Nœud flowgraph « File Sites » (catégorie once_p_duration, tags scenario). Charge un fichier .sites.json via gameplay_sites_sitesManager.load |
+| [✍ `flowgraph_nodes_gameplay_sites_location`](ge/extensions/flowgraph/nodes/gameplay/sites/location.md) | 8 | Nœud flowgraph « Location » (catégorie repeat_instant, tags scenario/sites). Décompose une donnée location (table locationData) : sorties na |
+| [✍ `flowgraph_nodes_gameplay_sites_locationByName`](ge/extensions/flowgraph/nodes/gameplay/sites/locationByName.md) | 5 | Nœud flowgraph « Location by Name ». Cherche une location par nom dans sitesData.locations.byName. Entrées : flow, sitesData, locationName ; |
+| [✍ `flowgraph_nodes_gameplay_sites_locationsByTag`](ge/extensions/flowgraph/nodes/gameplay/sites/locationsByTag.md) | 6 | Nœud flowgraph « Locations by Tags » (catégorie once_instant). Trouve au plus `count` locations portant un tag donné, éventuellement entre m |
+| [✍ `flowgraph_nodes_gameplay_sites_parkingspot`](ge/extensions/flowgraph/nodes/gameplay/sites/parkingspot.md) | 8 | Nœud flowgraph « Parking Spot » (catégorie repeat_instant). Décompose une place de parking (parkingSpotData) : sorties name, pos, rot (quat) |
+| [✍ `flowgraph_nodes_gameplay_sites_parkingspotByName`](ge/extensions/flowgraph/nodes/gameplay/sites/parkingspotByName.md) | 5 | Nœud flowgraph « Parking Spot by Name ». Cherche une place de parking par nom dans sitesData.parkingSpots.byName. Entrées : flow, sitesData, |
+| [✍ `flowgraph_nodes_gameplay_sites_posInZone`](ge/extensions/flowgraph/nodes/gameplay/sites/posInZone.md) | 3 | Nœud flowgraph « Position in Zone » (catégorie repeat_instant). Teste en 2D (zone:containsPoint2D) si une position est dans une zone Sites.  |
+| [✍ `flowgraph_nodes_gameplay_sites_zoneByName`](ge/extensions/flowgraph/nodes/gameplay/sites/zoneByName.md) | 5 | Nœud flowgraph « Zone by Name ». Cherche une zone dans sitesData.zones.byName. Entrées : flow, sitesData, zoneName ; sorties : flow, exists  |
+| [✍ `flowgraph_nodes_gameplay_timers_createTimer`](ge/extensions/flowgraph/nodes/gameplay/timers/createTimer.md) | 3 | Nœud flowgraph « Create Timer » (catégorie once_instant). Crée un timer via le module timer du flowgraph. Entrées : duration (défaut 5 s), r |
+| [✍ `flowgraph_nodes_gameplay_timers_getTimer`](ge/extensions/flowgraph/nodes/gameplay/timers/getTimer.md) | 2 | Nœud flowgraph « Get Timer ». Lit l'état d'un timer (timerId). Sorties : flow, complete, completed (impulsion unique), incomplete, elapsed,  |
+| [✍ `flowgraph_nodes_gameplay_timers_setTimerProperty`](ge/extensions/flowgraph/nodes/gameplay/timers/setTimerProperty.md) | 2 | Nœud flowgraph « Set Timer Property » (catégorie repeat_instant). Modifie un timer existant : progress (temps écoulé en s), pause, duration, |
+| [✍ `flowgraph_nodes_gameplay_timers_simpleTimer`](ge/extensions/flowgraph/nodes/gameplay/timers/simpleTimer.md) | 5 | Nœud flowgraph « Simple Timer » (catégorie once_f_duration). Timer tout-en-un : crée un timer (duration, ref dtSim/dtReal/dtRaw) au déclench |
+| [✍ `flowgraph_nodes_gameplay_toggleWalking`](ge/extensions/flowgraph/nodes/gameplay/toggleWalking.md) | 1 | Nœud flowgraph « Toggle Walking » (catégorie repeat_instant, dépend de gameplay_walk). Impulsions d'entrée enterWalking (passe en mode march |
+| [✍ `flowgraph_nodes_gameplay_traffic_addVehicle`](ge/extensions/flowgraph/nodes/gameplay/traffic/addVehicle.md) | 1 | Nœud flowgraph « Add Vehicle (Traffic) » (once_instant). Ajoute le véhicule vehId à la table du trafic via self.mgr.modules.traffic:insertTr |
+| [✍ `flowgraph_nodes_gameplay_traffic_drivingStats`](ge/extensions/flowgraph/nodes/gameplay/traffic/drivingStats.md) | 4 | Nœud flowgraph « Traffic Driving Stats » (once_p_duration). Suit la route et le comportement de conduite d'un véhicule (vehId, sinon véhicul |
+| [✍ `flowgraph_nodes_gameplay_traffic_fileVehicleGroup`](ge/extensions/flowgraph/nodes/gameplay/traffic/fileVehicleGroup.md) | 5 | Nœud flowgraph « File Vehicle Group » (once_p_duration). Charge un fichier .vehGroup.json (jsonReadFile). Si le fichier a un generator ou pa |
+| [✍ `flowgraph_nodes_gameplay_traffic_getTrafficState`](ge/extensions/flowgraph/nodes/gameplay/traffic/getTrafficState.md) | 1 | Nœud flowgraph « Get Traffic State » (repeat_instant). Lit l'état du trafic (gameplay_traffic.getState : on, off, spawning, loading) et le n |
+| [✍ `flowgraph_nodes_gameplay_traffic_getVehicle`](ge/extensions/flowgraph/nodes/gameplay/traffic/getVehicle.md) | 1 | Nœud flowgraph « Get Vehicle Id From Table » (repeat_instant). Lit l'élément d'indice `index` d'un tableau d'ids de véhicules (vehicleIds) e |
+| [✍ `flowgraph_nodes_gameplay_traffic_getVehicleData`](ge/extensions/flowgraph/nodes/gameplay/traffic/getVehicleData.md) | 1 | Nœud flowgraph « Get Traffic Vehicle Data » (repeat_instant). Lit les paramètres d'un véhicule actif dans le trafic (gameplay_traffic.getTra |
+| [✍ `flowgraph_nodes_gameplay_traffic_parkingParams`](ge/extensions/flowgraph/nodes/gameplay/traffic/parkingParams.md) | 2 | Nœud flowgraph « Parking System Parameters » (once_instant). Règle le système de parking (gameplay_parking.setParkingVars) : precision et ne |
+| [✍ `flowgraph_nodes_gameplay_traffic_parkingTrackVehicle`](ge/extensions/flowgraph/nodes/gameplay/traffic/parkingTrackVehicle.md) | 4 | Nœud flowgraph « Track Vehicle Parking » (catégorie par défaut). Active le suivi de stationnement d'un véhicule (gameplay_parking.enableTrac |
+| [✍ `flowgraph_nodes_gameplay_traffic_pursuitInformation`](ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitInformation.md) | 5 | Nœud flowgraph « Pursuit Information » (repeat_instant). Donne l'état de la poursuite policière d'un véhicule (vehId, sinon joueur) via game |
+| [✍ `flowgraph_nodes_gameplay_traffic_pursuitMode`](ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitMode.md) | 2 | Nœud flowgraph « Set Pursuit Mode » (once_instant). Règle le mode de poursuite pour un véhicule du trafic : mode (0 off, 1 à 3 actif, -1 arr |
+| [✍ `flowgraph_nodes_gameplay_traffic_pursuitParams`](ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitParams.md) | 2 | Nœud flowgraph « Pursuit Parameters » (once_instant). Règle les paramètres de la police (gameplay_police.setPursuitVars) : policeStrictness  |
+| [✍ `flowgraph_nodes_gameplay_traffic_pursuitRoadblock`](ge/extensions/flowgraph/nodes/gameplay/traffic/pursuitRoadblock.md) | 1 | Nœud flowgraph « Pursuit Roadblock » (once_instant). Place jusqu'à 3 véhicules (vehId1..3) en barrage routier avec gameplay_police.placeRoad |
+| [✍ `flowgraph_nodes_gameplay_traffic_removeVehicle`](ge/extensions/flowgraph/nodes/gameplay/traffic/removeVehicle.md) | 1 | Nœud flowgraph « Remove Vehicle (Traffic) » (once_instant). Retire le véhicule vehId de la table du trafic via self.mgr.modules.traffic:remo |
+| [✍ `flowgraph_nodes_gameplay_traffic_setVehicleData`](ge/extensions/flowgraph/nodes/gameplay/traffic/setVehicleData.md) | 2 | Nœud flowgraph « Set Traffic Vehicle Data » (once_instant). Règle un véhicule actif du trafic : role (veh:setRole), enableActions (inverse d |
+| [✍ `flowgraph_nodes_gameplay_traffic_setVehicleFlowgraph`](ge/extensions/flowgraph/nodes/gameplay/traffic/setVehicleFlowgraph.md) | 4 | Nœud flowgraph « Set Vehicle Flowgraph » (once_instant). Lance un flowgraph personnalisé (fgFile) pour un véhicule du trafic via veh.role:se |
+| [✍ `flowgraph_nodes_gameplay_traffic_setupParkedCars`](ge/extensions/flowgraph/nodes/gameplay/traffic/setupParkedCars.md) | 4 | Nœud flowgraph « Setup Parking System » (once_instant). Active le système de placement sur places de parking : gameplay_parking.setState(tru |
+| [✍ `flowgraph_nodes_gameplay_traffic_setupPursuitGameplay`](ge/extensions/flowgraph/nodes/gameplay/traffic/setupPursuitGameplay.md) | 1 | Nœud flowgraph « Setup Pursuit Gameplay » (once_instant). Configure un gameplay de poursuite via gameplay_police.setupPursuitGameplay(suspec |
+| [✍ `flowgraph_nodes_gameplay_traffic_signals_controller`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/controller.md) | 7 | Nœud flowgraph « Get Signal Controller » (repeat_instant). Lit un contrôleur de feux (signalControllerData) : signalType, stateCount, durati |
+| [✍ `flowgraph_nodes_gameplay_traffic_signals_controllerByName`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/controllerByName.md) | 4 | Nœud flowgraph « Controller by Name » (once_instant). Cherche un contrôleur de feux (type de signal) par nom dans signalsData.controllers. S |
+| [✍ `flowgraph_nodes_gameplay_traffic_signals_fileTrafficSignals`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/fileTrafficSignals.md) | 6 | Nœud flowgraph « File Traffic Signals » (once_p_duration, dépend de core_trafficSignals). Charge un fichier de feux de signalisation (core_t |
+| [✍ `flowgraph_nodes_gameplay_traffic_signals_instance`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instance.md) | 1 | Nœud flowgraph « Get Signal Instance » (repeat_instant). Lit une instance de feu (signalInstanceData) : pos (position d'arrêt), dirVec, targ |
+| [✍ `flowgraph_nodes_gameplay_traffic_signals_instanceByName`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceByName.md) | 4 | Nœud flowgraph « Signal by Name » (once_instant). Cherche une instance de feu par nom dans signalsData.instances. Sorties : exists (caché),  |
+| [✍ `flowgraph_nodes_gameplay_traffic_signals_instanceSettings`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceSettings.md) | 1 | Nœud flowgraph « Signal Instance Settings » (once_instant). Règle une instance de feu : sequence (setSequence par id), controller (setContro |
+| [✍ `flowgraph_nodes_gameplay_traffic_signals_instanceState`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instanceState.md) | 1 | Nœud flowgraph « Predict Signal State » (once_instant). Prédit l'état futur d'une instance de feu après `seconds` secondes (positives unique |
+| [✍ `flowgraph_nodes_gameplay_traffic_signals_sequence`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequence.md) | 1 | Nœud flowgraph « Get Signal Sequence » (repeat_instant). Lit une séquence de feux (signalSequenceData) : step (currStep), maxSteps (#timelin |
+| [✍ `flowgraph_nodes_gameplay_traffic_signals_sequenceAdvance`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequenceAdvance.md) | 1 | Nœud flowgraph « Advance Sequence » (once_instant). Fait avancer une séquence de feux à l'étape suivante (sequence:advance()). |
+| [✍ `flowgraph_nodes_gameplay_traffic_signals_sequenceByName`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequenceByName.md) | 4 | Nœud flowgraph « Sequence by Name » (once_instant). Cherche une séquence de feux (groupe de signaux / logique de phases) par nom dans signal |
+| [✍ `flowgraph_nodes_gameplay_traffic_signals_sequenceSettings`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequenceSettings.md) | 1 | Nœud flowgraph « Signal Sequence Settings » (once_instant). Règle une séquence de feux : active (setActive), timed (enableTimer), stepIndex  |
+| [✍ `flowgraph_nodes_gameplay_traffic_signals_trafficSignalsSettings`](ge/extensions/flowgraph/nodes/gameplay/traffic/signals/trafficSignalsSettings.md) | 2 | Nœud flowgraph « Traffic Signals Settings » (once_instant, dépend de core_trafficSignals). Pins : signalsActive (core_trafficSignals.setActi |
+| [✍ `flowgraph_nodes_gameplay_traffic_trafficActivate`](ge/extensions/flowgraph/nodes/gameplay/traffic/trafficActivate.md) | 5 | Nœud flowgraph « Activate Traffic » (once_instant). Active le mode trafic pour une liste d'ids (vehicleIds, typiquement du nœud Spawn Vehicl |
+| [✍ `flowgraph_nodes_gameplay_traffic_trafficCustomGroup`](ge/extensions/flowgraph/nodes/gameplay/traffic/trafficCustomGroup.md) | 11 | Nœud flowgraph « Generate Vehicle Group » (catégorie provider, dépend de gameplay_traffic_trafficUtils). Génère les données d'un groupe de v |
+| [✍ `flowgraph_nodes_gameplay_traffic_trafficMoveGroup`](ge/extensions/flowgraph/nodes/gameplay/traffic/trafficMoveGroup.md) | 6 | Nœud flowgraph « Move Vehicle Group » (catégorie par défaut). Téléporte tous les véhicules d'un groupe (vehicleIds) vers une nouvelle positi |
+| [✍ `flowgraph_nodes_gameplay_traffic_trafficParams`](ge/extensions/flowgraph/nodes/gameplay/traffic/trafficParams.md) | 3 | Nœud flowgraph « Traffic Parameters » (once_instant). Règle le système de trafic via gameplay_traffic.setTrafficVars : aiMode (traffic, rand |
+| [✍ `flowgraph_nodes_gameplay_traffic_trafficScatter`](ge/extensions/flowgraph/nodes/gameplay/traffic/trafficScatter.md) | 1 | Nœud flowgraph « Scatter Traffic » (once_instant). Téléporte tous les véhicules de trafic loin du joueur ou de la caméra avec gameplay_traff |
+| [✍ `flowgraph_nodes_gameplay_traffic_trafficSpawnGroup`](ge/extensions/flowgraph/nodes/gameplay/traffic/trafficSpawnGroup.md) | 7 | Nœud flowgraph « Spawn Vehicle Group » (catégorie par défaut). Fait apparaître un groupe de véhicules avec core_multiSpawn.spawnGroup. Pins  |
+| [✍ `flowgraph_nodes_gameplay_vehiclePool_activateAll`](ge/extensions/flowgraph/nodes/gameplay/vehiclePool/activateAll.md) | 1 | Nœud flowgraph « Activate All Vehicles » (once_instant). Active ou désactive tous les véhicules du pool (pool:setAllVehs(activate), défaut t |
+| [✍ `flowgraph_nodes_gameplay_vehiclePool_activateByDistance`](ge/extensions/flowgraph/nodes/gameplay/vehiclePool/activateByDistance.md) | 1 | Nœud flowgraph « Activate Vehicles By Distance » (repeat_instant). Chaque frame, active les véhicules du pool proches d'un point et désactiv |
+| [✍ `flowgraph_nodes_gameplay_vehiclePool_activateVehicle`](ge/extensions/flowgraph/nodes/gameplay/vehiclePool/activateVehicle.md) | 1 | Nœud flowgraph « Activate Vehicle » (once_instant). Active ou désactive un véhicule du pool (pool:setVeh(vehId, activate), défaut true). Néc |
+| [✍ `flowgraph_nodes_gameplay_vehiclePool_addGroup`](ge/extensions/flowgraph/nodes/gameplay/vehiclePool/addGroup.md) | 1 | Nœud flowgraph « Add Vehicle Group To Pool » (once_instant). Insère dans le pool tous les ids de la table vehGroup (pool:insertVeh pour chac |
+| [✍ `flowgraph_nodes_gameplay_vehiclePool_addVehicle`](ge/extensions/flowgraph/nodes/gameplay/vehiclePool/addVehicle.md) | 1 | Nœud flowgraph « Add Vehicle (Pool) » (once_instant). Ajoute un véhicule au pool (pool:insertVeh(vehId)). Nécessite le module core_vehicleAc |
+| [✍ `flowgraph_nodes_gameplay_vehiclePool_createPool`](ge/extensions/flowgraph/nodes/gameplay/vehiclePool/createPool.md) | 5 | Nœud flowgraph « Create Vehicle Pool » (once_instant). Crée un pool de véhicules (core_vehicleActivePooling.createPool({name})) pour gérer l |
+| [✍ `flowgraph_nodes_gameplay_vehiclePool_cyclePool`](ge/extensions/flowgraph/nodes/gameplay/vehiclePool/cyclePool.md) | 1 | Nœud flowgraph « Cycle Pool » (once_instant). Bascule un véhicule actif et un véhicule inactif du pool pour garder le même nombre de véhicul |
+| [✍ `flowgraph_nodes_gameplay_vehiclePool_managePool`](ge/extensions/flowgraph/nodes/gameplay/vehiclePool/managePool.md) | 1 | Nœud flowgraph « Manage Vehicle Pool » (once_instant). Règle et lit un pool de véhicules : maxActive (nombre max de véhicules actifs ; -1 ou |
+| [✍ `flowgraph_nodes_gameplay_vehiclePool_removeVehicle`](ge/extensions/flowgraph/nodes/gameplay/vehiclePool/removeVehicle.md) | 1 | Nœud flowgraph « Remove Vehicle (Pool) » (once_instant). Retire un véhicule du pool (pool:removeVeh(vehId)). Nécessite le module core_vehicl |
+| [✍ `flowgraph_nodes_gameplay_zone`](ge/extensions/flowgraph/nodes/gameplay/zone.md) | 2 | Nœud flowgraph « In Zone » (repeat_instant, couleur sites). Détecte si un véhicule (vehId) est dans les zones de sitesData : teste des point |
+| [✍ `flowgraph_nodes_gfx_blur`](ge/extensions/flowgraph/nodes/gfx/blur.md) | 4 | Nœud flowgraph « Blur » (repeat_instant, tags gfx/blur). Floute la scène : pin blurAmount (0 à 1, défaut 1) devient l'alpha d'un rectangle p |
+| [✍ `flowgraph_nodes_gfx_dof`](ge/extensions/flowgraph/nodes/gfx/dof.md) | 5 | Nœud flowgraph « DOF » (catégorie par défaut, tags gfx/dof). Fait apparaître (blurIn) ou disparaître (blurOut) un flou de profondeur de cham |
+| [✍ `flowgraph_nodes_input_blacklistAction`](ge/extensions/flowgraph/nodes/input/blacklistAction.md) | 8 | Nœud flowgraph « Set Input Actions » (once_instant, dépend de core_input_actionFilter). Bloque ou autorise une liste d'actions d'entrée, com |
+| [✍ `flowgraph_nodes_input_blacklistActionFilter`](ge/extensions/flowgraph/nodes/input/blacklistActionFilter.md) | 6 | Nœud flowgraph « Set Input Actions by Filters » (once_instant, dépend de core_input_actionFilter ; recommandé pour les missions). Comme « Se |
+| [✍ `flowgraph_nodes_input_getActionControl`](ge/extensions/flowgraph/nodes/input/getActionControl.md) | 1 | Nœud flowgraph « Get Action Control » (repeat_instant). Donne le contrôle (touche/bouton) associé à une action d'entrée via core_input_bindi |
+| [✍ `flowgraph_nodes_logic_and`](ge/extensions/flowgraph/nodes/logic/and.md) | 6 | Noeud flowgraph 'And' (categorie logic). Ne laisse passer le flux que si toutes les entrees flow_1..flow_N ont du flux. Par defaut 2 entrees |
+| [✍ `flowgraph_nodes_logic_booleanExpression`](ge/extensions/flowgraph/nodes/logic/booleanExpression.md) | 10 | Noeud flowgraph 'Boolean Expression' (categorie simple). Evalue une expression booleenne Lua saisie dans data.expression (ex. 'a and not b') |
+| [✍ `flowgraph_nodes_logic_branch`](ge/extensions/flowgraph/nodes/logic/branch.md) | 1 | Noeud flowgraph 'Branch' (categorie logic) : un 'if'. Si le flux d'entree est actif, laisse passer le flux par la sortie True ou False selon |
+| [✍ `flowgraph_nodes_logic_bundle`](ge/extensions/flowgraph/nodes/logic/bundle.md) | 1 | Noeud flowgraph 'Bundle' (categorie logic). Recopie simplement le flux d'entree vers la sortie ; sert seulement a regrouper visuellement des |
+| [✍ `flowgraph_nodes_logic_chainFlowBranch`](ge/extensions/flowgraph/nodes/logic/chainFlowBranch.md) | 1 | Noeud flowgraph 'Chainflow Branch' (categorie logic). Variante de Branch pour le 'chain flow' (pins declares avec chainFlow=true) : envoie l |
+| [✍ `flowgraph_nodes_logic_compare`](ge/extensions/flowgraph/nodes/logic/compare.md) | 8 | Noeud flowgraph 'Compare' (categorie logic). Compare les entrees A et B (type any) avec une fonction de comparaison choisie dans l'editeur ( |
+| [✍ `flowgraph_nodes_logic_edgeDetect`](ge/extensions/flowgraph/nodes/logic/edgeDetect.md) | 2 | Noeud flowgraph 'Edge Detector' (categorie logic). Laisse passer le flux (une frame) quand la valeur du pin 'signal' change par rapport a la |
+| [✍ `flowgraph_nodes_logic_flowSwitch`](ge/extensions/flowgraph/nodes/logic/flowSwitch.md) | 7 | Noeud flowgraph 'Flow Switch' (categorie logic). Interrupteur avec les entrees flow 'on' et 'off' ; l'etat peut aussi etre bascule en cliqua |
+| [✍ `flowgraph_nodes_logic_frameDelay`](ge/extensions/flowgraph/nodes/logic/frameDelay.md) | 7 | Noeud flowgraph 'Frame Delay' (categorie logic). Apres que le flux d'entree est apparu, attend 'frames' appels de work avant de sortir du fl |
+| [✍ `flowgraph_nodes_logic_once`](ge/extensions/flowgraph/nodes/logic/once.md) | 3 | Noeud flowgraph 'Once' (categorie logic, behaviour once). Laisse passer le flux une seule fois (impulsion en sortie) ; le pin impulsion 'res |
+| [✍ `flowgraph_nodes_logic_rateLimit`](ge/extensions/flowgraph/nodes/logic/rateLimit.md) | 4 | Noeud flowgraph 'Flow Interval' (categorie logic, fichier rateLimit). Laisse passer une impulsion de flux a intervalle regulier tant que le  |
+| [✍ `flowgraph_nodes_logic_select`](ge/extensions/flowgraph/nodes/logic/select.md) | 8 | Noeud flowgraph 'Select' (categorie logic). Choisit une valeur parmi N entrees value_i selon les pins flow select_i actifs, et combine les v |
+| [✍ `flowgraph_nodes_logic_sequencer`](ge/extensions/flowgraph/nodes/logic/sequencer.md) | 9 | Noeud flowgraph 'Sequencer' (categorie logic). Active tour a tour les sorties flow value_1..value_N. Mode d'increment 'auto' (+1 par frame), |
+| [✍ `flowgraph_nodes_logic_switchcase`](ge/extensions/flowgraph/nodes/logic/switchcase.md) | 8 | Noeud flowgraph 'Switch Case' (categorie logic). Compare la valeur d'entree 'value' avec N valeurs value_i (egalite stricte) et met a true l |
+| [✍ `flowgraph_nodes_logic_timedTrigger`](ge/extensions/flowgraph/nodes/logic/timedTrigger.md) | 7 | Noeud flowgraph 'Timed Trigger' (categorie logic, behaviour once+duration). Il faut maintenir du flux sur 'charge' pendant data.duration sec |
+| [✍ `flowgraph_nodes_logic_wait`](ge/extensions/flowgraph/nodes/logic/wait.md) | 6 | Noeud flowgraph 'Wait' (categorie logic, behaviour duration+once). Quand le flux arrive, attend 'duration' secondes (3 par defaut) avant de  |
+| [✍ `flowgraph_nodes_logic_xor`](ge/extensions/flowgraph/nodes/logic/xor.md) | 1 | Noeud flowgraph 'Xor' (categorie logic). Le flux sort si exactement une des deux entrees a et b a du flux. |
+| [✍ `flowgraph_nodes_macro_foreach`](ge/extensions/flowgraph/nodes/macro/foreach.md) | 4 | Noeud flowgraph 'Foreach' (macro, categorie logic). Pour chaque element de la table d'entree, charge un nouveau flowgraph (fichier .flow.jso |
+| [✍ `flowgraph_nodes_macro_getForeach`](ge/extensions/flowgraph/nodes/macro/getForeach.md) | 3 | Noeud flowgraph 'Get Foreach' (categorie provider). Dans un flowgraph cree par un noeud Foreach, expose la cle (key) et la valeur (value) de |
+| [✍ `flowgraph_nodes_macro_integrated`](ge/extensions/flowgraph/nodes/macro/integrated.md) | 15 | Noeud macro 'Integrated' (cache, canHaveGraph) : represente un sous-graphe (graphe cible / macro) dans le graphe parent. Ses pins sont recop |
+| [✍ `flowgraph_nodes_macro_io`](ge/extensions/flowgraph/nodes/macro/io.md) | 6 | Noeud macro 'I/O' (cache, non supprimable) : sert de passerelle entre un sous-graphe (macro) et son graphe parent. ioType vaut 'in' (entrees |
+| [✍ `flowgraph_nodes_math_accumulator`](ge/extensions/flowgraph/nodes/math/accumulator.md) | 6 | Noeud flowgraph 'Accumulator' (categorie repeat_instant). Additionne la valeur du pin 'value' (1 par defaut) a une somme interne a chaque fr |
+| [✍ `flowgraph_nodes_math_ease`](ge/extensions/flowgraph/nodes/math/ease.md) | 6 | Noeud flowgraph 'Ease' (categorie simple). Applique une fonction d'easing a la valeur d'entree (normalement entre 0 et 1) : linear, in/out/i |
+| [✍ `flowgraph_nodes_math_increaser`](ge/extensions/flowgraph/nodes/math/increaser.md) | 4 | Noeud flowgraph 'Increaser' (categorie repeat_instant). Garde en memoire le maximum de la valeur d'entree : si 'value' depasse la valeur int |
+| [✍ `flowgraph_nodes_math_math`](ge/extensions/flowgraph/nodes/math/math.md) | 10 | Noeud flowgraph 'Expression' (categorie simple, fichier math). Evalue une expression mathematique Lua (data.expression) sur les pins a, b, c |
+| [✍ `flowgraph_nodes_math_quaternion_direction`](ge/extensions/flowgraph/nodes/math/quaternion/direction.md) | 2 | Noeud flowgraph 'Direction' (categorie simple). Convertit un angle 'deg' en degres en quaternion de rotation autour de l'axe Z (setFromEuler |
+| [✍ `flowgraph_nodes_math_quaternion_lookAt`](ge/extensions/flowgraph/nodes/math/quaternion/lookAt.md) | 2 | Noeud flowgraph 'Look At' (categorie simple). Calcule le quaternion qui oriente une direction allant du point 'from' vers 'to', avec le vect |
+| [✍ `flowgraph_nodes_math_smoothers_linear`](ge/extensions/flowgraph/nodes/math/smoothers/linear.md) | 5 | Noeud flowgraph 'Linear Smoother' (categorie simple). Lissage lineaire d'un signal avec newTemporalSmoothing : 'value' vers l'etat interne a |
+| [✍ `flowgraph_nodes_math_smoothers_nonLinear`](ge/extensions/flowgraph/nodes/math/smoothers/nonLinear.md) | 4 | Noeud flowgraph 'Nonlinear Smoother' (categorie simple). Lissage non lineaire avec newTemporalSmoothingNonLinear : taux upRate/downRate selo |
+| [✍ `flowgraph_nodes_math_smoothers_sigmoid`](ge/extensions/flowgraph/nodes/math/smoothers/sigmoid.md) | 4 | Noeud flowgraph 'Sigmoid Smoother' (categorie simple). Lissage sigmoide avec newTemporalSigmoidSmoothing : limites de vitesse upRateLimit/do |
+| [✍ `flowgraph_nodes_math_smoothers_spring`](ge/extensions/flowgraph/nodes/math/smoothers/spring.md) | 4 | Noeud flowgraph 'Spring Smoother' (categorie simple). Doit lisser un signal par ressort amorti (upSpring/downSpring, upDamp/downDamp selon l |
+| [✍ `flowgraph_nodes_math_vector_merge`](ge/extensions/flowgraph/nodes/math/vector/merge.md) | 2 | Noeud flowgraph 'Merge' (categorie simple). Regroupe jusqu'a 4 nombres x, y, z, w dans une table {x, y, z, w} (type vec3, color ou quat) sur |
+| [✍ `flowgraph_nodes_math_vector_split`](ge/extensions/flowgraph/nodes/math/vector/split.md) | 2 | Noeud flowgraph 'Split' (categorie simple). Decompose une table (vec3, color ou quat, 4 elements max) en nombres x, y, z, w. |
+| [✍ `flowgraph_nodes_mission_ARunForLife`](ge/extensions/flowgraph/nodes/mission/ARunForLife.md) | 33 | Noeud flowgraph 'ARunForLife' (categorie repeat_instant) : logique complete d'un petit mini-jeu de survie ("Plays my little scenario"). La c |
+| [✍ `flowgraph_nodes_mission_UpdateDisplayDragRace`](ge/extensions/flowgraph/nodes/mission/UpdateDisplayDragRace.md) | 6 | Noeud flowgraph 'Update Display Drag Race' (categorie repeat_instant) pour la mission de drag race : affiche sur le panneau du quart de mile |
+| [✍ `flowgraph_nodes_mission_blacklistParkingSpots`](ge/extensions/flowgraph/nodes/mission/blacklistParkingSpots.md) | 10 | Noeud flowgraph 'Blacklist Parking Spots' (categorie once_instant). Marque comme 'banned' les places de parking (gameplay_parking) situees d |
+| [✍ `flowgraph_nodes_mission_clearLightsDragRace`](ge/extensions/flowgraph/nodes/mission/clearLightsDragRace.md) | 5 | Noeud flowgraph 'Clear Lights Dragrace' (categorie repeat_instant). Cache les lumieres de prestage/stage et du compte a rebours (objets scen |
+| [✍ `flowgraph_nodes_mission_countdownLightsController`](ge/extensions/flowgraph/nodes/mission/countdownLightsController.md) | 4 | Noeud flowgraph 'Countdown Lights Controller' (categorie repeat_instant) pour le feu de depart du drag race. Allume les ambres puis le vert  |
+| [✍ `flowgraph_nodes_mission_getCustomVehicleData`](ge/extensions/flowgraph/nodes/mission/getCustomVehicleData.md) | 3 | Noeud flowgraph 'Get Custom Vehicle Data' (categorie once_instant). Prevu pour lire les champs dynamiques d'un vehicule (pin vehId) vers des |
+| [✍ `flowgraph_nodes_mission_getSetupData`](ge/extensions/flowgraph/nodes/mission/getSetupData.md) | 1 | Noeud flowgraph 'Get Mission Setup Data' (categorie provider). Expose sur ses sorties les valeurs des modules de preparation de mission (sel |
+| [✍ `flowgraph_nodes_mission_goToStartLine`](ge/extensions/flowgraph/nodes/mission/goToStartLine.md) | 3 | Noeud flowgraph 'Check Players Position' (categorie repeat_instant, fichier goToStartLine). Classe la position du vehicule par rapport a la  |
+| [✍ `flowgraph_nodes_mission_knockAwayCheck`](ge/extensions/flowgraph/nodes/mission/knockAwayCheck.md) | 7 | Noeud flowgraph 'KnockAway Check' (categorie repeat_instant). Detecte si les vehicules d'un prefab (pin prefabId) ont ete renverses (angle d |
+| [✍ `flowgraph_nodes_mission_lightsController`](ge/extensions/flowgraph/nodes/mission/lightsController.md) | 4 | Noeud flowgraph 'Lights Controller' (categorie repeat_instant) pour le feu de depart du drag race (version basee sur la vitesse). Meme seque |
+| [✍ `flowgraph_nodes_mission_postClean`](ge/extensions/flowgraph/nodes/mission/postClean.md) | 1 | Noeud flowgraph 'Mission Post Clean' (categorie once_p_duration). Nettoie apres une mission : si keepVeh, garde le vehicule vehId (ou le veh |
+| [✍ `flowgraph_nodes_mission_preClean`](ge/extensions/flowgraph/nodes/mission/preClean.md) | 1 | Noeud flowgraph 'Mission Cleanup' (categorie once_p_duration). Nettoie l'etat du monde avant une mission via le module mission du gestionnai |
+| [✍ `flowgraph_nodes_mission_prepareVehicle`](ge/extensions/flowgraph/nodes/mission/prepareVehicle.md) | 1 | Noeud flowgraph 'Prepare Vehicle' (categorie once_instant). Prepare un ou plusieurs vehicules pour le gameplay (electrique et valeurs) via s |
+| [✍ `flowgraph_nodes_mission_removeStashedPlayerVehicle`](ge/extensions/flowgraph/nodes/mission/removeStashedPlayerVehicle.md) | 1 | Noeud flowgraph 'Remove Stashed Player Vehicle' (categorie once_p_duration). Supprime le vehicule joueur mis de cote par le noeud de nettoya |
+| [✍ `flowgraph_nodes_mission_selectGarage2GarageVehicle`](ge/extensions/flowgraph/nodes/mission/selectGarage2GarageVehicle.md) | 5 | Noeud flowgraph 'Select Garage Vehicle' (categorie once_instant, auteur BeamNG) pour la mission garage-to-garage. Choisit au hasard un model |
+| [✍ `flowgraph_nodes_mission_selectGarage2GarageZones`](ge/extensions/flowgraph/nodes/mission/selectGarage2GarageZones.md) | 6 | Noeud flowgraph 'Select Garage Sites' (categorie once_instant, auteur BeamNG). Choisit une place de depart dans les zones initiales de la mi |
+| [✍ `flowgraph_nodes_mission_selectGarageSpots`](ge/extensions/flowgraph/nodes/mission/selectGarageSpots.md) | 6 | Noeud flowgraph 'Select Garage Spots' (categorie once_p_duration, auteur BeamNG). Choisit une place de depart et une place d'arrivee parmi s |
+| [✍ `flowgraph_nodes_mission_selectHeistMissionSpots`](ge/extensions/flowgraph/nodes/mission/selectHeistMissionSpots.md) | 4 | Noeud flowgraph 'Select Heist Spots' (categorie once_p_duration, auteur BeamNG). Choisit, parmi les places de sitesData.parkingSpots dont le |
+| [✍ `flowgraph_nodes_mission_stageLightsDragRace`](ge/extensions/flowgraph/nodes/mission/stageLightsDragRace.md) | 5 | Noeud flowgraph 'Set Stage Lights' (categorie repeat_instant). Allume la lumiere Pre Stage ou Stage de l'arbre de Noel du drag race (objets  |
+| [✍ `flowgraph_nodes_recording_playReplay`](ge/extensions/flowgraph/nodes/recording/playReplay.md) | 1 | Noeud flowgraph 'Play Replay' (categorie repeat_instant). Sur l'impulsion 'play', charge et lance un replay avec core_replay.loadFile. Le ch |
+| [✍ `flowgraph_nodes_recording_recordCamera`](ge/extensions/flowgraph/nodes/recording/recordCamera.md) | 5 | Noeud flowgraph 'Record Camera' (categorie repeat_f_duration). Enregistre un trajet de camera par images cles : la premiere impulsion 'snap' |
+| [✍ `flowgraph_nodes_recording_recordReplay`](ge/extensions/flowgraph/nodes/recording/recordReplay.md) | 6 | Noeud flowgraph 'Record Replay' (categorie repeat_f_duration). Doit enregistrer un replay du vehicule courant : l'impulsion 'start' puis 'st |
+| [✍ `flowgraph_nodes_recording_startAutoReplay`](ge/extensions/flowgraph/nodes/recording/startAutoReplay.md) | 1 | Noeud flowgraph 'Start Auto Replay'. Sur l'impulsion 'startNewRec', arrete l'enregistrement courant et en demarre un nouveau via le module m |
+| [✍ `flowgraph_nodes_recording_stopAutoReplay`](ge/extensions/flowgraph/nodes/recording/stopAutoReplay.md) | 1 | Noeud flowgraph 'Stop Auto Replay'. Arrete l'enregistrement en cours s'il y en a un (module missionReplay). Si 'attemptNotCompleted' est vra |
+| [✍ `flowgraph_nodes_recording_stopReplay`](ge/extensions/flowgraph/nodes/recording/stopReplay.md) | 1 | Noeud flowgraph 'Stop Replay' (categorie repeat_instant). Arrete la relecture en cours : si core_replay.state.state vaut 'playback', appelle |
+| [✍ `flowgraph_nodes_scene_camera_cameraAngle`](ge/extensions/flowgraph/nodes/scene/camera/cameraAngle.md) | 2 | Noeud flowgraph 'Camera Transform' (categorie repeat_instant, fichier cameraAngle). Donne la position (vec3), la rotation (quat) et le champ |
+| [✍ `flowgraph_nodes_scene_camera_cameraAutoRotate`](ge/extensions/flowgraph/nodes/scene/camera/cameraAutoRotate.md) | 1 | Noeud flowgraph 'Camera Look at Position' (categorie repeat_instant, fichier cameraAutoRotate). Passe en camera libre et oriente la camera p |
+| [✍ `flowgraph_nodes_scene_camera_cameraCircle`](ge/extensions/flowgraph/nodes/scene/camera/cameraCircle.md) | 4 | Noeud flowgraph 'Camera Auto Circle' (categorie once_p_duration). Fait tourner la camera libre en cercle autour d'un vehicule (vehId, defaut |
+| [✍ `flowgraph_nodes_scene_camera_cameraPath`](ge/extensions/flowgraph/nodes/scene/camera/cameraPath.md) | 8 | Noeud flowgraph 'Simple Cam Path' (categorie once_f_duration, fichier cameraPath). Lance une trajectoire de camera (fichier .camPath.json de |
+| [✍ `flowgraph_nodes_scene_camera_getCamPath`](ge/extensions/flowgraph/nodes/scene/camera/getCamPath.md) | 5 | Noeud flowgraph 'Get Cam Path' (categorie once_f_duration). Renseigne sur l'etat d'une trajectoire de camera (par 'id', sinon celle qui est  |
+| [✍ `flowgraph_nodes_scene_camera_getCameraFOV`](ge/extensions/flowgraph/nodes/scene/camera/getCameraFOV.md) | 2 | Noeud flowgraph 'Get Camera FOV' (categorie repeat_instant). Donne le champ de vision courant de la camera en degres (core_camera.getFovDeg) |
+| [✍ `flowgraph_nodes_scene_camera_getCameraMode`](ge/extensions/flowgraph/nodes/scene/camera/getCameraMode.md) | 1 | Noeud flowgraph 'Get Camera Mode' (categorie repeat_instant). Donne le nom du mode de camera actif (core_camera.getActiveCamName(0)) sur la  |
+| [✍ `flowgraph_nodes_scene_camera_procedural_procCamPathPosRot`](ge/extensions/flowgraph/nodes/scene/camera/procedural/procCamPathPosRot.md) | 1 | Noeud flowgraph 'Procedural Static CamPath' (categorie once_p_duration). Cree une trajectoire de camera a deux cles identiques (position pos |
+| [✍ `flowgraph_nodes_scene_camera_procedural_procDirectPath`](ge/extensions/flowgraph/nodes/scene/camera/procedural/procDirectPath.md) | 1 | Noeud flowgraph 'Procedural Direct Campath' (categorie once_p_duration). Genere une trajectoire de camera qui survole le trajet direct de 'f |
+| [✍ `flowgraph_nodes_scene_camera_restartCamPath`](ge/extensions/flowgraph/nodes/scene/camera/restartCamPath.md) | 2 | Noeud flowgraph 'Restart Cam Path' (categorie once_instant, behaviour once). Redemarre la trajectoire de camera active (ou celle d'id 'id',  |
+| [✍ `flowgraph_nodes_scene_camera_returnToVehicle`](ge/extensions/flowgraph/nodes/scene/camera/returnToVehicle.md) | 1 | Noeud flowgraph 'Return camera to vehicle' (categorie once_instant). Ramene la camera au vehicule actif depuis un autre mode (camera libre,  |
+| [✍ `flowgraph_nodes_scene_camera_setCameraFOV`](ge/extensions/flowgraph/nodes/scene/camera/setCameraFOV.md) | 4 | Noeud flowgraph « Set Camera FOV » (categorie repeat_instant, couleur/icone camera). Pin d'entree : value (number), le champ de vision en de |
+| [✍ `flowgraph_nodes_scene_camera_setCameraMode`](ge/extensions/flowgraph/nodes/scene/camera/setCameraMode.md) | 1 | Noeud flowgraph « Set Camera Mode » (repeat_instant, dependance core_camera). Pin d'entree : mode (string), nom du mode camera. A chaque exe |
+| [✍ `flowgraph_nodes_scene_camera_setCameraPosition`](ge/extensions/flowgraph/nodes/scene/camera/setCameraPosition.md) | 7 | Noeud flowgraph « Set Camera Position » (repeat_instant). Deplace la camera libre a une position, saisie dans le noeud (mode 'custom') ou fo |
+| [✍ `flowgraph_nodes_scene_camera_setCameraRotation`](ge/extensions/flowgraph/nodes/scene/camera/setCameraRotation.md) | 7 | Noeud flowgraph « Set Camera Rotation » (repeat_instant). Applique une rotation (quaternion) a la camera libre, saisie dans le noeud (mode ' |
+| [✍ `flowgraph_nodes_scene_camera_startCamPath`](ge/extensions/flowgraph/nodes/scene/camera/startCamPath.md) | 5 | Noeud flowgraph « Start Cam Path » (once_instant). Fait suivre a la camera le chemin d'un objet CameraPath (fichier .camPath.json). Entrees  |
+| [✍ `flowgraph_nodes_scene_camera_stopCamPath`](ge/extensions/flowgraph/nodes/scene/camera/stopCamPath.md) | 2 | Noeud flowgraph « Stop Cam Path » (once_instant). Arrete un chemin camera : le chemin actif n'est pas considere comme termine mais devient i |
+| [✍ `flowgraph_nodes_scene_collectionMarker`](ge/extensions/flowgraph/nodes/scene/collectionMarker.md) | 6 | Noeud flowgraph « Collection Marker » (repeat_instant, auteur BeamNG). Affiche un jeton colorable aux couleurs BeamNG (TSStatic art/shapes/c |
+| [✍ `flowgraph_nodes_scene_customLuaCommand`](ge/extensions/flowgraph/nodes/scene/customLuaCommand.md) | 4 | Noeud flowgraph « Custom Lua Command » (once_instant). Compile avec loadstring le code Lua recu dans le pin func puis l'execute avec pcall.  |
+| [✍ `flowgraph_nodes_scene_getObjectField`](ge/extensions/flowgraph/nodes/scene/getObjectField.md) | 1 | Noeud flowgraph « Get Object Field » (repeat_instant). Lit un champ d'un objet de la scene (scenetree.findObjectById). Entrees : objectId, f |
+| [✍ `flowgraph_nodes_scene_getPlayerVehicle`](ge/extensions/flowgraph/nodes/scene/getPlayerVehicle.md) | 2 | Noeud flowgraph « Get Player Vehicle ID » (categorie provider). Sorties : vehId (number) id du vehicule controle par le joueur (be:getPlayer |
+| [✍ `flowgraph_nodes_scene_getPointOnDecalroad`](ge/extensions/flowgraph/nodes/scene/getPointOnDecalroad.md) | 3 | Noeud flowgraph « Get Point on Decalroad » (repeat_instant). Donne la position d'un point de controle d'une DecalRoad (roadId, idx) et une a |
+| [✍ `flowgraph_nodes_scene_hide`](ge/extensions/flowgraph/nodes/scene/hide.md) | 2 | Noeud flowgraph « Show/Hide Object » (repeat_instant). Cache ou montre un objet de la scene. Entrees : objID (number), hide (bool, true = ca |
+| [✍ `flowgraph_nodes_scene_idByName`](ge/extensions/flowgraph/nodes/scene/idByName.md) | 6 | Noeud flowgraph « ID by Name » (categorie simple). Retrouve l'id du premier objet de la scene portant un nom (scenetree.findObject). Entree  |
+| [✍ `flowgraph_nodes_scene_keepPrefab`](ge/extensions/flowgraph/nodes/scene/keepPrefab.md) | 2 | Noeud flowgraph « Keep Prefab » (once_instant). Marque un prefab pour qu'il soit conserve apres l'arret du flowgraph ; par defaut un prefab  |
+| [✍ `flowgraph_nodes_scene_particleEmitter`](ge/extensions/flowgraph/nodes/scene/particleEmitter.md) | 11 | Noeud flowgraph « Particle Emitter » (repeat_instant, auteur BeamNG). Cree un objet ParticleEmitterNode (emetteur BNGP_confetti, dataBlock l |
+| [✍ `flowgraph_nodes_scene_pointOnDecalroad`](ge/extensions/flowgraph/nodes/scene/pointOnDecalroad.md) | 3 | Noeud flowgraph « Point on Decalroad » (repeat_instant). Teste si un point (vec3) est sur une DecalRoad (roadId) via roadObj:containsPoint,  |
+| [✍ `flowgraph_nodes_scene_raceLineParking`](ge/extensions/flowgraph/nodes/scene/raceLineParking.md) | 15 | Noeud flowgraph « Raceline Parking » (repeat_instant, auteur BeamNG). Vérifie qu'un véhicule est garé dans une place définie par position/ro |
+| [✍ `flowgraph_nodes_scene_raycast`](ge/extensions/flowgraph/nodes/scene/raycast.md) | 2 | Noeud flowgraph « Raycast » (repeat_instant, tags util/draw). Lance un rayon depuis pos dans la direction dir et touche le premier objet de  |
+| [✍ `flowgraph_nodes_scene_rectMarker`](ge/extensions/flowgraph/nodes/scene/rectMarker.md) | 15 | Noeud flowgraph « Parking Markers » (repeat_instant, auteur BeamNG). Crée une place de parking rectangulaire : un BeamNGTrigger de type Box  |
+| [✍ `flowgraph_nodes_scene_reloadCollision`](ge/extensions/flowgraph/nodes/scene/reloadCollision.md) | 1 | Noeud flowgraph « Reload Collision » (once_instant). Recharge les données de collision du niveau une seule fois via be:reloadCollision(). Au |
+| [✍ `flowgraph_nodes_scene_reloadNavGraph`](ge/extensions/flowgraph/nodes/scene/reloadNavGraph.md) | 1 | Noeud flowgraph « Reload Nav Graph » (once_instant). Recharge le graphe de navigation (la map) une seule fois via map.reset(). Aucun pin. |
+| [✍ `flowgraph_nodes_scene_removePrefab`](ge/extensions/flowgraph/nodes/scene/removePrefab.md) | 2 | Noeud flowgraph « Remove Prefab » (repeat_instant). Supprime un prefab par son id via self.mgr.modules.prefab:deletePrefab(id, true). Entrée |
+| [✍ `flowgraph_nodes_scene_resetPrefab`](ge/extensions/flowgraph/nodes/scene/resetPrefab.md) | 1 | Noeud flowgraph « Reset Prefab » (once_instant, auteur BeamNG). Restaure les transformations des objets/véhicules d'un prefab via self.mgr.m |
+| [✍ `flowgraph_nodes_scene_setObjectField`](ge/extensions/flowgraph/nodes/scene/setObjectField.md) | 1 | Noeud flowgraph « Set Object Field » (repeat_instant). Modifie un champ d'un objet de la scène par id. Entrées : objectId, fieldName, fieldA |
+| [✍ `flowgraph_nodes_scene_sevensegmentDisplay`](ge/extensions/flowgraph/nodes/scene/sevensegmentDisplay.md) | 10 | Noeud flowgraph « Sevensegment Display » (repeat_instant, auteur BeamNG). Crée un afficheur sept segments composé de TSStatic (art/shapes/qu |
+| [✍ `flowgraph_nodes_scene_singleMarker`](ge/extensions/flowgraph/nodes/scene/singleMarker.md) | 12 | Noeud flowgraph « Single Marker » (auteur BeamNG). Affiche un marqueur de course (scenario/race_marker) à une position avec un rayon. Doit ê |
+| [✍ `flowgraph_nodes_scene_spawnLight`](ge/extensions/flowgraph/nodes/scene/spawnLight.md) | 7 | Noeud flowgraph « SpotLight » (repeat_instant, auteur BeamNG). Crée un objet SpotLight (worldEditorCppApi.createObject) et le met à jour. En |
+| [✍ `flowgraph_nodes_scene_spawnPrefab`](ge/extensions/flowgraph/nodes/scene/spawnPrefab.md) | 8 | Noeud flowgraph « Spawn Prefab » (auteur BeamNG, behaviour once). Charge un prefab (.prefab.json ou ancien .prefab) à une position via spawn |
+| [✍ `flowgraph_nodes_scene_spawnTSStatic`](ge/extensions/flowgraph/nodes/scene/spawnTSStatic.md) | 8 | Noeud flowgraph « Spawn TSStatic » (once_instant, auteur BeamNG). Crée un objet TSStatic avec shapeName, position, rotation et scale. Entrée |
+| [✍ `flowgraph_nodes_scene_storeStatics`](ge/extensions/flowgraph/nodes/scene/storeStatics.md) | 13 | Noeud flowgraph « Store Statics » (auteur BeamNG). Mémorise la position, rotation, échelle et shape des TSStatic sélectionnés dans l'éditeur |
+| [✍ `flowgraph_nodes_scene_trackPrefab`](ge/extensions/flowgraph/nodes/scene/trackPrefab.md) | 2 | Noeud flowgraph « Track Prefab » (once_instant). Permet au flowgraph de suivre un prefab créé hors flowgraph, via modules.prefab:addPrefab(i |
+| [✍ `flowgraph_nodes_states_stateEntry`](ge/extensions/flowgraph/nodes/states/stateEntry.md) | 0 | Noeud d'état « State Entry » du stategraph (créé par _flowgraph_createStateNode, pas _flowgraph_createNode). Point d'entrée du graphe d'état |
+| [✍ `flowgraph_nodes_states_stateExit`](ge/extensions/flowgraph/nodes/states/stateExit.md) | 5 | Noeud d'état « State Exit » (créé par _flowgraph_createStateNode). Point de sortie du graphe d'états : un pin d'entrée 'flow' de type state  |
+| [✍ `flowgraph_nodes_states_stateNode`](ge/extensions/flowgraph/nodes/states/stateNode.md) | 14 | Noeud d'état « State Node » du stategraph (créé par _flowgraph_createStateNode). Représente un graphe cible (targetGraph) dans le graphe d'é |
+| [✍ `flowgraph_nodes_states_transition`](ge/extensions/flowgraph/nodes/states/transition.md) | 9 | Noeud « Transition » du stategraph. Termine l'état courant et passe à un nouvel état : au flow, collecte la valeur de tous ses pins d'entrée |
+| [✍ `flowgraph_nodes_states_transitionStack`](ge/extensions/flowgraph/nodes/states/transitionStack.md) | 8 | Noeud « Get Transition Variables » du stategraph. Lit les variables passées par le noeud « Transition » de l'état précédent (pile transition |
+| [✍ `flowgraph_nodes_string_format`](ge/extensions/flowgraph/nodes/string/format.md) | 8 | Noeud « Format String » (repeat_instant). Applique string.format(data.pattern, valeurs...) avec jusqu'à 16 valeurs (pins d'entrée dynamiques |
+| [✍ `flowgraph_nodes_string_match`](ge/extensions/flowgraph/nodes/string/match.md) | 3 | Noeud « Match String » (simple). Doit renvoyer la première capture d'un pattern Lua appliqué à la chaîne d'entrée ; pins : value (in, string |
+| [✍ `flowgraph_nodes_string_stringconcat`](ge/extensions/flowgraph/nodes/string/stringconcat.md) | 8 | Noeud « Concat » (simple, OBSOLÈTE : « Use the Format String node instead »). Concatène toutes ses entrées (converties par tostring) en une  |
+| [✍ `flowgraph_nodes_string_subString`](ge/extensions/flowgraph/nodes/string/subString.md) | 3 | Noeud « SubString » (simple). Extrait une sous-chaîne avec string.sub(value, data.from, data.to). Valeurs par défaut from = 0 et to = -1. Pi |
+| [✍ `flowgraph_nodes_thread_loadProject`](ge/extensions/flowgraph/nodes/thread/loadProject.md) | 5 | Noeud « Load Project » (once_p_duration). Charge un flowgraph (.flow.json) par chemin et le démarre comme projet enfant via self.mgr.modules |
+| [✍ `flowgraph_nodes_thread_receiveMessage`](ge/extensions/flowgraph/nodes/thread/receiveMessage.md) | 5 | Noeud « Receive Message » (thread). Reçoit un message envoyé par un autre projet flowgraph en cours (Send Message) et expose ses champs sur  |
+| [✍ `flowgraph_nodes_thread_sendMessage`](ge/extensions/flowgraph/nodes/thread/sendMessage.md) | 4 | Noeud « Send Message » (thread). Envoie un message (table des pins d'entrée non fixes) au projet flowgraph d'id donné (-1 = parent) via modu |
+| [✍ `flowgraph_nodes_timetrials_onRaceCheckpoint`](ge/extensions/flowgraph/nodes/timetrials/onRaceCheckpoint.md) | 5 | Noeud « Race CP Reached » (repeat_instant). Laisse passer une impulsion quand le joueur franchit un checkpoint de course. Sorties : checked  |
+| [✍ `flowgraph_nodes_timetrials_onRaceComplete`](ge/extensions/flowgraph/nodes/timetrials/onRaceComplete.md) | 5 | Noeud « Race Complete » (repeat_instant, tag input). Pins de sortie : complete (flow quand la course est terminée) et ongoing (flow tant qu' |
+| [✍ `flowgraph_nodes_timetrials_onRaceConfig`](ge/extensions/flowgraph/nodes/timetrials/onRaceConfig.md) | 4 | Noeud « Race Config » (provider, tag input). Donne la configuration choisie par le joueur pour la course, lue une seule fois dans scenario_s |
+| [✍ `flowgraph_nodes_timetrials_onRaceRestarted`](ge/extensions/flowgraph/nodes/timetrials/onRaceRestarted.md) | 4 | Noeud « Race Restarted » (logic, tag input). Doit lever une impulsion de sortie 'restart' quand la course est relancée (hook onScenarioResta |
+| [✍ `flowgraph_nodes_timetrials_onRaceStart`](ge/extensions/flowgraph/nodes/timetrials/onRaceStart.md) | 5 | Noeud « Race Started » (logic, tag input). Pins de sortie : started (flow quand la course a démarré) et stopped (flow avant le départ). Pass |
+| [✍ `flowgraph_nodes_types_bool`](ge/extensions/flowgraph/nodes/types/bool.md) | 3 | Noeud « Bool » (provider). Fournit une valeur booléenne (data.value, true par défaut) sur le pin value. |
+| [✍ `flowgraph_nodes_types_color`](ge/extensions/flowgraph/nodes/types/color.md) | 7 | Noeud « Color » (provider). Fournit une couleur (table RGBA {r,g,b,a}, avec 4 valeurs PBR supplémentaires aux index 5-8 en mode custom) sur  |
+| [✍ `flowgraph_nodes_types_genericValue`](ge/extensions/flowgraph/nodes/types/genericValue.md) | 7 | Noeud « Generic Set/Get Variable » (repeat_instant). Lit ou écrit une variable du flowgraph par nom (varName, + suffix numérique optionnel c |
+| [✍ `flowgraph_nodes_types_getVariable`](ge/extensions/flowgraph/nodes/types/getVariable.md) | 10 | Noeud « Get Variable » (provider, caché des menus : créé depuis l'éditeur de variables). Expose une variable du graphe ou du projet (case «  |
+| [✍ `flowgraph_nodes_types_number`](ge/extensions/flowgraph/nodes/types/number.md) | 5 | Noeud « Number » (provider). Fournit un nombre (data.value, 0 par défaut) sur le pin value. |
+| [✍ `flowgraph_nodes_types_quat`](ge/extensions/flowgraph/nodes/types/quat.md) | 5 | Noeud « Quat » (repeat_instant). Construit un quaternion à partir des pins x, y, z, w (0 par défaut) et l'écrit en table {x,y,z,w} sur le pi |
+| [✍ `flowgraph_nodes_types_setVariable`](ge/extensions/flowgraph/nodes/types/setVariable.md) | 10 | Noeud « Set Variable » (repeat_instant, caché des menus). Écrit une variable du graphe ou du projet à partir d'un pin d'entrée portant son n |
+| [✍ `flowgraph_nodes_types_string`](ge/extensions/flowgraph/nodes/types/string.md) | 7 | Noeud « String » (provider). Fournit une chaîne (« Hello World » par défaut) sur le pin value. Édition simple ou multi-lignes dans l'éditeur |
+| [✍ `flowgraph_nodes_types_transform`](ge/extensions/flowgraph/nodes/types/transform.md) | 16 | Nœud flowgraph « Transform » (catégorie provider, icône d_rotation) : fournit une position, une rotation et une échelle 3D éditables dans l' |
+| [✍ `flowgraph_nodes_types_vec3`](ge/extensions/flowgraph/nodes/types/vec3.md) | 5 | Nœud flowgraph « Vec3 » (catégorie repeat_instant, tags vec3/vector/direction) : construit un vecteur 3D. Entrées number « x », « y », « z » |
+| [✍ `flowgraph_nodes_ui_autoMedal`](ge/extensions/flowgraph/nodes/ui/autoMedal.md) | 1 | Nœud flowgraph « Medal » (catégorie repeat_instant, UI) : détermine la médaille à partir d'un score. Entrées : « points », seuils « bronze » |
+| [✍ `flowgraph_nodes_ui_buttons_createButton`](ge/extensions/flowgraph/nodes/ui/buttons/createButton.md) | 2 | Nœud flowgraph « Create Button » (catégorie once_instant) : crée un bouton dans le module flowgraph 'button' (self.mgr.modules.button:addBut |
+| [✍ `flowgraph_nodes_ui_buttons_getButton`](ge/extensions/flowgraph/nodes/ui/buttons/getButton.md) | 1 | Nœud flowgraph « Get Button » (catégorie once_instant) : lit l'état d'un bouton créé avec Create Button. Entrée « buttonId ». Sorties : « cl |
+| [✍ `flowgraph_nodes_ui_buttons_getMultipleButtons`](ge/extensions/flowgraph/nodes/ui/buttons/getMultipleButtons.md) | 7 | Nœud flowgraph « Get Multiple Buttons » (catégorie repeat_instant) : surveille plusieurs boutons créés auparavant. Pour chaque i (nombre rég |
+| [✍ `flowgraph_nodes_ui_buttons_setButtonProperty`](ge/extensions/flowgraph/nodes/ui/buttons/setButtonProperty.md) | 2 | Nœud flowgraph « Set Button Property » (catégorie repeat_instant) : modifie les propriétés d'un bouton existant. Entrées : « buttonId », « l |
+| [✍ `flowgraph_nodes_ui_buttons_setMultipleButtonsProperty`](ge/extensions/flowgraph/nodes/ui/buttons/setMultipleButtonsProperty.md) | 7 | Nœud flowgraph « Set Multiple Buttons Property » (catégorie repeat_instant) : même chose que Set Button Property pour plusieurs boutons. Pou |
+| [✍ `flowgraph_nodes_ui_buttons_simpleButton`](ge/extensions/flowgraph/nodes/ui/buttons/simpleButton.md) | 5 | Nœud flowgraph « Simple Button » (catégorie once_instant) : crée un bouton tout-en-un dont les valeurs ne peuvent plus être changées. Entrée |
+| [✍ `flowgraph_nodes_ui_buttons_simpleMultipleButtons`](ge/extensions/flowgraph/nodes/ui/buttons/simpleMultipleButtons.md) | 10 | Nœud flowgraph « Simple Multiple Buttons » (catégorie once_instant) : version multi-boutons de Simple Button. Pour chaque i : entrées « hide |
+| [✍ `flowgraph_nodes_ui_clearMessage`](ge/extensions/flowgraph/nodes/ui/clearMessage.md) | 1 | Nœud flowgraph « Clear Messages » (catégorie once_instant, auteur BeamNG) : efface tous les messages affichés dans l'UI. Aucun pin. Déclench |
+| [✍ `flowgraph_nodes_ui_contextTranslation`](ge/extensions/flowgraph/nodes/ui/contextTranslation.md) | 3 | Nœud flowgraph « Context Translation » (catégorie repeat_instant) : crée un objet de traduction avec contexte. Entrée « translationString »  |
+| [✍ `flowgraph_nodes_ui_convertUnit`](ge/extensions/flowgraph/nodes/ui/convertUnit.md) | 1 | Nœud flowgraph « ConvertUnit » (catégorie repeat_instant) : convertit une valeur en SI vers l'unité préférée du joueur (réglage de l'UI) ave |
+| [✍ `flowgraph_nodes_ui_cornerTimer`](ge/extensions/flowgraph/nodes/ui/cornerTimer.md) | 2 | Nœud flowgraph « Set UI Timer » (catégorie repeat_instant, auteur BeamNG, durée) : affiche un temps dans l'app UI chronomètre. Entrées : « v |
+| [✍ `flowgraph_nodes_ui_customButtonTEST`](ge/extensions/flowgraph/nodes/ui/customButtonTEST.md) | 9 | Nœud flowgraph « Custom Button TEST » (catégorie once_instant, description « TEST ») : nœud d'essai qui affiche un bouton « Click me! » via  |
+| [✍ `flowgraph_nodes_ui_customUiLayout`](ge/extensions/flowgraph/nodes/ui/customUiLayout.md) | 8 | Nœud flowgraph « Custom UI Layout » (catégorie provider) : enregistre une disposition d'apps UI (layout) dans le nœud pour la réutiliser. So |
+| [✍ `flowgraph_nodes_ui_endScreen`](ge/extensions/flowgraph/nodes/ui/endScreen.md) | 17 | Nœud flowgraph « End Screen » (catégorie once_instant, singleActive) : affiche l'écran de fin d'un scénario avec boutons personnalisables (n |
+| [✍ `flowgraph_nodes_ui_endStats`](ge/extensions/flowgraph/nodes/ui/endStats.md) | 8 | Nœud flowgraph « End Stats » (catégorie repeat_instant) : rassemble les statistiques à afficher dans l'écran de fin. Pour chaque statistique |
+| [✍ `flowgraph_nodes_ui_fadeFromBlack`](ge/extensions/flowgraph/nodes/ui/fadeFromBlack.md) | 6 | Nœud flowgraph « Fade From Black » (catégorie once_f_duration) : fait apparaître l'écran depuis le noir. Entrée « duration » (0.75 s par déf |
+| [✍ `flowgraph_nodes_ui_fadeSequence`](ge/extensions/flowgraph/nodes/ui/fadeSequence.md) | 7 | Nœud flowgraph « Fade Sequence » (catégorie once_f_duration, obsolète) : enchaîne fondu au noir, pause et fondu depuis le noir via ui_fadeSc |
+| [✍ `flowgraph_nodes_ui_fadeToBlack`](ge/extensions/flowgraph/nodes/ui/fadeToBlack.md) | 6 | Nœud flowgraph « Fade To Black » (catégorie once_f_duration) : fait passer l'écran au noir. Entrée « duration » (0.75 s). Sortie de durée pa |
+| [✍ `flowgraph_nodes_ui_flashMessage`](ge/extensions/flowgraph/nodes/ui/flashMessage.md) | 2 | Nœud flowgraph « Flash Message » (catégorie repeat_instant, durée) : affiche un message au centre de l'écran via scenario/scenariohelper.fla |
+| [✍ `flowgraph_nodes_ui_genericMissionDataText`](ge/extensions/flowgraph/nodes/ui/genericMissionDataText.md) | 3 | Nœud flowgraph « Generic Mission Text » (catégorie repeat_instant, durée) : affiche une info dans l'app « Generic Mission Data ». Entrées :  |
+| [✍ `flowgraph_nodes_ui_getGamestate`](ge/extensions/flowgraph/nodes/ui/getGamestate.md) | 2 | Nœud flowgraph « Get Gamestate » (catégorie repeat_instant) : lit l'état courant de l'UI (core_gamestate.state.state). Sortie « state » (str |
+| [✍ `flowgraph_nodes_ui_hideEditor`](ge/extensions/flowgraph/nodes/ui/hideEditor.md) | 2 | Nœud flowgraph « Show Editor » (catégorie once_instant, auteur BeamNG) : affiche ou masque le World Editor. Entrée « value » (bool, vrai = v |
+| [✍ `flowgraph_nodes_ui_hideGameUI`](ge/extensions/flowgraph/nodes/ui/hideGameUI.md) | 1 | Nœud flowgraph « Hide Game UI » (catégorie repeat_instant, auteur BeamNG) : affiche ou masque l'UI normale du jeu (apps, etc.) avec extensio |
+| [✍ `flowgraph_nodes_ui_imgui_elemental_imBegin`](ge/extensions/flowgraph/nodes/ui/imgui/elemental/imBegin.md) | 3 | Nœud flowgraph « im Begin » (catégorie repeat_instant, tag imgui) : ouvre une fenêtre imgui (à terminer avec « im End »). Entrées : « title  |
+| [✍ `flowgraph_nodes_ui_imgui_elemental_imButton`](ge/extensions/flowgraph/nodes/ui/imgui/elemental/imButton.md) | 2 | Nœud flowgraph « im Button » (catégorie repeat_instant, tag imgui) : bouton imgui pleine largeur dans la fenêtre courante. Entrée « text ».  |
+| [✍ `flowgraph_nodes_ui_imgui_elemental_imCheckbox`](ge/extensions/flowgraph/nodes/ui/imgui/elemental/imCheckbox.md) | 3 | Nœud flowgraph « im Checkbox » (catégorie repeat_instant, tag imgui) : case à cocher imgui. Entrées : « text », « enabled » (vrai), impulsio |
+| [✍ `flowgraph_nodes_ui_imgui_elemental_imColor`](ge/extensions/flowgraph/nodes/ui/imgui/elemental/imColor.md) | 2 | Nœud flowgraph « im Color » (catégorie repeat_instant, tag imgui) : sélecteur de couleur imgui (ColorEdit4 sans entrées numériques, avec bar |
+| [✍ `flowgraph_nodes_ui_imgui_elemental_imEnd`](ge/extensions/flowgraph/nodes/ui/imgui/elemental/imEnd.md) | 1 | Nœud flowgraph « im End » (catégorie repeat_instant, tag imgui) : termine la fenêtre imgui ouverte par « im Begin » (im.End). Aucun pin. |
+| [✍ `flowgraph_nodes_ui_imgui_elemental_imNumbers`](ge/extensions/flowgraph/nodes/ui/imgui/elemental/imNumbers.md) | 6 | Nœud flowgraph « im Number » (catégorie repeat_instant, tag imgui) : champ numérique imgui. Mode choisi dans les propriétés : Int, Float, Sl |
+| [✍ `flowgraph_nodes_ui_imgui_elemental_imSeparator`](ge/extensions/flowgraph/nodes/ui/imgui/elemental/imSeparator.md) | 4 | Nœud flowgraph « im Separator » (catégorie repeat_instant, tag imgui) : séparateur horizontal dans une fenêtre imgui, avec espace au-dessus  |
+| [✍ `flowgraph_nodes_ui_imgui_elemental_imText`](ge/extensions/flowgraph/nodes/ui/imgui/elemental/imText.md) | 2 | Nœud flowgraph « im Text » (catégorie repeat_instant, tag imgui) : affiche un texte avec retour à la ligne automatique dans la fenêtre imgui |
+| [✍ `flowgraph_nodes_ui_imgui_imDialogue`](ge/extensions/flowgraph/nodes/ui/imgui/imDialogue.md) | 10 | Nœud flowgraph « im Dialogue » (catégorie repeat_instant, singleActive, tag imgui) : fenêtre imgui avec titre, description et boutons. Entré |
+| [✍ `flowgraph_nodes_ui_imgui_imSimpleBox`](ge/extensions/flowgraph/nodes/ui/imgui/imSimpleBox.md) | 2 | Nœud flowgraph « im Simple Text Box » (catégorie repeat_instant, tag imgui) : fenêtre imgui minimale avec un titre et un texte. Entrées : «  |
+| [✍ `flowgraph_nodes_ui_imgui_imVehicleSelect`](ge/extensions/flowgraph/nodes/ui/imgui/imVehicleSelect.md) | 7 | Nœud flowgraph « im Vehicle Selector » (catégorie once_instant, tags imgui/vehicle/config) : fenêtre imgui de choix de véhicule basée sur ed |
+| [✍ `flowgraph_nodes_ui_listDescription`](ge/extensions/flowgraph/nodes/ui/listDescription.md) | 7 | Nœud flowgraph « List Description » (catégorie repeat_instant) : construit un texte de liste à partir de clés de traduction ou d'objets de t |
+| [✍ `flowgraph_nodes_ui_message`](ge/extensions/flowgraph/nodes/ui/message.md) | 5 | Nœud flowgraph « Message » (catégorie once_instant par défaut, durée) : affiche un message dans la petite app de messages via le hook 'Messa |
+| [✍ `flowgraph_nodes_ui_missionControlHint`](ge/extensions/flowgraph/nodes/ui/missionControlHint.md) | 7 | Nœud flowgraph « Mission Control Hints » (catégorie repeat_instant, auteur BeamNG, durée) : affiche des indications de commandes (passer vit |
+| [✍ `flowgraph_nodes_ui_missionEndScreen`](ge/extensions/flowgraph/nodes/ui/missionEndScreen.md) | 17 | Nœud flowgraph « Mission End Screen » (catégorie once_instant, singleActive) : écran de fin de mission avec boutons par défaut et personnali |
+| [✍ `flowgraph_nodes_ui_missionPopup`](ge/extensions/flowgraph/nodes/ui/missionPopup.md) | 12 | Nœud flowgraph « Popup » (catégorie par défaut, once + singleActive) : affiche un popup d'information que seul le bouton ferme (ui_popup.ope |
+| [✍ `flowgraph_nodes_ui_monologue`](ge/extensions/flowgraph/nodes/ui/monologue.md) | 9 | Nœud flowgraph « Monologue » (catégorie once_f_duration, durée) : affiche une suite de messages l'un après l'autre avec ui_message. Entrées  |
+| [✍ `flowgraph_nodes_ui_multiDescription`](ge/extensions/flowgraph/nodes/ui/multiDescription.md) | 8 | Nœud flowgraph « Multi Description » (catégorie repeat_instant) : fusionne plusieurs textes en une description multiple pour Start Screen /  |
+| [✍ `flowgraph_nodes_ui_onBigmapPoiSelected`](ge/extensions/flowgraph/nodes/ui/onBigmapPoiSelected.md) | 4 | Nœud flowgraph « On Bigmap Poi » (catégorie repeat_instant) : détecte la sélection d'un point d'intérêt sur la grande carte. Sorties : « sel |
+| [✍ `flowgraph_nodes_ui_onBigmapStateChange`](ge/extensions/flowgraph/nodes/ui/onBigmapStateChange.md) | 5 | Nœud flowgraph « On Bigmap State Change » (catégorie repeat_instant) : détecte l'ouverture et la fermeture de la grande carte. Sorties impul |
+| [✍ `flowgraph_nodes_ui_raceCheckpoints`](ge/extensions/flowgraph/nodes/ui/raceCheckpoints.md) | 1 | Nœud flowgraph « Set UI Race Checkpoints » (catégorie repeat_instant, auteur BeamNG, durée) : met à jour l'app UI de points de passage. Entr |
+| [✍ `flowgraph_nodes_ui_raceLaps`](ge/extensions/flowgraph/nodes/ui/raceLaps.md) | 1 | Nœud flowgraph « Set UI Race Laps » (catégorie repeat_instant, auteur BeamNG, durée) : met à jour l'app UI de tours. Entrées : « cur » (nil  |
+| [✍ `flowgraph_nodes_ui_raceRecoveriesUsed`](ge/extensions/flowgraph/nodes/ui/raceRecoveriesUsed.md) | 1 | Nœud flowgraph « Set UI Race Recovery » (catégorie repeat_instant, auteur BeamNG, durée) : met à jour l'app UI du compteur de récupérations  |
+| [✍ `flowgraph_nodes_ui_rtMessage`](ge/extensions/flowgraph/nodes/ui/rtMessage.md) | 3 | Nœud flowgraph « RT Message » (catégorie repeat_instant, tags ui/text) : affiche un message en temps réel (hook 'ScenarioRealtimeDisplay').  |
+| [✍ `flowgraph_nodes_ui_selectButtons`](ge/extensions/flowgraph/nodes/ui/selectButtons.md) | 15 | Nœud flowgraph « Select Buttons » (catégorie once_instant, once + singleActive) : dialogue de choix avec plusieurs boutons (ui_missionInfo.o |
+| [✍ `flowgraph_nodes_ui_setUILayout`](ge/extensions/flowgraph/nodes/ui/setUILayout.md) | 7 | Nœud flowgraph « Set UI Layout » (catégorie once_instant) : change la disposition des apps de l'UI via self.mgr.modules.ui:setGameState. Ent |
+| [✍ `flowgraph_nodes_ui_showApps`](ge/extensions/flowgraph/nodes/ui/showApps.md) | 3 | Nœud flowgraph « Show Apps » (catégorie once_instant, auteur BeamNG) : affiche ou masque les apps de l'UI (hook 'ShowApps'). Entrée « value  |
+| [✍ `flowgraph_nodes_ui_showMonitor`](ge/extensions/flowgraph/nodes/ui/showMonitor.md) | 1 | Nœud flowgraph « Show Monitor » (catégorie once_instant, auteur BeamNG) : active le moniteur flowgraph (petite fenêtre) et cache l'éditeur.  |
+| [✍ `flowgraph_nodes_ui_startScreen`](ge/extensions/flowgraph/nodes/ui/startScreen.md) | 16 | Nœud flowgraph « Start Screen » (catégorie par défaut, once + singleActive) : affiche l'écran de démarrage d'un scénario (navigation UI 'sce |
+| [✍ `flowgraph_nodes_ui_tasklistClear`](ge/extensions/flowgraph/nodes/ui/tasklistClear.md) | 1 | Nœud flowgraph « Clear Goals » (catégorie once_instant, auteur BeamNG) : efface tous les objectifs de la liste de tâches (hook 'ClearTasklis |
+| [✍ `flowgraph_nodes_ui_tasklistMessage`](ge/extensions/flowgraph/nodes/ui/tasklistMessage.md) | 1 | Nœud flowgraph « Tasklist Message » (catégorie once_instant, durée) : affiche un objectif de type message dans l'app Goal List (hook 'SetTas |
+| [✍ `flowgraph_nodes_ui_tasklistTask`](ge/extensions/flowgraph/nodes/ui/tasklistTask.md) | 1 | Nœud flowgraph « Tasklist Task » (catégorie once_instant, durée) : affiche une tâche dans l'app Tasklist (hook 'SetTasklistTask', type 'goal |
+| [✍ `flowgraph_nodes_ui_threeElementSelect`](ge/extensions/flowgraph/nodes/ui/threeElementSelect.md) | 13 | Nœud flowgraph « Three Element Select » (catégorie par défaut, once + singleActive) : laisse le joueur choisir entre trois éléments (navigat |
+| [✍ `flowgraph_nodes_ui_updatedUI_endScreenAiCompetitorsLeaderboard`](ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenAiCompetitorsLeaderboard.md) | 1 | Nœud flowgraph « EndScreen AI Competitors Leaderboard » (catégorie once_instant, tags end/finish/rally) : ajoute au écran de fin de mission  |
+| [✍ `flowgraph_nodes_ui_updatedUI_endScreenBegin`](ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenBegin.md) | 16 | Nœud « EndScreen Begin » (catégorie par défaut, couleur ui). Commence la construction de l'écran de fin d'une mission : à la première frame  |
+| [✍ `flowgraph_nodes_ui_updatedUI_endScreenDriftStats`](ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenDriftStats.md) | 1 | Nœud « EndScreen Drift Stats » (catégorie repeat_instant, couleur ui). Ajoute à l'écran de fin un panneau de statistiques de drift. Chaîne : |
+| [✍ `flowgraph_nodes_ui_updatedUI_endScreenLapTimesPanel`](ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenLapTimesPanel.md) | 1 | Nœud « EndScreen Lap Times » (repeat_instant, couleur ui). Affiche dans l'écran de fin les temps au tour d'un véhicule. Entrées : flow, race |
+| [✍ `flowgraph_nodes_ui_updatedUI_endScreenResults`](ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenResults.md) | 2 | Nœud « EndScreen Results » (repeat_instant, couleur ui). Ajoute à l'écran de fin le panneau de résultats de la mission : texte formaté de la |
+| [✍ `flowgraph_nodes_ui_updatedUI_endScreenTimeSlip`](ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenTimeSlip.md) | 2 | Nœud « EndScreen Drag Time Slip » (repeat_instant, couleur ui). Affiche dans l'écran de fin le ticket de chronométrage (time slip) d'une cou |
+| [✍ `flowgraph_nodes_ui_updatedUI_endScreenWhole`](ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenWhole.md) | 17 | Nœud « EndScreen Whole » (couleur ui, singleActive). Version tout-en-un de l'écran de fin d'un scénario/mission : construit les boutons (mis |
+| [✍ `flowgraph_nodes_ui_updatedUI_startScreenBegin`](ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenBegin.md) | 8 | Nœud « StartScreen Begin » (couleur ui). Commence la construction de l'écran de démarrage d'une mission : à la première frame avec flow acti |
+| [✍ `flowgraph_nodes_ui_updatedUI_startScreenCrashAnalysisStepDetails`](ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenCrashAnalysisStepDetails.md) | 1 | Nœud « Start Screen Crash Analysis Step Details » (repeat_instant, couleur ui). Ajoute à l'écran de démarrage simple un panneau de détails d |
+| [✍ `flowgraph_nodes_ui_updatedUI_startScreenDial`](ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenDial.md) | 3 | Nœud « StartScreen Drag Dial » (repeat_instant, couleur ui). Ajoute à l'écran de démarrage le panneau de réglage du dial d'une course de dra |
+| [✍ `flowgraph_nodes_ui_updatedUI_startScreenFinish`](ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenFinish.md) | 1 | Nœud « Screen Finish » (repeat_instant, couleur ui). Termine la construction d'un écran (début ou fin) et l'envoie à l'UI. Entrée flow (chai |
+| [✍ `flowgraph_nodes_ui_updatedUI_startScreenIntro`](ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenIntro.md) | 1 | Nœud « StartScreen Intro » (repeat_instant, couleur ui). Nœud combiné pour l'écran de démarrage : panneau d'intro, puis objectifs et notes ( |
+| [✍ `flowgraph_nodes_ui_updatedUI_startScreenMainHeader`](ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenMainHeader.md) | 1 | Nœud « Screen Main Header » (repeat_instant, couleur ui). Ajoute un grand en-tête à l'écran (en général le nom de la mission). Entrées : flo |
+| [✍ `flowgraph_nodes_ui_updatedUI_startScreenRallySettings`](ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.md) | 15 | Nœud « StartScreen Rally Settings » (repeat_instant, couleur ui). Ajoute à l'écran de démarrage d'une mission de rallye un panneau « coDrive |
+| [✍ `flowgraph_nodes_ui_updatedUI_startScreenText`](ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenText.md) | 2 | Nœud « StartScreen Text Panel » (repeat_instant, couleur ui). Ajoute à l'écran de démarrage un panneau texte avec en-tête. Entrées : flow, h |
+| [✍ `flowgraph_nodes_ui_vehicleSelector`](ge/extensions/flowgraph/nodes/ui/vehicleSelector.md) | 15 | Nœud « Vehicle Selector » (couleur ui, singleActive, dépend de core_input_bindings). Ouvre un écran de démarrage (via le module ui) avec un  |
+| [✍ `flowgraph_nodes_util_closestPath`](ge/extensions/flowgraph/nodes/util/closestPath.md) | 7 | Nœud « Route Distance » (repeat_instant). Calcule la distance approximative restante le long du navgraph entre une position suivie et la fin |
+| [✍ `flowgraph_nodes_util_closestRoad`](ge/extensions/flowgraph/nodes/util/closestRoad.md) | 4 | Nœud « Closest Road » (repeat_instant). Trouve la route du navgraph la plus proche d'une position (map.findClosestRoad) et renvoie les deux  |
+| [✍ `flowgraph_nodes_util_customLua`](ge/extensions/flowgraph/nodes/util/customLua.md) | 11 | Nœud « Custom Lua » (catégorie repeat_instant, couleur debug). Permet d'écrire du code Lua directement dans l'éditeur flowgraph, avec pins d |
+| [✍ `flowgraph_nodes_util_distanceBetween`](ge/extensions/flowgraph/nodes/util/distanceBetween.md) | 2 | Nœud « Distance Between » (repeat_instant). Calcule la distance entre deux positions, chacune pouvant être un id de véhicule (number) ou un  |
+| [✍ `flowgraph_nodes_util_distanceRemaining`](ge/extensions/flowgraph/nodes/util/distanceRemaining.md) | 1 | Nœud « Waypoints Distance » (repeat_instant). Calcule la distance restante le long d'une liste de waypoints pour un véhicule et indique s'il |
+| [✍ `flowgraph_nodes_util_file_loadData`](ge/extensions/flowgraph/nodes/util/file/loadData.md) | 3 | Nœud « Load Data » (catégorie once_instant, couleur file). Charge des données simples depuis un fichier, réutilisables entre sessions. Entré |
+| [✍ `flowgraph_nodes_util_file_saveData`](ge/extensions/flowgraph/nodes/util/file/saveData.md) | 2 | Nœud « Save Data » (once_instant, couleur file). Sauvegarde des données simples dans un fichier réutilisable entre sessions. Entrée : file ( |
+| [✍ `flowgraph_nodes_util_fileExists`](ge/extensions/flowgraph/nodes/util/fileExists.md) | 1 | Nœud « File Exists » (catégorie once_p_duration). Vérifie qu'un fichier existe. Entrées : file (chemin ou nom), extension (caché, ajoutée au |
+| [✍ `flowgraph_nodes_util_firstElement`](ge/extensions/flowgraph/nodes/util/firstElement.md) | 4 | Nœud « Get First Element of Table » (repeat_instant). Renvoie le premier élément (index 1) d'une table. Entrée : table. Sortie : firstElemen |
+| [✍ `flowgraph_nodes_util_getLevelData`](ge/extensions/flowgraph/nodes/util/getLevelData.md) | 1 | Nœud « Get Level Data » (once_instant). Donne des informations sur le niveau courant d'après getMissionFilename() : nom de dossier du niveau |
+| [✍ `flowgraph_nodes_util_getMapObjectsDynField`](ge/extensions/flowgraph/nodes/util/getMapObjectsDynField.md) | 4 | Nœud « Get Map Objects IDs by DynField » (repeat_instant). Renvoie la liste des ids des objets de la carte (map.objects, donc les véhicules  |
+| [✍ `flowgraph_nodes_util_getTableValueByKey`](ge/extensions/flowgraph/nodes/util/getTableValueByKey.md) | 1 | Nœud « Get Table Value By Key » (repeat_instant). Lit une valeur dans une table à partir d'une clé (string ou number). Entrées : value (tabl |
+| [✍ `flowgraph_nodes_util_ghost`](ge/extensions/flowgraph/nodes/util/ghost.md) | 5 | Nœud caché « GHOST » (catégorie logic, hidden=true). Sert de remplaçant quand un projet flowgraph référence un type de nœud qui n'existe plu |
+| [✍ `flowgraph_nodes_util_hideLoadingScreen`](ge/extensions/flowgraph/nodes/util/hideLoadingScreen.md) | 3 | Nœud « Hide Loading Screen » (once_instant). Cache l'écran de chargement après le chargement d'un niveau (utile avec « Load Level » en mode  |
+| [✍ `flowgraph_nodes_util_hsvColor`](ge/extensions/flowgraph/nodes/util/hsvColor.md) | 3 | Nœud « Color HSV » (catégorie simple). Crée une couleur à partir de teinte, saturation, valeur (0 à 1) et alpha. Sortie : color = table {r,  |
+| [✍ `flowgraph_nodes_util_linePointFromXnorm`](ge/extensions/flowgraph/nodes/util/linePointFromXnorm.md) | 1 | Nœud « Line Point From Xnorm » (repeat_instant). Renvoie la position située entre deux points d'une ligne selon un ratio xnorm (0 = posA, 1  |
+| [✍ `flowgraph_nodes_util_loadLevel`](ge/extensions/flowgraph/nodes/util/loadLevel.md) | 6 | Nœud « Load Level » (couleur bleue, icône public). Charge un niveau : levelPath est relatif à levels/ (info.json est ajouté automatiquement) |
+| [✍ `flowgraph_nodes_util_loadProject`](ge/extensions/flowgraph/nodes/util/loadProject.md) | 4 | Nœud « Load Project » (once_p_duration). Charge un projet flowgraph par nom (chemin relatif à flowgraphEditor/, extension .flow.json faculta |
+| [✍ `flowgraph_nodes_util_onMenu`](ge/extensions/flowgraph/nodes/util/onMenu.md) | 3 | Nœud « On Menu » (repeat_instant). Détecte l'ouverture d'un menu d'interface (menu Échap), d'après core_input_bindings.getMenuActionMapEnabl |
+| [✍ `flowgraph_nodes_util_perlinNoise`](ge/extensions/flowgraph/nodes/util/perlinNoise.md) | 10 | Nœud « Perlin Noise » (repeat_instant). Produit un nombre pseudo-aléatoire cohérent (bruit de Perlin à octaves) en fonction d'une valeur d'e |
+| [✍ `flowgraph_nodes_util_popActionMap`](ge/extensions/flowgraph/nodes/util/popActionMap.md) | 2 | Nœud « Pop Action Map » (once_instant). Retire une action map de la pile d'entrées (popActionMap). Entrée : name. Le champ todo signale un c |
+| [✍ `flowgraph_nodes_util_project`](ge/extensions/flowgraph/nodes/util/project.md) | 2 | Nœud « Get Project Info » (once_instant, icône event_note). Donne des informations sur le projet flowgraph courant. Sorties : name, descript |
+| [✍ `flowgraph_nodes_util_pushActionMap`](ge/extensions/flowgraph/nodes/util/pushActionMap.md) | 4 | Nœud « Push Action Map » (once_instant). Empile une action map (pushActionMap) pour activer ses entrées ; elle est retirée automatiquement à |
+| [✍ `flowgraph_nodes_util_randomColor`](ge/extensions/flowgraph/nodes/util/randomColor.md) | 1 | Nœud « Random Color » (repeat_instant, icône casino). Fournit une couleur aléatoire {r, g, b, a} à chaque frame. Entrées : cuteColor (couleu |
+| [✍ `flowgraph_nodes_util_randomNumber`](ge/extensions/flowgraph/nodes/util/randomNumber.md) | 1 | Nœud « Random Number » (repeat_instant, icône casino). Génère un nombre aléatoire dans [rangeStart, rangeEnd] à chaque frame. Entrées : rang |
+| [✍ `flowgraph_nodes_util_randomQuaternion`](ge/extensions/flowgraph/nodes/util/randomQuaternion.md) | 1 | Nœud « Random Quaternion » (repeat_instant, icône casino). Fournit un quaternion aléatoire à chaque frame. Entrées (degrés, cachées/fixes) : |
+| [✍ `flowgraph_nodes_util_randomVector`](ge/extensions/flowgraph/nodes/util/randomVector.md) | 1 | Nœud « Random Vector » (repeat_instant, icône casino). Fournit un vecteur aléatoire non normalisé. Entrées : xMin/xMax, yMin/yMax, zMin/zMax |
+| [✍ `flowgraph_nodes_util_roadSegment`](ge/extensions/flowgraph/nodes/util/roadSegment.md) | 3 | Nœud « Road Properties » (repeat_instant). Donne les propriétés d'un segment de route du navgraph défini par deux nœuds. Entrées : n1, n2 (n |
+| [✍ `flowgraph_nodes_util_routePointToPoint`](ge/extensions/flowgraph/nodes/util/routePointToPoint.md) | 1 | Nœud « Get Navgraph Route » (once_instant). Calcule un itinéraire sur le navgraph entre une position de départ et une d'arrivée. Entrées : p |
+| [✍ `flowgraph_nodes_util_routePosition`](ge/extensions/flowgraph/nodes/util/routePosition.md) | 4 | Nœud « Route Position » (once_instant). Donne la position le long d'un itinéraire à une distance donnée en avant. Entrées : navgraphRoute (t |
+| [✍ `flowgraph_nodes_util_template`](ge/extensions/flowgraph/nodes/util/template.md) | 12 | Nœud « Template Node » : exemple documenté de tout ce qu'un programmeur peut utiliser pour créer un nœud flowgraph. Montre les catégories po |
+| [✍ `flowgraph_nodes_util_time`](ge/extensions/flowgraph/nodes/util/time.md) | 3 | Nœud « Time » (catégorie provider, sans flow). Fournit le temps courant. Sorties : time (os.clockhp(), horloge haute précision), dtReal (tem |
+| [✍ `flowgraph_nodes_util_timedSequence`](ge/extensions/flowgraph/nodes/util/timedSequence.md) | 11 | Nœud « Timed Sequence » (once_f_duration, icône timer). Enchaîne N parties chronométrées (réglable dans l'inspecteur, 1 minimum). Pour chaqu |
+| [✍ `flowgraph_nodes_util_tonumber`](ge/extensions/flowgraph/nodes/util/tonumber.md) | 1 | Nœud « To Number » (catégorie simple). Convertit l'entrée en nombre avec tonumber. Entrée : value (any). Sortie : value (number). Le champ t |
+| [✍ `flowgraph_nodes_util_tostring`](ge/extensions/flowgraph/nodes/util/tostring.md) | 1 | Nœud « To String » (catégorie simple). Convertit l'entrée en chaîne avec tostring. Entrée : value (any). Sortie : value (string). |
+| [✍ `flowgraph_nodes_util_worldEditorOpen`](ge/extensions/flowgraph/nodes/util/worldEditorOpen.md) | 3 | Nœud « World Editor Open » (repeat_instant). Indique si l'éditeur de monde est ouvert (editor.active). Entrée : reset (impulsion). Sorties : |
+| [✍ `flowgraph_nodes_vehicle_ai_aiParams`](ge/extensions/flowgraph/nodes/vehicle/ai/aiParams.md) | 2 | Nœud « AI Parameters » (couleur ai, repeat_p_duration). Règle divers paramètres de l'IA d'un véhicule en envoyant des commandes ai.* via que |
+| [✍ `flowgraph_nodes_vehicle_ai_arrive`](ge/extensions/flowgraph/nodes/vehicle/ai/arrive.md) | 6 | Nœud « AI Arrive » (couleur ai, once_f_duration, comportement duration). Envoie un véhicule vers un waypoint du navgraph (mode IA « manual » |
+| [✍ `flowgraph_nodes_vehicle_ai_chase`](ge/extensions/flowgraph/nodes/vehicle/ai/chase.md) | 1 | Nœud « AI Chase » (couleur ai, once_p_duration). Met un véhicule en mode IA « chase » pour poursuivre un autre véhicule, avec contact intent |
+| [✍ `flowgraph_nodes_vehicle_ai_directlyTo`](ge/extensions/flowgraph/nodes/vehicle/ai/directlyTo.md) | 8 | Nœud « AI Directly To » (couleur ai, comportement duration + once). Fait rouler un véhicule en ligne droite vers une position cible, via un  |
+| [✍ `flowgraph_nodes_vehicle_ai_disable`](ge/extensions/flowgraph/nodes/vehicle/ai/disable.md) | 2 | Nœud « AI Disable » (couleur ai, repeat_p_duration). Désactive le mode IA d'un véhicule. Entrée : aiVehId (sans valeur = véhicule du joueur) |
+| [✍ `flowgraph_nodes_vehicle_ai_flee`](ge/extensions/flowgraph/nodes/vehicle/ai/flee.md) | 1 | Nœud « AI Flee » (couleur ai, once_p_duration). Met un véhicule en mode IA « flee » pour fuir un autre véhicule. Entrées : aiVehId (sans val |
+| [✍ `flowgraph_nodes_vehicle_ai_follow`](ge/extensions/flowgraph/nodes/vehicle/ai/follow.md) | 1 | Nœud « AI Follow » (couleur ai, once_p_duration). Met un véhicule en mode IA « follow » pour suivre un autre véhicule, sans contact intentio |
+| [✍ `flowgraph_nodes_vehicle_ai_followWaypoints`](ge/extensions/flowgraph/nodes/vehicle/ai/followWaypoints.md) | 7 | Nœud « AI Follow Waypoints » (couleur ai, once_f_duration). Fait suivre à un véhicule une liste de waypoints du navgraph avec ai.driveUsingP |
+| [✍ `flowgraph_nodes_vehicle_ai_getAIMode`](ge/extensions/flowgraph/nodes/vehicle/ai/getAIMode.md) | 5 | Nœud « Get AI Mode » (couleur ai, repeat_p_duration). Lit le mode IA courant d'un véhicule. Entrée : vehId (sans valeur = joueur). Sortie :  |
+| [✍ `flowgraph_nodes_vehicle_ai_goToEndLine`](ge/extensions/flowgraph/nodes/vehicle/ai/goToEndLine.md) | 5 | Nœud « AI Go To The End Line » (couleur ai, comportement duration, pas de catégorie). Envoie un véhicule en mode IA « manual » vers une lign |
+| [✍ `flowgraph_nodes_vehicle_ai_random`](ge/extensions/flowgraph/nodes/vehicle/ai/random.md) | 1 | Nœud « AI Random » (couleur ai, once_p_duration). Met un véhicule en mode IA « random » (roule sur des routes aléatoires). Entrée : aiVehId  |
+| [✍ `flowgraph_nodes_vehicle_ai_scriptAI_followPath`](ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/followPath.md) | 12 | Nœud « AI Follow Path from Data » (couleur ai). Fait suivre à un véhicule un chemin ScriptAI fourni par les nœuds « AI Path from File » ou « |
+| [✍ `flowgraph_nodes_vehicle_ai_scriptAI_pathFromFile`](ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/pathFromFile.md) | 7 | Nœud « AI Path from File » (catégorie provider, couleur ai). Fournit un chemin ScriptAI chargé depuis un fichier de piste /replays/scriptai/ |
+| [✍ `flowgraph_nodes_vehicle_ai_scriptAI_pathStored`](ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/pathStored.md) | 8 | Nœud « Stored AI Path » (provider, couleur ai). Stocke dans le projet un chemin ScriptAI enregistré avec l'éditeur ScriptAIManager et le fou |
+| [✍ `flowgraph_nodes_vehicle_ai_scriptAI_playRecording`](ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/playRecording.md) | 8 | Nœud « Play ScriptAI Recording » (couleur ai, repeat_p_duration). Fait rejouer à un véhicule un enregistrement ScriptAI lu dans un fichier . |
+| [✍ `flowgraph_nodes_vehicle_ai_simpleFollowDecalroad`](ge/extensions/flowgraph/nodes/vehicle/ai/simpleFollowDecalroad.md) | 8 | Nœud « Follow Decalroad » (couleur ai, comportement duration). Fait suivre simplement une DecalRoad à un véhicule : construit un chemin à pa |
+| [✍ `flowgraph_nodes_vehicle_ai_stop`](ge/extensions/flowgraph/nodes/vehicle/ai/stop.md) | 6 | Nœud « AI Stop » (couleur ai, once_p_duration). Demande à l'IA d'arrêter le véhicule (ai.setState mode « stop ») et active la sortie stopped |
+| [✍ `flowgraph_nodes_vehicle_ai_traffic`](ge/extensions/flowgraph/nodes/vehicle/ai/traffic.md) | 1 | Nœud « AI Traffic » (couleur ai, once_p_duration). Met un véhicule en mode IA « traffic » : il roule selon les règles de circulation. N'acti |
+| [✍ `flowgraph_nodes_vehicle_alignForCoupling`](ge/extensions/flowgraph/nodes/vehicle/alignForCoupling.md) | 3 | Nœud « Align for Coupling » (couleur vehicle, icône link, comportement duration + once). Place une remorque derrière un véhicule tracteur po |
+| [✍ `flowgraph_nodes_vehicle_applyVelocity`](ge/extensions/flowgraph/nodes/vehicle/applyVelocity.md) | 1 | Nœud flowgraph « Apply Velocity to Vehicle » (catégorie `repeat_p_duration`, tags boost/thrust/move). Donne instantanément une vitesse à un  |
+| [✍ `flowgraph_nodes_vehicle_beamstate_beamstate`](ge/extensions/flowgraph/nodes/vehicle/beamstate/beamstate.md) | 6 | Nœud « Beamstate » (catégorie `once_p_duration`, tags destroy/damage/funstuff). Appelle une fonction sans paramètre de `beamstate` côté véhi |
+| [✍ `flowgraph_nodes_vehicle_beamstate_breakgroup`](ge/extensions/flowgraph/nodes/vehicle/beamstate/breakgroup.md) | 1 | Nœud « Breakgroup » (catégorie `repeat_p_duration`, tags destroy/damage). Casse un ou plusieurs breakgroups du véhicule. Pins d'entrée : `ve |
+| [✍ `flowgraph_nodes_vehicle_beamstate_couple`](ge/extensions/flowgraph/nodes/vehicle/beamstate/couple.md) | 3 | Nœud « Toggle Coupling » (catégorie `repeat_p_duration`, tags attach/detach/trailer/couple). Pilote les attelages (coupleurs) d'un véhicule  |
+| [✍ `flowgraph_nodes_vehicle_beamstate_reload`](ge/extensions/flowgraph/nodes/vehicle/beamstate/reload.md) | 1 | Nœud « Reload Vehicle » (catégorie `repeat_p_duration`, tag reset). Recharge le véhicule (`veh:reload()`), c'est-à-dire un rechargement comp |
+| [✍ `flowgraph_nodes_vehicle_beamstate_reset`](ge/extensions/flowgraph/nodes/vehicle/beamstate/reset.md) | 1 | Nœud « Reset Vehicle » (catégorie `repeat_p_duration`, tag reset). Remet le véhicule à son état initial : `veh:requestReset(RESET_PHYSICS)`  |
+| [✍ `flowgraph_nodes_vehicle_boost`](ge/extensions/flowgraph/nodes/vehicle/boost.md) | 3 | Nœud « Boost Vehicle » (catégorie `repeat_p_duration`, tags boost/thrust). Charge l'extension véhicule `core_booster` puis appelle `core_boo |
+| [✍ `flowgraph_nodes_vehicle_bus_busControls`](ge/extensions/flowgraph/nodes/vehicle/bus/busControls.md) | 3 | Nœud « Bus Controls Detection » (catégorie `repeat_instant`, icône bus). Lit l'état d'un bus : sorties `isKneeling` (bool, bus agenouillé) e |
+| [✍ `flowgraph_nodes_vehicle_bus_isBus`](ge/extensions/flowgraph/nodes/vehicle/bus/isBus.md) | 1 | Nœud « Is Bus » (catégorie `repeat_instant`). Teste si un véhicule est un bus via `mgr.modules.vehicle:isBus(vehId)`. Pin d'entrée : `vehId` |
+| [✍ `flowgraph_nodes_vehicle_bus_registerBusData`](ge/extensions/flowgraph/nodes/vehicle/bus/registerBusData.md) | 1 | Nœud « Register Bus Data » (catégorie `once_instant`). Enregistre le callback de notification de changement de valeurs d'un bus (agenouillem |
+| [✍ `flowgraph_nodes_vehicle_colors`](ge/extensions/flowgraph/nodes/vehicle/colors.md) | 2 | Nœud « Set Vehicle Colors » (catégorie `repeat_instant`, tags colors). Change les trois peintures du véhicule : `color1` (principale, `obj.c |
+| [✍ `flowgraph_nodes_vehicle_customPartsConfigProvider`](ge/extensions/flowgraph/nodes/vehicle/customPartsConfigProvider.md) | 8 | Nœud fournisseur « Custom Parts Config Provider » (catégorie `provider`). Permet de construire dans l'éditeur une configuration de pièces pe |
+| [✍ `flowgraph_nodes_vehicle_enterVehicle`](ge/extensions/flowgraph/nodes/vehicle/enterVehicle.md) | 3 | Nœud « Enter Vehicle » (catégorie `dynamic_instant`, dépend de `gameplay_walk`). Fait entrer le joueur dans un véhicule (`gameplay_walk.getI |
+| [✍ `flowgraph_nodes_vehicle_fire_fire`](ge/extensions/flowgraph/nodes/vehicle/fire/fire.md) | 7 | Nœud « Fire » (catégorie `once_p_duration`, tags destroy/damage/funstuff). Appelle une action de feu sur un véhicule via `core_vehicleBridge |
+| [✍ `flowgraph_nodes_vehicle_flipUpright`](ge/extensions/flowgraph/nodes/vehicle/flipUpright.md) | 3 | Nœud « Flip Upright » (catégorie `repeat_instant`, tags rotation/position/recover/move). Remet le véhicule d'aplomb sans le réparer : `spawn |
+| [✍ `flowgraph_nodes_vehicle_freeze`](ge/extensions/flowgraph/nodes/vehicle/freeze.md) | 2 | Nœud « Freeze Vehicle » (catégorie `repeat_instant`). Gèle ou dégèle un véhicule via `core_vehicleBridge.executeAction(veh,'setFreeze', free |
+| [✍ `flowgraph_nodes_vehicle_gForce`](ge/extensions/flowgraph/nodes/vehicle/gForce.md) | 5 | Nœud « Gravity Force » (catégorie `repeat_p_duration`, tags gravity/force/gforce). Calcule les g subis par le véhicule à partir des accéléra |
+| [✍ `flowgraph_nodes_vehicle_generateLicensePlate`](ge/extensions/flowgraph/nodes/vehicle/generateLicensePlate.md) | 1 | Nœud « Generate License Plate » (catégorie `once_instant`, tags plate/license). Génère une plaque d'immatriculation aléatoire pour un véhicu |
+| [✍ `flowgraph_nodes_vehicle_getActive`](ge/extensions/flowgraph/nodes/vehicle/getActive.md) | 1 | Nœud « Get Vehicle Active » (catégorie `repeat_instant`). Lit l'état actif (visible) d'un véhicule avec `obj:getActive()`. Pin d'entrée : `v |
+| [✍ `flowgraph_nodes_vehicle_getElectricsValue`](ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.md) | 8 | Nœud « Get Electrics Value » (catégorie `once_f_duration`). Lit une valeur d'`electrics` du véhicule : s'abonne avec `core_vehicleBridge.reg |
+| [✍ `flowgraph_nodes_vehicle_getGearboxMode`](ge/extensions/flowgraph/nodes/vehicle/getGearboxMode.md) | 5 | Nœud « Get Gearboxmode » (catégorie `once_f_duration`). Demande au contrôleur `mainController` du véhicule son `gearboxMode` (par `core_vehi |
+| [✍ `flowgraph_nodes_vehicle_getPowertrainData`](ge/extensions/flowgraph/nodes/vehicle/getPowertrainData.md) | 5 | Nœud « Get Powertrain Data » (catégorie `once_f_duration`). Demande une propriété d'un périphérique du powertrain (`core_vehicleBridge.reque |
+| [✍ `flowgraph_nodes_vehicle_groundDistance`](ge/extensions/flowgraph/nodes/vehicle/groundDistance.md) | 2 | Nœud « Distance From Ground » (catégorie `repeat_instant`, tags gameplay/utils). Mesure la distance entre le point le plus bas de la boîte e |
+| [✍ `flowgraph_nodes_vehicle_hasCouplerTag`](ge/extensions/flowgraph/nodes/vehicle/hasCouplerTag.md) | 2 | Nœud « Has Coupler Tag » (catégorie `repeat_instant`, tags event/attach/detach). Indique si un véhicule possède des attelages portant certai |
+| [✍ `flowgraph_nodes_vehicle_isCoupled`](ge/extensions/flowgraph/nodes/vehicle/isCoupled.md) | 1 | Nœud « Is Coupled » (catégorie `repeat_instant`, tags event/attach/detach). Teste si deux véhicules sont attelés (`mgr.modules.vehicle:isCou |
+| [✍ `flowgraph_nodes_vehicle_isPlayerUsable`](ge/extensions/flowgraph/nodes/vehicle/isPlayerUsable.md) | 2 | Nœud « Is Player usable » (catégorie `repeat_instant`). Lit `playerUsable` d'un véhicule. Pin d'entrée : `vehId` ; sorties : flux `true` et  |
+| [✍ `flowgraph_nodes_vehicle_keep`](ge/extensions/flowgraph/nodes/vehicle/keep.md) | 2 | Nœud « Keep Vehicle » (catégorie `once_instant`). Marque un véhicule à conserver à l'arrêt du flowgraph (par défaut les véhicules créés pend |
+| [✍ `flowgraph_nodes_vehicle_moveTo`](ge/extensions/flowgraph/nodes/vehicle/moveTo.md) | 3 | Nœud « Move Vehicle To » (catégorie `repeat_instant`, tags rotation/position/teleport/move). Déplace un véhicule. Pins d'entrée : `vehId`, ` |
+| [✍ `flowgraph_nodes_vehicle_onCannonFired`](ge/extensions/flowgraph/nodes/vehicle/onCannonFired.md) | 3 | Nœud événement « on Cannon Fired » (catégorie `repeat_instant`). Émet une impulsion sur la sortie flux `cannonFired` quand le hook `onCannon |
+| [✍ `flowgraph_nodes_vehicle_onVehicleDestroyed`](ge/extensions/flowgraph/nodes/vehicle/onVehicleDestroyed.md) | 5 | Nœud événement « On Vehicle Destroyed » (catégorie `logic`, tag event). Émet une impulsion sur `flow` et le `vehId` du véhicule détruit quan |
+| [✍ `flowgraph_nodes_vehicle_onVehicleReset`](ge/extensions/flowgraph/nodes/vehicle/onVehicleReset.md) | 5 | Nœud événement « On Vehicle Reset » (catégorie `logic`). Émet une impulsion sur `flow` quand un véhicule est remis à zéro (hook `onVehicleRe |
+| [✍ `flowgraph_nodes_vehicle_onVehicleSpawned`](ge/extensions/flowgraph/nodes/vehicle/onVehicleSpawned.md) | 5 | Nœud événement « On Vehicle Spawned » (catégorie `logic`). Émet une impulsion sur `flow` et l'id `vehId` quand un véhicule est créé (hook `o |
+| [✍ `flowgraph_nodes_vehicle_onVehicleSwitched`](ge/extensions/flowgraph/nodes/vehicle/onVehicleSwitched.md) | 5 | Nœud événement « On Vehicle Switched » (catégorie `logic`, tag event). Émet une impulsion sur `flow` quand le joueur change de véhicule (hoo |
+| [✍ `flowgraph_nodes_vehicle_playerUsable`](ge/extensions/flowgraph/nodes/vehicle/playerUsable.md) | 2 | Nœud « Player Usable » (catégorie `repeat_instant`). Fixe si un véhicule peut être contrôlé par le joueur : `source.obj.playerUsable = contr |
+| [✍ `flowgraph_nodes_vehicle_randomConfigProvider`](ge/extensions/flowgraph/nodes/vehicle/randomConfigProvider.md) | 7 | Nœud fournisseur « Random Config Provider » (catégorie `once_instant`). Choisit au hasard un modèle et une configuration parmi les voitures  |
+| [✍ `flowgraph_nodes_vehicle_recoverInPlace`](ge/extensions/flowgraph/nodes/vehicle/recoverInPlace.md) | 2 | Nœud « Recover In Place » (catégorie `once_instant`). Récupère un véhicule sur place : `veh:resetBrokenFlexMesh()` puis `spawn.safeTeleport` |
+| [✍ `flowgraph_nodes_vehicle_removeVehicle`](ge/extensions/flowgraph/nodes/vehicle/removeVehicle.md) | 1 | Nœud « Remove Vehicle » (catégorie `repeat_instant`, tags gameplay/utils). Supprime un véhicule : informe l'éditeur (`editor.onRemoveSceneTr |
+| [✍ `flowgraph_nodes_vehicle_replay`](ge/extensions/flowgraph/nodes/vehicle/replay.md) | 7 | Nœud « Timeline Replay » (comportement `duration`). Lance un fichier de replay (`core_replay.loadFile`) au début de son segment de timeline  |
+| [✍ `flowgraph_nodes_vehicle_setActive`](ge/extensions/flowgraph/nodes/vehicle/setActive.md) | 1 | Nœud « Set Vehicle Active » (catégorie `once_instant`). Rend un véhicule visible ou invisible (`obj:setActive(1 ou 0)`). Pins d'entrée : `ve |
+| [✍ `flowgraph_nodes_vehicle_setGearbox`](ge/extensions/flowgraph/nodes/vehicle/setGearbox.md) | 6 | Nœud « Set Gearbox Mode » (catégorie `once_f_duration`). Change le mode de boîte (`arcade` ou `realistic`) via `core_vehicleBridge.executeAc |
+| [✍ `flowgraph_nodes_vehicle_setIgnition`](ge/extensions/flowgraph/nodes/vehicle/setIgnition.md) | 3 | Nœud « Set Ignition » (catégorie `repeat_instant`). Règle le niveau d'allumage : `core_vehicleBridge.executeAction(veh,'setIgnitionLevel', m |
+| [✍ `flowgraph_nodes_vehicle_setLicensePlate`](ge/extensions/flowgraph/nodes/vehicle/setLicensePlate.md) | 3 | Nœud « Set License Plate » (comportement `once`). Change le texte de plaque d'un véhicule avec `core_vehicles.setPlateText(text, vehId)`. Pi |
+| [✍ `flowgraph_nodes_vehicle_setLightbar`](ge/extensions/flowgraph/nodes/vehicle/setLightbar.md) | 3 | Nœud « Set Lightbar » (catégorie `repeat_instant`). Règle le mode de la barre lumineuse : `core_vehicleBridge.executeAction(veh,'setLightbar |
+| [✍ `flowgraph_nodes_vehicle_setLights`](ge/extensions/flowgraph/nodes/vehicle/setLights.md) | 3 | Nœud « Set Lights » (catégorie `repeat_instant`). Règle l'état des phares avant : `core_vehicleBridge.executeAction(veh,'setLightMode', mode |
+| [✍ `flowgraph_nodes_vehicle_shiftToGearIndex`](ge/extensions/flowgraph/nodes/vehicle/shiftToGearIndex.md) | 1 | Nœud « Shift to Gear Index » (catégorie `repeat_instant`). Passe un rapport précis sur une boîte manuelle : `core_vehicleBridge.executeActio |
+| [✍ `flowgraph_nodes_vehicle_spawnVehicle`](ge/extensions/flowgraph/nodes/vehicle/spawnVehicle.md) | 9 | Nœud « Spawn Vehicle » : crée un véhicule (`core_vehicles.spawnNewVehicle` ou `replaceVehicle` si `replacePlayer`), attend qu'il soit prêt p |
+| [✍ `flowgraph_nodes_vehicle_special_customVehicleGetter`](ge/extensions/flowgraph/nodes/vehicle/special/customVehicleGetter.md) | 6 | Nœud « Get Custom Vehicle Value » (comportement `duration`, `once`). Évalue côté véhicule une expression Lua (`data.fun`, par exemple `elect |
+| [✍ `flowgraph_nodes_vehicle_special_customVlua`](ge/extensions/flowgraph/nodes/vehicle/special/customVlua.md) | 3 | Nœud « Custom Vehicle Lua » (catégorie `repeat_p_duration`, tags lua/vlua/command/code). Exécute du code Lua dans la VM du véhicule avec `ve |
+| [✍ `flowgraph_nodes_vehicle_special_customVlua_string`](ge/extensions/flowgraph/nodes/vehicle/special/customVlua_string.md) | 3 | Nœud « Custom vlua - deprecated » (catégorie `repeat_p_duration`). Ancienne version de « Custom Vehicle Lua » : envoie la chaîne du pin `cus |
+| [✍ `flowgraph_nodes_vehicle_special_vehicleAction`](ge/extensions/flowgraph/nodes/vehicle/special/vehicleAction.md) | 7 | Nœud « Vehicle Action » (comportement `duration`, catégorie `repeat_p_duration`). Appelle une action du véhicule définie dans son `input_act |
+| [✍ `flowgraph_nodes_vehicle_special_wheelDistance`](ge/extensions/flowgraph/nodes/vehicle/special/wheelDistance.md) | 4 | Nœud « Wheel Distance » (catégorie `repeat_p_duration`). Donne la distance, projetée sur la direction du véhicule, entre un point `position` |
+| [✍ `flowgraph_nodes_vehicle_states`](ge/extensions/flowgraph/nodes/vehicle/states.md) | 1 | Nœud « Vehicle States » (catégorie `repeat_instant`). Lit dans `map.objects[vehId].states` l'état du klaxon (`horn`) et de la barre lumineus |
+| [✍ `flowgraph_nodes_vehicle_teleportToLastRoad`](ge/extensions/flowgraph/nodes/vehicle/teleportToLastRoad.md) | 2 | Nœud « Teleport To Last Road » (catégorie `repeat_instant`). Téléporte le véhicule sur la dernière route valide (`spawn.teleportToLastRoad`) |
+| [✍ `flowgraph_nodes_vehicle_toShowroom`](ge/extensions/flowgraph/nodes/vehicle/toShowroom.md) | 2 | Nœud « Move To Showroom » (catégorie `repeat_instant`, dépend de `util_showroom`). Remet à zéro et déplace un véhicule dans le showroom (`ut |
+| [✍ `flowgraph_nodes_vehicle_toggleVehicleControls`](ge/extensions/flowgraph/nodes/vehicle/toggleVehicleControls.md) | 3 | Nœud « Toggle Vehicle Controls » (catégorie `repeat_instant`). Active ou désactive l'action map `VehicleCommonActionMap` (`setEnabled(contro |
+| [✍ `flowgraph_nodes_vehicle_touching`](ge/extensions/flowgraph/nodes/vehicle/touching.md) | 2 | Nœud « Vehicle Touch » (catégorie `repeat_instant`, tags collision/collide/hit). Détecte via `map.objects[vehIdA].objectCollisions` si un vé |
+| [✍ `flowgraph_nodes_vehicle_touchingProps`](ge/extensions/flowgraph/nodes/vehicle/touchingProps.md) | 2 | Nœud « Props Touch » (catégorie `repeat_instant`, tags collision/collide/hit). Indique si un véhicule touche un objet (prop) d'une liste d'i |
+| [✍ `flowgraph_nodes_vehicle_touchingStatic`](ge/extensions/flowgraph/nodes/vehicle/touchingStatic.md) | 6 | Nœud « Static Object Touch » (catégorie `repeat_instant`, tags collision/static). Détecte une intersection du véhicule avec des objets stati |
+| [✍ `flowgraph_nodes_vehicle_trackVehicle`](ge/extensions/flowgraph/nodes/vehicle/trackVehicle.md) | 3 | Nœud « Track Vehicle » (catégorie `repeat_instant`). Permet au flowgraph de suivre un véhicule créé en dehors de lui (`mgr.modules.vehicle:a |
+| [✍ `flowgraph_nodes_vehicle_trailerRespawn`](ge/extensions/flowgraph/nodes/vehicle/trailerRespawn.md) | 2 | Nœud « Trailer Respawn Control » (catégorie `once_instant`, dépend de `core_trailerRespawn`). Active ou désactive le respawn automatique des |
+| [✍ `flowgraph_nodes_vehicle_vehicleConfigProvider`](ge/extensions/flowgraph/nodes/vehicle/vehicleConfigProvider.md) | 6 | Nœud fournisseur « Vehicle Config Provider » (comportement `simple`, catégorie `provider`). Permet de choisir un modèle et une config de véh |
+| [✍ `flowgraph_nodes_vehicle_vehicleData`](ge/extensions/flowgraph/nodes/vehicle/vehicleData.md) | 2 | Nœud « Get Vehicle Data » (catégorie `repeat_instant`), obsolète : « remplacé par Get Vehicle Data, Vehicle OOBB et Vehicle Wheels ». Lit `m |
+| [✍ `flowgraph_nodes_vehicle_vehicleMapData`](ge/extensions/flowgraph/nodes/vehicle/vehicleMapData.md) | 2 | Nœud « Get Vehicle Data » (catégorie `repeat_instant`). Fournit position, directions, rotation, vitesse, activité et dommages depuis `map.ob |
+| [✍ `flowgraph_nodes_vehicle_vehicleOOBB`](ge/extensions/flowgraph/nodes/vehicle/vehicleOOBB.md) | 2 | Nœud « Get Vehicle Bounds » (catégorie `repeat_instant`, tags telemetry/bounds/corner). Donne les coins de la boîte englobante orientée du v |
+| [✍ `flowgraph_nodes_vehicle_vehiclePing`](ge/extensions/flowgraph/nodes/vehicle/vehiclePing.md) | 5 | Nœud « Vehicle Ping » (catégorie `once_f_duration`). Envoie un `ping` au véhicule (`core_vehicleBridge.requestValue(veh, cb, 'ping')`) pour  |
+| [✍ `flowgraph_nodes_vehicle_vehicleWheels`](ge/extensions/flowgraph/nodes/vehicle/vehicleWheels.md) | 2 | Nœud « Get Vehicle Wheel Center » (catégorie `repeat_instant`, tags telemetry/wheel). Calcule la moyenne des positions des roues (premier nœ |
+| [✍ `flowgraph_pin`](ge/extensions/flowgraph/pin.md) | 18 | Classe `pin` du flowgraph : représente une broche d'entrée ou de sortie d'un nœud (nom, type, direction, valeur, liens). Le module renvoie u |
+| [✍ `flowgraph_states`](ge/extensions/flowgraph/states.md) | 26 | Gestion des états (« state machine ») d'un projet flowgraph basé sur des graphes d'états (nœuds `states/stateNode`, `states/stateEntry`, `st |
+| [✍ `flowgraph_utils`](ge/extensions/flowgraph/utils.md) | 4 | Utilitaires du flowgraph : détection de type d'une valeur, test de compatibilité avec un type de pin, valeur par défaut par type, étiquette  |
+| [✍ `flowgraph_variableStorage`](ge/extensions/flowgraph/variableStorage.md) | 27 | Stockage des variables d'un projet flowgraph (variables globales du projet lues/écrites par les nœuds getVariable/setVariable). Le module re |
 | [✍ `freeroam_bigMapMarkers`](ge/extensions/freeroam/bigMapMarkers.md) | 9 | Gère les marqueurs de la grande carte (big map) : regroupe les points d'intérêt (POI) bruts de gameplay_rawPois qui ont un bigmapMarker en g |
 | [✍ `freeroam_bigMapMode`](ge/extensions/freeroam/bigMapMode.md) | 43 | Mode « grande carte » (big map) du jeu : ouvre et ferme la carte du niveau vue de dessus avec une transition de caméra, bascule la caméra 'b |
 | [✍ `freeroam_bigMapPoiProvider`](ge/extensions/freeroam/bigMapPoiProvider.md) | 20 | Fournisseur de données pour la grande carte : transforme les POI bruts (missions, garages, stations-service, concessionnaires, points de dép |
@@ -1707,253 +1707,253 @@ Généré par tim19Atlas à partir du code Lua du jeu (lecture seule).
 | [✍ `freeroam_specialTriggers`](ge/extensions/freeroam/specialTriggers.md) | 16 | Déclencheurs spéciaux pilotés par données : relie des BeamNGTrigger (ou zones) à l'affichage/masquage d'objets de scène (TSStatic, lumières  |
 | [✍ `freeroam_vehicleSwitchNotification`](ge/extensions/freeroam/vehicleSwitchNotification.md) | 2 | Affiche une notification à l'écran quand le joueur change de véhicule ou de siège : nom du véhicule (marque, nom, configuration), icône selo |
 | [✍ `freeroam_vueBigMap`](ge/extensions/freeroam/vueBigMap.md) | 21 | Backend Lua de la grande carte (big map) en interface Vue : prépare pour l'UI la liste des points d'intérêt (POI : missions, garages, statio |
-| [`gameplay_achievement`](ge/extensions/gameplay/achievement.md) | 6 |  |
-| [`gameplay_backgroundActivities_g2g`](ge/extensions/gameplay/backgroundActivities/g2g.md) | 12 |  |
-| [`gameplay_city`](ge/extensions/gameplay/city.md) | 9 |  |
-| [`gameplay_crashTest_crashTestBoundaries`](ge/extensions/gameplay/crashTest/crashTestBoundaries.md) | 5 |  |
-| [`gameplay_crashTest_crashTestCountdown`](ge/extensions/gameplay/crashTest/crashTestCountdown.md) | 2 |  |
-| [`gameplay_crashTest_crashTestScoring`](ge/extensions/gameplay/crashTest/crashTestScoring.md) | 6 |  |
-| [`gameplay_crashTest_crashTestTaskList`](ge/extensions/gameplay/crashTest/crashTestTaskList.md) | 6 |  |
-| [`gameplay_crashTest_scenarioManager`](ge/extensions/gameplay/crashTest/scenarioManager.md) | 18 |  |
-| [`gameplay_crawl_boundary`](ge/extensions/gameplay/crawl/boundary.md) | 13 |  |
-| [`gameplay_crawl_crawlFlowgraphBridge`](ge/extensions/gameplay/crawl/crawlFlowgraphBridge.md) | 22 |  |
-| [`gameplay_crawl_debug`](ge/extensions/gameplay/crawl/debug.md) | 9 |  |
-| [`gameplay_crawl_debugDraw`](ge/extensions/gameplay/crawl/debugDraw.md) | 3 |  |
-| [`gameplay_crawl_display`](ge/extensions/gameplay/crawl/display.md) | 22 |  |
-| [`gameplay_crawl_flowgraphBridge`](ge/extensions/gameplay/crawl/flowgraphBridge.md) | 23 |  |
-| [`gameplay_crawl_freeroamMultiplayer`](ge/extensions/gameplay/crawl/freeroamMultiplayer.md) | 4 |  |
-| [`gameplay_crawl_general`](ge/extensions/gameplay/crawl/general.md) | 17 |  |
-| [`gameplay_crawl_saveSystem`](ge/extensions/gameplay/crawl/saveSystem.md) | 31 |  |
-| [`gameplay_crawl_utils`](ge/extensions/gameplay/crawl/utils.md) | 42 |  |
-| [`gameplay_delivery_delivery`](ge/extensions/gameplay/delivery/delivery.md) | 12 |  |
-| [`gameplay_discover`](ge/extensions/gameplay/discover.md) | 20 |  |
-| [`gameplay_drag_core`](ge/extensions/gameplay/drag/core.md) | 68 |  |
-| [`gameplay_drag_dialPopup`](ge/extensions/gameplay/drag/dialPopup.md) | 2 |  |
-| [`gameplay_drag_display`](ge/extensions/gameplay/drag/display.md) | 22 |  |
-| [`gameplay_drag_dragBridge`](ge/extensions/gameplay/drag/dragBridge.md) | 57 |  |
-| [`gameplay_drag_dragTypes_bracketRace`](ge/extensions/gameplay/drag/dragTypes/bracketRace.md) | 5 |  |
-| [`gameplay_drag_dragTypes_headsUpRace`](ge/extensions/gameplay/drag/dragTypes/headsUpRace.md) | 5 |  |
-| [`gameplay_drag_mpDragHandlers`](ge/extensions/gameplay/drag/mpDragHandlers.md) | 1 |  |
-| [`gameplay_drag_phaseHandlers`](ge/extensions/gameplay/drag/phaseHandlers.md) | 26 |  |
-| [`gameplay_drag_poi`](ge/extensions/gameplay/drag/poi.md) | 5 |  |
-| [`gameplay_drag_rulesMenu`](ge/extensions/gameplay/drag/rulesMenu.md) | 9 |  |
-| [`gameplay_drag_saveSystem`](ge/extensions/gameplay/drag/saveSystem.md) | 23 |  |
-| [`gameplay_drag_times`](ge/extensions/gameplay/drag/times.md) | 11 |  |
-| [`gameplay_drag_timeslip`](ge/extensions/gameplay/drag/timeslip.md) | 3 |  |
-| [`gameplay_drift_bounds`](ge/extensions/gameplay/drift/bounds.md) | 5 |  |
-| [`gameplay_drift_destination`](ge/extensions/gameplay/drift/destination.md) | 13 |  |
-| [`gameplay_drift_display`](ge/extensions/gameplay/drift/display.md) | 27 |  |
-| [`gameplay_drift_drift`](ge/extensions/gameplay/drift/drift.md) | 45 |  |
-| [`gameplay_drift_freeroam_cruising`](ge/extensions/gameplay/drift/freeroam/cruising.md) | 1 |  |
-| [`gameplay_drift_freeroam_driftSpots`](ge/extensions/gameplay/drift/freeroam/driftSpots.md) | 15 |  |
-| [`gameplay_drift_general`](ge/extensions/gameplay/drift/general.md) | 23 |  |
-| [`gameplay_drift_multiplayer`](ge/extensions/gameplay/drift/multiplayer.md) | 7 |  |
-| [`gameplay_drift_quickMessages`](ge/extensions/gameplay/drift/quickMessages.md) | 10 |  |
-| [`gameplay_drift_saveLoad`](ge/extensions/gameplay/drift/saveLoad.md) | 9 |  |
-| [`gameplay_drift_scoreboard`](ge/extensions/gameplay/drift/scoreboard.md) | 11 |  |
-| [`gameplay_drift_scoring`](ge/extensions/gameplay/drift/scoring.md) | 34 |  |
-| [`gameplay_drift_sounds`](ge/extensions/gameplay/drift/sounds.md) | 9 |  |
-| [`gameplay_drift_stallingSystem`](ge/extensions/gameplay/drift/stallingSystem.md) | 6 |  |
-| [`gameplay_drift_statistics`](ge/extensions/gameplay/drift/statistics.md) | 4 |  |
-| [`gameplay_drift_stuntZones`](ge/extensions/gameplay/drift/stuntZones.md) | 20 |  |
-| [`gameplay_drift_stuntZones_donut`](ge/extensions/gameplay/drift/stuntZones/donut.md) | 8 |  |
-| [`gameplay_drift_stuntZones_driftThrough`](ge/extensions/gameplay/drift/stuntZones/driftThrough.md) | 8 |  |
-| [`gameplay_drift_stuntZones_hitPole`](ge/extensions/gameplay/drift/stuntZones/hitPole.md) | 11 |  |
-| [`gameplay_drift_stuntZones_nearPole`](ge/extensions/gameplay/drift/stuntZones/nearPole.md) | 11 |  |
-| [`gameplay_forceField`](ge/extensions/gameplay/forceField.md) | 12 |  |
-| [`gameplay_freeformDelivery_debug`](ge/extensions/gameplay/freeformDelivery/debug.md) | 5 |  |
-| [`gameplay_freeformDelivery_endScreen`](ge/extensions/gameplay/freeformDelivery/endScreen.md) | 1 |  |
-| [`gameplay_freeformDelivery_freeformDelivery`](ge/extensions/gameplay/freeformDelivery/freeformDelivery.md) | 21 |  |
-| [`gameplay_freeformDelivery_goals`](ge/extensions/gameplay/freeformDelivery/goals.md) | 16 |  |
-| [`gameplay_freeformDelivery_hints`](ge/extensions/gameplay/freeformDelivery/hints.md) | 3 |  |
-| [`gameplay_freeformDelivery_loader`](ge/extensions/gameplay/freeformDelivery/loader.md) | 1 |  |
-| [`gameplay_freeformDelivery_markers`](ge/extensions/gameplay/freeformDelivery/markers.md) | 5 |  |
-| [`gameplay_freeformDelivery_odometer`](ge/extensions/gameplay/freeformDelivery/odometer.md) | 7 |  |
-| [`gameplay_freeformDelivery_routes`](ge/extensions/gameplay/freeformDelivery/routes.md) | 20 |  |
-| [`gameplay_freeformDelivery_setup`](ge/extensions/gameplay/freeformDelivery/setup.md) | 11 |  |
-| [`gameplay_freeformDelivery_tasklist`](ge/extensions/gameplay/freeformDelivery/tasklist.md) | 4 |  |
-| [`gameplay_freeformDelivery_utils`](ge/extensions/gameplay/freeformDelivery/utils.md) | 17 |  |
-| [`gameplay_freeformDelivery_vehicleSleep`](ge/extensions/gameplay/freeformDelivery/vehicleSleep.md) | 4 |  |
-| [`gameplay_garageMode`](ge/extensions/gameplay/garageMode.md) | 28 |  |
-| [`gameplay_lowPerformance`](ge/extensions/gameplay/lowPerformance.md) | 9 |  |
-| [`gameplay_lowPerformance.test`](ge/extensions/gameplay/lowPerformance.test.md) | 6 | Run with require('testFramework/TestManager'):runTestFiles('gameplay/lowPerformance') |
-| [`gameplay_markerInteraction`](ge/extensions/gameplay/markerInteraction.md) | 21 |  |
-| [`gameplay_markers_bigmapMarker`](ge/extensions/gameplay/markers/bigmapMarker.md) | 11 |  |
-| [`gameplay_markers_crawlMarker`](ge/extensions/gameplay/markers/crawlMarker.md) | 13 |  |
-| [`gameplay_markers_driftLineMarker`](ge/extensions/gameplay/markers/driftLineMarker.md) | 11 |  |
-| [`gameplay_markers_gasStationMarker`](ge/extensions/gameplay/markers/gasStationMarker.md) | 13 |  |
-| [`gameplay_markers_inspectVehicleMarker`](ge/extensions/gameplay/markers/inspectVehicleMarker.md) | 10 |  |
-| [`gameplay_markers_invisibleMarker`](ge/extensions/gameplay/markers/invisibleMarker.md) | 10 |  |
-| [`gameplay_markers_invisibleTrigger`](ge/extensions/gameplay/markers/invisibleTrigger.md) | 13 |  |
-| [`gameplay_markers_missionMarker`](ge/extensions/gameplay/markers/missionMarker.md) | 15 |  |
-| [`gameplay_markers_parkingMarker`](ge/extensions/gameplay/markers/parkingMarker.md) | 15 |  |
-| [`gameplay_markers_vehicleTrigger`](ge/extensions/gameplay/markers/vehicleTrigger.md) | 13 |  |
-| [`gameplay_markers_walkingMarker`](ge/extensions/gameplay/markers/walkingMarker.md) | 13 |  |
-| [`gameplay_markers_zoneMarker`](ge/extensions/gameplay/markers/zoneMarker.md) | 12 |  |
-| [`gameplay_missions_locationsDetector`](ge/extensions/gameplay/missions/locationsDetector.md) | 1 |  |
-| [`gameplay_missions_missionManager`](ge/extensions/gameplay/missions/missionManager.md) | 19 |  |
-| [`gameplay_missions_missionScreen`](ge/extensions/gameplay/missions/missionScreen.md) | 34 |  |
-| [`gameplay_missions_missionTypes_baseMission`](ge/extensions/gameplay/missions/missionTypes/baseMission.md) | 5 |  |
-| [`gameplay_missions_missionTypes_editorHelper`](ge/extensions/gameplay/missions/missionTypes/editorHelper.md) | 33 |  |
-| [`gameplay_missions_missionTypes_flowMission`](ge/extensions/gameplay/missions/missionTypes/flowMission.md) | 20 |  |
-| [`gameplay_missions_missions`](ge/extensions/gameplay/missions/missions.md) | 37 |  |
-| [`gameplay_missions_poiTest`](ge/extensions/gameplay/missions/poiTest.md) | 3 |  |
-| [`gameplay_missions_proceduralMissionGenerators_busModeMissions`](ge/extensions/gameplay/missions/proceduralMissionGenerators/busModeMissions.md) | 1 |  |
-| [`gameplay_missions_proceduralMissionGenerators_timeTrialMissions`](ge/extensions/gameplay/missions/proceduralMissionGenerators/timeTrialMissions.md) | 1 |  |
-| [`gameplay_missions_progress`](ge/extensions/gameplay/missions/progress.md) | 27 |  |
-| [`gameplay_missions_startTrigger`](ge/extensions/gameplay/missions/startTrigger.md) | 5 |  |
-| [`gameplay_missions_unlocks`](ge/extensions/gameplay/missions/unlocks.md) | 19 |  |
-| [`gameplay_missions_unlocks_conditions_careerConditions`](ge/extensions/gameplay/missions/unlocks/conditions/careerConditions.md) | 0 |  |
-| [`gameplay_missions_unlocks_conditions_genericConditions`](ge/extensions/gameplay/missions/unlocks/conditions/genericConditions.md) | 0 |  |
-| [`gameplay_missions_unlocks_conditions_missionConditions`](ge/extensions/gameplay/missions/unlocks/conditions/missionConditions.md) | 2 |  |
-| [`gameplay_missions_unlocks_conditions_vehicleConditions`](ge/extensions/gameplay/missions/unlocks/conditions/vehicleConditions.md) | 0 |  |
-| [`gameplay_missions_vehicleFilterResolver`](ge/extensions/gameplay/missions/vehicleFilterResolver.md) | 2 |  |
-| [`gameplay_multiseat_gamemodeManager`](ge/extensions/gameplay/multiseat/gamemodeManager.md) | 30 |  |
-| [`gameplay_parking`](ge/extensions/gameplay/parking.md) | 39 |  |
-| [`gameplay_playmodeMarkers`](ge/extensions/gameplay/playmodeMarkers.md) | 12 |  |
-| [`gameplay_police`](ge/extensions/gameplay/police.md) | 35 |  |
-| [`gameplay_pursuit_proceduralMode`](ge/extensions/gameplay/pursuit/proceduralMode.md) | 3 |  |
-| [`gameplay_pursuit_pursuit`](ge/extensions/gameplay/pursuit/pursuit.md) | 21 |  |
-| [`gameplay_race_pacenote`](ge/extensions/gameplay/race/pacenote.md) | 9 |  |
-| [`gameplay_race_path`](ge/extensions/gameplay/race/path.md) | 18 |  |
-| [`gameplay_race_pathnode`](ge/extensions/gameplay/race/pathnode.md) | 19 |  |
-| [`gameplay_race_race`](ge/extensions/gameplay/race/race.md) | 38 |  |
-| [`gameplay_race_segment`](ge/extensions/gameplay/race/segment.md) | 20 |  |
-| [`gameplay_race_startPosition`](ge/extensions/gameplay/race/startPosition.md) | 13 |  |
-| [`gameplay_rally`](ge/extensions/gameplay/rally.md) | 37 |  |
-| [`gameplay_rally_aiCompetitors`](ge/extensions/gameplay/rally/aiCompetitors.md) | 5 |  |
-| [`gameplay_rally_audioManager`](ge/extensions/gameplay/rally/audioManager.md) | 31 |  |
-| [`gameplay_rally_audioTiming`](ge/extensions/gameplay/rally/audioTiming.md) | 4 |  |
-| [`gameplay_rally_cameraPathPlayer`](ge/extensions/gameplay/rally/cameraPathPlayer.md) | 3 |  |
-| [`gameplay_rally_client`](ge/extensions/gameplay/rally/client.md) | 2 |  |
-| [`gameplay_rally_codriverTiming`](ge/extensions/gameplay/rally/codriverTiming.md) | 5 |  |
-| [`gameplay_rally_compositors_helpers_calibrationOverrides`](ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.md) | 9 |  |
-| [`gameplay_rally_compositors_helpers_colors`](ge/extensions/gameplay/rally/compositors/helpers/colors.md) | 0 |  |
-| [`gameplay_rally_compositors_helpers_compositorUtil`](ge/extensions/gameplay/rally/compositors/helpers/compositorUtil.md) | 34 |  |
-| [`gameplay_rally_compositors_helpers_styleValidator`](ge/extensions/gameplay/rally/compositors/helpers/styleValidator.md) | 1 |  |
-| [`gameplay_rally_compositors_helpers_textCompositor`](ge/extensions/gameplay/rally/compositors/helpers/textCompositor.md) | 34 |  |
-| [`gameplay_rally_compositors_helpers_visualCompositor`](ge/extensions/gameplay/rally/compositors/helpers/visualCompositor.md) | 3 |  |
-| [`gameplay_rally_compositors_styles_english_casual`](ge/extensions/gameplay/rally/compositors/styles/english/casual.md) | 0 |  |
-| [`gameplay_rally_compositors_styles_english_caution`](ge/extensions/gameplay/rally/compositors/styles/english/caution.md) | 0 |  |
-| [`gameplay_rally_compositors_styles_english_distance`](ge/extensions/gameplay/rally/compositors/styles/english/distance.md) | 0 |  |
-| [`gameplay_rally_compositors_styles_english_enthusiast`](ge/extensions/gameplay/rally/compositors/styles/english/enthusiast.md) | 0 |  |
-| [`gameplay_rally_compositors_styles_english_modifiers`](ge/extensions/gameplay/rally/compositors/styles/english/modifiers.md) | 0 |  |
-| [`gameplay_rally_compositors_styles_english_numbering_easy_medium_hard`](ge/extensions/gameplay/rally/compositors/styles/english/numbering/easy_medium_hard.md) | 0 | Shared English easy/medium/hard corner numbering metadata. |
-| [`gameplay_rally_compositors_styles_english_numbering_one_to_six`](ge/extensions/gameplay/rally/compositors/styles/english/numbering/one_to_six.md) | 0 | Shared English 1-6 corner numbering metadata. |
-| [`gameplay_rally_compositors_styles_english_systemPacenotes`](ge/extensions/gameplay/rally/compositors/styles/english/systemPacenotes.md) | 0 |  |
-| [`gameplay_rally_compositors_styles_english_visual`](ge/extensions/gameplay/rally/compositors/styles/english/visual.md) | 0 |  |
-| [`gameplay_rally_compositors_styles_spanish_enthusiast`](ge/extensions/gameplay/rally/compositors/styles/spanish/enthusiast.md) | 0 |  |
-| [`gameplay_rally_compositors_styles_spanish_numbering_one_to_six`](ge/extensions/gameplay/rally/compositors/styles/spanish/numbering/one_to_six.md) | 0 | Shared Spanish 1-6 corner numbering metadata. |
-| [`gameplay_rally_cutCapture`](ge/extensions/gameplay/rally/cutCapture.md) | 5 |  |
-| [`gameplay_rally_driveline_drivelineMeasurement`](ge/extensions/gameplay/rally/driveline/drivelineMeasurement.md) | 1 |  |
-| [`gameplay_rally_driveline_drivelineRoute`](ge/extensions/gameplay/rally/driveline/drivelineRoute.md) | 48 |  |
-| [`gameplay_rally_driveline_drivelineV3`](ge/extensions/gameplay/rally/driveline/drivelineV3.md) | 26 |  |
-| [`gameplay_rally_driveline_pointList`](ge/extensions/gameplay/rally/driveline/pointList.md) | 12 |  |
-| [`gameplay_rally_driveline_rallyRouteTracker`](ge/extensions/gameplay/rally/driveline/rallyRouteTracker.md) | 15 |  |
-| [`gameplay_rally_driveline_util`](ge/extensions/gameplay/rally/driveline/util.md) | 0 |  |
-| [`gameplay_rally_enums`](ge/extensions/gameplay/rally/enums.md) | 0 |  |
-| [`gameplay_rally_extHelper`](ge/extensions/gameplay/rally/extHelper.md) | 2 |  |
-| [`gameplay_rally_fuelUtils`](ge/extensions/gameplay/rally/fuelUtils.md) | 3 |  |
-| [`gameplay_rally_geometry`](ge/extensions/gameplay/rally/geometry.md) | 1 |  |
-| [`gameplay_rally_loop_penalties`](ge/extensions/gameplay/rally/loop/penalties.md) | 4 |  |
-| [`gameplay_rally_loop_rallyAttempts`](ge/extensions/gameplay/rally/loop/rallyAttempts.md) | 2 |  |
-| [`gameplay_rally_loop_rallyEventLog`](ge/extensions/gameplay/rally/loop/rallyEventLog.md) | 15 |  |
-| [`gameplay_rally_loop_rallyLoopManager`](ge/extensions/gameplay/rally/loop/rallyLoopManager.md) | 134 |  |
-| [`gameplay_rally_loop_rallyLoopStars`](ge/extensions/gameplay/rally/loop/rallyLoopStars.md) | 5 |  |
-| [`gameplay_rally_loop_rallyLoopTime`](ge/extensions/gameplay/rally/loop/rallyLoopTime.md) | 6 |  |
-| [`gameplay_rally_loop_roadSectionPenaltyKeeper`](ge/extensions/gameplay/rally/loop/roadSectionPenaltyKeeper.md) | 5 |  |
-| [`gameplay_rally_loop_scheduleUtils`](ge/extensions/gameplay/rally/loop/scheduleUtils.md) | 4 |  |
-| [`gameplay_rally_loop_speedingDetector`](ge/extensions/gameplay/rally/loop/speedingDetector.md) | 7 |  |
-| [`gameplay_rally_loop_stagedCountdownTest`](ge/extensions/gameplay/rally/loop/stagedCountdownTest.md) | 4 |  |
-| [`gameplay_rally_loop_stagedCountdownUtils`](ge/extensions/gameplay/rally/loop/stagedCountdownUtils.md) | 12 |  |
-| [`gameplay_rally_loop_standaloneFallbackStream`](ge/extensions/gameplay/rally/loop/standaloneFallbackStream.md) | 6 |  |
-| [`gameplay_rally_loop_uiColors`](ge/extensions/gameplay/rally/loop/uiColors.md) | 4 |  |
-| [`gameplay_rally_notebook_focusedNearDraw`](ge/extensions/gameplay/rally/notebook/focusedNearDraw.md) | 3 |  |
-| [`gameplay_rally_notebook_noSelectionPreview`](ge/extensions/gameplay/rally/notebook/noSelectionPreview.md) | 3 |  |
-| [`gameplay_rally_notebook_pacenote`](ge/extensions/gameplay/rally/notebook/pacenote.md) | 129 |  |
-| [`gameplay_rally_notebook_pacenoteGenerator`](ge/extensions/gameplay/rally/notebook/pacenoteGenerator.md) | 1 |  |
-| [`gameplay_rally_notebook_pacenoteWaypoint`](ge/extensions/gameplay/rally/notebook/pacenoteWaypoint.md) | 20 |  |
-| [`gameplay_rally_notebook_path`](ge/extensions/gameplay/rally/notebook/path.md) | 105 |  |
-| [`gameplay_rally_notebook_structured`](ge/extensions/gameplay/rally/notebook/structured.md) | 14 |  |
-| [`gameplay_rally_notebook_systemPacenotes`](ge/extensions/gameplay/rally/notebook/systemPacenotes.md) | 2 |  |
-| [`gameplay_rally_notebook_test_testNotebook`](ge/extensions/gameplay/rally/notebook/test/testNotebook.md) | 1 |  |
-| [`gameplay_rally_notebook_waypointTypes`](ge/extensions/gameplay/rally/notebook/waypointTypes.md) | 1 |  |
-| [`gameplay_rally_rallyManager`](ge/extensions/gameplay/rally/rallyManager.md) | 88 |  |
-| [`gameplay_rally_recce`](ge/extensions/gameplay/rally/recce.md) | 10 |  |
-| [`gameplay_rally_recce_cutsRecording`](ge/extensions/gameplay/rally/recce/cutsRecording.md) | 1 |  |
-| [`gameplay_rally_recce_drivelineRecording`](ge/extensions/gameplay/rally/recce/drivelineRecording.md) | 1 |  |
-| [`gameplay_rally_recceApp`](ge/extensions/gameplay/rally/recceApp.md) | 25 |  |
-| [`gameplay_rally_recceSettings`](ge/extensions/gameplay/rally/recceSettings.md) | 16 |  |
-| [`gameplay_rally_recoveryClockAdvance`](ge/extensions/gameplay/rally/recoveryClockAdvance.md) | 2 |  |
-| [`gameplay_rally_snaproad`](ge/extensions/gameplay/rally/snaproad.md) | 70 |  |
-| [`gameplay_rally_snaproad_geoPacenotes`](ge/extensions/gameplay/rally/snaproad/geoPacenotes.md) | 6 |  |
-| [`gameplay_rally_snaproad_normals`](ge/extensions/gameplay/rally/snaproad/normals.md) | 2 |  |
-| [`gameplay_rally_stage_stageObserver`](ge/extensions/gameplay/rally/stage/stageObserver.md) | 10 |  |
-| [`gameplay_rally_stage_stageTimingState`](ge/extensions/gameplay/rally/stage/stageTimingState.md) | 16 |  |
-| [`gameplay_rally_starThresholds`](ge/extensions/gameplay/rally/starThresholds.md) | 1 |  |
-| [`gameplay_rally_startClocks_rallyStartTree`](ge/extensions/gameplay/rally/startClocks/rallyStartTree.md) | 3 |  |
-| [`gameplay_rally_test_testRouteFix`](ge/extensions/gameplay/rally/test/testRouteFix.md) | 4 |  |
-| [`gameplay_rally_tools_devTools`](ge/extensions/gameplay/rally/tools/devTools.md) | 26 |  |
-| [`gameplay_rally_tools_loopToolbox`](ge/extensions/gameplay/rally/tools/loopToolbox.md) | 12 |  |
-| [`gameplay_rally_tools_rallyToolbox`](ge/extensions/gameplay/rally/tools/rallyToolbox.md) | 22 |  |
-| [`gameplay_rally_trafficExclusion`](ge/extensions/gameplay/rally/trafficExclusion.md) | 5 |  |
-| [`gameplay_rally_transcripts_entry`](ge/extensions/gameplay/rally/transcripts/entry.md) | 16 |  |
-| [`gameplay_rally_transcripts_path`](ge/extensions/gameplay/rally/transcripts/path.md) | 8 |  |
-| [`gameplay_rally_transcripts_vehicleSnapshot`](ge/extensions/gameplay/rally/transcripts/vehicleSnapshot.md) | 3 |  |
-| [`gameplay_rally_util`](ge/extensions/gameplay/rally/util.md) | 48 |  |
-| [`gameplay_rally_util_colors`](ge/extensions/gameplay/rally/util/colors.md) | 0 |  |
-| [`gameplay_rally_util_jsonlUtils`](ge/extensions/gameplay/rally/util/jsonlUtils.md) | 5 |  |
-| [`gameplay_rally_util_normalizer`](ge/extensions/gameplay/rally/util/normalizer.md) | 1 |  |
-| [`gameplay_rally_vehicleCapture`](ge/extensions/gameplay/rally/vehicleCapture.md) | 5 |  |
-| [`gameplay_rally_vehicleTracker`](ge/extensions/gameplay/rally/vehicleTracker.md) | 13 |  |
-| [`gameplay_rally_voicepack`](ge/extensions/gameplay/rally/voicepack.md) | 47 |  |
-| [`gameplay_rally_voicepackMissionSettings`](ge/extensions/gameplay/rally/voicepackMissionSettings.md) | 4 |  |
-| [`gameplay_rallyLoop`](ge/extensions/gameplay/rallyLoop.md) | 35 |  |
-| [`gameplay_rallyStartClock`](ge/extensions/gameplay/rallyStartClock.md) | 8 |  |
-| [`gameplay_rawPois`](ge/extensions/gameplay/rawPois.md) | 3 |  |
-| [`gameplay_route_raceRoute`](ge/extensions/gameplay/route/raceRoute.md) | 19 |  |
-| [`gameplay_route_route`](ge/extensions/gameplay/route/route.md) | 18 |  |
-| [`gameplay_seatOccupants`](ge/extensions/gameplay/seatOccupants.md) | 42 |  |
-| [`gameplay_sites_location`](ge/extensions/gameplay/sites/location.md) | 6 |  |
-| [`gameplay_sites_parkingSpot`](ge/extensions/gameplay/sites/parkingSpot.md) | 15 |  |
-| [`gameplay_sites_sites`](ge/extensions/gameplay/sites/sites.md) | 12 |  |
-| [`gameplay_sites_sitesManager`](ge/extensions/gameplay/sites/sitesManager.md) | 11 |  |
-| [`gameplay_sites_zone`](ge/extensions/gameplay/sites/zone.md) | 21 |  |
-| [`gameplay_skidpadTest`](ge/extensions/gameplay/skidpadTest.md) | 3 |  |
-| [`gameplay_speedTrapLeaderboards`](ge/extensions/gameplay/speedTrapLeaderboards.md) | 9 |  |
-| [`gameplay_speedTraps`](ge/extensions/gameplay/speedTraps.md) | 2 |  |
-| [`gameplay_statistic`](ge/extensions/gameplay/statistic.md) | 39 |  |
-| [`gameplay_statisticModules_watchJturn`](ge/extensions/gameplay/statisticModules/watchJturn.md) | 4 |  |
-| [`gameplay_statisticModules_watchRollover`](ge/extensions/gameplay/statisticModules/watchRollover.md) | 4 |  |
-| [`gameplay_taxi`](ge/extensions/gameplay/taxi.md) | 35 |  |
-| [`gameplay_traffic`](ge/extensions/gameplay/traffic.md) | 60 |  |
-| [`gameplay_traffic_baseRole`](ge/extensions/gameplay/traffic/baseRole.md) | 26 |  |
-| [`gameplay_traffic_roadTracking`](ge/extensions/gameplay/traffic/roadTracking.md) | 9 |  |
-| [`gameplay_traffic_roles_empty`](ge/extensions/gameplay/traffic/roles/empty.md) | 1 |  |
-| [`gameplay_traffic_roles_police`](ge/extensions/gameplay/traffic/roles/police.md) | 5 |  |
-| [`gameplay_traffic_roles_standard`](ge/extensions/gameplay/traffic/roles/standard.md) | 9 |  |
-| [`gameplay_traffic_roles_suspect`](ge/extensions/gameplay/traffic/roles/suspect.md) | 5 |  |
-| [`gameplay_traffic_source`](ge/extensions/gameplay/traffic/source.md) | 10 |  |
-| [`gameplay_traffic_trafficUtils`](ge/extensions/gameplay/traffic/trafficUtils.md) | 18 |  |
-| [`gameplay_traffic_vehicle`](ge/extensions/gameplay/traffic/vehicle.md) | 35 |  |
-| [`gameplay_tutorial_bounds`](ge/extensions/gameplay/tutorial/bounds.md) | 15 |  |
-| [`gameplay_tutorial_damageTracker`](ge/extensions/gameplay/tutorial/damageTracker.md) | 19 |  |
-| [`gameplay_tutorial_markers`](ge/extensions/gameplay/tutorial/markers.md) | 13 |  |
-| [`gameplay_tutorial_runtime`](ge/extensions/gameplay/tutorial/runtime.md) | 15 |  |
-| [`gameplay_tutorial_setup`](ge/extensions/gameplay/tutorial/setup.md) | 21 |  |
-| [`gameplay_util_crashDetection`](ge/extensions/gameplay/util/crashDetection.md) | 10 |  |
-| [`gameplay_util_customFields`](ge/extensions/gameplay/util/customFields.md) | 12 |  |
-| [`gameplay_util_damageAssessment`](ge/extensions/gameplay/util/damageAssessment.md) | 9 |  |
-| [`gameplay_util_groundContact`](ge/extensions/gameplay/util/groundContact.md) | 1 |  |
-| [`gameplay_util_routeGenerator`](ge/extensions/gameplay/util/routeGenerator.md) | 2 |  |
-| [`gameplay_util_sortedList`](ge/extensions/gameplay/util/sortedList.md) | 10 |  |
-| [`gameplay_util_vehicleSighting`](ge/extensions/gameplay/util/vehicleSighting.md) | 3 |  |
-| [`gameplay_vehiclePerformance`](ge/extensions/gameplay/vehiclePerformance.md) | 9 |  |
-| [`gameplay_vehiclePresencePolicy`](ge/extensions/gameplay/vehiclePresencePolicy.md) | 4 |  |
-| [`gameplay_vehiclePresencePolicy.test`](ge/extensions/gameplay/vehiclePresencePolicy.test.md) | 3 | Run with: |
-| [`gameplay_walk`](ge/extensions/gameplay/walk.md) | 36 |  |
-| [`license`](ge/extensions/license.md) | 5 |  |
-| [`lightrunner_lightrunnerConfigurator`](ge/extensions/lightrunner/lightrunnerConfigurator.md) | 0 |  |
+| [✍ `gameplay_achievement`](ge/extensions/gameplay/achievement.md) | 6 | Extension GE qui relie les statistiques de jeu (gameplay_statistic) aux succès et statistiques du fournisseur en ligne (OnlineServiceProvide |
+| [✍ `gameplay_backgroundActivities_g2g`](ge/extensions/gameplay/backgroundActivities/g2g.md) | 12 | Activité de fond « g2g » : à l'activation, fondu au noir, apparition d'un véhicule aléatoire (voiture ou camion avec Top Speed > 10), puis f |
+| [✍ `gameplay_city`](ge/extensions/gameplay/city.md) | 9 | Extension qui charge le fichier city.sites.json du niveau courant (via gameplay_sites_sitesManager) et offre des requêtes sur ses zones et p |
+| [✍ `gameplay_crashTest_crashTestBoundaries`](ge/extensions/gameplay/crashTest/crashTestBoundaries.md) | 5 | Gère les limites de zone du scénario de test de collision (crash test). Charge un fichier .sites.json de la mission (bounds.sites.json, ou b |
+| [✍ `gameplay_crashTest_crashTestCountdown`](ge/extensions/gameplay/crashTest/crashTestCountdown.md) | 2 | Compte à rebours affiché pendant le scénario de crash test. Chaque seconde entière franchie, il envoie un message à l'UI (évènement Scenario |
+| [✍ `gameplay_crashTest_crashTestScoring`](ge/extensions/gameplay/crashTest/crashTestScoring.md) | 6 | Calcul des scores du scénario de crash test. Pour chaque étape réussie, calcule des sous-scores (temps avant impact, vitesse d'impact, dégât |
+| [✍ `gameplay_crashTest_crashTestTaskList`](ge/extensions/gameplay/crashTest/crashTestTaskList.md) | 6 | Alimente la liste de tâches de l'UI (évènements SetTasklistHeader et SetTasklistTask) pour le scénario de crash test. Chaque étape devient u |
+| [✍ `gameplay_crashTest_scenarioManager`](ge/extensions/gameplay/crashTest/scenarioManager.md) | 18 | Chef d'orchestre de la mission « crashTest » (analyse de collisions). processData transforme la définition de la mission en étapes (véhicule |
+| [✍ `gameplay_crawl_boundary`](ge/extensions/gameplay/crawl/boundary.md) | 13 | Gestion de la limite de zone du mode « crawl » (franchissement lent). Il fait apparaître des drapeaux (TSStatic flagMarker.dae) le long du c |
+| [✍ `gameplay_crawl_crawlFlowgraphBridge`](ge/extensions/gameplay/crawl/crawlFlowgraphBridge.md) | 22 | Pont entre le mode « crawl » (franchissement lent de parcours à points de passage) et les nœuds flowgraph / missions. Il charge un parcours  |
+| [✍ `gameplay_crawl_debug`](ge/extensions/gameplay/crawl/debug.md) | 9 | Fenêtre de debug ImGui « Crawl Debug Window » du mode crawl, réservée aux développeurs (désactivée par défaut). Une fois activée, elle affic |
+| [✍ `gameplay_crawl_debugDraw`](ge/extensions/gameplay/crawl/debugDraw.md) | 3 | Visualisation de debug en lecture seule des parcours du mode crawl, via debugDrawer : points de passage (sphères, flèches de direction, étiq |
+| [✍ `gameplay_crawl_display`](ge/extensions/gameplay/crawl/display.md) | 22 | Affichage des messages à l'écran du mode crawl. Chaque fonction showXxxMessage envoie une notification traduite (clés ui.crawl.*) via ui_mes |
+| [✍ `gameplay_crawl_flowgraphBridge`](ge/extensions/gameplay/crawl/flowgraphBridge.md) | 23 | Pont entre le mode crawl (franchissement lent de parcours) et les nœuds flowgraph des missions. Il charge un parcours depuis gameplay_crawl_ |
+| [✍ `gameplay_crawl_freeroamMultiplayer`](ge/extensions/gameplay/crawl/freeroamMultiplayer.md) | 4 | Intégration du crawl en freeroam multijoueur. Chargée par gameplay_crawl_general quand une session multijoueur commence (onMPSessionChanged) |
+| [✍ `gameplay_crawl_general`](ge/extensions/gameplay/crawl/general.md) | 17 | Cœur du mode crawl (franchissement lent de parcours) côté freeroam/carrière : garde le parcours actif (activeTrail : trail, zone, chemin cop |
+| [✍ `gameplay_crawl_saveSystem`](ge/extensions/gameplay/crawl/saveSystem.md) | 31 | Système de fichiers du mode crawl. Il lit et écrit les quatre types de fichiers JSON d'un niveau, dans /levels/<niveau>/crawls/ : *.trail.js |
+| [✍ `gameplay_crawl_utils`](ge/extensions/gameplay/crawl/utils.md) | 42 | Moteur d'exécution du mode crawl (franchissement lent d'un parcours à points de passage). Il garde l'état de chaque crawler (crawlStates, in |
+| [✍ `gameplay_delivery_delivery`](ge/extensions/gameplay/delivery/delivery.md) | 12 | Classe d'une livraison chronométrée (ancien système de livraison). Une instance choisit au hasard des lieux d'un objet sites portant un tag, |
+| [✍ `gameplay_discover`](ge/extensions/gameplay/discover.md) | 20 | Gère les « discovers » (expériences de l'écran Découvrir/Play). Il charge tous les fichiers *.lua de /gameplay/discover/ : chacun peut expor |
+| [✍ `gameplay_drag_core`](ge/extensions/gameplay/drag/core.md) | 68 | Noyau du système de drag race (solo et multijoueur). Il possède la table dragData (piste, couloirs, pilotes, timers, phases), crée les « rac |
+| [✍ `gameplay_drag_dialPopup`](ge/extensions/gameplay/drag/dialPopup.md) | 2 | Fenêtre ImGui « Drag - Set Dial » pour le bracket racing : le joueur local saisit son dial (temps annoncé, en secondes) dans un champ décima |
+| [✍ `gameplay_drag_display`](ge/extensions/gameplay/drag/display.md) | 22 | Affichage de la piste de drag : arbre de départ (feux pré-stage, stage, trois ambres, vert, rouge, bleu global, feu gagnant, feu conducteur  |
+| [✍ `gameplay_drag_dragBridge`](ge/extensions/gameplay/drag/dragBridge.md) | 57 | Façade du système de drag pour les nœuds flowgraph (missions) et l'interface Vue. Elle ne contient presque pas de logique : elle renvoie ver |
+| [✍ `gameplay_drag_dragTypes_bracketRace`](ge/extensions/gameplay/drag/dragTypes/bracketRace.md) | 5 | Type de course « bracket race » : chaque pilote annonce un dial (temps visé) et gagne en s'en approchant sans le battre. Chargée par gamepla |
+| [✍ `gameplay_drag_dragTypes_headsUpRace`](ge/extensions/gameplay/drag/dragTypes/headsUpRace.md) | 5 | Type de course « heads-up » : départ simultané sans handicap, le meilleur temps du timer important gagne. Chargée par gameplay_drag_core qua |
+| [✍ `gameplay_drag_mpDragHandlers`](ge/extensions/gameplay/drag/mpDragHandlers.md) | 1 | Table de dispatch des messages réseau du mode drag multijoueur. Le gamemode MP (multiplayer/gamemodes/drag) appelle handle(msgName, ...) à c |
+| [✍ `gameplay_drag_phaseHandlers`](ge/extensions/gameplay/drag/phaseHandlers.md) | 26 | Logique de phases d'une course de drag : stage (placement sur la ligne de stage), countdown (arbre de départ), race (course jusqu'au dernier |
+| [✍ `gameplay_drag_poi`](ge/extensions/gameplay/drag/poi.md) | 5 | Points d'intérêt (POI) des pistes de drag. Pour chaque couloir de chaque piste du niveau, crée un déclencheur invisible de 6 m de rayon posé |
+| [✍ `gameplay_drag_rulesMenu`](ge/extensions/gameplay/drag/rulesMenu.md) | 9 | Contexte de l'écran de règles de drag (interface Vue « mission.dragRules »). Il retrouve la piste associée à une installation (facility.id,  |
+| [✍ `gameplay_drag_saveSystem`](ge/extensions/gameplay/drag/saveSystem.md) | 23 | Chargement et sauvegarde des données de drag. Lit les pistes (fichiers *.strip.json et *.dragSettings.json, ou ancien format converti), reco |
+| [✍ `gameplay_drag_times`](ge/extensions/gameplay/drag/times.md) | 11 | Chronométrage du drag. Chaque frame, onUpdate fait avancer le timer principal de chaque racer dont les timers sont démarrés (dtSim en solo,  |
+| [✍ `gameplay_drag_timeslip`](ge/extensions/gameplay/drag/timeslip.md) | 3 | Génère le ticket de chronométrage (timeslip) d'une course de drag : infos de piste, météo (température, gravité), et pour chaque racer son n |
+| [✍ `gameplay_drift_bounds`](ge/extensions/gameplay/drift/bounds.md) | 5 | Limites de zone du mode drift. Charge un fichier de sites (zones) avec setBounds, puis, à chaque frame, regarde pour chaque véhicule suivi p |
+| [✍ `gameplay_drift_destination`](ge/extensions/gameplay/drift/destination.md) | 13 | Suivi d'itinéraire du mode drift (« A vers B »). setRacePath charge un chemin de course (gameplay/race/path) depuis un fichier JSON, éventue |
+| [✍ `gameplay_drift_display`](ge/extensions/gameplay/drift/display.md) | 27 | Couche d'affichage (UI) du drift. Chaque frame, publie sur le stream UI "drift" l'état de chaque véhicule suivi (score permanent, score pote |
+| [✍ `gameplay_drift_drift`](ge/extensions/gameplay/drift/drift.md) | 45 | Moteur de détection du drift. Pour chaque véhicule suivi (un état par vehId, le véhicule du joueur 0 est suivi automatiquement), calcule à c |
+| [✍ `gameplay_drift_freeroam_cruising`](ge/extensions/gameplay/drift/freeroam/cruising.md) | 1 | Détecte en roaming libre le passage en mode « cruising » de drift : quand le joueur enchaîne assez de drifts (ou fait un très long drift), l |
+| [✍ `gameplay_drift_freeroam_driftSpots`](ge/extensions/gameplay/drift/freeroam/driftSpots.md) | 15 | Gère les spots de drift du roaming libre (et de la carrière) : zones de départ/arrivée sous forme de lignes (lineOne/lineTwo), à traverser e |
+| [✍ `gameplay_drift_general`](ge/extensions/gameplay/drift/general.md) | 23 | Chef d'orchestre du gameplay de drift. Garde le contexte courant (inFreeroam, inChallenge, inFreeroamChallenge, inAnotherMissionType, inFree |
+| [✍ `gameplay_drift_multiplayer`](ge/extensions/gameplay/drift/multiplayer.md) | 7 | Pont entre le gameplay de drift et le tableau de scores multijoueur (multiplayer_multiplayerScoreboard). Quand un spot de drift démarre, cré |
+| [✍ `gameplay_drift_quickMessages`](ge/extensions/gameplay/drift/quickMessages.md) | 10 | Détecte les « quick messages » de drift (petits bonus affichés pendant le drift : grand angle, drift inversé, long drift, frôlement, chaîne  |
+| [✍ `gameplay_drift_saveLoad`](ge/extensions/gameplay/drift/saveLoad.md) | 9 | Charge et sauvegarde les spots de drift du roaming libre. Scanne /levels/<niveau>/driftSpots/ à la recherche de spot.driftSpot.json, constru |
+| [✍ `gameplay_drift_scoreboard`](ge/extensions/gameplay/drift/scoreboard.md) | 11 | Accumule les statistiques d'un défi de drift pour l'écran de fin : score et nombre de drifts par palier (tier), messages rapides obtenus (qu |
+| [✍ `gameplay_drift_scoring`](ge/extensions/gameplay/drift/scoring.md) | 34 | Calcule le score de drift de chaque véhicule suivi (un état de score par vehId). Pendant un drift, ajoute à un score en cache des points con |
+| [✍ `gameplay_drift_sounds`](ge/extensions/gameplay/drift/sounds.md) | 9 | Gère les sons d'interface du drift (événements FMOD UI>Career>Drift_*) : un son continu pendant un drift dont la hauteur suit le facteur de  |
+| [✍ `gameplay_drift_stallingSystem`](ge/extensions/gameplay/drift/stallingSystem.md) | 6 | Système anti-répétition du mode défi « Gymkhana » : il garde l'historique des figures (drifts normaux et zones de cascade) et calcule un mul |
+| [✍ `gameplay_drift_statistics`](ge/extensions/gameplay/drift/statistics.md) | 4 | Enregistre les statistiques de drift dans gameplay_statistic (clés drift/...) et débloque les succès de drift. Écoute les hooks de fin de dr |
+| [✍ `gameplay_drift_stuntZones`](ge/extensions/gameplay/drift/stuntZones.md) | 20 | Gestionnaire des zones de cascade (stunt zones) du mode drift/Gymkhana. setStuntZones(zones) crée un objet par zone en chargeant le sous-mod |
+| [✍ `gameplay_drift_stuntZones_donut`](ge/extensions/gameplay/drift/stuntZones/donut.md) | 8 | Type de zone de cascade « donut » : le joueur doit faire un tour complet (360° cumulés d'angle de direction de vitesse) en drift à l'intérie |
+| [✍ `gameplay_drift_stuntZones_driftThrough`](ge/extensions/gameplay/drift/stuntZones/driftThrough.md) | 8 | Type de zone de cascade « driftThrough » (passage serré) : le joueur doit traverser en drift une boîte orientée (OBB, centre pos, demi-axes  |
+| [✍ `gameplay_drift_stuntZones_hitPole`](ge/extensions/gameplay/drift/stuntZones/hitPole.md) | 11 | Type de zone de cascade « hitPole » : un poteau (véhicule delineator, config vehicles/delineator/pole.pc) est spawné à pos, avec un marqueur |
+| [✍ `gameplay_drift_stuntZones_nearPole`](ge/extensions/gameplay/drift/stuntZones/nearPole.md) | 11 | Type de zone de cascade « nearPole » : un poteau rayé (delineator, config vehicles/delineator/stripes.pc) est spawné à pos ; le joueur marqu |
+| [✍ `gameplay_forceField`](ge/extensions/gameplay/forceField.md) | 12 | Mode « champ de force » du menu radial Fun Stuff : crée autour du véhicule du joueur 0 une « planète » de gravité (obj:setPlanets) envoyée à |
+| [✍ `gameplay_freeformDelivery_debug`](ge/extensions/gameplay/freeformDelivery/debug.md) | 5 | Fenêtre imgui de debug « Freeform Delivery Debug » du mode de livraison libre. Quand elle est activée (setEnableDebugWindow(true)), elle col |
+| [✍ `gameplay_freeformDelivery_endScreen`](ge/extensions/gameplay/freeformDelivery/endScreen.md) | 1 | Petit module du mode de livraison libre (freeformDelivery) qui rassemble les statistiques affichées à la fin d'une livraison : temps écoulé, |
+| [✍ `gameplay_freeformDelivery_freeformDelivery`](ge/extensions/gameplay/freeformDelivery/freeformDelivery.md) | 21 | Module principal du mode de livraison libre (freeform delivery). Il orchestre le cycle de vie d'une livraison décrite par un fichier deliver |
+| [✍ `gameplay_freeformDelivery_goals`](ge/extensions/gameplay/freeformDelivery/goals.md) | 16 | Évalue les objectifs (goals) du mode de livraison libre. À partir de delivery.goals, crée un objectif par entrée (types placement, playerInV |
+| [✍ `gameplay_freeformDelivery_hints`](ge/extensions/gameplay/freeformDelivery/hints.md) | 3 | Gère les indices (hints) du mode de livraison libre : chaque hint de la livraison (id, targetAreaIds, message, subtext) s'affiche comme mess |
+| [✍ `gameplay_freeformDelivery_loader`](ge/extensions/gameplay/freeformDelivery/loader.md) | 1 | Charge un fichier de définition de livraison libre (JSON) : lit les données, charge le fichier de sites (sitesFile), fait apparaître les pre |
+| [✍ `gameplay_freeformDelivery_markers`](ge/extensions/gameplay/freeformDelivery/markers.md) | 5 | Sous-module du mode livraison libre (freeformDelivery) qui affiche les repères visuels des zones cibles : décalques au sol pour les places d |
+| [✍ `gameplay_freeformDelivery_odometer`](ge/extensions/gameplay/freeformDelivery/odometer.md) | 7 | Sous-module de la livraison libre qui suit l'odomètre des véhicules marqués trackOdometer dans la définition de livraison. Il lit la valeur  |
+| [✍ `gameplay_freeformDelivery_routes`](ge/extensions/gameplay/freeformDelivery/routes.md) | 20 | Gestion des itinéraires de la livraison libre. Construit des routes de guidage (core_groundMarkers.setPath) vers une zone cible ou vers un v |
+| [✍ `gameplay_freeformDelivery_setup`](ge/extensions/gameplay/freeformDelivery/setup.md) | 11 | Mise en place et démontage d'une livraison libre. Associe les véhicules déjà spawnés par le chargeur (delivery._vehicleIndex, par internalNa |
+| [✍ `gameplay_freeformDelivery_tasklist`](ge/extensions/gameplay/freeformDelivery/tasklist.md) | 4 | Alimente l'app « tasks » (liste de tâches en haut à gauche) pendant une livraison libre. Il affiche un en-tête (nom de la livraison), une tâ |
+| [✍ `gameplay_freeformDelivery_utils`](ge/extensions/gameplay/freeformDelivery/utils.md) | 17 | Fonctions utilitaires partagées par les sous-modules de la livraison libre : cache de positions de véhicules, recherche d'objets de site (li |
+| [✍ `gameplay_freeformDelivery_vehicleSleep`](ge/extensions/gameplay/freeformDelivery/vehicleSleep.md) | 4 | Sous-module de la livraison libre qui endort (setActive(0)) les véhicules de livraison éloignés de la caméra et du véhicule du joueur, et le |
+| [✍ `gameplay_garageMode`](ge/extensions/gameplay/garageMode.md) | 28 | Mode garage : charge le niveau garage_v2 (ou utilise l'emplacement actuel en carrière), gèle le véhicule sur son point d'apparition, passe l |
+| [✍ `gameplay_lowPerformance`](ge/extensions/gameplay/lowPerformance.md) | 9 | Détecteur de faible fréquence d'images en freeroam et en écran partagé (modes freeroam et multiseatGamemode uniquement ; missions, scénarios |
+| [✍ `gameplay_lowPerformance.test`](ge/extensions/gameplay/lowPerformance.test.md) | 6 | Tests automatisés du détecteur gameplay/lowPerformance, à lancer avec require('testFramework/TestManager'):runTestFiles('gameplay/lowPerform |
+| [✍ `gameplay_markerInteraction`](ge/extensions/gameplay/markerInteraction.md) | 21 | Gère chaque frame (onPreRender) l'affichage et l'interaction des marqueurs de mission/activité en freeroam et en carrière : sélectionne les  |
+| [✍ `gameplay_markers_bigmapMarker`](ge/extensions/gameplay/markers/bigmapMarker.md) | 11 | Type de marqueur utilisé par la grande carte (bigmap) : pour chaque cluster de POI, affiche une icône et une colonne (icônes d'icon renderer |
+| [✍ `gameplay_markers_crawlMarker`](ge/extensions/gameplay/markers/crawlMarker.md) | 13 | Marqueur de zone de crawling (rock crawling) en mode jeu : une icône flottante au-dessus d'une zone sphérique. Le véhicule du joueur qui ent |
+| [✍ `gameplay_markers_driftLineMarker`](ge/extensions/gameplay/markers/driftLineMarker.md) | 11 | Marqueur de ligne de départ des défis de drift en freeroam. Il n'affiche rien lui-même : il rend visibles les objets de scène nommés (marker |
+| [✍ `gameplay_markers_gasStationMarker`](ge/extensions/gameplay/markers/gasStationMarker.md) | 13 | Marqueur de station-service (carburant ou recharge électrique) en mode jeu. Pour chaque pompe (paire de noms d'objets de scène : zone, icône |
+| [✍ `gameplay_markers_inspectVehicleMarker`](ge/extensions/gameplay/markers/inspectVehicleMarker.md) | 10 | Marqueur « inspecter un véhicule » en mode jeu (par exemple un véhicule à examiner chez un vendeur) : une icône flottante (poi_parking_rect  |
+| [✍ `gameplay_markers_invisibleMarker`](ge/extensions/gameplay/markers/invisibleMarker.md) | 10 | Marqueur « nul » : implémente toute l'interface d'un marqueur de mode jeu (init, setup, update, show, hide, clearObjects, interactInPlayMode |
+| [✍ `gameplay_markers_invisibleTrigger`](ge/extensions/gameplay/markers/invisibleTrigger.md) | 13 | Déclencheur sphérique invisible : à partir d'un POI invisibleTrigger (pos, radius, onEnter, onInside, onExit), appelle les callbacks Lua qua |
+| [✍ `gameplay_markers_missionMarker`](ge/extensions/gameplay/markers/missionMarker.md) | 15 | Marqueur de mission en mode jeu : une icône (exclamation par défaut) flottant au-dessus d'un point, reliée au sol par un trait, plus deux dé |
+| [✍ `gameplay_markers_parkingMarker`](ge/extensions/gameplay/markers/parkingMarker.md) | 15 | Marqueur de place de parking en mode jeu (par exemple pour livrer ou déposer un véhicule) : un décalque rayé au sol, un contour 3D (park_out |
+| [✍ `gameplay_markers_vehicleTrigger`](ge/extensions/gameplay/markers/vehicleTrigger.md) | 13 | Marqueur de « portes » pour véhicule (par exemple l'entrée d'un garage ou d'un atelier) en mode jeu. Chaque porte est une paire d'objets de  |
+| [✍ `gameplay_markers_walkingMarker`](ge/extensions/gameplay/markers/walkingMarker.md) | 13 | Marqueur de « portes » pour le joueur à pied (entrées de bâtiments, par exemple). Même principe que vehicleTrigger : chaque porte est une pa |
+| [✍ `gameplay_markers_zoneMarker`](ge/extensions/gameplay/markers/zoneMarker.md) | 12 | Marqueur de zone sans visuel : rend un POI interactif quand le véhicule du joueur (ses quatre coins au sol de la boîte englobante) est entiè |
+| [✍ `gameplay_missions_locationsDetector`](ge/extensions/gameplay/missions/locationsDetector.md) | 1 | Détecte les missions dont le cluster de marqueurs contient la position donnée du joueur. getNearbyLocations parcourt les clusters de gamepla |
+| [✍ `gameplay_missions_missionManager`](ge/extensions/gameplay/missions/missionManager.md) | 19 | Chef d'orchestre du démarrage et de l'arrêt des missions. Chaque démarrage ou arrêt est une suite d'étapes (taskData.steps) exécutées image  |
+| [✍ `gameplay_missions_missionScreen`](ge/extensions/gameplay/missions/missionScreen.md) | 34 | Pont entre le système de missions et l'interface (UI Vue) : prépare les données de l'écran de mission (missions au marqueur courant, mission |
+| [✍ `gameplay_missions_missionTypes_baseMission`](ge/extensions/gameplay/missions/missionTypes/baseMission.md) | 5 | Classe de base des types de mission (non-flowgraph). Le module renvoie une fabrique `function(derivedClass, ...)` : elle crée un objet à par |
+| [✍ `gameplay_missions_missionTypes_editorHelper`](ge/extensions/gameplay/missions/missionTypes/editorHelper.md) | 33 | Classe de base pour écrire l'éditeur d'un type de mission dans l'éditeur du jeu (interface imgui). Un type de mission déclare ses champs mis |
+| [✍ `gameplay_missions_missionTypes_flowMission`](ge/extensions/gameplay/missions/missionTypes/flowMission.md) | 21 | Classe de base des missions pilotées par un flowgraph (type « flowgraph » et dérivés). Le module renvoie une fabrique `function(derivedClass |
+| [✍ `gameplay_missions_missions`](ge/extensions/gameplay/missions/missions.md) | 37 | Registre central des missions de BeamNG. Il découvre les missions fichier (dossiers /gameplay/missions/<niveau>/<type>/.../info.json) et pro |
+| [✍ `gameplay_missions_poiTest`](ge/extensions/gameplay/missions/poiTest.md) | 3 | Extension de test du système de points d'intérêt (POI). Elle ajoute un POI factice « poiTest » sur chaque place de parking définie dans le f |
+| [✍ `gameplay_missions_proceduralMissionGenerators_busModeMissions`](ge/extensions/gameplay/missions/proceduralMissionGenerators/busModeMissions.md) | 1 | Générateur procédural de missions « busMode » (conduite de bus en freeroam). Pour chaque niveau possédant des fichiers /levels/<niveau>/busl |
+| [✍ `gameplay_missions_proceduralMissionGenerators_timeTrialMissions`](ge/extensions/gameplay/missions/proceduralMissionGenerators/timeTrialMissions.md) | 1 | Générateur procédural de missions « generatedTimeTrial » à partir des courses rapides (quickraces) de chaque niveau. Il charge scenario_quic |
+| [✍ `gameplay_missions_progress`](ge/extensions/gameplay/missions/progress.md) | 27 | Gère la progression (sauvegarde) des missions : tentatives (attempts), agrégats (meilleur résultat, nombre d'essais, classements), étoiles d |
+| [✍ `gameplay_missions_startTrigger`](ge/extensions/gameplay/missions/startTrigger.md) | 5 | Transforme le champ `startTrigger` d'une mission en liste de « locations » (zones de démarrage) et regroupe les zones proches en clusters po |
+| [✍ `gameplay_missions_unlocks`](ge/extensions/gameplay/missions/unlocks.md) | 19 | Extension GE qui évalue les conditions de déblocage et de visibilité des missions (champs startCondition et visibleCondition). Au chargement |
+| [✍ `gameplay_missions_unlocks_conditions_careerConditions`](ge/extensions/gameplay/missions/unlocks/conditions/careerConditions.md) | 0 | Types de condition de déblocage de missions liés à la carrière : niveau de branche (branchLevel) et ligue débloquée (league). Chargés par ga |
+| [✍ `gameplay_missions_unlocks_conditions_genericConditions`](ge/extensions/gameplay/missions/unlocks/conditions/genericConditions.md) | 0 | Types de condition génériques pour les déblocages de missions : never, missing, always et les combinateurs multiAnd / multiOr. Chargés par g |
+| [✍ `gameplay_missions_unlocks_conditions_missionConditions`](ge/extensions/gameplay/missions/unlocks/conditions/missionConditions.md) | 2 | Types de condition de déblocage fondés sur la progression d'autres missions : missionPassed (réussie) et missionCompleted (complétée). Elles |
+| [✍ `gameplay_missions_unlocks_conditions_vehicleConditions`](ge/extensions/gameplay/missions/unlocks/conditions/vehicleConditions.md) | 0 | Type de condition de déblocage de missions lié au véhicule : vehicleDriven. Chargé par gameplay_missions_unlocks. |
+| [✍ `gameplay_missions_vehicleFilterResolver`](ge/extensions/gameplay/missions/vehicleFilterResolver.md) | 2 | Transforme une configuration de filtre de véhicules de mission (filterData : liste blanche/noire, réglages de probabilité, ajouts et retrait |
+| [✍ `gameplay_multiseat_gamemodeManager`](ge/extensions/gameplay/multiseat/gamemodeManager.md) | 30 | Gestionnaire des modes de jeu multi-sièges (écran partagé). Il charge les fournisseurs gameplay/discover/multiseat/*Rules.lua, collecte leur |
+| [✍ `gameplay_parking`](ge/extensions/gameplay/parking.md) | 39 | Système de véhicules garés et de suivi du stationnement. D'une part il fait apparaître des voitures garées sur les places du fichier de site |
+| [✍ `gameplay_playmodeMarkers`](ge/extensions/gameplay/playmodeMarkers.md) | 12 | Gère les marqueurs de jeu en freeroam/carrière (missions, parkings, zones, stations-service, etc.). Il regroupe les POI bruts de gameplay_ra |
+| [✍ `gameplay_police`](ge/extensions/gameplay/police.md) | 35 | Logique de police du trafic : suit les véhicules ayant le rôle 'police', gère les poursuites (niveaux -1 à 3 selon le score d'infractions),  |
+| [✍ `gameplay_pursuit_proceduralMode`](ge/extensions/gameplay/pursuit/proceduralMode.md) | 3 | Squelette vide prévu pour les scénarios de poursuite générés procéduralement et les évènements aléatoires. Le commentaire du code indique qu |
+| [✍ `gameplay_pursuit_pursuit`](ge/extensions/gameplay/pursuit/pursuit.md) | 21 | Gestionnaire de mode poursuite : événement de gameplay où plusieurs véhicules « chase » (police) poursuivent plusieurs véhicules « flee » (f |
+| [✍ `gameplay_race_pacenote`](ge/extensions/gameplay/race/pacenote.md) | 9 | Classe d'une annonce de copilote (pacenote) d'un chemin de course : une sphère positionnée (manuellement ou sur un nœud du navgraph) avec un |
+| [✍ `gameplay_race_path`](ge/extensions/gameplay/race/path.md) | 18 | Classe du chemin de course (race path) : conteneur de pathnodes, segments, positions de départ (startPositions) et pacenotes, avec métadonné |
+| [✍ `gameplay_race_pathnode`](ge/extensions/gameplay/race/pathnode.md) | 19 | Classe d'un point de passage (pathnode) d'un chemin de course : sphère avec rayon et normale optionnelle, positionnée manuellement ou sur un |
+| [✍ `gameplay_race_race`](ge/extensions/gameplay/race/race.md) | 38 | Classe du moteur de course : fait courir un ou plusieurs véhicules sur un chemin de course (gameplay/race/path). À chaque image elle suit le |
+| [✍ `gameplay_race_segment`](ge/extensions/gameplay/race/segment.md) | 20 | Classe d'un segment de chemin de course : tronçon entre deux pathnodes (from et to). Trois représentations sont prévues : « waypoint » (lign |
+| [✍ `gameplay_race_startPosition`](ge/extensions/gameplay/race/startPosition.md) | 13 | Classe d'une position de départ d'une course : position et rotation d'une ligne de départ, avec un groupe ('start', 'rollingStart', 'recover |
+| [✍ `gameplay_rally`](ge/extensions/gameplay/rally.md) | 37 | Point d'entrée du mode rallye (extension gameplay_rally). Il possède le gestionnaire de rallye (RallyManager) chargé pour une mission, relay |
+| [✍ `gameplay_rally_aiCompetitors`](ge/extensions/gameplay/rally/aiCompetitors.md) | 5 | Simule des concurrents IA pour le classement (leaderboard) d'une spéciale ou d'une boucle de rallye. Les paramètres des concurrents (skill,  |
+| [✍ `gameplay_rally_audioManager`](ge/extensions/gameplay/rally/audioManager.md) | 31 | Gestionnaire de la file audio du copilote de rallye. Il met en file des 'audioObj' (clips de notes, notes système, pauses) et les joue un pa |
+| [✍ `gameplay_rally_audioTiming`](ge/extensions/gameplay/rally/audioTiming.md) | 4 | Bornes et fonctions de limitation (clamp) des réglages d'espacement audio du copilote de rallye, en millisecondes : écart entre virages, ent |
+| [✍ `gameplay_rally_cameraPathPlayer`](ge/extensions/gameplay/rally/cameraPathPlayer.md) | 3 | Lit une trajectoire de caméra qui suit la route du rallye. À partir des points d'une 'snaproad' (pointsForCameraPath), il construit un chemi |
+| [✍ `gameplay_rally_client`](ge/extensions/gameplay/rally/client.md) | 2 | Client HTTP très léger vers un service local de transcription vocale (http://localhost:27872) utilisé pour la reconnaissance des notes parlé |
+| [✍ `gameplay_rally_codriverTiming`](ge/extensions/gameplay/rally/codriverTiming.md) | 5 | Calcule le délai du copilote de rallye : l'écart (en secondes) entre la fin de l'annonce d'une note et l'arrivée de la voiture au virage. Le |
+| [✍ `gameplay_rally_compositors_helpers_calibrationOverrides`](ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.md) | 9 | Gère le calibrage par mission des seuils d'un style de compositeur de notes de rallye (diamètres d'intensité des virages, longueurs d'arc pa |
+| [✍ `gameplay_rally_compositors_helpers_colors`](ge/extensions/gameplay/rally/compositors/helpers/colors.md) | 0 | Palette de couleurs partagée par les styles de notes de rallye visuelles. Les valeurs sont soit des références CSS (var(--bng-...)) consommé |
+| [✍ `gameplay_rally_compositors_helpers_compositorUtil`](ge/extensions/gameplay/rally/compositors/helpers/compositorUtil.md) | 34 | Boîte à outils du compositeur de notes de rallye. Parcourt les éléments d'une note structurée dans l'ordre fixe des emplacements, appelle po |
+| [✍ `gameplay_rally_compositors_helpers_styleValidator`](ge/extensions/gameplay/rally/compositors/helpers/styleValidator.md) | 1 | Vérifie la cohérence interne d'un style de compositeur de notes de rallye (fichier sous compositors/styles/). Il contrôle la table distance  |
+| [✍ `gameplay_rally_compositors_helpers_textCompositor`](ge/extensions/gameplay/rally/compositors/helpers/textCompositor.md) | 34 | Compositeur de texte des notes de rallye : charge un style (fichier compositors/styles/<nom>.lua), le copie, applique les calibrages de la m |
+| [✍ `gameplay_rally_compositors_helpers_visualCompositor`](ge/extensions/gameplay/rally/compositors/helpers/visualCompositor.md) | 3 | Compositeur visuel des notes de rallye : transforme une note structurée en une liste (4 maximum) de 'visuels' pour l'application d'UI des no |
+| [✍ `gameplay_rally_compositors_styles_english_casual`](ge/extensions/gameplay/rally/compositors/styles/english/casual.md) | 0 | Style de notes de rallye 'English casual' : un copilote anglais simplifié qui annonce les virages en 'easy / medium / hard' (numérotation ea |
+| [✍ `gameplay_rally_compositors_styles_english_caution`](ge/extensions/gameplay/rally/compositors/styles/english/caution.md) | 0 | Composant 'caution' partagé par les styles anglais : textes des trois niveaux d'avertissement ('care', 'caution', 'double caution') et coule |
+| [✍ `gameplay_rally_compositors_styles_english_distance`](ge/extensions/gameplay/rally/compositors/styles/english/distance.md) | 0 | Configuration des appels de distance des styles anglais : mots de liaison selon l'écart entre deux notes, unités parlées, règles d'arrondi e |
+| [✍ `gameplay_rally_compositors_styles_english_enthusiast`](ge/extensions/gameplay/rally/compositors/styles/english/enthusiast.md) | 0 | Style de notes de rallye 'English enthusiast' : copilote anglais complet, avec numérotation 1 à 6 (one_to_six), appels de distance activés ( |
+| [✍ `gameplay_rally_compositors_styles_english_modifiers`](ge/extensions/gameplay/rally/compositors/styles/english/modifiers.md) | 0 | Catalogue des modificateurs atomiques anglais pour les notes de rallye (freinage, guidage de trajectoire, coupes, 'keep', chicanes, sauts, c |
+| [✍ `gameplay_rally_compositors_styles_english_numbering_easy_medium_hard`](ge/extensions/gameplay/rally/compositors/styles/english/numbering/easy_medium_hard.md) | 0 | Numérotation anglaise partagée des virages en trois niveaux : hard, medium, easy. Chaque niveau donne le texte parlé, la plage de diamètre p |
+| [✍ `gameplay_rally_compositors_styles_english_numbering_one_to_six`](ge/extensions/gameplay/rally/compositors/styles/english/numbering/one_to_six.md) | 0 | Numérotation anglaise partagée des virages de 1 (très serré) à 6 (quasi plat), avec pour chaque niveau le texte parlé, la plage de diamètre  |
+| [✍ `gameplay_rally_compositors_styles_english_systemPacenotes`](ge/extensions/gameplay/rally/compositors/styles/english/systemPacenotes.md) | 0 | Notes système en anglais (annonces du copilote qui ne viennent pas des virages) : compte à rebours de départ (five à go), avertissements de  |
+| [✍ `gameplay_rally_compositors_styles_english_visual`](ge/extensions/gameplay/rally/compositors/styles/english/visual.md) | 0 | Couleurs générales des notes de rallye visuelles pour les styles anglais : couleur du lien 'into' et couleur du texte de distance. Renvoie d |
+| [✍ `gameplay_rally_compositors_styles_spanish_enthusiast`](ge/extensions/gameplay/rally/compositors/styles/spanish/enthusiast.md) | 0 | Style de notes de rallye en espagnol ('Spanish enthusiast') : numérotation 1 à 6 (uno à seis), directions 'izquierda'/'derecha', formes (se  |
+| [✍ `gameplay_rally_compositors_styles_spanish_numbering_one_to_six`](ge/extensions/gameplay/rally/compositors/styles/spanish/numbering/one_to_six.md) | 0 | Numérotation espagnole partagée des virages de 1 à 6 : textes parlés (uno, dos, tres, cuatro, cinco, seis), plages de diamètre physique (m), |
+| [✍ `gameplay_rally_cutCapture`](ge/extensions/gameplay/rally/cutCapture.md) | 5 | Enregistre les 'coupures' (cuts) pendant la reconnaissance (recce) d'un rallye : à chaque capture, la position, l'orientation et l'angle de  |
+| [✍ `gameplay_rally_driveline_drivelineMeasurement`](ge/extensions/gameplay/rally/driveline/drivelineMeasurement.md) | 1 | Classe vide (squelette) prévue pour les mesures sur une driveline de rallye. Le constructeur require(...)(driveline) appelle C:init, qui ne  |
+| [✍ `gameplay_rally_driveline_drivelineRoute`](ge/extensions/gameplay/rally/driveline/drivelineRoute.md) | 48 | Deuxième version de la driveline de rallye, fondée sur gameplay/route/raceRoute. À partir d'un RacePath (race.json), d'un carnet de notes (N |
+| [✍ `gameplay_rally_driveline_drivelineV3`](ge/extensions/gameplay/rally/driveline/drivelineV3.md) | 26 | Troisième version de la driveline de rallye : transforme l'enregistrement de reconnaissance (recce) en une spline éditable, puis en une list |
+| [✍ `gameplay_rally_driveline_pointList`](ge/extensions/gameplay/rally/driveline/pointList.md) | 12 | Liste de points le long d'un chemin (driveline de rallye). Chaque point est une table {pos (vec3), quat, ts, normal, prev, next, id, partiti |
+| [✍ `gameplay_rally_driveline_rallyRouteTracker`](ge/extensions/gameplay/rally/driveline/rallyRouteTracker.md) | 15 | Suivi de la position d'un véhicule le long d'une route statique de rallye. À chaque update, la position est projetée sur les segments de la  |
+| [✍ `gameplay_rally_driveline_util`](ge/extensions/gameplay/rally/driveline/util.md) | 0 | Constantes d'édition de la driveline de rallye (spline éditable construite à partir de l'enregistrement de reconnaissance). Utilisées par dr |
+| [✍ `gameplay_rally_enums`](ge/extensions/gameplay/rally/enums.md) | 0 | Énumérations partagées du système de rallye (notes de copilote) : mode audio des pacenotes, type de déclenchement (trigger), type de relâche |
+| [✍ `gameplay_rally_extHelper`](ge/extensions/gameplay/rally/extHelper.md) | 2 | Extension vide : sert uniquement à forcer le chargement du namespace gameplay_rally_* via extensions.load('gameplay_rally_extHelper'). Les f |
+| [✍ `gameplay_rally_fuelUtils`](ge/extensions/gameplay/rally/fuelUtils.md) | 3 | Outils pour sauvegarder et restaurer le carburant d'un véhicule de rallye (par exemple après un reset ou une réparation). createFuelSnapshot |
+| [✍ `gameplay_rally_geometry`](ge/extensions/gameplay/rally/geometry.md) | 1 | Prototype de génération automatique de notes de rallye à partir de la géométrie de la route. Quand un marqueur de route (ground marker) est  |
+| [✍ `gameplay_rally_loop_penalties`](ge/extensions/gameplay/rally/loop/penalties.md) | 4 | Calcul des pénalités de contrôle horaire (time control) d'une boucle de rallye : arrivée en avance, en retard, faux départ. Le temps est com |
+| [✍ `gameplay_rally_loop_rallyAttempts`](ge/extensions/gameplay/rally/loop/rallyAttempts.md) | 2 | Crée et enregistre une tentative (attempt) de mission pour une boucle de rallye (rally loop) à travers le système de progression des mission |
+| [✍ `gameplay_rally_loop_rallyEventLog`](ge/extensions/gameplay/rally/loop/rallyEventLog.md) | 15 | Journal des évènements d'une boucle de rallye. Chaque entrée (item) porte un timestamp, un eventId, un eventGroup, un type ('penalty', etc.) |
+| [✍ `gameplay_rally_loop_rallyLoopManager`](ge/extensions/gameplay/rally/loop/rallyLoopManager.md) | 134 | Gestionnaire d'une boucle de rallye (rally loop) : une mission qui enchaîne service de départ, jusqu'à 4 couples liaison/spéciale (stageN_ra |
+| [✍ `gameplay_rally_loop_rallyLoopStars`](ge/extensions/gameplay/rally/loop/rallyLoopStars.md) | 5 | Gère les étoiles (bronze, silver, gold) d'une boucle de rallye. Les seuils de la boucle sont la somme des seuils des spéciales liées (jusqu' |
+| [✍ `gameplay_rally_loop_rallyLoopTime`](ge/extensions/gameplay/rally/loop/rallyLoopTime.md) | 6 | Gère l'heure de la journée d'une boucle de rallye. Construit le réglage joueur « Loop Time » (Défaut, Maintenant, puis chaque heure HH:MM li |
+| [✍ `gameplay_rally_loop_roadSectionPenaltyKeeper`](ge/extensions/gameplay/rally/loop/roadSectionPenaltyKeeper.md) | 5 | Surveille les sections de liaison (road sections) d'une boucle de rallye : si le joueur déclenche trop de recalculs d'itinéraire dans une fe |
+| [✍ `gameplay_rally_loop_scheduleUtils`](ge/extensions/gameplay/rally/loop/scheduleUtils.md) | 4 | Petites fonctions utilitaires de calcul d'horaires pour les boucles de rallye : arrondi à la minute supérieure, conversion de créneaux (slot |
+| [✍ `gameplay_rally_loop_speedingDetector`](ge/extensions/gameplay/rally/loop/speedingDetector.md) | 7 | Détecte les excès de vitesse du joueur sur les sections de liaison d'une boucle de rallye. Toutes les secondes, la vitesse du véhicule joueu |
+| [✍ `gameplay_rally_loop_stagedCountdownTest`](ge/extensions/gameplay/rally/loop/stagedCountdownTest.md) | 4 | Simulation de test pour le compte à rebours de départ de spéciale (staged countdown). Reproduit une horloge murale à partir de l'heure du jo |
+| [✍ `gameplay_rally_loop_stagedCountdownUtils`](ge/extensions/gameplay/rally/loop/stagedCountdownUtils.md) | 12 | Fonctions communes au compte à rebours de départ de spéciale (nœud flowgraph et simulation de test) : lecture de l'horloge murale de l'envir |
+| [✍ `gameplay_rally_loop_standaloneFallbackStream`](ge/extensions/gameplay/rally/loop/standaloneFallbackStream.md) | 6 | Flux de données de secours pour les apps d'interface de spéciale de rallye quand aucune boucle (rally loop) ne les alimente (spéciale lancée |
+| [✍ `gameplay_rally_loop_uiColors`](ge/extensions/gameplay/rally/loop/uiColors.md) | 4 | Palette de couleurs d'interface pour le rallye : une couleur de thème pour la boucle (loop) et une pour la spéciale (stage), avec une varian |
+| [✍ `gameplay_rally_notebook_focusedNearDraw`](ge/extensions/gameplay/rally/notebook/focusedNearDraw.md) | 3 | Dessin de debug de l'éditeur de notes de rallye (pacenotes) : quand la caméra est proche des notes, ne dessine que la portion de la route (s |
+| [✍ `gameplay_rally_notebook_noSelectionPreview`](ge/extensions/gameplay/rally/notebook/noSelectionPreview.md) | 3 | Aperçu de l'éditeur de notes de rallye (pacenotes) quand aucune note n'est sélectionnée. Loin de la route (au-delà de overviewDistance), des |
+| [✍ `gameplay_rally_notebook_pacenote`](ge/extensions/gameplay/rally/notebook/pacenote.md) | 129 | Une pacenote de rallye (une note du copilote) : classe instanciée par le carnet (notebook, path.lua). Elle porte deux waypoints (cornerStart |
+| [✍ `gameplay_rally_notebook_pacenoteGenerator`](ge/extensions/gameplay/rally/notebook/pacenoteGenerator.md) | 1 | Générateur simple de pacenotes : à partir d'une liste de points de la ligne de conduite (driveline), il détecte les virages gauche/droite en |
+| [✍ `gameplay_rally_notebook_pacenoteWaypoint`](ge/extensions/gameplay/rally/notebook/pacenoteWaypoint.md) | 20 | Waypoint d'une pacenote de rallye : une position, un rayon, une normale (direction d'un plan de franchissement) et un type (cornerStart ou c |
+| [✍ `gameplay_rally_notebook_path`](ge/extensions/gameplay/rally/notebook/path.md) | 105 | Le carnet de notes de rallye (notebook) : conteneur d'une liste triée de pacenotes (pacenote.lua) enregistré dans un fichier *.notebook.json |
+| [✍ `gameplay_rally_notebook_structured`](ge/extensions/gameplay/rally/notebook/structured.md) | 18 | Stockage « structuré » d'une pacenote de rallye en six emplacements fixes (clés de chaîne "1" à "6", qui sont aussi l'ordre de lecture) : 1  |
+| [✍ `gameplay_rally_notebook_systemPacenotes`](ge/extensions/gameplay/rally/notebook/systemPacenotes.md) | 2 | Détient la liste canonique des noms de pacenotes « système » du rallye (compte à rebours, avertissements de départ, vérifications radio/cein |
+| [✍ `gameplay_rally_notebook_test_testNotebook`](ge/extensions/gameplay/rally/notebook/test/testNotebook.md) | 1 | Tests manuels du carnet de notes de rallye (notebook), à lancer depuis la console Lua du jeu. testAll() enchaîne dix tests avec une assertio |
+| [✍ `gameplay_rally_notebook_waypointTypes`](ge/extensions/gameplay/rally/notebook/waypointTypes.md) | 1 | Constantes des types de waypoints d'une pacenote de rallye : début de virage ("cornerStart") et fin de virage ("cornerEnd"). Fournit aussi u |
+| [✍ `gameplay_rally_rallyManager`](ge/extensions/gameplay/rally/rallyManager.md) | 88 | Gestionnaire d'une mission de rallye chargée (spéciale ou section de route). Un objet RallyManager regroupe le notebook (pacenotes), le chem |
+| [✍ `gameplay_rally_recce`](ge/extensions/gameplay/rally/recce.md) | 10 | Gestionnaire de haut niveau des enregistrements de reconnaissance (recce) d'un rallye. Il charge la driveline (points horodatés du parcours  |
+| [✍ `gameplay_rally_recce_cutsRecording`](ge/extensions/gameplay/rally/recce/cutsRecording.md) | 1 | Chargeur des « cuts » de reconnaissance (recce) d'un rallye. Un cut est un marqueur de position où le copilote a fait un enregistrement voca |
+| [✍ `gameplay_rally_recce_drivelineRecording`](ge/extensions/gameplay/rally/recce/drivelineRecording.md) | 1 | Chargeur du fichier de « driveline » enregistré pendant une reconnaissance (recce) de rallye. Une driveline est une suite de points horodaté |
+| [✍ `gameplay_rally_recceApp`](ge/extensions/gameplay/rally/recceApp.md) | 25 | Application « Recce » du rallye en freeroam : permet de charger une mission de rallye (rallyStage, rallyStageLoop ou rallyRoadSection du niv |
+| [✍ `gameplay_rally_recceSettings`](ge/extensions/gameplay/rally/recceSettings.md) | 16 | Préférences persistantes de la reconnaissance (recce) de rallye, enregistrées dans rallySettingsRoot/recce.json : dernier id de mission et d |
+| [✍ `gameplay_rally_recoveryClockAdvance`](ge/extensions/gameplay/rally/recoveryClockAdvance.md) | 2 | Table des pénalités de chronomètre appliquées à chaque récupération du véhicule (reset) en rallye. Une récupération coûte un nombre fixe de  |
+| [✍ `gameplay_rally_snaproad`](ge/extensions/gameplay/rally/snaproad.md) | 70 | Snaproad de rallye : « route magnétique » construite sur les points d'une driveline (PointList). Elle permet de projeter une position sur la |
+| [✍ `gameplay_rally_snaproad_geoPacenotes`](ge/extensions/gameplay/rally/snaproad/geoPacenotes.md) | 6 | Mesure géométrique des virages des pacenotes à partir de la route (snaproad). À partir des points d'une partition, il ajuste un ou plusieurs |
+| [✍ `gameplay_rally_snaproad_normals`](ge/extensions/gameplay/rally/snaproad/normals.md) | 2 | Petit utilitaire de calcul de normales pour les points d'un snaproad de rallye. À partir d'un point doté de liens prev/next, il calcule le v |
+| [✍ `gameplay_rally_stage_stageObserver`](ge/extensions/gameplay/rally/stage/stageObserver.md) | 10 | Observateur de spéciale de rallye : à chaque mise à jour, il compare l'emprise (8 coins de la boîte englobante orientée, OOBB) du véhicule e |
+| [✍ `gameplay_rally_stage_stageTimingState`](ge/extensions/gameplay/rally/stage/stageTimingState.md) | 16 | Machine d'état du chronomètre d'une spéciale de rallye : temps écoulé, activation, fin, pas de temps de la frame et temps intermédiaires (sp |
+| [✍ `gameplay_rally_starThresholds`](ge/extensions/gameplay/rally/starThresholds.md) | 1 | Calcule les seuils de temps des étoiles (or, argent, bronze) d'une spéciale de rallye à partir d'un temps de référence créé à la main (basel |
+| [✍ `gameplay_rally_startClocks_rallyStartTree`](ge/extensions/gameplay/rally/startClocks/rallyStartTree.md) | 3 | Affichage LED du panneau d'horloge de départ (« rally start tree ») de BeamNG. Il retrouve dans la scène les TSStatic utilisant la forme s_r |
+| [✍ `gameplay_rally_test_testRouteFix`](ge/extensions/gameplay/rally/test/testRouteFix.md) | 4 | Extension de test de développement pour le module gameplay/route/route : au chargement, elle crée une Route avec un petit chemin de 3 points |
+| [✍ `gameplay_rally_tools_devTools`](ge/extensions/gameplay/rally/tools/devTools.md) | 26 | Panneau imgui d'outils de développement pour le rallye, destiné à l'éditeur de rallye. Il regroupe quatre sections : « Voicepack Tools » (gé |
+| [✍ `gameplay_rally_tools_loopToolbox`](ge/extensions/gameplay/rally/tools/loopToolbox.md) | 12 | Fenêtre imgui de debug « Rally Loop Debug » (Loop Toolbox) pour la boucle de rallye, ouverte par gameplay_rallyLoop.toggleDebug(). Elle perm |
+| [✍ `gameplay_rally_tools_rallyToolbox`](ge/extensions/gameplay/rally/tools/rallyToolbox.md) | 22 | Fenêtre imgui de debug du RallyManager (gameplay_rally) : affiche la mission courante et la distance de la driveline, propose Warm Reload (r |
+| [✍ `gameplay_rally_trafficExclusion`](ge/extensions/gameplay/rally/trafficExclusion.md) | 5 | Calcule des zones sphériques d'exclusion du trafic IA le long des spéciales de rallye, puis les applique au navgraph (`map.setTrafficExclusi |
+| [✍ `gameplay_rally_transcripts_entry`](ge/extensions/gameplay/rally/transcripts/entry.md) | 16 | Une transcription individuelle de la reconnaissance de rallye : le texte reconnu de la voix du copilote, sa source, son horodatage et les do |
+| [✍ `gameplay_rally_transcripts_path`](ge/extensions/gameplay/rally/transcripts/path.md) | 8 | Conteneur des transcriptions (texte reconnu de la voix du copilote lors de la reconnaissance) d'un rallye. Il charge et sauvegarde un fichie |
+| [✍ `gameplay_rally_transcripts_vehicleSnapshot`](ge/extensions/gameplay/rally/transcripts/vehicleSnapshot.md) | 3 | Classe squelette représentant un instantané de véhicule (position, orientation, braquage, horodatage) rattaché à un chemin de transcriptions |
+| [✍ `gameplay_rally_util`](ge/extensions/gameplay/rally/util.md) | 48 | Boîte à outils commune du mode rallye (GE) : constantes (noms de dossiers, états actifs, couleurs flowgraph, valeurs par défaut du copilote) |
+| [✍ `gameplay_rally_util_colors`](ge/extensions/gameplay/rally/util/colors.md) | 0 | Palette de couleurs et constantes d'affichage (alphas, rayons, largeurs) partagées par les outils de rallye : snaproads, notes d'allure (pac |
+| [✍ `gameplay_rally_util_jsonlUtils`](ge/extensions/gameplay/rally/util/jsonlUtils.md) | 5 | Utilitaires de lecture de fichiers JSONL (un objet JSON par ligne), utilisés pour charger les enregistrements de reconnaissance du rallye (d |
+| [✍ `gameplay_rally_util_normalizer`](ge/extensions/gameplay/rally/util/normalizer.md) | 1 | Petit utilitaire de normalisation de texte pour les notes du rallye : applique successivement une liste de remplacements (motif, remplacemen |
+| [✍ `gameplay_rally_vehicleCapture`](ge/extensions/gameplay/rally/vehicleCapture.md) | 5 | Enregistreur de trajectoire du véhicule pendant la reconnaissance (recce) d'un rallye. Tous les 2 m parcourus, il capture position, orientat |
+| [✍ `gameplay_rally_vehicleTracker`](ge/extensions/gameplay/rally/vehicleTracker.md) | 13 | Suivi du véhicule joueur (slot 0) pour le rallye : position, vitesse et détection de dégâts. À chaque onUpdate, il relit map.objects[vehicle |
+| [✍ `gameplay_rally_voicepack`](ge/extensions/gameplay/rally/voicepack.md) | 47 | Module sans état qui gère les « voicepacks » du copilote de rallye : paquets de voix (audio .ogg + metadata.json + voicepack.json) situés so |
+| [✍ `gameplay_rally_voicepackMissionSettings`](ge/extensions/gameplay/rally/voicepackMissionSettings.md) | 4 | Fine couche autour de gameplay/rally/voicepack pour les réglages utilisateur d'une mission de rallye : construit le réglage « pack de voix » |
+| [✍ `gameplay_rallyLoop`](ge/extensions/gameplay/rallyLoop.md) | 35 | Extension façade du mode « boucle de rallye » (enchaînement service, liaison, spéciales). Elle possède l'instance de RallyLoopManager (loop/ |
+| [✍ `gameplay_rallyStartClock`](ge/extensions/gameplay/rallyStartClock.md) | 8 | Gère les horloges de départ de spéciale (panneaux physiques présents dans les niveaux) pour le rallye. Il charge les types d'horloges depuis |
+| [✍ `gameplay_rawPois`](ge/extensions/gameplay/rawPois.md) | 3 | Cache des points d'intérêt « bruts » (POI) par niveau. Il collecte les POI en émettant le hook `onGetRawPoiListForLevel(levelIdentifier, ele |
+| [✍ `gameplay_route_raceRoute`](ge/extensions/gameplay/route/raceRoute.md) | 19 | Variante synchrone de route.lua pour les courses et le rallye : chemin sur le navgraph avec métadonnées par point (metadata), callbacks de f |
+| [✍ `gameplay_route_route`](ge/extensions/gameplay/route/route.md) | 18 | Classe d'itinéraire sur le navgraph (module `map`) : calcule un chemin via une liste de positions, mémorise les distances restantes (distToT |
+| [✍ `gameplay_seatOccupants`](ge/extensions/gameplay/seatOccupants.md) | 42 | Système de sièges et d'occupants des véhicules. Il enregistre quel joueur (ou quel occupant factice) occupe quel siège de chaque véhicule (o |
+| [✍ `gameplay_sites_location`](ge/extensions/gameplay/sites/location.md) | 6 | Classe « Location » d'un jeu de sites (fichier *.sites.json) : un point nommé de la carte avec une position, un rayon et une couleur. Sert à |
+| [✍ `gameplay_sites_parkingSpot`](ge/extensions/gameplay/sites/parkingSpot.md) | 15 | Classe « ParkingSpot » d'un jeu de sites : un rectangle orienté (position, rotation, dimensions scl = largeur X, longueur Y, hauteur Z) repr |
+| [✍ `gameplay_sites_sites`](ge/extensions/gameplay/sites/sites.md) | 12 | Classe « Sites » : conteneur d'un fichier *.sites.json. Regroupe trois listes triées (locations, zones, parkingSpots), des index par tag et  |
+| [✍ `gameplay_sites_sitesManager`](ge/extensions/gameplay/sites/sitesManager.md) | 11 | Extension qui recense les fichiers *.sites.json de chaque niveau, les charge en objets « sites » (lieux, zones, places de parking) et les me |
+| [✍ `gameplay_sites_zone`](ge/extensions/gameplay/sites/zone.md) | 21 | Classe « Zone » d'un jeu de sites : un polygone 2D (liste de sommets en coordonnées monde) délimitant une région de la carte, avec en option |
+| [✍ `gameplay_skidpadTest`](ge/extensions/gameplay/skidpadTest.md) | 3 | Extension de test de skidpad : téléporte un véhicule au point de départ « skidpadSpawn » puis lui fait suivre par l'IA le circuit défini par |
+| [✍ `gameplay_speedTrapLeaderboards`](ge/extensions/gameplay/speedTrapLeaderboards.md) | 9 | Extension qui tient les classements (top 10) des radars de vitesse, par niveau et par radar (triggerName), en mode freeroam uniquement. Les  |
+| [✍ `gameplay_speedTraps`](ge/extensions/gameplay/speedTraps.md) | 2 | Extension qui gère les radars de vitesse et de feu rouge posés dans les niveaux sous forme de triggers BeamNGTrigger portant un champ speedT |
+| [✍ `gameplay_statistic`](ge/extensions/gameplay/statistic.md) | 39 | Extension de statistiques de jeu. Elle tient des métriques nommées (compteurs, valeurs, minuteurs) enregistrées dans settings/cloud/gameplay |
+| [✍ `gameplay_statisticModules_watchJturn`](ge/extensions/gameplay/statisticModules/watchJturn.md) | 4 | Module de statistiques qui détecte les « J-turns » (demi-tour en marche arrière puis marche avant) du véhicule joueur et incrémente la métri |
+| [✍ `gameplay_statisticModules_watchRollover`](ge/extensions/gameplay/statisticModules/watchRollover.md) | 4 | Module de statistiques qui détecte les tonneaux (véhicule retourné sur le toit puis remis sur ses roues) et incrémente la métrique « vehicle |
+| [✍ `gameplay_taxi`](ge/extensions/gameplay/taxi.md) | 35 | Système de taxi en freeroam et carrière : le joueur à pied peut héler un taxi du trafic (ou en appeler un par le menu rapide), monter, chois |
+| [✍ `gameplay_traffic`](ge/extensions/gameplay/traffic.md) | 60 | Système principal de trafic IA en freeroam. Il fait apparaître un groupe de véhicules (via core_multiSpawn), les insère dans la table du tra |
+| [✍ `gameplay_traffic_baseRole`](ge/extensions/gameplay/traffic/baseRole.md) | 26 | Classe de base des « rôles » du trafic (civil, police, suspect, etc.). Un rôle est attaché à un véhicule du trafic (objet de gameplay_traffi |
+| [✍ `gameplay_traffic_roadTracking`](ge/extensions/gameplay/traffic/roadTracking.md) | 9 | Classe qui suit le placement et le comportement d'un véhicule sur la route : segment de route courant (n1, n2), position latérale, alignemen |
+| [✍ `gameplay_traffic_roles_empty`](ge/extensions/gameplay/traffic/roles/empty.md) | 1 | Rôle de trafic minimal (« empty »). Il hérite de baseRole mais vide la table d'actions : aucune action supplémentaire ni IA spécifique n'est |
+| [✍ `gameplay_traffic_roles_police`](ge/extensions/gameplay/traffic/roles/police.md) | 5 | Rôle de trafic « police » (classe 'emergency'). Il définit les actions de poursuite (pursuitStart, pursuitEnd, chaseTarget, avoidTarget, roa |
+| [✍ `gameplay_traffic_roles_standard`](ge/extensions/gameplay/traffic/roles/standard.md) | 9 | Rôle de trafic « standard » : le conducteur civil par défaut. Il réagit aux collisions, accidents et événements vus (quasi-accident, collisi |
+| [✍ `gameplay_traffic_roles_suspect`](ge/extensions/gameplay/traffic/roles/suspect.md) | 5 | Rôle de trafic « suspect » : un véhicule recherché par la police. Il définit les actions watchPolice (devenir recherché), fleePolice (fuir), |
+| [✍ `gameplay_traffic_source`](ge/extensions/gameplay/traffic/source.md) | 10 | Gère les « sources » (foyers) du gestionnaire de trafic, utile quand plusieurs joueurs (écran partagé) doivent chacun avoir du trafic autour |
+| [✍ `gameplay_traffic_trafficUtils`](ge/extensions/gameplay/traffic/trafficUtils.md) | 18 | Boîte à outils du système de trafic : création de groupes de véhicules de trafic ou de police (via core_multiSpawn), chargement de fichiers  |
+| [✍ `gameplay_traffic_vehicle`](ge/extensions/gameplay/traffic/vehicle.md) | 35 | Classe d'un véhicule géré par le système de trafic (gameplay_traffic). Elle suit l'état du véhicule (reset, active, fadeIn, fadeOut, queued, |
+| [✍ `gameplay_tutorial_bounds`](ge/extensions/gameplay/tutorial/bounds.md) | 15 | Gère les limites de la zone du tutoriel de carrière. Il vérifie que le joueur reste dans les zones actives des sites du tutoriel ; sinon il  |
+| [✍ `gameplay_tutorial_damageTracker`](ge/extensions/gameplay/tutorial/damageTracker.md) | 19 | Suit les dégâts du véhicule pendant le tutoriel de carrière (et le time trial). Il s'appuie sur gameplay_util_crashDetection pour détecter l |
+| [✍ `gameplay_tutorial_markers`](ge/extensions/gameplay/tutorial/markers.md) | 13 | Gère les marqueurs visuels du tutoriel de carrière : marqueurs d'attention au-dessus d'un véhicule ou à une position, marqueurs de direction |
+| [✍ `gameplay_tutorial_runtime`](ge/extensions/gameplay/tutorial/runtime.md) | 15 | Moteur générique de didacticiel : il enchaîne des « étapes » qui sont chacune une extension Lua distincte (préfixe + identifiant d'étape). I |
+| [✍ `gameplay_tutorial_setup`](ge/extensions/gameplay/tutorial/setup.md) | 21 | Mise en place de la scène du didacticiel : préfabs, sites (zones de stationnement), véhicule du didacticiel (sunburst2, config apmTutorial_s |
+| [✍ `gameplay_util_crashDetection`](ge/extensions/gameplay/util/crashDetection.md) | 10 | Détecteur de collisions (« crashes ») pour des véhicules suivis. Il compare à chaque image les dégâts du véhicule (map.objects[id].damage et |
+| [✍ `gameplay_util_customFields`](ge/extensions/gameplay/util/customFields.md) | 12 | Petit conteneur de « champs personnalisés » typés (string, number, boolean, vec3, quat) et d'étiquettes (tags) triées, avec sérialisation. L |
+| [✍ `gameplay_util_damageAssessment`](ge/extensions/gameplay/util/damageAssessment.md) | 9 | Évalue les dégâts d'un véhicule : niveau global (aucun, léger, modéré, sévère) d'après map.objects[id].damage, et répartition par zone. Pour |
+| [✍ `gameplay_util_groundContact`](ge/extensions/gameplay/util/groundContact.md) | 1 | Utilitaire minimal pour savoir si un véhicule repose sur ses roues. Il lance un rayon statique vers le bas depuis le bas de la boîte engloba |
+| [✍ `gameplay_util_routeGenerator`](ge/extensions/gameplay/util/routeGenerator.md) | 2 | Génère procéduralement un parcours de course sur le graphe routier de la carte (map.getMap().nodes). Une marche aléatoire guidée (angle préf |
+| [✍ `gameplay_util_sortedList`](ge/extensions/gameplay/util/sortedList.md) | 10 | Liste d'objets ordonnée par `sortOrder`, avec index par id (objects) et par nom (byName). Elle fabrique les objets via un constructeur fourn |
+| [✍ `gameplay_util_vehicleSighting`](ge/extensions/gameplay/util/vehicleSighting.md) | 3 | Détermine si un observateur (la caméra du joueur ou un véhicule) peut « voir » un véhicule cible. La portée dépend de l'angle : portée maxim |
+| [✍ `gameplay_vehiclePerformance`](ge/extensions/gameplay/vehiclePerformance.md) | 9 | Calcule l'indice de performance (PI) et la classe (X, S, A, B, C, D) d'un véhicule à partir de ses résultats de test automatique (temps 0-60 |
+| [✍ `gameplay_vehiclePresencePolicy`](ge/extensions/gameplay/vehiclePresencePolicy.md) | 4 | Règles pures (sans état) décrivant la « présence » d'un joueur par rapport à un véhicule : driver (conducteur), passenger (passager) ou unre |
+| [✍ `gameplay_vehiclePresencePolicy.test`](ge/extensions/gameplay/vehiclePresencePolicy.test.md) | 3 | Tests unitaires de gameplay/vehiclePresencePolicy. Chaque fonction testXxx reçoit un contexte de test `ctx` (avec assert et assertEqual) fou |
+| [✍ `gameplay_walk`](ge/extensions/gameplay/walk.md) | 36 | Mode « marche » du joueur : sortir du véhicule fait apparaître un véhicule spécial « unicycle » (le personnage) que le joueur contrôle à pie |
+| [✍ `license`](ge/extensions/license.md) | 5 | Interroge l'état des licences BeamNG.tech (recherche) et commerciale via les objets C++ ResearchVerifier et CommercialVerifier, avec un cach |
+| [✍ `lightrunner_lightrunnerConfigurator`](ge/extensions/lightrunner/lightrunnerConfigurator.md) | 0 | Configurateur de l'assistant (wizard) « Light Runner » : course rapide sur le niveau glow_city. Il construit un descripteur à partir de quic |
 | [✍ `mcp_server`](ge/extensions/mcp/server.md) | 7 | Serveur MCP (Model Context Protocol) intégré au jeu. Il ouvre un petit serveur HTTP local (via le serveur C++ BNGWebWSServer) sur http://127 |
 | [✍ `mcp_shared`](ge/extensions/mcp/shared.md) | 4 | État et petites aides partagés par les modules d'outils MCP (mcp/tools/*.lua). Chargé par `require('mcp/shared')`, donc singleton via le cac |
 | [✍ `mcp_tools`](ge/extensions/mcp/tools.md) | 3 | Chargeur des modules d'outils MCP. Au chargement il parcourt `/lua/ge/extensions/mcp/tools/*.lua` (niveau 1), les `require` un par un et fus |
@@ -1973,10 +1973,10 @@ Généré par tim19Atlas à partir du code Lua du jeu (lecture seule).
 | [✍ `mcp_tools_ui`](ge/extensions/mcp/tools/ui.md) | 11 | Outils MCP pour l'interface (CEF/Vue) : lire la route et l'état Pinia, naviguer, afficher/masquer l'UI, afficher un message, et piloter le D |
 | [✍ `mcp_tools_vehicle`](ge/extensions/mcp/tools/vehicle.md) | 11 | Outils MCP véhicules : lister, détailler, fichiers JBeam et arbre de parts, journal d'instabilité physique, reset/rechargement du véhicule j |
 | [✍ `mcp_tools_world`](ge/extensions/mcp/tools/world.md) | 6 | Outils MCP « monde » : lister et charger des niveaux, déclencher une action d'entrée liée (comme une touche), récupérer ou supprimer un véhi |
-| [`oneshotRace_oneshotRaceCore`](ge/extensions/oneshotRace/oneshotRaceCore.md) | 1 |  |
-| [`oneshotRace_quickRaceConfiguratorDescriptor`](ge/extensions/oneshotRace/quickRaceConfiguratorDescriptor.md) | 1 |  |
-| [`quickrace_quickraceConfigurator`](ge/extensions/quickrace/quickraceConfigurator.md) | 0 |  |
-| [`remoteControl_remoteControl`](ge/extensions/remoteControl/remoteControl.md) | 5 |  |
+| [✍ `oneshotRace_oneshotRaceCore`](ge/extensions/oneshotRace/oneshotRaceCore.md) | 1 | Cœur commun des assistants (wizards) de course « one shot » : à partir d'un descripteur, createConfigurator() renvoie un objet qui garde la  |
+| [✍ `oneshotRace_quickRaceConfiguratorDescriptor`](ge/extensions/oneshotRace/quickRaceConfiguratorDescriptor.md) | 1 | Fabrique le descripteur commun aux configurateurs de course rapide (quickrace, Light Runner). Le descripteur est consommé par oneshotRaceCor |
+| [✍ `quickrace_quickraceConfigurator`](ge/extensions/quickrace/quickraceConfigurator.md) | 0 | Configurateur de l'assistant de course rapide (quickrace) : niveau, piste, véhicule et réglages (marche arrière, départ lancé, nombre de tou |
+| [✍ `remoteControl_remoteControl`](ge/extensions/remoteControl/remoteControl.md) | 5 | Exemple/prototype de télécommande HTTP : au chargement, démarre un petit serveur HTTP (utils/simpleHttpServer) sur 0.0.0.0:8081 qui sert les |
 | [✍ `render_hdr`](ge/extensions/render/hdr.md) | 3 | Crée au premier frame la chaîne d'effets de post-traitement HDR (exposition automatique/locale) : PostEffectBrightPass (rendu AfterPostFX à  |
 | [✍ `render_openxr`](ge/extensions/render/openxr.md) | 11 | Interface Lua de la réalité virtuelle OpenXR (casque VR). Pilote le moteur C++ (objet global OpenXR) : activation/désactivation avec une boî |
 | [✍ `render_playerCompassMarkers`](ge/extensions/render/playerCompassMarkers.md) | 3 | Indicateurs de direction des autres joueurs pour l'écran partagé (multi-sièges en freeroam). Pour chaque vue, dessine en haut de la vue une  |
@@ -2022,331 +2022,331 @@ Généré par tim19Atlas à partir du code Lua du jeu (lecture seule).
 | [✍ `scenario_timeLimit`](ge/extensions/scenario/timeLimit.md) | 3 | But de scénario « timeLimit » : le scénario doit être terminé en moins de maxTime secondes. Chargé par scenario_raceGoals (init, processStat |
 | [✍ `scenario_waypointAction`](ge/extensions/scenario/waypointAction.md) | 3 | But de scénario « wayPointAction » : affiche un message à l'écran quand un véhicule atteint certains waypoints de la course. Chargé par scen |
 | [✍ `scenario_waypoints`](ge/extensions/scenario/waypoints.md) | 14 | Système de waypoints d'un scénario de course : à partir de scenario.lapConfig (liste ordonnée de waypoints/triggers) et des branches (lapCon |
-| [`statistics_statistics`](ge/extensions/statistics/statistics.md) | 23 |  |
-| [`telemetry_clientFacts`](ge/extensions/telemetry/clientFacts.md) | 4 |  |
-| [`telemetry_clientFacts.test`](ge/extensions/telemetry/clientFacts.test.md) | 6 |  |
-| [`telemetry_configManager`](ge/extensions/telemetry/configManager.md) | 11 |  |
-| [`telemetry_configManager.test`](ge/extensions/telemetry/configManager.test.md) | 1 | Run with: |
-| [`telemetry_core`](ge/extensions/telemetry/core.md) | 16 |  |
-| [`telemetry_core.test`](ge/extensions/telemetry/core.test.md) | 1 | Run with: |
-| [`telemetry_hardwareAudio`](ge/extensions/telemetry/hardwareAudio.md) | 1 |  |
-| [`telemetry_hardwareAudio.test`](ge/extensions/telemetry/hardwareAudio.test.md) | 4 |  |
-| [`telemetry_hardwareChanges`](ge/extensions/telemetry/hardwareChanges.md) | 3 |  |
-| [`telemetry_hardwareChanges.test`](ge/extensions/telemetry/hardwareChanges.test.md) | 4 |  |
-| [`telemetry_hardwareInput`](ge/extensions/telemetry/hardwareInput.md) | 3 |  |
-| [`telemetry_hardwareInput.test`](ge/extensions/telemetry/hardwareInput.test.md) | 6 |  |
-| [`telemetry_performanceMetrics`](ge/extensions/telemetry/performanceMetrics.md) | 4 |  |
-| [`telemetry_performanceSpatialConfig`](ge/extensions/telemetry/performanceSpatialConfig.md) | 1 |  |
-| [`telemetry_performanceSpatialConfig.test`](ge/extensions/telemetry/performanceSpatialConfig.test.md) | 7 |  |
-| [`telemetry_performanceSpatialDetector`](ge/extensions/telemetry/performanceSpatialDetector.md) | 5 |  |
-| [`telemetry_performanceSpatialDetector.test`](ge/extensions/telemetry/performanceSpatialDetector.test.md) | 10 |  |
-| [`telemetry_performanceSpatialGameplayExit`](ge/extensions/telemetry/performanceSpatialGameplayExit.md) | 2 |  |
-| [`telemetry_performanceSpatialGameplayExit.test`](ge/extensions/telemetry/performanceSpatialGameplayExit.test.md) | 10 |  |
-| [`telemetry_performanceSpatialSnapshot`](ge/extensions/telemetry/performanceSpatialSnapshot.md) | 1 |  |
-| [`telemetry_performanceSpatialSnapshot.test`](ge/extensions/telemetry/performanceSpatialSnapshot.test.md) | 3 |  |
-| [`telemetry_reporters_jsonFileReporter`](ge/extensions/telemetry/reporters/jsonFileReporter.md) | 1 |  |
-| [`telemetry_trackers_career`](ge/extensions/telemetry/trackers/career.md) | 5 |  |
-| [`telemetry_trackers_controls`](ge/extensions/telemetry/trackers/controls.md) | 4 |  |
-| [`telemetry_trackers_editor`](ge/extensions/telemetry/trackers/editor.md) | 6 |  |
-| [`telemetry_trackers_gameplay_firstDrive`](ge/extensions/telemetry/trackers/gameplay/firstDrive.md) | 8 |  |
-| [`telemetry_trackers_gameplay_missions`](ge/extensions/telemetry/trackers/gameplay/missions.md) | 11 |  |
-| [`telemetry_trackers_gameplay_other`](ge/extensions/telemetry/trackers/gameplay/other.md) | 7 |  |
-| [`telemetry_trackers_hardware`](ge/extensions/telemetry/trackers/hardware.md) | 4 |  |
-| [`telemetry_trackers_level`](ge/extensions/telemetry/trackers/level.md) | 11 |  |
-| [`telemetry_trackers_mcp`](ge/extensions/telemetry/trackers/mcp.md) | 2 |  |
-| [`telemetry_trackers_memory`](ge/extensions/telemetry/trackers/memory.md) | 2 |  |
-| [`telemetry_trackers_mods`](ge/extensions/telemetry/trackers/mods.md) | 2 |  |
-| [`telemetry_trackers_performance`](ge/extensions/telemetry/trackers/performance.md) | 2 |  |
-| [`telemetry_trackers_performanceSpatial`](ge/extensions/telemetry/trackers/performanceSpatial.md) | 7 |  |
-| [`telemetry_trackers_performanceWarnings`](ge/extensions/telemetry/trackers/performanceWarnings.md) | 2 |  |
-| [`telemetry_trackers_physics`](ge/extensions/telemetry/trackers/physics.md) | 2 |  |
-| [`telemetry_trackers_session`](ge/extensions/telemetry/trackers/session.md) | 4 |  |
-| [`telemetry_trackers_settings`](ge/extensions/telemetry/trackers/settings.md) | 1 |  |
-| [`telemetry_trackers_splitscreen`](ge/extensions/telemetry/trackers/splitscreen.md) | 10 |  |
-| [`telemetry_trackers_traffic`](ge/extensions/telemetry/trackers/traffic.md) | 7 |  |
-| [`telemetry_trackers_ui`](ge/extensions/telemetry/trackers/ui.md) | 5 |  |
-| [`telemetry_trackers_vehicle`](ge/extensions/telemetry/trackers/vehicle.md) | 7 |  |
-| [`telemetry_userIdentity`](ge/extensions/telemetry/userIdentity.md) | 2 |  |
-| [`telemetry_vehicleInfo`](ge/extensions/telemetry/vehicleInfo.md) | 2 |  |
-| [`trackbuilder_trackBuilder`](ge/extensions/trackbuilder/trackBuilder.md) | 25 |  |
-| [`ui_ambientSound`](ge/extensions/ui/ambientSound.md) | 4 |  |
-| [`ui_appContainers`](ge/extensions/ui/appContainers.md) | 17 |  |
-| [`ui_appContainers_topCenter`](ge/extensions/ui/appContainers/topCenter.md) | 28 |  |
-| [`ui_appContainers_topLeft`](ge/extensions/ui/appContainers/topLeft.md) | 1 |  |
-| [`ui_appContainers_topRight`](ge/extensions/ui/appContainers/topRight.md) | 1 |  |
-| [`ui_appLayouts`](ge/extensions/ui/appLayouts.md) | 23 |  |
-| [`ui_appSelector_general`](ge/extensions/ui/appSelector/general.md) | 31 |  |
-| [`ui_apps`](ge/extensions/ui/apps.md) | 4 |  |
-| [`ui_apps_genericMissionData`](ge/extensions/ui/apps/genericMissionData.md) | 4 |  |
-| [`ui_apps_minimap_additionalInfo`](ge/extensions/ui/apps/minimap/additionalInfo.md) | 6 |  |
-| [`ui_apps_minimap_layers`](ge/extensions/ui/apps/minimap/layers.md) | 0 |  |
-| [`ui_apps_minimap_minimap`](ge/extensions/ui/apps/minimap/minimap.md) | 15 |  |
-| [`ui_apps_minimap_roads`](ge/extensions/ui/apps/minimap/roads.md) | 2 |  |
-| [`ui_apps_minimap_route`](ge/extensions/ui/apps/minimap/route.md) | 2 |  |
-| [`ui_apps_minimap_topomap`](ge/extensions/ui/apps/minimap/topomap.md) | 9 |  |
-| [`ui_apps_minimap_utils`](ge/extensions/ui/apps/minimap/utils.md) | 19 |  |
-| [`ui_apps_minimap_vehicles`](ge/extensions/ui/apps/minimap/vehicles.md) | 3 |  |
-| [`ui_apps_missionControls`](ge/extensions/ui/apps/missionControls.md) | 5 |  |
-| [`ui_apps_pointsBar`](ge/extensions/ui/apps/pointsBar.md) | 5 |  |
-| [`ui_arrowGPS`](ge/extensions/ui/arrowGPS.md) | 7 |  |
-| [`ui_arrowGPS.test`](ge/extensions/ui/arrowGPS.test.md) | 8 | Run with require('testFramework/TestManager'):runTestFiles('ui/arrowGPS') |
-| [`ui_audio`](ge/extensions/ui/audio.md) | 5 |  |
-| [`ui_bindingsLegend`](ge/extensions/ui/bindingsLegend.md) | 22 |  |
-| [`ui_busRouteSelector_general`](ge/extensions/ui/busRouteSelector/general.md) | 0 |  |
-| [`ui_cameraDistanceApp`](ge/extensions/ui/cameraDistanceApp.md) | 1 |  |
-| [`ui_console`](ge/extensions/ui/console.md) | 12 |  |
-| [`ui_credits`](ge/extensions/ui/credits.md) | 5 |  |
-| [`ui_extApp`](ge/extensions/ui/extApp.md) | 4 |  |
-| [`ui_fadeScreen`](ge/extensions/ui/fadeScreen.md) | 9 |  |
-| [`ui_firstDrive_moveOff`](ge/extensions/ui/firstDrive/moveOff.md) | 10 |  |
-| [`ui_freeroamSelector_general`](ge/extensions/ui/freeroamSelector/general.md) | 49 |  |
-| [`ui_frustumOffset`](ge/extensions/ui/frustumOffset.md) | 2 |  |
-| [`ui_gameBlur`](ge/extensions/ui/gameBlur.md) | 4 |  |
-| [`ui_gamemodes_gamemodesTabProvider`](ge/extensions/ui/gamemodes/gamemodesTabProvider.md) | 10 |  |
-| [`ui_gameplayScoreboard`](ge/extensions/ui/gameplayScoreboard.md) | 11 |  |
-| [`ui_gameplaySelector_general`](ge/extensions/ui/gameplaySelector/general.md) | 51 |  |
-| [`ui_gameplaySelector_tileClustering`](ge/extensions/ui/gameplaySelector/tileClustering.md) | 7 |  |
-| [`ui_gameplaySelector_tileGenerators_campaignTiles`](ge/extensions/ui/gameplaySelector/tileGenerators/campaignTiles.md) | 2 |  |
-| [`ui_gameplaySelector_tileGenerators_discoverTiles`](ge/extensions/ui/gameplaySelector/tileGenerators/discoverTiles.md) | 3 |  |
-| [`ui_gameplaySelector_tileGenerators_levelTiles`](ge/extensions/ui/gameplaySelector/tileGenerators/levelTiles.md) | 6 |  |
-| [`ui_gameplaySelector_tileGenerators_missionTiles`](ge/extensions/ui/gameplaySelector/tileGenerators/missionTiles.md) | 2 |  |
-| [`ui_gameplaySelector_tileGenerators_scenarioTiles`](ge/extensions/ui/gameplaySelector/tileGenerators/scenarioTiles.md) | 2 |  |
-| [`ui_gameplaySelector_tileSorting`](ge/extensions/ui/gameplaySelector/tileSorting.md) | 10 | Tile Sorting Module for Gameplay Selector |
-| [`ui_gameplaySelector_tiles`](ge/extensions/ui/gameplaySelector/tiles.md) | 2 |  |
-| [`ui_garage_routeLifecycleCallbacks`](ge/extensions/ui/garage/routeLifecycleCallbacks.md) | 3 |  |
-| [`ui_gridSelector`](ge/extensions/ui/gridSelector.md) | 31 |  |
-| [`ui_gridSelectorRouteLifecycleCallbacks`](ge/extensions/ui/gridSelectorRouteLifecycleCallbacks.md) | 3 |  |
-| [`ui_gridSelectorUtils_buttonModule`](ge/extensions/ui/gridSelectorUtils/buttonModule.md) | 1 |  |
-| [`ui_gridSelectorUtils_displayDataModule`](ge/extensions/ui/gridSelectorUtils/displayDataModule.md) | 1 |  |
-| [`ui_gridSelectorUtils_filterModule`](ge/extensions/ui/gridSelectorUtils/filterModule.md) | 1 |  |
-| [`ui_gridSelectorUtils_tilesModule`](ge/extensions/ui/gridSelectorUtils/tilesModule.md) | 1 |  |
-| [`ui_gridSelectorUtils_translateHelper`](ge/extensions/ui/gridSelectorUtils/translateHelper.md) | 1 |  |
-| [`ui_legal`](ge/extensions/ui/legal.md) | 2 |  |
-| [`ui_lightRunnerSelector_general`](ge/extensions/ui/lightRunnerSelector/general.md) | 0 |  |
-| [`ui_liveries`](ge/extensions/ui/liveries.md) | 4 |  |
-| [`ui_liveries_camera`](ge/extensions/ui/liveries/camera.md) | 15 |  |
-| [`ui_liveries_decal`](ge/extensions/ui/liveries/decal.md) | 49 |  |
-| [`ui_liveries_fill`](ge/extensions/ui/liveries/fill.md) | 5 |  |
-| [`ui_liveries_paint`](ge/extensions/ui/liveries/paint.md) | 4 |  |
-| [`ui_liveries_routeLifecycleCallbacks`](ge/extensions/ui/liveries/routeLifecycleCallbacks.md) | 20 |  |
-| [`ui_liveries_saves`](ge/extensions/ui/liveries/saves.md) | 11 |  |
-| [`ui_liveries_textures`](ge/extensions/ui/liveries/textures.md) | 7 |  |
-| [`ui_menuManager`](ge/extensions/ui/menuManager.md) | 10 |  |
-| [`ui_menuRouteLifecycleCallbacks`](ge/extensions/ui/menuRouteLifecycleCallbacks.md) | 1 |  |
-| [`ui_messagesDebugger`](ge/extensions/ui/messagesDebugger.md) | 4 |  |
-| [`ui_missionInfo`](ge/extensions/ui/missionInfo.md) | 8 |  |
-| [`ui_multiseat_assignmentCache`](ge/extensions/ui/multiseat/assignmentCache.md) | 3 |  |
-| [`ui_multiseat_freeroam`](ge/extensions/ui/multiseat/freeroam.md) | 14 |  |
-| [`ui_multiseat_generalSettings`](ge/extensions/ui/multiseat/generalSettings.md) | 5 |  |
-| [`ui_multiseat_multiseatConfiguration`](ge/extensions/ui/multiseat/multiseatConfiguration.md) | 24 |  |
-| [`ui_multiseat_multiseatSettings`](ge/extensions/ui/multiseat/multiseatSettings.md) | 32 |  |
-| [`ui_multiseat_multiseatVehicles`](ge/extensions/ui/multiseat/multiseatVehicles.md) | 63 |  |
-| [`ui_oneshotRaceSelector_core`](ge/extensions/ui/oneshotRaceSelector/core.md) | 2 |  |
-| [`ui_oneshotRaceSelector_quickRaceTrackDescriptor`](ge/extensions/ui/oneshotRaceSelector/quickRaceTrackDescriptor.md) | 1 |  |
-| [`ui_options`](ge/extensions/ui/options.md) | 2 |  |
-| [`ui_pause_actions`](ge/extensions/ui/pause/actions.md) | 12 |  |
-| [`ui_pause_camera`](ge/extensions/ui/pause/camera.md) | 6 |  |
-| [`ui_pause_features_homeRail`](ge/extensions/ui/pause/features/homeRail.md) | 1 |  |
-| [`ui_pause_photomode`](ge/extensions/ui/pause/photomode.md) | 6 |  |
-| [`ui_pause_providers_missionObjectives`](ge/extensions/ui/pause/providers/missionObjectives.md) | 1 |  |
-| [`ui_pause_providers_nearbyActivities`](ge/extensions/ui/pause/providers/nearbyActivities.md) | 2 |  |
-| [`ui_pause_providers_routeData_career`](ge/extensions/ui/pause/providers/routeData/career.md) | 4 |  |
-| [`ui_pause_providers_routeData_common`](ge/extensions/ui/pause/providers/routeData/common.md) | 6 |  |
-| [`ui_pause_providers_routeData_environment`](ge/extensions/ui/pause/providers/routeData/environment.md) | 5 |  |
-| [`ui_pause_providers_routeData_gamemodes`](ge/extensions/ui/pause/providers/routeData/gamemodes.md) | 3 |  |
-| [`ui_pause_providers_routeData_home`](ge/extensions/ui/pause/providers/routeData/home.md) | 4 |  |
-| [`ui_pause_providers_routeData_multiplayer`](ge/extensions/ui/pause/providers/routeData/multiplayer.md) | 4 |  |
-| [`ui_pause_providers_routeData_photomode`](ge/extensions/ui/pause/providers/routeData/photomode.md) | 1 |  |
-| [`ui_pause_providers_routeData_system`](ge/extensions/ui/pause/providers/routeData/system.md) | 1 |  |
-| [`ui_pause_providers_routeData_vehicle`](ge/extensions/ui/pause/providers/routeData/vehicle.md) | 10 |  |
-| [`ui_pause_providers_trafficControls`](ge/extensions/ui/pause/providers/trafficControls.md) | 2 |  |
-| [`ui_pause_providers_vehicleTabInteractions`](ge/extensions/ui/pause/providers/vehicleTabInteractions.md) | 18 |  |
-| [`ui_pause_routeLifecycleCallbacks`](ge/extensions/ui/pause/routeLifecycleCallbacks.md) | 9 |  |
-| [`ui_pause_vehicleConfigurationGuard`](ge/extensions/ui/pause/vehicleConfigurationGuard.md) | 7 |  |
-| [`ui_pause_vehicleConfigurationOccupants`](ge/extensions/ui/pause/vehicleConfigurationOccupants.md) | 16 |  |
-| [`ui_photomode_advancedRender`](ge/extensions/ui/photomode/advancedRender.md) | 16 |  |
-| [`ui_photomode_camera`](ge/extensions/ui/photomode/camera.md) | 24 |  |
-| [`ui_photomode_capture`](ge/extensions/ui/photomode/capture.md) | 26 |  |
-| [`ui_photomode_effects`](ge/extensions/ui/photomode/effects.md) | 11 |  |
-| [`ui_photomode_flash`](ge/extensions/ui/photomode/flash.md) | 10 |  |
-| [`ui_photomode_overlays`](ge/extensions/ui/photomode/overlays.md) | 13 |  |
-| [`ui_photomode_postFxPersistence`](ge/extensions/ui/photomode/postFxPersistence.md) | 2 |  |
-| [`ui_photomode_presets`](ge/extensions/ui/photomode/presets.md) | 12 |  |
-| [`ui_photomode_preview`](ge/extensions/ui/photomode/preview.md) | 4 |  |
-| [`ui_photomode_scene`](ge/extensions/ui/photomode/scene.md) | 13 |  |
-| [`ui_photomode_session`](ge/extensions/ui/photomode/session.md) | 22 |  |
-| [`ui_photomode_shared`](ge/extensions/ui/photomode/shared.md) | 20 |  |
-| [`ui_photomode_speedCameraOverlay`](ge/extensions/ui/photomode/speedCameraOverlay.md) | 1 |  |
-| [`ui_policeInfo`](ge/extensions/ui/policeInfo.md) | 8 |  |
-| [`ui_popup`](ge/extensions/ui/popup.md) | 13 |  |
-| [`ui_quickraceSelector_general`](ge/extensions/ui/quickraceSelector/general.md) | 0 |  |
-| [`ui_router`](ge/extensions/ui/router.md) | 25 |  |
-| [`ui_router_config`](ge/extensions/ui/router/config.md) | 0 |  |
-| [`ui_router_constants`](ge/extensions/ui/router/constants.md) | 0 |  |
-| [`ui_router_debug`](ge/extensions/ui/router/debug.md) | 5 |  |
-| [`ui_router_guards_default`](ge/extensions/ui/router/guards/default.md) | 3 |  |
-| [`ui_router_guards_legal`](ge/extensions/ui/router/guards/legal.md) | 0 |  |
-| [`ui_router_guards_multiseat`](ge/extensions/ui/router/guards/multiseat.md) | 0 |  |
-| [`ui_router_guards_photomode`](ge/extensions/ui/router/guards/photomode.md) | 0 |  |
-| [`ui_router_guards_vehicleConfiguration`](ge/extensions/ui/router/guards/vehicleConfiguration.md) | 0 |  |
-| [`ui_router_lifecycleExecutor`](ge/extensions/ui/router/lifecycleExecutor.md) | 3 |  |
-| [`ui_router_managers_breadcrumbManager`](ge/extensions/ui/router/managers/breadcrumbManager.md) | 3 |  |
-| [`ui_router_managers_frameworkManager`](ge/extensions/ui/router/managers/frameworkManager.md) | 3 |  |
-| [`ui_router_managers_guardManager`](ge/extensions/ui/router/managers/guardManager.md) | 5 |  |
-| [`ui_router_managers_scopeManager`](ge/extensions/ui/router/managers/scopeManager.md) | 3 |  |
-| [`ui_router_managers_transitionManager`](ge/extensions/ui/router/managers/transitionManager.md) | 22 |  |
-| [`ui_router_models_PendingTransition`](ge/extensions/ui/router/models/PendingTransition.md) | 6 |  |
-| [`ui_router_models_ResolvedRoute`](ge/extensions/ui/router/models/ResolvedRoute.md) | 10 |  |
-| [`ui_router_navigationObserver`](ge/extensions/ui/router/navigationObserver.md) | 5 |  |
-| [`ui_router_navigationObserver.test`](ge/extensions/ui/router/navigationObserver.test.md) | 11 |  |
-| [`ui_router_navigationProtection.test`](ge/extensions/ui/router/navigationProtection.test.md) | 15 |  |
-| [`ui_router_navigationState`](ge/extensions/ui/router/navigationState.md) | 25 |  |
-| [`ui_router_routeFailure.test`](ge/extensions/ui/router/routeFailure.test.md) | 5 |  |
-| [`ui_router_routeHandlers`](ge/extensions/ui/router/routeHandlers.md) | 1 |  |
-| [`ui_router_routeHandlers_careerExitHandlers`](ge/extensions/ui/router/routeHandlers/careerExitHandlers.md) | 3 |  |
-| [`ui_router_routeHandlers_mainMenuExitHandlers`](ge/extensions/ui/router/routeHandlers/mainMenuExitHandlers.md) | 1 |  |
-| [`ui_router_routeHandlers_missionExitHandlers`](ge/extensions/ui/router/routeHandlers/missionExitHandlers.md) | 3 |  |
-| [`ui_router_routeHandlers_radialExitHandlers`](ge/extensions/ui/router/routeHandlers/radialExitHandlers.md) | 1 |  |
-| [`ui_router_routeHandlers_rootExitHandlers`](ge/extensions/ui/router/routeHandlers/rootExitHandlers.md) | 1 |  |
-| [`ui_router_routeManager`](ge/extensions/ui/router/routeManager.md) | 10 |  |
-| [`ui_router_routeManager.test`](ge/extensions/ui/router/routeManager.test.md) | 19 |  |
-| [`ui_router_routeReference`](ge/extensions/ui/router/routeReference.md) | 4 |  |
-| [`ui_router_routeReference.test`](ge/extensions/ui/router/routeReference.test.md) | 20 |  |
-| [`ui_router_routes`](ge/extensions/ui/router/routes.md) | 0 |  |
-| [`ui_router_routes_bigmap`](ge/extensions/ui/router/routes/bigmap.md) | 0 |  |
-| [`ui_router_routes_busRouteWizard`](ge/extensions/ui/router/routes/busRouteWizard.md) | 0 |  |
-| [`ui_router_routes_campaign`](ge/extensions/ui/router/routes/campaign.md) | 0 |  |
-| [`ui_router_routes_career`](ge/extensions/ui/router/routes/career.md) | 0 |  |
-| [`ui_router_routes_debug`](ge/extensions/ui/router/routes/debug.md) | 0 |  |
-| [`ui_router_routes_decals`](ge/extensions/ui/router/routes/decals.md) | 0 |  |
-| [`ui_router_routes_default`](ge/extensions/ui/router/routes/default.md) | 0 |  |
-| [`ui_router_routes_firstDrive`](ge/extensions/ui/router/routes/firstDrive.md) | 0 |  |
-| [`ui_router_routes_freeroamLevels`](ge/extensions/ui/router/routes/freeroamLevels.md) | 0 |  |
-| [`ui_router_routes_freeroamWizard`](ge/extensions/ui/router/routes/freeroamWizard.md) | 0 |  |
-| [`ui_router_routes_garage`](ge/extensions/ui/router/routes/garage.md) | 0 |  |
-| [`ui_router_routes_global`](ge/extensions/ui/router/routes/global.md) | 0 |  |
-| [`ui_router_routes_legal`](ge/extensions/ui/router/routes/legal.md) | 0 |  |
-| [`ui_router_routes_lightrunnerWizard`](ge/extensions/ui/router/routes/lightrunnerWizard.md) | 0 |  |
-| [`ui_router_routes_liveries`](ge/extensions/ui/router/routes/liveries.md) | 0 |  |
-| [`ui_router_routes_menu`](ge/extensions/ui/router/routes/menu.md) | 0 |  |
-| [`ui_router_routes_mission`](ge/extensions/ui/router/routes/mission.md) | 0 |  |
-| [`ui_router_routes_mods`](ge/extensions/ui/router/routes/mods.md) | 0 |  |
-| [`ui_router_routes_multiplayer`](ge/extensions/ui/router/routes/multiplayer.md) | 0 |  |
-| [`ui_router_routes_multiseat`](ge/extensions/ui/router/routes/multiseat.md) | 0 |  |
-| [`ui_router_routes_options`](ge/extensions/ui/router/routes/options.md) | 0 |  |
-| [`ui_router_routes_pause`](ge/extensions/ui/router/routes/pause.md) | 0 |  |
-| [`ui_router_routes_quickraceWizard`](ge/extensions/ui/router/routes/quickraceWizard.md) | 0 |  |
-| [`ui_router_routes_radial`](ge/extensions/ui/router/routes/radial.md) | 0 |  |
-| [`ui_router_routes_scenario`](ge/extensions/ui/router/routes/scenario.md) | 0 |  |
-| [`ui_router_routes_taxi`](ge/extensions/ui/router/routes/taxi.md) | 0 |  |
-| [`ui_router_routes_trackBuilder`](ge/extensions/ui/router/routes/trackBuilder.md) | 0 |  |
-| [`ui_router_runtimeRouteRegistry`](ge/extensions/ui/router/runtimeRouteRegistry.md) | 3 |  |
-| [`ui_router_runtimeRouteRegistry.test`](ge/extensions/ui/router/runtimeRouteRegistry.test.md) | 24 | Run with: |
-| [`ui_router_services_navigationContext`](ge/extensions/ui/router/services/navigationContext.md) | 2 |  |
-| [`ui_router_services_routeResolver`](ge/extensions/ui/router/services/routeResolver.md) | 2 |  |
-| [`ui_router_transitionRecovery.test`](ge/extensions/ui/router/transitionRecovery.test.md) | 10 |  |
-| [`ui_router_utils`](ge/extensions/ui/router/utils.md) | 4 |  |
-| [`ui_tutorialHighlight`](ge/extensions/ui/tutorialHighlight.md) | 6 |  |
-| [`ui_uiMods`](ge/extensions/ui/uiMods.md) | 9 |  |
-| [`ui_uiNavi`](ge/extensions/ui/uiNavi.md) | 17 |  |
-| [`ui_uiStateManager`](ge/extensions/ui/uiStateManager.md) | 7 |  |
-| [`ui_vehiclePaint`](ge/extensions/ui/vehiclePaint.md) | 4 |  |
-| [`ui_vehicleRadarApp`](ge/extensions/ui/vehicleRadarApp.md) | 5 |  |
-| [`ui_vehicleSelector_detailsInteraction`](ge/extensions/ui/vehicleSelector/detailsInteraction.md) | 10 |  |
-| [`ui_vehicleSelector_general`](ge/extensions/ui/vehicleSelector/general.md) | 80 |  |
-| [`ui_vehicleSelector_tileClustering`](ge/extensions/ui/vehicleSelector/tileClustering.md) | 6 |  |
-| [`ui_vehicleSelector_tileGrouping`](ge/extensions/ui/vehicleSelector/tileGrouping.md) | 5 |  |
-| [`ui_vehicleSelector_tileSorting`](ge/extensions/ui/vehicleSelector/tileSorting.md) | 7 |  |
-| [`ui_vehicleSelector_tiles`](ge/extensions/ui/vehicleSelector/tiles.md) | 6 |  |
-| [`ui_vehicleSelector_vehicleMetadataEditor`](ge/extensions/ui/vehicleSelector/vehicleMetadataEditor.md) | 1 |  |
-| [`ui_vehicleSelector_vehicleOperations`](ge/extensions/ui/vehicleSelector/vehicleOperations.md) | 14 |  |
-| [`ui_vehicleSelector_vehicleSpecifications`](ge/extensions/ui/vehicleSelector/vehicleSpecifications.md) | 5 |  |
-| [`ui_visibility`](ge/extensions/ui/visibility.md) | 8 |  |
-| [`util_asyncBulkLoader`](ge/extensions/util/asyncBulkLoader.md) | 19 |  |
-| [`util_autoAnnotation`](ge/extensions/util/autoAnnotation.md) | 6 |  |
-| [`util_bakeTest`](ge/extensions/util/bakeTest.md) | 2 | Dev-only: drives the GPU material baker + glTF exporter over a hardcoded set of |
-| [`util_booster`](ge/extensions/util/booster.md) | 1 |  |
-| [`util_calibrateESC`](ge/extensions/util/calibrateESC.md) | 7 |  |
-| [`util_compileImposters`](ge/extensions/util/compileImposters.md) | 5 |  |
-| [`util_compileMeshes`](ge/extensions/util/compileMeshes.md) | 2 |  |
-| [`util_configListGenerator`](ge/extensions/util/configListGenerator.md) | 3 |  |
-| [`util_datastore`](ge/extensions/util/datastore.md) | 17 |  |
-| [`util_decalRoadsEditor`](ge/extensions/util/decalRoadsEditor.md) | 3 |  |
-| [`util_dependencyTree`](ge/extensions/util/dependencyTree.md) | 1 |  |
-| [`util_docCreator`](ge/extensions/util/docCreator.md) | 2 |  |
-| [`util_export`](ge/extensions/util/export.md) | 7 |  |
-| [`util_followTheWhiteRabbit`](ge/extensions/util/followTheWhiteRabbit.md) | 2 |  |
-| [`util_forestGenerator`](ge/extensions/util/forestGenerator.md) | 11 |  |
-| [`util_groundModelDebug`](ge/extensions/util/groundModelDebug.md) | 5 |  |
-| [`util_inputSystemUtils`](ge/extensions/util/inputSystemUtils.md) | 2 |  |
-| [`util_instancedLineRenderDemo`](ge/extensions/util/instancedLineRenderDemo.md) | 2 |  |
-| [`util_jbeamStats`](ge/extensions/util/jbeamStats.md) | 1 |  |
-| [`util_lawnMower`](ge/extensions/util/lawnMower.md) | 9 |  |
-| [`util_logStreams`](ge/extensions/util/logStreams.md) | 6 |  |
-| [`util_materialDebugViz`](ge/extensions/util/materialDebugViz.md) | 5 |  |
-| [`util_materialHotReload`](ge/extensions/util/materialHotReload.md) | 2 | Hot-reloads *.materials.json files on disk change: re-parses the file (patching |
-| [`util_nodeBeamExport`](ge/extensions/util/nodeBeamExport.md) | 2 |  |
-| [`util_nodeStream`](ge/extensions/util/nodeStream.md) | 3 |  |
-| [`util_optickRollingCapture`](ge/extensions/util/optickRollingCapture.md) | 1 |  |
-| [`util_photomode`](ge/extensions/util/photomode.md) | 1 |  |
-| [`util_photomodeAttach`](ge/extensions/util/photomodeAttach.md) | 3 |  |
-| [`util_photomodeFlash`](ge/extensions/util/photomodeFlash.md) | 6 |  |
-| [`util_procTrack`](ge/extensions/util/procTrack.md) | 27 |  |
-| [`util_rectangleGen`](ge/extensions/util/rectangleGen.md) | 2 |  |
-| [`util_renderComponentsAPI`](ge/extensions/util/renderComponentsAPI.md) | 1 |  |
-| [`util_resaveMaterials`](ge/extensions/util/resaveMaterials.md) | 2 |  |
-| [`util_resolution`](ge/extensions/util/resolution.md) | 2 |  |
-| [`util_richPresence`](ge/extensions/util/richPresence.md) | 37 |  |
-| [`util_saveDynamicData`](ge/extensions/util/saveDynamicData.md) | 7 |  |
-| [`util_screenshotCreator`](ge/extensions/util/screenshotCreator.md) | 9 |  |
-| [`util_screenshotCreator_capture`](ge/extensions/util/screenshotCreator/capture.md) | 2 |  |
-| [`util_screenshotCreator_currentConfigThumbnail`](ge/extensions/util/screenshotCreator/currentConfigThumbnail.md) | 3 |  |
-| [`util_screenshotCreator_framing_configured`](ge/extensions/util/screenshotCreator/framing/configured.md) | 4 |  |
-| [`util_screenshotCreator_framing_isometric`](ge/extensions/util/screenshotCreator/framing/isometric.md) | 3 |  |
-| [`util_screenshotCreator_framing_legacy`](ge/extensions/util/screenshotCreator/framing/legacy.md) | 4 |  |
-| [`util_screenshotCreator_framing_procedural`](ge/extensions/util/screenshotCreator/framing/procedural.md) | 5 |  |
-| [`util_screenshotCreator_framingManager`](ge/extensions/util/screenshotCreator/framingManager.md) | 14 |  |
-| [`util_screenshotCreator_job`](ge/extensions/util/screenshotCreator/job.md) | 17 |  |
-| [`util_screenshotCreator_lightingSetup`](ge/extensions/util/screenshotCreator/lightingSetup.md) | 7 |  |
-| [`util_screenshotCreator_modelSelection`](ge/extensions/util/screenshotCreator/modelSelection.md) | 5 |  |
-| [`util_screenshotCreator_nodeOutpaint`](ge/extensions/util/screenshotCreator/nodeOutpaint.md) | 31 |  |
-| [`util_screenshotCreator_settings`](ge/extensions/util/screenshotCreator/settings.md) | 51 |  |
-| [`util_screenshotCreator_shippedConfigs`](ge/extensions/util/screenshotCreator/shippedConfigs.md) | 3 |  |
-| [`util_screenshotCreator_thumbnailCapturePipeline`](ge/extensions/util/screenshotCreator/thumbnailCapturePipeline.md) | 3 |  |
-| [`util_screenshotCreator_thumbnailComposerRun`](ge/extensions/util/screenshotCreator/thumbnailComposerRun.md) | 11 |  |
-| [`util_screenshotCreator_thumbnailConfig`](ge/extensions/util/screenshotCreator/thumbnailConfig.md) | 9 |  |
-| [`util_screenshotCreator_thumbnailPaths`](ge/extensions/util/screenshotCreator/thumbnailPaths.md) | 4 |  |
-| [`util_screenshotCreator_thumbnailTargets`](ge/extensions/util/screenshotCreator/thumbnailTargets.md) | 8 |  |
-| [`util_screenshotCreator_ui`](ge/extensions/util/screenshotCreator/ui.md) | 5 |  |
-| [`util_screenshotCreator_vehicleSetup`](ge/extensions/util/screenshotCreator/vehicleSetup.md) | 8 |  |
-| [`util_showroom`](ge/extensions/util/showroom.md) | 4 |  |
-| [`util_sortLines`](ge/extensions/util/sortLines.md) | 2 |  |
-| [`util_stepHandler`](ge/extensions/util/stepHandler.md) | 18 |  |
-| [`util_surfaceMaskWheels`](ge/extensions/util/surfaceMaskWheels.md) | 22 |  |
-| [`util_terrainGenerator`](ge/extensions/util/terrainGenerator.md) | 19 |  |
-| [`util_testExtensionProxies`](ge/extensions/util/testExtensionProxies.md) | 3 |  |
-| [`util_testJSONFilesSyntax`](ge/extensions/util/testJSONFilesSyntax.md) | 1 |  |
-| [`util_tileBake`](ge/extensions/util/tileBake.md) | 3 | Dev-only: bakes distant-city tile proxies. Buckets every static mesh + big forest item in |
-| [`util_trackBuilder_basicBorders`](ge/extensions/util/trackBuilder/basicBorders.md) | 1 |  |
-| [`util_trackBuilder_basicCenters`](ge/extensions/util/trackBuilder/basicCenters.md) | 2 |  |
-| [`util_trackBuilder_borderWallMesh`](ge/extensions/util/trackBuilder/borderWallMesh.md) | 1 |  |
-| [`util_trackBuilder_cameraTransition`](ge/extensions/util/trackBuilder/cameraTransition.md) | 2 |  |
-| [`util_trackBuilder_ceilingMesh`](ge/extensions/util/trackBuilder/ceilingMesh.md) | 1 |  |
-| [`util_trackBuilder_markers`](ge/extensions/util/trackBuilder/markers.md) | 19 |  |
-| [`util_trackBuilder_materialUtil`](ge/extensions/util/trackBuilder/materialUtil.md) | 4 |  |
-| [`util_trackBuilder_meshes`](ge/extensions/util/trackBuilder/meshes.md) | 0 |  |
-| [`util_trackBuilder_multiTrackMerger`](ge/extensions/util/trackBuilder/multiTrackMerger.md) | 3 |  |
-| [`util_trackBuilder_obstaclePlacer`](ge/extensions/util/trackBuilder/obstaclePlacer.md) | 3 |  |
-| [`util_trackBuilder_pieces`](ge/extensions/util/trackBuilder/pieces.md) | 15 |  |
-| [`util_trackBuilder_proceduralPrimitives`](ge/extensions/util/trackBuilder/proceduralPrimitives.md) | 6 |  |
-| [`util_trackBuilder_quickraceSetup`](ge/extensions/util/trackBuilder/quickraceSetup.md) | 2 |  |
-| [`util_trackBuilder_segmentToProceduralMesh`](ge/extensions/util/trackBuilder/segmentToProceduralMesh.md) | 6 |  |
-| [`util_trackBuilder_splineTrack`](ge/extensions/util/trackBuilder/splineTrack.md) | 71 |  |
-| [`util_vehicleRopeDebug`](ge/extensions/util/vehicleRopeDebug.md) | 1 |  |
-| [`util_windDebug`](ge/extensions/util/windDebug.md) | 3 |  |
-| [`util_worker`](ge/extensions/util/worker.md) | 10 |  |
-| [`util_wsTest`](ge/extensions/util/wsTest.md) | 3 |  |
-| [`vehicles_saveConfigUtils`](ge/extensions/vehicles/saveConfigUtils.md) | 3 |  |
+| [✍ `statistics_statistics`](ge/extensions/statistics/statistics.md) | 23 | Extension GE qui suit les statistiques d'un scénario (distance parcourue, altitude, vitesse max, dégâts, temps, objectifs) pour chaque véhic |
+| [✍ `telemetry_clientFacts`](ge/extensions/telemetry/clientFacts.md) | 4 | Module (chargé par require, pas une extension) qui rassemble les « faits client » de la télémétrie : version du jeu, plateforme, type de bui |
+| [✍ `telemetry_clientFacts.test`](ge/extensions/telemetry/clientFacts.test.md) | 6 | Tests unitaires de telemetry/clientFacts, exécutés avec extensions.testFramework_TestManager:runTestFiles("clientFacts"). Chaque fonction te |
+| [✍ `telemetry_configManager`](ge/extensions/telemetry/configManager.md) | 11 | Extension GE (dépend de telemetry_userIdentity) qui gère la configuration de la télémétrie : lecture du cache /telemetry/config.json, valida |
+| [✍ `telemetry_configManager.test`](ge/extensions/telemetry/configManager.test.md) | 1 | Test unitaire de telemetry/configManager (extensions.testFramework_TestManager:runTestFiles("configManager")). |
+| [✍ `telemetry_core`](ge/extensions/telemetry/core.md) | 16 | Noyau de la télémétrie de BeamNG (extension GE telemetry_core, dépend de telemetry_configManager). Il décide si la télémétrie est active (co |
+| [✍ `telemetry_core.test`](ge/extensions/telemetry/core.test.md) | 1 | Test unitaire de telemetry/core (extensions.testFramework_TestManager:runTestFiles("core")). |
+| [✍ `telemetry_hardwareAudio`](ge/extensions/telemetry/hardwareAudio.md) | 1 | Module utilitaire de la télémétrie matérielle (chargé par require) : transforme les informations brutes du périphérique de sortie audio en u |
+| [✍ `telemetry_hardwareAudio.test`](ge/extensions/telemetry/hardwareAudio.test.md) | 4 | Tests unitaires de telemetry/hardwareAudio (runTestFiles("hardwareAudio")). |
+| [✍ `telemetry_hardwareChanges`](ge/extensions/telemetry/hardwareChanges.md) | 3 | Module utilitaire de la télémétrie matérielle (chargé par require) : compare deux instantanés de manettes pour produire des événements de co |
+| [✍ `telemetry_hardwareChanges.test`](ge/extensions/telemetry/hardwareChanges.test.md) | 4 | Tests unitaires de telemetry/hardwareChanges (runTestFiles("hardwareChanges")). |
+| [✍ `telemetry_hardwareInput`](ge/extensions/telemetry/hardwareInput.md) | 3 | Module utilitaire de la télémétrie matérielle (chargé par require) : transforme les informations des contrôleurs de jeu en données de télémé |
+| [✍ `telemetry_hardwareInput.test`](ge/extensions/telemetry/hardwareInput.test.md) | 6 | Tests unitaires de telemetry/hardwareInput (runTestFiles("hardwareInput")). |
+| [✍ `telemetry_performanceMetrics`](ge/extensions/telemetry/performanceMetrics.md) | 4 | Petit module utilitaire (chargé par require) de la télémétrie de performance : lecture sûre de variables du VariableRegistry, état de focus  |
+| [✍ `telemetry_performanceSpatialConfig`](ge/extensions/telemetry/performanceSpatialConfig.md) | 1 | Module utilitaire (chargé par require) qui lit et valide la configuration serveur du tracker performanceSpatial. Les nombres sont bornés (Na |
+| [✍ `telemetry_performanceSpatialConfig.test`](ge/extensions/telemetry/performanceSpatialConfig.test.md) | 7 | Tests unitaires de telemetry/performanceSpatialConfig (runTestFiles("performanceSpatialConfig")). |
+| [✍ `telemetry_performanceSpatialDetector`](ge/extensions/telemetry/performanceSpatialDetector.md) | 5 | Détecteur de chutes de performance (« dips ») pour le tracker performanceSpatial. Il suit une moyenne mobile exponentielle du temps de frame |
+| [✍ `telemetry_performanceSpatialDetector.test`](ge/extensions/telemetry/performanceSpatialDetector.test.md) | 10 | Tests unitaires de telemetry/performanceSpatialDetector (runTestFiles("performanceSpatialDetector")). |
+| [✍ `telemetry_performanceSpatialGameplayExit`](ge/extensions/telemetry/performanceSpatialGameplayExit.md) | 2 | Aide de télémétrie : détermine quelle activité de gameplay est en cours (mission, scénario, livraison, essai, certification, drag/drift/craw |
+| [✍ `telemetry_performanceSpatialGameplayExit.test`](ge/extensions/telemetry/performanceSpatialGameplayExit.test.md) | 10 | Tests unitaires de telemetry/performanceSpatialGameplayExit. Chaque test reçoit un contexte `ctx` (assert, assertEqual) du lanceur de tests  |
+| [✍ `telemetry_performanceSpatialSnapshot`](ge/extensions/telemetry/performanceSpatialSnapshot.md) | 1 | Module utilitaire (chargé par require) qui construit l'instantané de performance envoyé par le tracker performanceSpatial : FPS (instantané, |
+| [✍ `telemetry_performanceSpatialSnapshot.test`](ge/extensions/telemetry/performanceSpatialSnapshot.test.md) | 3 | Tests unitaires de telemetry/performanceSpatialSnapshot (runTestFiles("performanceSpatialSnapshot")). |
+| [✍ `telemetry_reporters_jsonFileReporter`](ge/extensions/telemetry/reporters/jsonFileReporter.md) | 1 | Envoyeur de télémétrie : au chargement, une tâche du jobsystem attend 5 s puis envoie au serveur (appel core_online s11/v2/telemetryReports) |
+| [✍ `telemetry_trackers_career`](ge/extensions/telemetry/trackers/career.md) | 5 | Suiveur de télémétrie du mode carrière : mesure la durée pendant laquelle une carrière est jouée (activité « careerActive » avec l'état de l |
+| [✍ `telemetry_trackers_controls`](ge/extensions/telemetry/trackers/controls.md) | 4 | Suiveur de télémétrie des commandes : signale la méthode de direction utilisée (évènement ponctuel « controlsUsed ») et, à la fermeture du j |
+| [✍ `telemetry_trackers_editor`](ge/extensions/telemetry/trackers/editor.md) | 6 | Suiveur de télémétrie de l'éditeur de monde : mesure la durée d'ouverture de l'éditeur (activité « editorActive ») et enregistre les fenêtre |
+| [✍ `telemetry_trackers_gameplay_firstDrive`](ge/extensions/telemetry/trackers/gameplay/firstDrive.md) | 8 | Suiveur de télémétrie du didacticiel « First Drive » : la session (activité « firstDriveActive »), ses leçons (démarrées, arrêtées, terminée |
+| [✍ `telemetry_trackers_gameplay_missions`](ge/extensions/telemetry/trackers/gameplay/missions.md) | 11 | Suiveur de télémétrie des missions : suit l'entonnoir (quelles missions démarrent, comment elles sont configurées, comment elles finissent). |
+| [✍ `telemetry_trackers_gameplay_other`](ge/extensions/telemetry/trackers/gameplay/other.md) | 7 | Suiveur de télémétrie des petites fonctionnalités de gameplay qui n'ont pas leur propre suiveur : le constructeur de pistes (activité « trac |
+| [✍ `telemetry_trackers_hardware`](ge/extensions/telemetry/trackers/hardware.md) | 4 | Suiveur de télémétrie matérielle : collecte les informations système, graphiques, d'affichage, audio, stockage et périphériques d'entrée pou |
+| [✍ `telemetry_trackers_level`](ge/extensions/telemetry/trackers/level.md) | 11 | Suiveur de télémétrie des niveaux et des scénarios : quels niveaux sont joués et combien de temps (activité « levelLoaded »), plus le cycle  |
+| [✍ `telemetry_trackers_mcp`](ge/extensions/telemetry/trackers/mcp.md) | 2 | Suiveur de télémétrie des appels d'outils MCP (serveur Model Context Protocol du jeu) : pour chaque appel d'outil, enregistre le nom de l'ou |
+| [✍ `telemetry_trackers_memory`](ge/extensions/telemetry/trackers/memory.md) | 2 | Suiveur de télémétrie mémoire : rapporte la mémoire de la machine, celle que tient le jeu, et si l'OS a commencé à paginer sur disque. Il in |
+| [✍ `telemetry_trackers_mods`](ge/extensions/telemetry/trackers/mods.md) | 2 | Suiveur de télémétrie des mods : rapporte quels mods sont installés et actifs, pour distinguer plantages et performances entre installations |
+| [✍ `telemetry_trackers_performance`](ge/extensions/telemetry/trackers/performance.md) | 2 | Suiveur de télémétrie des performances : rapporte le framerate des joueurs à partir de ce que le moteur mesure déjà pour la surcouche cyclée |
+| [✍ `telemetry_trackers_performanceSpatial`](ge/extensions/telemetry/trackers/performanceSpatial.md) | 7 | Suiveur de télémétrie des performances « spatiales » : relie le framerate à l'endroit où se trouve le joueur. Il interroge le FPS instantané |
+| [✍ `telemetry_trackers_performanceWarnings`](ge/extensions/telemetry/trackers/performanceWarnings.md) | 2 | Suiveur de télémétrie des avertissements matériels de performance affichés au joueur : chaque avertissement (catégorie + message) n'est rapp |
+| [✍ `telemetry_trackers_physics`](ge/extensions/telemetry/trackers/physics.md) | 2 | Suiveur de télémétrie physique : rapporte les instabilités physiques avec assez de contexte pour les reproduire (évènement « physicsInstabil |
+| [✍ `telemetry_trackers_session`](ge/extensions/telemetry/trackers/session.md) | 4 | Suiveur de télémétrie de session : marque le début et la fin de la session. Il se charge en premier et se décharge en dernier, donc encadre  |
+| [✍ `telemetry_trackers_settings`](ge/extensions/telemetry/trackers/settings.md) | 1 | Suiveur de télémétrie des réglages : enregistre les réglages déclarés du jeu (settings.impl.defaults) avec leur valeur courante et leur vale |
+| [✍ `telemetry_trackers_splitscreen`](ge/extensions/telemetry/trackers/splitscreen.md) | 10 | Suiveur de télémétrie de l'écran partagé : sessions d'écran partagé, durée d'usage de chaque configuration et modes de jeu multi-siège joués |
+| [✍ `telemetry_trackers_traffic`](ge/extensions/telemetry/trackers/traffic.md) | 7 | Traceur de télémétrie du trafic. Il répond à la question « combien de trafic est réellement utilisé » : il ouvre l'activité `trafficActive`  |
+| [✍ `telemetry_trackers_ui`](ge/extensions/telemetry/trackers/ui.md) | 5 | Traceur de télémétrie de l'interface. Il suit les écrans (routes UI) que le joueur ouvre et quitte : chaque écran est une activité `uiScreen |
+| [✍ `telemetry_trackers_vehicle`](ge/extensions/telemetry/trackers/vehicle.md) | 7 | Traceur de télémétrie des véhicules. Il enregistre quels véhicules sont créés (événement `vehicleSpawned`), conduits et pendant combien de t |
+| [✍ `telemetry_userIdentity`](ge/extensions/telemetry/userIdentity.md) | 2 | Gère l'identifiant anonyme de l'utilisateur utilisé par la télémétrie. Un « sel » aléatoire est créé une fois et stocké dans `/telemetry/sal |
+| [✍ `telemetry_vehicleInfo`](ge/extensions/telemetry/vehicleInfo.md) | 2 | Utilitaires partagés par les traceurs de télémétrie pour décrire un véhicule : modèle et configuration (`getData`) et mod d'origine (`getMod |
+| [✍ `trackbuilder_trackBuilder`](ge/extensions/trackbuilder/trackBuilder.md) | 25 | Interface ImGui de l'éditeur de circuits (Track Builder). Elle pilote le moteur de spline `util_trackBuilder_splineTrack` (chargé via `exten |
+| [✍ `ui_ambientSound`](ge/extensions/ui/ambientSound.md) | 4 | Petit gestionnaire de « flux » de sons d'ambiance joués dans le canal audio 'AudioGui'. Chaque flux est décrit par un fichier JSON (clé data |
+| [✍ `ui_appContainers`](ge/extensions/ui/appContainers.md) | 17 | Registre générique des « conteneurs » d'apps d'interface (topLeft, topCenter, topRight) et de la visibilité de chaque app. Les extensions to |
+| [✍ `ui_appContainers_topCenter`](ge/extensions/ui/appContainers/topCenter.md) | 28 | Conteneur d'apps « topCenter » (haut-centre de l'interface : arrowGPS, rally, drift, drag, pointsBar, speedTargetBar, flashMessage, countdow |
+| [✍ `ui_appContainers_topLeft`](ge/extensions/ui/appContainers/topLeft.md) | 1 | Déclare le conteneur d'apps « topLeft » (coin haut-gauche de l'interface) auprès de ui_appContainers. Le trigger UI est setTopLeftAppVisibil |
+| [✍ `ui_appContainers_topRight`](ge/extensions/ui/appContainers/topRight.md) | 1 | Déclare le conteneur d'apps « topRight » (coin haut-droit de l'interface) auprès de ui_appContainers, avec le trigger UI setTopRightAppVisib |
+| [✍ `ui_appLayouts`](ge/extensions/ui/appLayouts.md) | 23 | Gère les dispositions (layouts) des apps de l'interface : lecture, création, copie, renommage, suppression et réinitialisation des fichiers  |
+| [✍ `ui_appSelector_general`](ge/extensions/ui/appSelector/general.md) | 31 | Backend (`backendName = "appSelector"`) du sélecteur d'apps de l'interface, branché sur le composant générique GridSelector. Il liste les ap |
+| [✍ `ui_apps`](ge/extensions/ui/apps.md) | 4 | Catalogue des apps d'interface (Vue/JS) installées. getUIAppsData parcourt /ui/modules/apps/ à la recherche de app.json, de app.vue et des v |
+| [✍ `ui_apps_genericMissionData`](ge/extensions/ui/apps/genericMissionData.md) | 4 | Stocke des lignes d'information de mission (titre, texte, chrono) classées par catégorie et les envoie à l'app d'interface « genericMissionD |
+| [✍ `ui_apps_minimap_additionalInfo`](ge/extensions/ui/apps/minimap/additionalInfo.md) | 6 | Calcule les informations complémentaires affichées par la mini-carte : distance restante jusqu'à la destination (routePlanner de core_ground |
+| [✍ `ui_apps_minimap_layers`](ge/extensions/ui/apps/minimap/layers.md) | 0 | Constantes numériques des couches de dessin de la mini-carte. Les couches sont rendues de la plus basse (0) à la plus haute : fond, grille,  |
+| [✍ `ui_apps_minimap_minimap`](ge/extensions/ui/apps/minimap/minimap.md) | 15 | Minimap affichée en ImGui (API marquée expérimentale par BeamNG). Elle dessine dans une texture les routes, le joueur, les autres véhicules, |
+| [✍ `ui_apps_minimap_roads`](ge/extensions/ui/apps/minimap/roads.md) | 2 | Dessine les routes du graphe de navigation (map.getMap()) sur la mini-carte. Au premier appel, il construit un tableau de segments (position |
+| [✍ `ui_apps_minimap_route`](ge/extensions/ui/apps/minimap/route.md) | 2 | Dessine sur la mini-carte l'itinéraire de navigation (core_groundMarkers.routePlanner.path) et le pointeur de destination. L'itinéraire est  |
+| [✍ `ui_apps_minimap_topomap`](ge/extensions/ui/apps/minimap/topomap.md) | 9 | Carte topographique de la minimap. Calcule les bornes du niveau à partir des nœuds du navgraph (`map.getMap()`), échantillonne la hauteur du |
+| [✍ `ui_apps_minimap_utils`](ge/extensions/ui/apps/minimap/utils.md) | 19 | Utilitaires partagés de la mini-carte : conversion coordonnées monde / carte (transformation affine recalculée à chaque setMinimapState), re |
+| [✍ `ui_apps_minimap_vehicles`](ge/extensions/ui/apps/minimap/vehicles.md) | 3 | Dessine les marqueurs de véhicules de la mini-carte : le joueur (véhicule, piéton à pied ou caméra libre) et les autres véhicules actifs (tr |
+| [✍ `ui_apps_missionControls`](ge/extensions/ui/apps/missionControls.md) | 5 | Gère la liste des indications de commandes (« control hints ») affichées par l'app d'interface missionControls pendant une mission. Chaque i |
+| [✍ `ui_apps_pointsBar`](ge/extensions/ui/apps/pointsBar.md) | 5 | Alimente l'app d'interface pointsBar (barre de points avec paliers). Il garde le nombre de points et les paliers (100, 200, 300 par défaut)  |
+| [✍ `ui_arrowGPS`](ge/extensions/ui/arrowGPS.md) | 7 | Affiche une flèche GPS 3D (TSStatic art/shapes/interface/s_mm_arrow_floating.dae) flottant devant la caméra, à l'emplacement de l'app d'inte |
+| [✍ `ui_arrowGPS.test`](ge/extensions/ui/arrowGPS.test.md) | 8 | Tests unitaires de l'extension ui_arrowGPS (flèche GPS flottante à l'écran). Le fichier charge arrowGPS.lua dans un environnement simulé (fa |
+| [✍ `ui_audio`](ge/extensions/ui/audio.md) | 5 | Joue les sons d'interface (canal audio « AudioGui ») à partir du fichier ui/soundClasses.json. Chaque classe de son contient des évènements  |
+| [✍ `ui_bindingsLegend`](ge/extensions/ui/bindingsLegend.md) | 22 | Alimente l'app « légende des commandes » (bindings legend) de l'interface. Elle regroupe des jeux d'actions (nommés par un label et classés  |
+| [✍ `ui_busRouteSelector_general`](ge/extensions/ui/busRouteSelector/general.md) | 0 | Backend du sélecteur en grille de l'assistant Vue « BusRoute ». Décrit via un descripteur les niveaux ayant des lignes de bus (scenario_scen |
+| [✍ `ui_cameraDistanceApp`](ge/extensions/ui/cameraDistanceApp.md) | 1 | Application UI de debug « distance caméra ». À chaque frame, mesure la distance entre le véhicule joueur et la caméra, la pousse à l'UI via  |
+| [✍ `ui_console`](ge/extensions/ui/console.md) | 12 | Console de développement « consoleNG » en ImGui (fenêtre « beamng.consoleNG »). Elle affiche le journal du jeu (lu à chaque image via Engine |
+| [✍ `ui_credits`](ge/extensions/ui/credits.md) | 5 | Joue la musique des crédits (évènement FMOD « event:>Music>credits » sur le canal AudioGui) avec des fondus de volume. Le chargement de l'ex |
+| [✍ `ui_extApp`](ge/extensions/ui/extApp.md) | 4 | Serveur web/WebSocket pour afficher l'interface du jeu sur un appareil externe (téléphone). Au chargement, il démarre via utils/wsUtils un s |
+| [✍ `ui_fadeScreen`](ge/extensions/ui/fadeScreen.md) | 9 | Fondu au noir de l'écran piloté depuis Lua. Envoie l'évènement UI « LoadingScreen » (active + paramètres fadeIn/pause/fadeOut/data), règle l |
+| [✍ `ui_firstDrive_moveOff`](ge/extensions/ui/firstDrive/moveOff.md) | 10 | Didacticiel « démarrer et rouler » de l'expérience First Drive. Une fois activé, il suit le véhicule du joueur 0 (accélérateur, frein, embra |
+| [✍ `ui_freeroamSelector_general`](ge/extensions/ui/freeroamSelector/general.md) | 49 | Backend « freeroamSelector » du sélecteur en grille (gridSelector) : l'écran où l'on choisit un niveau et un point d'apparition pour le mode |
+| [✍ `ui_frustumOffset`](ge/extensions/ui/frustumOffset.md) | 2 | Décale le centre du frustum de la caméra (scenetree.OnlyGui:setFrustumCameraCenterOffset) pour que la vue 3D soit recentrée quand des pannea |
+| [✍ `ui_gameBlur`](ge/extensions/ui/gameBlur.md) | 4 | Gère des rectangles de flou plein écran dessinés derrière l'interface (effet scenetree.ScreenBlurFX). Les rectangles sont rangés par groupes |
+| [✍ `ui_gamemodes_gamemodesTabProvider`](ge/extensions/ui/gamemodes/gamemodesTabProvider.md) | 10 | Façade utilisée par l'onglet « modes de jeu » de l'UI. Selon qu'une session multijoueur existe (multiplayer_sessionManager.getCurrentSession |
+| [✍ `ui_gameplayScoreboard`](ge/extensions/ui/gameplayScoreboard.md) | 11 | Couche de données de tableau des scores, indépendante de la source (écran partagé local ou réseau multijoueur). Garde l'état des joueurs (no |
+| [✍ `ui_gameplaySelector_general`](ge/extensions/ui/gameplaySelector/general.md) | 51 | Backend « gameplaySelector » du sélecteur en grille : l'écran qui liste missions, scénarios, campagnes, expériences de démarrage rapide et s |
+| [✍ `ui_gameplaySelector_tileClustering`](ge/extensions/ui/gameplaySelector/tileClustering.md) | 7 | Regroupe les éléments du sélecteur de gameplay en « clusters » (par niveau, par type ou automatiquement selon le système) et fabrique la tui |
+| [✍ `ui_gameplaySelector_tileGenerators_campaignTiles`](ge/extensions/ui/gameplaySelector/tileGenerators/campaignTiles.md) | 2 | Générateur de tuiles du sélecteur de gameplay pour les campagnes (système hérité). Il ajoute une tuile par campagne renvoyée par campaign_ca |
+| [✍ `ui_gameplaySelector_tileGenerators_discoverTiles`](ge/extensions/ui/gameplaySelector/tileGenerators/discoverTiles.md) | 3 | Générateur de tuiles du sélecteur de gameplay pour les « expériences de démarrage rapide » (système quickStartExperiences). Il lit les pages |
+| [✍ `ui_gameplaySelector_tileGenerators_levelTiles`](ge/extensions/ui/gameplaySelector/tileGenerators/levelTiles.md) | 6 | Générateur de tuiles du sélecteur freeroam : une tuile par point d'apparition (spawn point) de chaque niveau de core_levels.getList(). Il co |
+| [✍ `ui_gameplaySelector_tileGenerators_missionTiles`](ge/extensions/ui/gameplaySelector/tileGenerators/missionTiles.md) | 2 | Générateur de tuiles du sélecteur de gameplay pour les missions (système « challenges »). Il ajoute une tuile par mission de gameplay_missio |
+| [✍ `ui_gameplaySelector_tileGenerators_scenarioTiles`](ge/extensions/ui/gameplaySelector/tileGenerators/scenarioTiles.md) | 2 | Générateur de tuiles du sélecteur de gameplay pour les scénarios (système hérité). Il ajoute une tuile par scénario renvoyé par scenario_sce |
+| [✍ `ui_gameplaySelector_tileSorting`](ge/extensions/ui/gameplaySelector/tileSorting.md) | 10 | Tri centralisé des tuiles du sélecteur de gameplay. Fournit quatre modes (Name, System, GameplayAutomatic, Date), la conversion des valeurs  |
+| [✍ `ui_gameplaySelector_tiles`](ge/extensions/ui/gameplaySelector/tiles.md) | 2 | Cœur du backend « gameplaySelector » : il choisit les tuiles à afficher selon le chemin de navigation (toutes les activités, détail d'un sys |
+| [✍ `ui_garage_routeLifecycleCallbacks`](ge/extensions/ui/garage/routeLifecycleCallbacks.md) | 3 | Callbacks de cycle de vie des routes UI du garage en mode photo. Pour les routes « garage.photomode » (et « garage.photomode.* »), ouvre une |
+| [✍ `ui_gridSelector`](ge/extensions/ui/gridSelector.md) | 31 | Façade unique entre l'interface (UI Vue) et les sélecteurs en grille (véhicules, gameplay, apps, freeroam, course rapide, light runner, lign |
+| [✍ `ui_gridSelectorRouteLifecycleCallbacks`](ge/extensions/ui/gridSelectorRouteLifecycleCallbacks.md) | 3 | Callbacks de cycle de vie des routes de l'UI pour les écrans à sélecteur en grille. À l'entrée ou au montage d'une route, il calcule un inst |
+| [✍ `ui_gridSelectorUtils_buttonModule`](ge/extensions/ui/gridSelectorUtils/buttonModule.md) | 7 | Petit utilitaire des sélecteurs en grille : gère un registre de boutons d'action. Chaque bouton reçoit un identifiant numérique incrémental  |
+| [✍ `ui_gridSelectorUtils_displayDataModule`](ge/extensions/ui/gridSelectorUtils/displayDataModule.md) | 13 | Utilitaire des sélecteurs en grille : gère les options d'affichage (tri, filtres d'affichage, bascules…), la liste des favoris et celle des  |
+| [✍ `ui_gridSelectorUtils_filterModule`](ge/extensions/ui/gridSelectorUtils/filterModule.md) | 22 | Utilitaire des sélecteurs en grille : gère l'état des filtres (filtres à ensemble de valeurs « set » et filtres de plage « range »), le text |
+| [✍ `ui_gridSelectorUtils_tilesModule`](ge/extensions/ui/gridSelectorUtils/tilesModule.md) | 3 | Utilitaire des sélecteurs en grille : moteur générique de production des tuiles. À partir d'une config (convertisseur item -> tuile, gestion |
+| [✍ `ui_gridSelectorUtils_translateHelper`](ge/extensions/ui/gridSelectorUtils/translateHelper.md) | 1 | Aide de traduction côté Lua pour les sélecteurs en grille. Traduit une clé avec `_tr`, résout les expressions imbriquées de style Angular (` |
+| [✍ `ui_legal`](ge/extensions/ui/legal.md) | 2 | Vérifie si l'utilisateur a répondu à l'assistant de consentement en ligne (réglages `onlineFeatures` et `telemetry`, valeur "ask" = pas enco |
+| [✍ `ui_lightRunnerSelector_general`](ge/extensions/ui/lightRunnerSelector/general.md) | 0 | Backend du sélecteur en grille pour l'assistant Vue LightRunner. Il réutilise les mêmes niveaux/pistes que la course rapide (scenario_quickR |
+| [✍ `ui_liveries`](ge/extensions/ui/liveries.md) | 4 | Orchestrateur de l'éditeur de livrées (peinture/décalcomanies) de l'UI. Il s'appuie sur l'API d'éditeur `editor_api_dynamicDecals` : à l'ouv |
+| [✍ `ui_liveries_camera`](ge/extensions/ui/liveries/camera.md) | 15 | Pilote la caméra de l'éditeur de livrées : vues prédéfinies autour du véhicule (haut, gauche, droite, arrière, avant), cadrage de la caméra  |
+| [✍ `ui_liveries_decal`](ge/extensions/ui/liveries/decal.md) | 49 | Logique côté Lua de l'écran des décalques de l'éditeur de livrées. Il enveloppe editor_api_dynamicDecals : pile de couches (liste, sélection |
+| [✍ `ui_liveries_fill`](ge/extensions/ui/liveries/fill.md) | 5 | Gère la couche de remplissage de base (« fill layer ») d'une livrée dans l'éditeur de livrées. Il s'appuie sur editor_api_dynamicDecals pour |
+| [✍ `ui_liveries_paint`](ge/extensions/ui/liveries/paint.md) | 4 | Lit et modifie la peinture (couleur RGBA, métallisation, rugosité) d'une couche de l'éditeur de livrées, retrouvée par son uid dans editor_a |
+| [✍ `ui_liveries_routeLifecycleCallbacks`](ge/extensions/ui/liveries/routeLifecycleCallbacks.md) | 20 | Relie les routes de l'interface de l'éditeur de livrées (liveries, liveries.edit, liveries.edit.decals…) au code Lua. Le routeur UI appelle  |
+| [✍ `ui_liveries_saves`](ge/extensions/ui/liveries/saves.md) | 11 | Gère les sauvegardes de livrées (éditeur de décalcomanies dynamiques) dans settings/dynamicDecals/*.dynDecals.json. Permet de lister, créer, |
+| [✍ `ui_liveries_textures`](ge/extensions/ui/liveries/textures.md) | 7 | Fournit à l'interface des livrées le catalogue des textures de décalcomanies dynamiques, classées par tags (digit, gradient, letter, logo, n |
+| [✍ `ui_menuManager`](ge/extensions/ui/menuManager.md) | 10 | Décide quelle route de l'interface (ui_router) afficher quand le joueur ouvre, ferme ou bascule le menu : menu principal, menu pause v2, gar |
+| [✍ `ui_menuRouteLifecycleCallbacks`](ge/extensions/ui/menuRouteLifecycleCallbacks.md) | 1 | Petite extension qui relie des événements du jeu à la navigation de l'interface. Actuellement elle ne contient qu'un hook : à l'entrée en mo |
+| [✍ `ui_messagesDebugger`](ge/extensions/ui/messagesDebugger.md) | 4 | Fenêtre ImGui de débogage des messages à l'écran (événements UI « Message »). Elle permet de composer un message (texte, catégorie, icône, d |
+| [✍ `ui_missionInfo`](ge/extensions/ui/missionInfo.md) | 8 | Gère la fenêtre d'information de mission et l'invite d'activité (« activity accept ») affichée en jeu. Il mémorise les boutons actifs, envoi |
+| [✍ `ui_multiseat_assignmentCache`](ge/extensions/ui/multiseat/assignmentCache.md) | 3 | Cache en mémoire des affectations multi-sièges (multiseat). Il garde une copie profonde de la valeur passée à set et en renvoie une copie à  |
+| [✍ `ui_multiseat_freeroam`](ge/extensions/ui/multiseat/freeroam.md) | 14 | Gère la session multi-sièges (écran partagé) en balade libre : choix des véhicules suggérés, plan d'apparition (positions du niveau, sinon g |
+| [✍ `ui_multiseat_generalSettings`](ge/extensions/ui/multiseat/generalSettings.md) | 5 | Fournisseur de réglages « general » de la fenêtre de réglages multiseat. Il déclare les champs : même véhicule pour tous, rassembler les véh |
+| [✍ `ui_multiseat_multiseatConfiguration`](ge/extensions/ui/multiseat/multiseatConfiguration.md) | 24 | Modèle transactionnel de la configuration multi-sièges : quels périphériques d'entrée (ou groupes de périphériques gérés par la plateforme)  |
+| [✍ `ui_multiseat_multiseatSettings`](ge/extensions/ui/multiseat/multiseatSettings.md) | 32 | Logique de l'écran de réglages multi-sièges (routes « pause.multiseatSettings » et « pause.multiseatSettings.vehicleSelector »). Il collecte |
+| [✍ `ui_multiseat_multiseatVehicles`](ge/extensions/ui/multiseat/multiseatVehicles.md) | 63 | Gère les véhicules et les profils (personas) des joueurs en multi-sièges : choix des véhicules suggérés, couleurs automatiques proches de la |
+| [✍ `ui_oneshotRaceSelector_core`](ge/extensions/ui/oneshotRaceSelector/core.md) | 2 | Socle commun des back-ends ui_gridSelector pour les trois sélecteurs « oneshot race » (quickraceSelector, lightRunnerSelector, busRouteSelec |
+| [✍ `ui_oneshotRaceSelector_quickRaceTrackDescriptor`](ge/extensions/ui/oneshotRaceSelector/quickRaceTrackDescriptor.md) | 1 | Descriptor de back-end gridSelector partagé par quickrace et lightRunner. Les deux tirent leurs listes de niveaux et de pistes de scenario_q |
+| [✍ `ui_options`](ge/extensions/ui/options.md) | 2 | Petit utilitaire côté GE pour la disposition (layout) du menu d'options Vue. Il lit quels fichiers layout.json / layout.dev.json existent da |
+| [✍ `ui_pause_actions`](ge/extensions/ui/pause/actions.md) | 12 | Registre des actions du menu pause. Il enregistre des boutons (via ui/gridSelectorUtils/buttonModule) exécutables par id, gère l'enchaînemen |
+| [✍ `ui_pause_camera`](ge/extensions/ui/pause/camera.md) | 6 | Caméra orbitale automatique du menu pause : prévue pour passer la caméra du joueur en mode orbit et la faire tourner lentement autour du véh |
+| [✍ `ui_pause_features_homeRail`](ge/extensions/ui/pause/features/homeRail.md) | 1 | Construit le rail de boutons de droite de l'accueil du menu pause. Selon le contexte (mode freeroam, career, mission, multiplayer, garage, f |
+| [✍ `ui_pause_photomode`](ge/extensions/ui/pause/photomode.md) | 6 | Façade du mode photo intégré au menu pause. Elle ne contient pas de logique : elle charge les huit modules ui_photomode_* (session, camera,  |
+| [✍ `ui_pause_providers_missionObjectives`](ge/extensions/ui/pause/providers/missionObjectives.md) | 1 | Fournisseur de données du menu pause pour les objectifs de la mission en cours. Il se contente de renvoyer le résultat de gameplay_missions_ |
+| [✍ `ui_pause_providers_nearbyActivities`](ge/extensions/ui/pause/providers/nearbyActivities.md) | 2 | Fournisseur du menu pause pour la section « activités à proximité ». Il lit les points d'intérêt de la grande carte (freeroam_vueBigMap.getP |
+| [✍ `ui_pause_providers_routeData_career`](ge/extensions/ui/pause/providers/routeData/career.md) | 4 | Fournisseur de données du menu pause pour les écrans de carrière : progression (digest et missions APM suggérées), historique (financier, ga |
+| [✍ `ui_pause_providers_routeData_common`](ge/extensions/ui/pause/providers/routeData/common.md) | 6 | Outils partagés par les fournisseurs routeData du menu pause : navigation par séquence d'états, enregistrement de boutons via ui_pause_actio |
+| [✍ `ui_pause_providers_routeData_environment`](ge/extensions/ui/pause/providers/routeData/environment.md) | 5 | Fournisseur de données du menu pause pour la page Environnement : résumé (météo, circulation, autres), page météo/heure, page simulation (gr |
+| [✍ `ui_pause_providers_routeData_gamemodes`](ge/extensions/ui/pause/providers/routeData/gamemodes.md) | 3 | Fournisseur de données du menu pause pour les modes de jeu multijoueur : liste des modes (composant GamemodesTab), configuration d'un mode ( |
+| [✍ `ui_pause_providers_routeData_home`](ge/extensions/ui/pause/providers/routeData/home.md) | 4 | Fournit les données de l'écran d'accueil du menu pause (route « pause »). Selon le mode de jeu (career, mission, multiplayer, freeroam, free |
+| [✍ `ui_pause_providers_routeData_multiplayer`](ge/extensions/ui/pause/providers/routeData/multiplayer.md) | 4 | Fournisseur de données du menu pause pour le multijoueur : page d'accueil multijoueur (boutons Paramètres de session / Modes de jeu / Gérer  |
+| [✍ `ui_pause_providers_routeData_photomode`](ge/extensions/ui/pause/providers/routeData/photomode.md) | 1 | Fournisseur de données du menu pause pour la page du mode photo. Il renvoie la charge utile (payload) fournie par ui_pause_photomode.getRout |
+| [✍ `ui_pause_providers_routeData_system`](ge/extensions/ui/pause/providers/routeData/system.md) | 1 | Fournisseur de données du menu pause pour la page Système. Il construit le rail de boutons en trois groupes : topSystemButtons (Options, Mod |
+| [✍ `ui_pause_providers_routeData_vehicle`](ge/extensions/ui/pause/providers/routeData/vehicle.md) | 10 | Fournit les données des routes « véhicule » du menu pause (pause.vehicle et sous-routes : configuration combinée, packs, réglages, peinture, |
+| [✍ `ui_pause_providers_trafficControls`](ge/extensions/ui/pause/providers/trafficControls.md) | 2 | Fournisseur de données du panneau « contrôles du trafic » du menu pause. Il compte les véhicules de trafic (en circulation, garés, police, a |
+| [✍ `ui_pause_providers_vehicleTabInteractions`](ge/extensions/ui/pause/providers/vehicleTabInteractions.md) | 18 | Fournisseur de données et d'actions pour l'onglet « Véhicule » (et la gestion des véhicules) du menu pause. Il liste les véhicules apparus ( |
+| [✍ `ui_pause_routeLifecycleCallbacks`](ge/extensions/ui/pause/routeLifecycleCallbacks.md) | 9 | Callbacks de cycle de vie des routes « pause.* » du nouveau menu pause (routeur UI Vue). Le routeur appelle ces hooks quand l'utilisateur en |
+| [✍ `ui_pause_vehicleConfigurationGuard`](ge/extensions/ui/pause/vehicleConfigurationGuard.md) | 7 | Garde de sortie de l'écran de configuration véhicule du menu pause. Quand l'UI signale des modifications non appliquées (setHasPendingChange |
+| [✍ `ui_pause_vehicleConfigurationOccupants`](ge/extensions/ui/pause/vehicleConfigurationOccupants.md) | 16 | Extension GE qui alimente l'onglet « Occupants » de l'écran de configuration du véhicule (menu pause). Elle liste les sièges du véhicule con |
+| [✍ `ui_photomode_advancedRender`](ge/extensions/ui/photomode/advancedRender.md) | 16 | Réglages de rendu avancé du mode photo : finesse des détails (detailAdjust), échelle LOD du terrain, densité d'herbe, qualité des ombres, om |
+| [✍ `ui_photomode_camera`](ge/extensions/ui/photomode/camera.md) | 24 | Caméra du mode photo : FOV, vitesse de la caméra libre, roulis, exposition (auto ou EV manuel), mouvement lissé, visibilité des nœuds fixes  |
+| [✍ `ui_photomode_capture`](ge/extensions/ui/photomode/capture.md) | 26 | Capture d'images du mode photo : réglages (supersampling, niveau de réduction, HDR, capture avec flou de mouvement, passes supplémentaires s |
+| [✍ `ui_photomode_effects`](ge/extensions/ui/photomode/effects.md) | 11 | Effets de post-traitement du mode photo : profondeur de champ (DOF, avec mise au point automatique), SSAO, occlusion spéculaire, ombres en e |
+| [✍ `ui_photomode_flash`](ge/extensions/ui/photomode/flash.md) | 10 | Réglages du flash du mode photo. Garde en mémoire l'état du flash (activé, tir à la capture, intensité, angle, teinte, saturation) et le tra |
+| [✍ `ui_photomode_overlays`](ge/extensions/ui/photomode/overlays.md) | 13 | Gestion des « overlays » du mode photo : des superpositions d'images (cadres, filigranes, applis UI) décrites par un dossier contenant overl |
+| [✍ `ui_photomode_postFxPersistence`](ge/extensions/ui/photomode/postFxPersistence.md) | 2 | Sauvegarde et relecture sur disque de l'état des effets de post-traitement du mode photo (profondeur de champ, flou de mouvement, occlusion  |
+| [✍ `ui_photomode_presets`](ge/extensions/ui/photomode/presets.md) | 12 | Gestion des presets du mode photo, de trois types : camera, scene et effects. Chaque type est stocké dans un fichier JSON sous settings/phot |
+| [✍ `ui_photomode_preview`](ge/extensions/ui/photomode/preview.md) | 4 | Partie « aperçu / relecture » du mode photo. Elle ajoute aux métadonnées d'une capture l'état complet du mode photo (caméra, scène, effets,  |
+| [✍ `ui_photomode_scene`](ge/extensions/ui/photomode/scene.md) | 13 | Onglet « scène » du mode photo : lit et modifie l'environnement du niveau (heure du jour, date, nuages, brouillard, vent, décalage du nord,  |
+| [✍ `ui_photomode_session`](ge/extensions/ui/photomode/session.md) | 22 | Orchestrateur de la session du mode photo. Il ouvre et ferme la session : pause de la simulation (demande de pause « ui_pause_photomode »),  |
+| [✍ `ui_photomode_shared`](ge/extensions/ui/photomode/shared.md) | 20 | Bibliothèque d'outils et état partagé de tous les modules du mode photo (ui_photomode_*). Elle contient la table d'état de session S, le jou |
+| [✍ `ui_photomode_speedCameraOverlay`](ge/extensions/ui/photomode/speedCameraOverlay.md) | 1 | Fournit les données affichées par la surcouche « radar / caméra de vitesse » du mode photo : carte courante, nom du lieu, heure du niveau, p |
+| [✍ `ui_policeInfo`](ge/extensions/ui/policeInfo.md) | 8 | Extension GE qui alimente l'interface des poursuites de police : elle lit gameplay_police.getPursuitData à chaque frame GUI et publie le flu |
+| [✍ `ui_popup`](ge/extensions/ui/popup.md) | 13 | Extension GE qui ouvre les popups de tutoriel de l'interface (hook UI OpenTutorialPopup). Un popup est décrit par un dossier de contenu (par |
+| [✍ `ui_quickraceSelector_general`](ge/extensions/ui/quickraceSelector/general.md) | 0 | Backend du sélecteur en grille de l'assistant Vue « Quickrace » : expose la liste des niveaux et, pour chaque niveau, sa liste de pistes. Le |
+| [✍ `ui_router`](ge/extensions/ui/router.md) | 25 | Routeur de navigation de l'interface côté Lua (ui_router). Il orchestre un « handshake » avec les frameworks UI (Vue, Angular/legacy) : réso |
+| [✍ `ui_router_config`](ge/extensions/ui/router/config.md) | 0 | Constantes de configuration du routeur d'interface (ui_router) : route principale par défaut, délais des transitions (plat pour Angular/lega |
+| [✍ `ui_router_constants`](ge/extensions/ui/router/constants.md) | 0 | Tables de constantes partagées du routeur d'interface : états de transition, types d'action de navigation, résultats de garde, actions de fr |
+| [✍ `ui_router_debug`](ge/extensions/ui/router/debug.md) | 5 | Fenêtre ImGui « Router Debugger » pour inspecter le routeur d'interface : route courante, route en attente, fil d'Ariane, champ de saisie po |
+| [✍ `ui_router_guards_default`](ge/extensions/ui/router/guards/default.md) | 3 | Trois gardes de navigation « par défaut » du routeur : journalisation de la navigation, blocage si le délai de transition est atteint, bloca |
+| [✍ `ui_router_guards_legal`](ge/extensions/ui/router/guards/legal.md) | 0 | Garde d'entrée « onlineConsentSet » : n'autorise la navigation vers une route que si le consentement en ligne a été donné, c'est-à-dire si l |
+| [✍ `ui_router_guards_multiseat`](ge/extensions/ui/router/guards/multiseat.md) | 0 | Garde de sortie « confirmMultiseatSettingsExit » : lorsqu'on quitte l'écran des réglages multi-sièges, délègue la confirmation à ui_multisea |
+| [✍ `ui_router_guards_photomode`](ge/extensions/ui/router/guards/photomode.md) | 0 | Garde de sortie « confirmPhotomodeExit » : empêche de quitter le mode photo sans confirmation. Elle autorise la navigation si la route cible |
+| [✍ `ui_router_guards_vehicleConfiguration`](ge/extensions/ui/router/guards/vehicleConfiguration.md) | 0 | Garde de sortie « confirmVehicleConfigurationCombinedExit » : délègue à ui_pause_vehicleConfigurationGuard.confirmExit(route, params, contex |
+| [✍ `ui_router_lifecycleExecutor`](ge/extensions/ui/router/lifecycleExecutor.md) | 3 | Exécute les hooks de cycle de vie d'une route (onEnter, onMount, onLeave…) pour le routeur. Il résout la référence de fonction déclarée sur  |
+| [✍ `ui_router_managers_breadcrumbManager`](ge/extensions/ui/router/managers/breadcrumbManager.md) | 3 | Construit le fil d'Ariane (breadcrumbs) d'une route pour le routeur. Pour une route non globale, il ajoute éventuellement un décorateur de m |
+| [✍ `ui_router_managers_frameworkManager`](ge/extensions/ui/router/managers/frameworkManager.md) | 3 | Pont sortant du routeur Lua vers les frameworks UI (Vue, Angular) par guihooks. Il émet les évènements de changement de route (démarrage, fi |
+| [✍ `ui_router_managers_guardManager`](ge/extensions/ui/router/managers/guardManager.md) | 5 | Registre des gardes de navigation du routeur. reloadGuards parcourt le dossier lua/ge/extensions/ui/router/guards/, charge chaque fichier et |
+| [✍ `ui_router_managers_scopeManager`](ge/extensions/ui/router/managers/scopeManager.md) | 3 | Gère les portées (scopes) de focus d'une route d'interface. Une route déclare un arbre de portées (scopeTree) ; ce module détermine la porté |
+| [✍ `ui_router_managers_transitionManager`](ge/extensions/ui/router/managers/transitionManager.md) | 22 | Gère le cycle de vie des transitions de route du routeur d'interface : une seule transition à la fois, session de transition (jalons de prog |
+| [✍ `ui_router_models_PendingTransition`](ge/extensions/ui/router/models/PendingTransition.md) | 6 | Modèle de données « PendingTransition » : représente une transition de navigation en cours {transitionId, action, toRoute, fromRoute, option |
+| [✍ `ui_router_models_ResolvedRoute`](ge/extensions/ui/router/models/ResolvedRoute.md) | 10 | Construit l'entrée de navigation canonique (NavigationEntry) utilisée partout dans le routeur : {request, resolved, origin, toRoute, fromRou |
+| [✍ `ui_router_navigationObserver`](ge/extensions/ui/router/navigationObserver.md) | 5 | Diagnostic non-shipping du routeur : attribue chaque appel à navigate() au module Lua appelant (en remontant la pile en ignorant les fichier |
+| [✍ `ui_router_navigationObserver.test`](ge/extensions/ui/router/navigationObserver.test.md) | 11 | Tests unitaires du module non-shipping NavigationObserver (classification duplicate_navigation / conflicting_navigation, attribution de l'ap |
+| [✍ `ui_router_navigationProtection.test`](ge/extensions/ui/router/navigationProtection.test.md) | 15 | Tests du verrou de navigation protégée (options.cancellable == false) de router.lua : acquisition, blocage à l'admission, conservation entre |
+| [✍ `ui_router_navigationState`](ge/extensions/ui/router/navigationState.md) | 25 | Mémoire d'état du routeur d'interface : entrée précédente, entrée courante et entrée en attente (pending), état du décorateur de fil d'Arian |
+| [✍ `ui_router_routeFailure.test`](ge/extensions/ui/router/routeFailure.test.md) | 5 | Tests du contrat d'échec de transition de router.lua : routeMounted refusé avant la validation, retour arrière de routeChangeFailed pour une |
+| [✍ `ui_router_routeHandlers`](ge/extensions/ui/router/routeHandlers.md) | 1 | Registre des gestionnaires de retour/sortie nommés des routes. Une route dont le retour est en mode « handler » désigne un nom (par exemple  |
+| [✍ `ui_router_routeHandlers_careerExitHandlers`](ge/extensions/ui/router/routeHandlers/careerExitHandlers.md) | 3 | Gestionnaires de retour/sortie des écrans de carrière, référencés par routeHandlers.lua : sortie de la sélection de profil, retour dans les  |
+| [✍ `ui_router_routeHandlers_mainMenuExitHandlers`](ge/extensions/ui/router/routeHandlers/mainMenuExitHandlers.md) | 1 | Gestionnaire de sortie du menu principal. |
+| [✍ `ui_router_routeHandlers_missionExitHandlers`](ge/extensions/ui/router/routeHandlers/missionExitHandlers.md) | 3 | Gestionnaires de sortie/retour des écrans de mission et de pause. Quand un écran de début/fin de mission est actif, ils renvoient vers la ro |
+| [✍ `ui_router_routeHandlers_radialExitHandlers`](ge/extensions/ui/router/routeHandlers/radialExitHandlers.md) | 1 | Gestionnaire de retour du menu radial (accès rapide). |
+| [✍ `ui_router_routeHandlers_rootExitHandlers`](ge/extensions/ui/router/routeHandlers/rootExitHandlers.md) | 1 | Gestionnaire de sortie des routes racines (garage / menu). |
+| [✍ `ui_router_routeManager`](ge/extensions/ui/router/routeManager.md) | 10 | Gestionnaire des routes du routeur UI. Il construit l'arbre des routes à partir du registre racine (routes.lua), des modules du dossier rout |
+| [✍ `ui_router_routeManager.test`](ge/extensions/ui/router/routeManager.test.md) | 19 | Tests unitaires du routeManager (résolution des noms de routes relatifs, cibles de retour relatives, valeur par défaut de `uiNav`). Fichier  |
+| [✍ `ui_router_routeReference`](ge/extensions/ui/router/routeReference.md) | 4 | Fonctions pures pour décomposer une référence de navigation décorée de la forme `route[?clé=valeur&...][:portée]`. La partie route peut rest |
+| [✍ `ui_router_routeReference.test`](ge/extensions/ui/router/routeReference.test.md) | 20 | Tests unitaires de routeReference (analyse « route?clé=valeur:portée », décodage URL, fusion des paramètres explicites et inline) et de la p |
+| [✍ `ui_router_routes`](ge/extensions/ui/router/routes.md) | 0 | Registre racine des routes du routeur UI : l'unique point d'entrée explicite pour enregistrer les familles de routes de premier niveau. Chaq |
+| [✍ `ui_router_routes_bigmap`](ge/extensions/ui/router/routes/bigmap.md) | 0 | Routes de la grande carte (Vue) : écran « bigmap » (titre Map) avec une sous-route bigmapMenu. Arbre de portées (scopes) de navigation manet |
+| [✍ `ui_router_routes_busRouteWizard`](ge/extensions/ui/router/routes/busRouteWizard.md) | 0 | Assistant Vue de configuration d'une ligne de bus (portage de l'ancien module Angular busRoute, gardé à côté de « menu.busRoutes » derrière  |
+| [✍ `ui_router_routes_campaign`](ge/extensions/ui/router/routes/campaign.md) | 0 | Module de routes « campaign » abstrait (Vue, barres masquées). Ses enfants (components, ui-apps-test, comic) ont en réalité les screenId « d |
+| [✍ `ui_router_routes_career`](ge/extensions/ui/router/routes/career.md) | 0 | Routes du mode carrière (Vue) : ordinateur de carrière (career.computer et ses écrans : inventaire des véhicules, achat de pièces, réparatio |
+| [✍ `ui_router_routes_debug`](ge/extensions/ui/router/routes/debug.md) | 0 | Routes de débogage de l'UI (Vue, barres masquées, module abstrait) : composants de démonstration, test des apps UI, chargeur asynchrone en m |
+| [✍ `ui_router_routes_decals`](ge/extensions/ui/router/routes/decals.md) | 0 | Sous-arbre de routes de l'éditeur de décalcomanies de livrées (inclus par liveries.edit.decals). Flux d'ajout : decals -> camera (choix de l |
+| [✍ `ui_router_routes_default`](ge/extensions/ui/router/routes/default.md) | 0 | Module de routes par défaut, abstrait, qui définit la configuration `ui` d'écrans de base : mapview (Angular), options (Vue, infoBar par déf |
+| [✍ `ui_router_routes_firstDrive`](ge/extensions/ui/router/routes/firstDrive.md) | 0 | Routes de la première conduite guidée (Vue) : introduction, onboarding, arrivée, fin, récupération, zones d'apprentissage. Les retours sont  |
+| [✍ `ui_router_routes_freeroamLevels`](ge/extensions/ui/router/routes/freeroamLevels.md) | 0 | Assistant Vue de choix de niveau/véhicule/options pour le mode libre (freeroam), version à racine « grille de niveaux ». Les hooks appellent |
+| [✍ `ui_router_routes_freeroamWizard`](ge/extensions/ui/router/routes/freeroamWizard.md) | 0 | Variante « Wizard » de l'assistant freeroam : même parcours que freeroamLevels (levels > level, vehicles > vehicle, options, multiplayer) ma |
+| [✍ `ui_router_routes_garage`](ge/extensions/ui/router/routes/garage.md) | 0 | Routes du garage (Vue) : vue d'ensemble, véhicule (sélecteur, réglage et miroirs, peinture, pièces, sauvegarde de configuration), liste de v |
+| [✍ `ui_router_routes_global`](ge/extensions/ui/router/routes/global.md) | 0 | Routes globales à un seul segment (hors module) : onboarding, buttonLayout, play, /mainmenu. Pour un nom à un segment, routeManager cherche  |
+| [✍ `ui_router_routes_legal`](ge/extensions/ui/router/routes/legal.md) | 0 | Routes juridiques (Vue, abstrait) : assistant de consentement en ligne en trois étapes onlineFeatures -> telemetry -> confirmation, chaque é |
+| [✍ `ui_router_routes_lightrunnerWizard`](ge/extensions/ui/router/routes/lightrunnerWizard.md) | 0 | Assistant Vue de configuration du mode LightRunner (portage de l'ancien module Angular lightrunner). Même structure que quickraceWizard, bac |
+| [✍ `ui_router_routes_liveries`](ge/extensions/ui/router/routes/liveries.md) | 0 | Routes de l'éditeur de livrées (Vue) : liste (liveries), édition (liveries.edit), peinture (liveries.edit.paint) et décalcomanies (inclut le |
+| [✍ `ui_router_routes_menu`](ge/extensions/ui/router/routes/menu.md) | 0 | Routes du menu principal (Vue) : sélecteurs de jeu (freeroam, quickrace, lightrunner, bus, scénarios, expériences, rallye), niveaux, véhicul |
+| [✍ `ui_router_routes_mission`](ge/extensions/ui/router/routes/mission.md) | 0 | Routes des missions (Vue, abstrait) : détails (retour par missionDetailsExitHandler), contrôle de mission (retour pause ; sélecteur de véhic |
+| [✍ `ui_router_routes_mods`](ge/extensions/ui/router/routes/mods.md) | 0 | Routes du gestionnaire de mods (interface Angular héritée) : local, downloaded, scheduled, repository, automation, automationDetails, detail |
+| [✍ `ui_router_routes_multiplayer`](ge/extensions/ui/router/routes/multiplayer.md) | 0 | Routes multijoueur : host-options, settings et playerList (écrans de pause avec hooks ui_pause_routeLifecycleCallbacks) et spectator (Vue, h |
+| [✍ `ui_router_routes_multiseat`](ge/extensions/ui/router/routes/multiseat.md) | 0 | Route racine du mode multiseat (plusieurs joueurs sur un écran, Vue) : écran « multiseat » (titre ui.multiseat.title), sortie par rootExit,  |
+| [✍ `ui_router_routes_options`](ge/extensions/ui/router/routes/options.md) | 0 | Routes des options (Vue) : racine « options » (repli vers menu via fallbackTarget) avec infoBar sans info système, et enfant category (scree |
+| [✍ `ui_router_routes_pause`](ge/extensions/ui/router/routes/pause.md) | 0 | Routes du menu pause (Vue), le plus gros module : écran de pause racine (retour par pauseExitHandler) avec rails gauche/droite/bas, puis sys |
+| [✍ `ui_router_routes_quickraceWizard`](ge/extensions/ui/router/routes/quickraceWizard.md) | 0 | Assistant Vue de la course rapide (portage de l'ancien module Angular quickrace, séparé de « menu.quickrace » pour coexister derrière un dra |
+| [✍ `ui_router_routes_radial`](ge/extensions/ui/router/routes/radial.md) | 0 | Routes du menu radial (Vue). La racine « radial » appelle core_quickAccess.endRouteHandoff à l'entrée (fin du transfert de route en cours, r |
+| [✍ `ui_router_routes_scenario`](ge/extensions/ui/router/routes/scenario.md) | 0 | Routes de fin et de début de scénario (Vue, module abstrait) : start, end, quickrace.end et chapter.end. Chaque écran a un scopeTree d'actio |
+| [✍ `ui_router_routes_taxi`](ge/extensions/ui/router/routes/taxi.md) | 0 | Route du mode taxi (Vue) : écran « taxi », hook onEnter gameplay_taxi.onTaxiViewEnter, barres et uiApps masquées. Aucun enfant. |
+| [✍ `ui_router_routes_trackBuilder`](ge/extensions/ui/router/routes/trackBuilder.md) | 0 | Route de l'éditeur de circuit (Vue) : écran « trackBuilder » (titre ui.playmodes.trackBuilder), sortie par rootExit, navigation UI désactivé |
+| [✍ `ui_router_runtimeRouteRegistry`](ge/extensions/ui/router/runtimeRouteRegistry.md) | 3 | Registre pur des routes d'exécution et analyseur de routes Vue brutes, sans effet de bord côté jeu. Il transforme un tableau de routes Vue e |
+| [✍ `ui_router_runtimeRouteRegistry.test`](ge/extensions/ui/router/runtimeRouteRegistry.test.md) | 24 | Tests unitaires du registre de routes d'exécution (analyse des routes Vue brutes, validation transactionnelle, précédence des sources, diffs |
+| [✍ `ui_router_services_navigationContext`](ge/extensions/ui/router/services/navigationContext.md) | 2 | Construit le contexte de navigation du routeur UI : un instantané de l'état du jeu (carrière, garage, mission, scénario, multijoueur, multis |
+| [✍ `ui_router_services_routeResolver`](ge/extensions/ui/router/services/routeResolver.md) | 2 | Service OBSOLÈTE du routeur UI : le flux principal construit désormais les NavigationEntries directement avec ResolvedRoute.createEntry(). C |
+| [✍ `ui_router_transitionRecovery.test`](ge/extensions/ui/router/transitionRecovery.test.md) | 10 | Tests ciblés du contrat de reprise au démarrage de Vue pour le routeur : renvoi de la transition toutes les secondes sans limite (phase star |
+| [✍ `ui_router_utils`](ge/extensions/ui/router/utils.md) | 4 | Petits utilitaires du routeur UI : détection et résolution de noms de routes relatifs (styles Angular « ^. » et Vue « ./ », « ../ »), fusion |
+| [✍ `ui_tutorialHighlight`](ge/extensions/ui/tutorialHighlight.md) | 6 | Gère la liste des éléments d'interface à mettre en surbrillance pendant un tutoriel. Chaque élément est identifié par un id (chaîne) ; l'éta |
+| [✍ `ui_uiMods`](ge/extensions/ui/uiMods.md) | 9 | Fournit à l'interface (Vue) la liste des mods d'UI, des apps UI et des listes d'images, et surveille les changements de fichiers pour préven |
+| [✍ `ui_uiNavi`](ge/extensions/ui/uiNavi.md) | 17 | Back-end Lua de la carte de navigation de l'interface (minimap, GPS). Il envoie à l'UI les positions des véhicules suivis, les points d'inté |
+| [✍ `ui_uiStateManager`](ge/extensions/ui/uiStateManager.md) | 7 | Suit l'état de disponibilité des frameworks d'interface ('vue' et 'angular') et choisit l'écran initial. Quand les deux ont annoncé uiReady, |
+| [✍ `ui_vehiclePaint`](ge/extensions/ui/vehiclePaint.md) | 4 | Petite fenêtre imgui de débogage « Metallic paint » pour régler en direct les paramètres de peinture métallique du véhicule du joueur (3 pei |
+| [✍ `ui_vehicleRadarApp`](ge/extensions/ui/vehicleRadarApp.md) | 5 | Partie Lua de l'application d'interface « vehicle radar » (radar de proximité des véhicules). À chaque frame GUI, elle sélectionne les véhic |
+| [✍ `ui_vehicleSelector_detailsInteraction`](ge/extensions/ui/vehicleSelector/detailsInteraction.md) | 10 | Façade du panneau de détails du sélecteur de véhicules. Elle assemble les spécifications (ui_vehicleSelector_vehicleSpecifications) et les b |
+| [✍ `ui_vehicleSelector_general`](ge/extensions/ui/vehicleSelector/general.md) | 80 | Module central du sélecteur de véhicules (backend « vehicleSelector » de ui_gridSelector). Il construit les données UI (modèles, configs, fi |
+| [✍ `ui_vehicleSelector_tileClustering`](ge/extensions/ui/vehicleSelector/tileClustering.md) | 6 | Regroupe les configurations de véhicules en « clusters » (une tuile par modèle ou par marque + sous-modèle) pour la grille du sélecteur de v |
+| [✍ `ui_vehicleSelector_tileGrouping`](ge/extensions/ui/vehicleSelector/tileGrouping.md) | 5 | Détermine dans quels groupes (sections de la grille) une config de véhicule apparaît selon le mode « Grouper par » du sélecteur : Type, Bran |
+| [✍ `ui_vehicleSelector_tileSorting`](ge/extensions/ui/vehicleSelector/tileSorting.md) | 7 | Fonctions de tri des tuiles du sélecteur de véhicules selon le mode « Trier par » : Name, Value, Years, Weight, Top Speed, Power, Weight/Pow |
+| [✍ `ui_vehicleSelector_tiles`](ge/extensions/ui/vehicleSelector/tiles.md) | 6 | Construit les tuiles affichées par la grille du sélecteur de véhicules. Il configure un tilesModule (ui/gridSelectorUtils/tilesModule) avec  |
+| [✍ `ui_vehicleSelector_vehicleMetadataEditor`](ge/extensions/ui/vehicleSelector/vehicleMetadataEditor.md) | 1 | Ébauche d'éditeur de métadonnées de véhicule pour le sélecteur. Le module est quasi vide : sa seule fonction renvoie des valeurs fixes. Sa r |
+| [✍ `ui_vehicleSelector_vehicleOperations`](ge/extensions/ui/vehicleSelector/vehicleOperations.md) | 14 | Actions du sélecteur de véhicules : crée les boutons « Faire apparaître » et « Remplacer le véhicule » d'une config, et les boutons de gesti |
+| [✍ `ui_vehicleSelector_vehicleSpecifications`](ge/extensions/ui/vehicleSelector/vehicleSpecifications.md) | 5 | Prépare le panneau de détails d'un véhicule du sélecteur : listes de spécifications (performances, autres), spécifications générales, icônes |
+| [✍ `ui_visibility`](ge/extensions/ui/visibility.md) | 8 | Affiche ou masque l'interface du jeu : l'UI web (CEF) et les fenêtres imgui. Utile pour les captures d'écran, les vidéos ou les outils. Il m |
+| [✍ `util_asyncBulkLoader`](ge/extensions/util/asyncBulkLoader.md) | 19 | Chargeur asynchrone de gros jeux de données (véhicules, missions, sélecteur de gameplay, niveaux, profils de sauvegarde carrière). Chaque lo |
+| [✍ `util_autoAnnotation`](ge/extensions/util/autoAnnotation.md) | 6 | Outil d'éditeur de niveau : parcourt récursivement l'arbre de scène (MissionGroup) et le jeu de données des objets de forêt (ForestItemDataS |
+| [✍ `util_bakeTest`](ge/extensions/util/bakeTest.md) | 2 | Outil de développement interne : après le démarrage d'une mission, il lance le « baker » de matériaux GPU (bakeShapeMaterialsPBR) puis l'exp |
+| [✍ `util_booster`](ge/extensions/util/booster.md) | 1 | Extension minuscule de démonstration pour un déclencheur « booster » : trigger(data) affiche les données reçues, puis devrait propulser un v |
+| [✍ `util_calibrateESC`](ge/extensions/util/calibrateESC.md) | 7 | Outil interne de mesure automatisée du contrôle de stabilité (ESC) des véhicules. Il charge le niveau /levels/smallgrid/info.json, puis pour |
+| [✍ `util_compileImposters`](ge/extensions/util/compileImposters.md) | 5 | Outil de build hors-ligne : pour une liste de niveaux, démarre chaque niveau en freeroam, attend qu'il soit chargé puis déclenche la compila |
+| [✍ `util_compileMeshes`](ge/extensions/util/compileMeshes.md) | 2 | Outil de build hors-ligne : compile les maillages .dae (Collada) en .cdae (chargement plus rapide) pour les dossiers art/, assets/, vehicles |
+| [✍ `util_configListGenerator`](ge/extensions/util/configListGenerator.md) | 3 | Génère des listes aléatoires de véhicules (configs) à partir de filtres, utilisées par les systèmes de gameplay qui ont besoin de véhicules  |
+| [✍ `util_datastore`](ge/extensions/util/datastore.md) | 17 | Magasin clé/valeur persistant générique, avec index secondaires construits à la demande. Chaque « store » est enregistré sous un nom avec un |
+| [✍ `util_decalRoadsEditor`](ge/extensions/util/decalRoadsEditor.md) | 3 | Visualisation de débogage, chargée dynamiquement par le moteur ou l'éditeur de monde : à chaque frame, elle dessine les objets AIPath de la  |
+| [✍ `util_dependencyTree`](ge/extensions/util/dependencyTree.md) | 1 | Outil de développement qui analyse les fichiers de contenu du niveau 'levels/gridmap' (*.level.json, *.material.json, *.datablock.json et *. |
+| [✍ `util_docCreator`](ge/extensions/util/docCreator.md) | 2 | Outil interne de BeamNG pour générer les données JSON et les ressources (images copiées avec un nom basé sur le hash SHA1) qui alimentent la |
+| [✍ `util_export`](ge/extensions/util/export.md) | 7 | Exporte le véhicule du joueur au format glTF 2.0 (.gltf avec JSON ou .glb binaire), ou une séquence d'images clés. Il récupère le maillage G |
+| [✍ `util_followTheWhiteRabbit`](ge/extensions/util/followTheWhiteRabbit.md) | 2 | Petit easter egg (référence à Matrix) : une fois chargée, l'extension crée un contexte de console « neo », l'active et affiche un mini jeu d |
+| [✍ `util_forestGenerator`](ge/extensions/util/forestGenerator.md) | 11 | Utilitaire pour créer, modifier, lister et supprimer des objets de la forêt (système Forest) du niveau chargé : arbres, buissons, rochers, e |
+| [✍ `util_groundModelDebug`](ge/extensions/util/groundModelDebug.md) | 5 | Fenêtre ImGui de débogage et de réglage des ground models (modèles de sol : friction, fluide de surface, type de collision). Elle permet d'a |
+| [✍ `util_inputSystemUtils`](ge/extensions/util/inputSystemUtils.md) | 2 | Outils de maintenance pour les fichiers inputmaps (profils de contrôleurs dans /settings/inputmaps/, format JSON). printStats compte les lia |
+| [✍ `util_instancedLineRenderDemo`](ge/extensions/util/instancedLineRenderDemo.md) | 2 | Démo technique du dessin de lignes « instanciées » du debugDrawer (drawLineInstance, drawDot), qui permettent des lignes épaisses avec conto |
+| [✍ `util_jbeamStats`](ge/extensions/util/jbeamStats.md) | 1 | Calcule des statistiques sur l'ensemble des fichiers .jbeam accessibles au jeu (y compris mods montés) : nombre de fichiers, de parts, de li |
+| [✍ `util_lawnMower`](ge/extensions/util/lawnMower.md) | 9 | Tondeuse à gazon pilotée par les props JBeam (côté GE uniquement). Il cherche dans le JBeam analysé de chaque véhicule les props portant l'o |
+| [✍ `util_logStreams`](ge/extensions/util/logStreams.md) | 6 | Petit utilitaire d'entrée/sortie pour sauvegarder et relire les « streams » (flux de données de véhicule) journalisés, sous trois formats da |
+| [✍ `util_materialDebugViz`](ge/extensions/util/materialDebugViz.md) | 6 | Visualisations de débogage des matériaux (PBR) pour l'éditeur et les outils de rendu. Il définit 22 modes (aucun, quad overdraw, fil de fer, |
+| [✍ `util_materialHotReload`](ge/extensions/util/materialHotReload.md) | 2 | Rechargement à chaud des fichiers *.materials.json et *.material.json : quand l'un d'eux est modifié sur disque, l'extension le relit (loadJ |
+| [✍ `util_nodeBeamExport`](ge/extensions/util/nodeBeamExport.md) | 2 | Exporteur minimal du véhicule du joueur : écrit dans un fichier JSON (.nbexport.json) la liste des nœuds (position et nom éventuel) et des p |
+| [✍ `util_nodeStream`](ge/extensions/util/nodeStream.md) | 3 | Serveur WebSocket local (127.0.0.1:8088, nom « nodestream ») qui diffuse en direct la structure du véhicule joueur à un client externe (visu |
+| [✍ `util_optickRollingCapture`](ge/extensions/util/optickRollingCapture.md) | 1 | Capture « glissante » pour le profileur Optick. Un premier appel à toggle() démarre un enregistrement qui ne garde que les 20 dernières seco |
+| [✍ `util_photomode`](ge/extensions/util/photomode.md) | 1 | Petit module du mode photo : liste les images PNG d'overlays disponibles dans ui/modules/photomode/ui-overlays (cadres, filigranes) que l'in |
+| [✍ `util_photomodeAttach`](ge/extensions/util/photomodeAttach.md) | 3 | Attache la caméra libre au véhicule du joueur pendant le mode photo : la caméra garde son décalage par rapport au véhicule et le suit à chaq |
+| [✍ `util_photomodeFlash`](ge/extensions/util/photomodeFlash.md) | 6 | Flash de mode photo : crée un projecteur (SpotLight, avec ombres, non sauvegardé dans le niveau) collé à la caméra pendant le mode photo, or |
+| [✍ `util_procTrack`](ge/extensions/util/procTrack.md) | 27 | Générateur procédural de parcours de type gymkhana, utilisé par les scénarios de génération de piste. À partir de rectangles de départ (para |
+| [✍ `util_rectangleGen`](ge/extensions/util/rectangleGen.md) | 2 | Générateur de graphe par découpage de rectangles, utilisé pour la génération procédurale de circuits (voir procTrack). À partir de rectangle |
+| [✍ `util_renderComponentsAPI`](ge/extensions/util/renderComponentsAPI.md) | 1 | Petit module d'aide pour l'interface des composants de rendu : liste les fichiers PNG de correction colorimétrique (LUT) présents dans art/p |
+| [✍ `util_resaveMaterials`](ge/extensions/util/resaveMaterials.md) | 2 | Outil de migration pour les développeurs : charge d'anciens fichiers de matériaux TorqueScript (materials.cs), puis les resauvegarde au nouv |
+| [✍ `util_resolution`](ge/extensions/util/resolution.md) | 2 | Aide pour lire et changer la résolution de la fenêtre du jeu via GFXDevice. getVideoModeSnapshot renvoie la largeur, la hauteur et le mode d |
+| [✍ `util_richPresence`](ge/extensions/util/richPresence.md) | 39 | Gère la « présence enrichie » du jeu : le statut affiché dans Steam (rich presence et timeline Steam), l'activité UDS (startActivityByID) et |
+| [✍ `util_saveDynamicData`](ge/extensions/util/saveDynamicData.md) | 7 | Outil automatisé interne : charge le niveau de test « autotest », puis fait apparaître chaque configuration de véhicule (filtrable par modèl |
+| [✍ `util_screenshotCreator`](ge/extensions/util/screenshotCreator.md) | 9 | Point d'entrée de l'outil interne de génération de vignettes (thumbnails) de véhicules. Ce fichier est une façade : il déclare comme dépenda |
+| [✍ `util_screenshotCreator_capture`](ge/extensions/util/screenshotCreator/capture.md) | 2 | Sous-module de capture de l'outil screenshotCreator : prend une capture hors écran d'un véhicule depuis une caméra donnée, via une vue de re |
+| [✍ `util_screenshotCreator_currentConfigThumbnail`](ge/extensions/util/screenshotCreator/currentConfigThumbnail.md) | 3 | Sous-module de screenshotCreator qui génère la vignette de la configuration courante d'un véhicule. start() prépare une capture asynchrone : |
+| [✍ `util_screenshotCreator_framing_configured`](ge/extensions/util/screenshotCreator/framing/configured.md) | 4 | Mode de cadrage « Configured camera » de screenshotCreator : utilise une caméra personnalisée enregistrée dans la configuration de vignette  |
+| [✍ `util_screenshotCreator_framing_isometric`](ge/extensions/util/screenshotCreator/framing/isometric.md) | 3 | Mode de cadrage « Fixed isometric » de screenshotCreator : place la caméra à distance fixe (15 m) du centre du véhicule, dans la direction l |
+| [✍ `util_screenshotCreator_framing_legacy`](ge/extensions/util/screenshotCreator/framing/legacy.md) | 4 | Mode de cadrage « Legacy (pre-r186184) » du créateur de captures : calcule la position et l'orientation de la caméra pour qu'un véhicule tie |
+| [✍ `util_screenshotCreator_framing_procedural`](ge/extensions/util/screenshotCreator/framing/procedural.md) | 5 | Mode de cadrage « Procedural » (mode par défaut) du créateur de captures. À partir des nœuds du véhicule, il calcule la caméra qui fait teni |
+| [✍ `util_screenshotCreator_framingManager`](ge/extensions/util/screenshotCreator/framingManager.md) | 14 | Registre des modes de cadrage du créateur de captures. Il collecte les modes en diffusant le hook onScreenshotCreatorCollectFramingModes (ch |
+| [✍ `util_screenshotCreator_job`](ge/extensions/util/screenshotCreator/job.md) | 17 | Orchestrateur du créateur de vignettes (thumbnails) de véhicules. Il lance, dans une coroutine pilotée par onPreRender, la boucle complète : |
+| [✍ `util_screenshotCreator_lightingSetup`](ge/extensions/util/screenshotCreator/lightingSetup.md) | 7 | Prépare l'éclairage de studio pour les vignettes de véhicules et le remet en état ensuite. Il retrouve dans la scène (scenetree) les objets  |
+| [✍ `util_screenshotCreator_modelSelection`](ge/extensions/util/screenshotCreator/modelSelection.md) | 5 | Onglet « Models selection » de l'outil de création de vignettes (ImGui) : liste tous les modèles de véhicules (core_vehicles.getModelList),  |
+| [✍ `util_screenshotCreator_nodeOutpaint`](ge/extensions/util/screenshotCreator/nodeOutpaint.md) | 31 | Outil de « peinture » des nœuds de cadrage pour les vignettes de véhicules. Il permet de désactiver (ou réactiver) des nœuds du véhicule ave |
+| [✍ `util_screenshotCreator_settings`](ge/extensions/util/screenshotCreator/settings.md) | 51 | Réglages et fenêtre de paramètres du créateur de captures/vignettes. Il conserve dans des pointeurs ImGui (getControls) tous les réglages :  |
+| [✍ `util_screenshotCreator_shippedConfigs`](ge/extensions/util/screenshotCreator/shippedConfigs.md) | 3 | Détermine si un modèle de véhicule ou une configuration (.pc) est « livré » avec le jeu, c'est-à-dire non exclu par le fichier de filtres de |
+| [✍ `util_screenshotCreator_thumbnailCapturePipeline`](ge/extensions/util/screenshotCreator/thumbnailCapturePipeline.md) | 3 | Chaîne de capture d'une vignette de véhicule utilisée par le compositeur de vignettes (thumbnailComposerRun) : remplace le véhicule par la c |
+| [✍ `util_screenshotCreator_thumbnailComposerRun`](ge/extensions/util/screenshotCreator/thumbnailComposerRun.md) | 11 | Moteur d'exécution du « Thumbnail Composer » (v2) : orchestre une série de captures de vignettes de véhicules pour une interface appelante ( |
+| [✍ `util_screenshotCreator_thumbnailConfig`](ge/extensions/util/screenshotCreator/thumbnailConfig.md) | 9 | Lecture et écriture de la configuration de vignette (clé thumbnailConfig) d'un véhicule : elle est stockée dans /vehicles/<modèle>/info_<con |
+| [✍ `util_screenshotCreator_thumbnailPaths`](ge/extensions/util/screenshotCreator/thumbnailPaths.md) | 4 | Calcul des chemins de sortie des vignettes de véhicules pour le compositeur de vignettes. Tous les fichiers vont dans vehicles/<modelKey>/ a |
+| [✍ `util_screenshotCreator_thumbnailTargets`](ge/extensions/util/screenshotCreator/thumbnailTargets.md) | 8 | Aide à la construction de la liste des cibles de vignettes (couples modèle/config) pour le compositeur de vignettes. Il valide les cibles re |
+| [✍ `util_screenshotCreator_ui`](ge/extensions/util/screenshotCreator/ui.md) | 5 | Fenêtre ImGui « Vehicle Screenshot Creator (WIP) » du créateur de vignettes de véhicules. Elle sert de façade aux autres modules util_screen |
+| [✍ `util_screenshotCreator_vehicleSetup`](ge/extensions/util/screenshotCreator/vehicleSetup.md) | 8 | Mise en place physique du véhicule avant une vignette : le replace à l'endroit de départ (premier SpawnSphere du niveau, sinon une position  |
+| [✍ `util_showroom`](ge/extensions/util/showroom.md) | 4 | Petit utilitaire de « showroom » : fait apparaître à la demande un préfabriqué de garage (art/prefabs/garage_simple.prefab) à la position fi |
+| [✍ `util_sortLines`](ge/extensions/util/sortLines.md) | 2 | Outil de développement qui trie, par champ « name », les fichiers JSON de sons d'un niveau. Ces fichiers contiennent un objet JSON par ligne |
+| [✍ `util_stepHandler`](ge/extensions/util/stepHandler.md) | 18 | Exécuteur de séquences d'étapes (« steps ») asynchrones pour scénarios et scripts de test. On construit une liste d'étapes avec les fonction |
+| [✍ `util_surfaceMaskWheels`](ge/extensions/util/surfaceMaskWheels.md) | 22 | Fait laisser aux roues du véhicule du joueur une trace dans le « surface mask » (SurfaceMaskClipmap, objet C++ qui garde un masque dynamique |
+| [✍ `util_terrainGenerator`](ge/extensions/util/terrainGenerator.md) | 19 | Utilitaire (encore en chantier selon le commentaire du fichier) qui génère un bloc de terrain (TerrainBlock) à partir d'une carte de hauteur |
+| [✍ `util_testExtensionProxies`](ge/extensions/util/testExtensionProxies.md) | 3 | Extension de test du système d'ExtensionProxy. Au chargement, elle crée 11 objets ExtensionProxyTester (id 0 à 10) et les soumet comme « eve |
+| [✍ `util_testJSONFilesSyntax`](ge/extensions/util/testJSONFilesSyntax.md) | 1 | Outil de diagnostic : au chargement, il parcourt tout le système de fichiers virtuel du jeu (racine '/') à la recherche des fichiers *.jbeam |
+| [✍ `util_tileBake`](ge/extensions/util/tileBake.md) | 3 | Outil réservé au développement : produit des proxys de tuiles pour la ville lointaine. Il répartit chaque mesh statique (TSStatic) et chaque |
+| [✍ `util_trackBuilder_basicBorders`](ge/extensions/util/trackBuilder/basicBorders.md) | 1 | Générateur des bordures gauche et droite d'un segment de piste du Track Builder. Il contient une bibliothèque de profils de bordure (regular |
+| [✍ `util_trackBuilder_basicCenters`](ge/extensions/util/trackBuilder/basicCenters.md) | 2 | Générateur de la surface centrale (la chaussée) d'un segment de piste du Track Builder. Trois profils de section sont définis : regular (sur |
+| [✍ `util_trackBuilder_borderWallMesh`](ge/extensions/util/trackBuilder/borderWallMesh.md) | 1 | Générateur des murs latéraux (gauche et droit) d'un segment de piste du Track Builder. Il définit un profil de mur en boîte (24 faces) et, s |
+| [✍ `util_trackBuilder_cameraTransition`](ge/extensions/util/trackBuilder/cameraTransition.md) | 2 | Petit utilitaire du Track Builder qui déplace en douceur la caméra libre vers une position et une rotation cibles. Il interpole position (li |
+| [✍ `util_trackBuilder_ceilingMesh`](ge/extensions/util/trackBuilder/ceilingMesh.md) | 1 | Générateur du plafond d'un segment de piste du Track Builder (utile pour les tunnels). Il définit un profil de section en U inversé (largeur |
+| [✍ `util_trackBuilder_markers`](ge/extensions/util/trackBuilder/markers.md) | 19 | Gère les marqueurs d'édition du Track Builder (inclinaison, hauteur, largeur, checkpoint, murs gauche et droit, plafond) et l'interpolation  |
+| [✍ `util_trackBuilder_materialUtil`](ge/extensions/util/trackBuilder/materialUtil.md) | 4 | Gère les huit jeux de matériaux (lettres A à H) du Track Builder. Chaque lettre correspond à deux matériaux de la scène, 'track_editor_<lett |
+| [✍ `util_trackBuilder_meshes`](ge/extensions/util/trackBuilder/meshes.md) | 0 | Table de profils de sections (cross-sections) prédéfinis du Track Builder : murs latéraux, murs inclinés et tubes. Chaque profil est une tab |
+| [✍ `util_trackBuilder_multiTrackMerger`](ge/extensions/util/trackBuilder/multiTrackMerger.md) | 3 | Construit le mesh de raccord (intersection) entre plusieurs segments de piste du Track Builder qui se rejoignent à un même point. Il prend l |
+| [✍ `util_trackBuilder_obstaclePlacer`](ge/extensions/util/trackBuilder/obstaclePlacer.md) | 3 | Place les obstacles d'une piste du Track Builder. Les obstacles à forme prédéfinie (sharp1, sharp2, obstacle1, obstacle2 : fichiers .dae du  |
+| [✍ `util_trackBuilder_pieces`](ge/extensions/util/trackBuilder/pieces.md) | 15 | Catalogue géométrique des « pièces » du Track Builder (hex, square, free). Chaque fonction reçoit les paramètres d'une pièce et renvoie, à p |
+| [✍ `util_trackBuilder_proceduralPrimitives`](ge/extensions/util/trackBuilder/proceduralPrimitives.md) | 6 | Générateurs de formes simples pour les obstacles du Track Builder : tore (ring), cylindre, cône, cube, bosse (bump) et rampe. Chaque fonctio |
+| [✍ `util_trackBuilder_quickraceSetup`](ge/extensions/util/trackBuilder/quickraceSetup.md) | 2 | Extension de liaison entre le mode course rapide (scénario) et le Track Builder : quand un scénario est chargé, elle décharge les pistes en  |
+| [✍ `util_trackBuilder_segmentToProceduralMesh`](ge/extensions/util/trackBuilder/segmentToProceduralMesh.md) | 6 | Transforme un segment de piste du Track Builder en objet ProceduralMesh dans la scène. Il calcule le repère local (nx, ny, nz) de chaque poi |
+| [✍ `util_trackBuilder_splineTrack`](ge/extensions/util/trackBuilder/splineTrack.md) | 71 | Cœur du Track Builder (éditeur de pistes procédurales). Le module garde deux niveaux de données par sous-piste : subPieces (description abst |
+| [✍ `util_vehicleRopeDebug`](ge/extensions/util/vehicleRopeDebug.md) | 1 | Outil de débogage ImGui « Rope Visual Sandbox » pour les cordes visuelles (rope visuals) du véhicule joueur. Il liste les cordes de `be:getP |
+| [✍ `util_windDebug`](ge/extensions/util/windDebug.md) | 3 | Visualise le champ de vent partagé : échantillonne `be:getWindAt()` sur une grille de 21 x 21 points espacés de 5 m centrée sur la caméra, e |
+| [✍ `util_worker`](ge/extensions/util/worker.md) | 10 | Exécuteur de tâches hors ligne : lit un fichier JSON `/work.json` contenant une liste d'éléments de travail ({type=..., ...}) et les exécute |
+| [✍ `util_wsTest`](ge/extensions/util/wsTest.md) | 3 | Outil de développement : démarre un serveur web/WebSocket (port 8083, protocole « bng-test », page ./ui/entrypoints/util_wsTest/) écoutant s |
+| [✍ `vehicles_saveConfigUtils`](ge/extensions/vehicles/saveConfigUtils.md) | 3 | Utilitaires de l'éditeur de métadonnées d'une configuration de véhicule (info_<config>.json) lors de la sauvegarde. Définit la liste des cha |
 
 ## Commun (GE + véhicule)
 
@@ -2408,114 +2408,114 @@ Généré par tim19Atlas à partir du code Lua du jeu (lecture seule).
 | [✍ `jbeam_utils`](common/jbeam/utils.md) | 11 | Fonctions utilitaires partagées du chargeur jbeam : ajout de nœuds et de poutres au véhicule en construction (compteurs maxIDs, copie des op |
 | [✍ `jbeam_variables`](common/jbeam/variables.md) | 5 | Gère les variables jbeam (réglages de véhicule de type range : géométrie, alignement, etc.) et la substitution des '$...' dans les pièces. I |
 | [✍ `jbeamWriter`](common/jbeamWriter.md) | 1 | Variante de l'encodeur JSON 'joli' qui n'indente (met en forme multi-lignes) que jusqu'à une certaine profondeur, pour écrire des fichiers j |
-| [`jit_p`](common/jit/p.md) | 2 | LuaJIT profiler. |
-| [`jit_v`](common/jit/v.md) | 3 | Verbose mode of the LuaJIT compiler. |
-| [`jit_vmdef`](common/jit/vmdef.md) | 0 | This is a generated file. DO NOT EDIT! |
-| [`zone`](common/jit/zone.md) | 0 | LuaJIT profiler zones. |
+| [✍ `jit_p`](common/jit/p.md) | 2 | Module jit.p de LuaJIT (auteur Mike Pall, licence MIT, copyright 2005-2026) : interface simple au profileur à faible surcharge intégré à Lua |
+| [✍ `jit_v`](common/jit/v.md) | 3 | Module jit.v de LuaJIT (Mike Pall, licence MIT, 2005-2026) : mode verbeux du compilateur JIT. Il affiche une ligne par trace générée ([TRACE |
+| [✍ `jit_vmdef`](common/jit/vmdef.md) | 0 | Fichier généré (« DO NOT EDIT ») de LuaJIT : tables de noms internes utilisées par les modules jit.dump, jit.bc, jit.v et le profileur pour  |
+| [✍ `zone`](common/jit/zone.md) | 2 | Module jit.zone de LuaJIT (Mike Pall, licence MIT, 2005-2026) : pile hiérarchique de « zones » nommées utilisée par le profileur (jit.p avec |
 | [✍ `json_ast`](common/json-ast.md) | 6 | Parseur JSON/SJSON qui construit un arbre syntaxique (AST) sans perte : chaque espace, tabulation, saut de ligne, commentaire (// et /* */), |
 | [✍ `json`](common/json.md) | 1 | Fin enrobage de string.buffer de LuaJIT pour lire et écrire du JSON/SJSON (https://github.com/Autodesk/sjson). `json.decode` lit du texte ou |
-| [`json_test`](common/json.test.md) | 17 |  |
+| [✍ `json_test`](common/json.test.md) | 17 | Tests unitaires du module json de BeamNG (require('json')). Chaque fonction testXxx(ctx) reçoit un contexte de test avec assertEqual(a, b, m |
 | [✍ `jsonDebug`](common/jsonDebug.md) | 1 | Variante de ljson (parseur SJSON en Lua pur) qui, en plus de décoder, renvoie une liste d'avertissements, notamment les clés dupliquées avec |
 | [✍ `jsonPrettyEncoderCustom`](common/jsonPrettyEncoderCustom.md) | 1 | Encodeur JSON 'joli' personnalisable : trie les clés par poids (tableWeights), et laisse un callback décider quelles tables sont repliées su |
 | [✍ `kdtreebox2d`](common/kdtreebox2d.md) | 10 | Arbre k-d pour boîtes 2D (xmin, ymin, xmax, ymax), donc 4 dimensions, permettant de retrouver rapidement tous les éléments dont la boîte int |
 | [✍ `kdtreebox3d`](common/kdtreebox3d.md) | 9 | Arbre k-d pour boîtes 3D (xmin, ymin, zmin, xmax, ymax, zmax), soit 6 dimensions. Permet de retrouver rapidement tous les éléments dont la b |
 | [✍ `kdtreepoint3d`](common/kdtreepoint3d.md) | 10 | Arbre k-d pour points 3D. Offre deux types de requêtes : les points dans une boîte (query / queryNotNested, itérateurs) et le point le plus  |
-| [`libs_LuLPeg_lulpeg`](common/libs/LuLPeg/lulpeg.md) | 0 | LuLPeg, a pure Lua port of LPeg, Roberto Ierusalimschy's |
-| [`libs_LuaIRC_asyncoperations`](common/libs/LuaIRC/asyncoperations.md) | 7 |  |
-| [`libs_LuaIRC_handlers`](common/libs/LuaIRC/handlers.md) | 0 |  |
-| [`libs_LuaIRC_init`](common/libs/LuaIRC/init.md) | 11 |  |
-| [`libs_LuaIRC_set`](common/libs/LuaIRC/set.md) | 4 |  |
-| [`libs_LuaIRC_util`](common/libs/LuaIRC/util.md) | 0 |  |
-| [`libs_LuaJIT_vmdef`](common/libs/LuaJIT/vmdef.md) | 0 | This is a generated file. DO NOT EDIT! |
-| [`zone`](common/libs/LuaJIT/zone.md) | 0 | LuaJIT profiler zones. |
-| [`libs_StackTracePlus_StackTracePlus`](common/libs/StackTracePlus/StackTracePlus.md) | 9 | The MIT License |
-| [`libs_binaryheap_binaryheap`](common/libs/binaryheap/binaryheap.md) | 15 | Binary heap implementation |
-| [`libs_copas_copas`](common/libs/copas/copas.md) | 25 | Copas is free software: it can be used for both academic and commercial purposes at absolutely no |
-| [`libs_copas_copas_ftp`](common/libs/copas/copas/ftp.md) | 2 | identical to the socket.ftp module except that it uses |
-| [`libs_copas_copas_http`](common/libs/copas/copas/http.md) | 2 | Full copy of the LuaSocket code, modified to include |
-| [`libs_copas_copas_limit`](common/libs/copas/copas/limit.md) | 5 | Limits resource usage while executing tasks. |
-| [`libs_copas_copas_lock`](common/libs/copas/copas/lock.md) | 3 |  |
-| [`libs_copas_copas_semaphore`](common/libs/copas/copas/semaphore.md) | 5 |  |
-| [`libs_copas_copas_smtp`](common/libs/copas/copas/smtp.md) | 1 | identical to the socket.smtp module except that it uses |
-| [`libs_copas_copas_timer`](common/libs/copas/copas/timer.md) | 2 |  |
-| [`libs_ezSVG_EzSVG`](common/libs/ezSVG/EzSVG.md) | 26 | Copyright (c) 2012 Patrick Borgeat |
-| [`libs_inspect_inspect`](common/libs/inspect/inspect.md) | 9 | inspect.lua 3.1.0 |
-| [`libs_lua_MessagePack_MessagePack`](common/libs/lua-MessagePack/MessagePack.md) | 9 | lua-MessagePack is licensed under the terms of the MIT/X11 license reproduced below. |
-| [`epnf`](common/libs/lua-luaepnf/epnf.md) | 9 |  |
-| [`libs_lua_websockets_websocket`](common/libs/lua-websockets/websocket.md) | 0 | Copyright (c) 2012 by Gerhard Lipp <gelipp@gmail.com> |
-| [`bxor`](common/libs/lua-websockets/websocket/bit.md) | 0 |  |
-| [`client`](common/libs/lua-websockets/websocket/client.md) | 0 |  |
-| [`libs_lua_websockets_websocket_client_copas`](common/libs/lua-websockets/websocket/client_copas.md) | 0 |  |
-| [`libs_lua_websockets_websocket_client_ev`](common/libs/lua-websockets/websocket/client_ev.md) | 0 |  |
-| [`libs_lua_websockets_websocket_client_sync`](common/libs/lua-websockets/websocket/client_sync.md) | 0 |  |
-| [`message_io`](common/libs/lua-websockets/websocket/ev_common.md) | 2 |  |
-| [`libs_lua_websockets_websocket_frame`](common/libs/lua-websockets/websocket/frame.md) | 7 | Following Websocket RFC: http://tools.ietf.org/html/rfc6455 |
-| [`libs_lua_websockets_websocket_handshake`](common/libs/lua-websockets/websocket/handshake.md) | 4 |  |
-| [`server`](common/libs/lua-websockets/websocket/server.md) | 0 |  |
-| [`libs_lua_websockets_websocket_server_copas`](common/libs/lua-websockets/websocket/server_copas.md) | 1 |  |
-| [`libs_lua_websockets_websocket_server_ev`](common/libs/lua-websockets/websocket/server_ev.md) | 1 |  |
-| [`libs_lua_websockets_websocket_sync`](common/libs/lua-websockets/websocket/sync.md) | 5 |  |
-| [`libs_lua_websockets_websocket_tools`](common/libs/lua-websockets/websocket/tools.md) | 7 |  |
-| [`libs_luamqtt_mqtt_bit53`](common/libs/luamqtt/mqtt/bit53.md) | 4 | implementing some functions from BitOp (http://bitop.luajit.org/) on Lua 5.3 |
-| [`libs_luamqtt_mqtt_bitwrap`](common/libs/luamqtt/mqtt/bitwrap.md) | 0 | wrapper around BitOp module |
-| [`libs_luamqtt_mqtt_client`](common/libs/luamqtt/mqtt/client.md) | 30 | MQTT client module |
-| [`luamqtt_VERSION`](common/libs/luamqtt/mqtt/init.md) | 3 | MQTT module |
-| [`libs_luamqtt_mqtt_ioloop`](common/libs/luamqtt/mqtt/ioloop.md) | 8 | ioloop module |
-| [`libs_luamqtt_mqtt_luasocket_copas`](common/libs/luamqtt/mqtt/luasocket-copas.md) | 5 | DOC: https://keplerproject.github.io/copas/ |
-| [`connector`](common/libs/luamqtt/mqtt/luasocket.md) | 5 | DOC: http://w3.impa.br/~diego/software/luasocket/tcp.html |
-| [`connector`](common/libs/luamqtt/mqtt/luasocket_ssl.md) | 2 | DOC: http://w3.impa.br/~diego/software/luasocket/tcp.html |
-| [`libs_luamqtt_mqtt_ngxsocket`](common/libs/luamqtt/mqtt/ngxsocket.md) | 5 | module table |
-| [`libs_luamqtt_mqtt_protocol`](common/libs/luamqtt/mqtt/protocol.md) | 25 | MQTT generic protocol components module |
-| [`libs_luamqtt_mqtt_protocol4`](common/libs/luamqtt/mqtt/protocol4.md) | 2 | Here is a MQTT v3.1.1 protocol implementation |
-| [`libs_luamqtt_mqtt_protocol5`](common/libs/luamqtt/mqtt/protocol5.md) | 2 | Here is a MQTT v5.0 protocol implementation |
-| [`libs_luamqtt_mqtt_tools`](common/libs/luamqtt/mqtt/tools.md) | 2 | module table |
-| [`libs_luaqrcode_qrencode`](common/libs/luaqrcode/qrencode.md) | 1 | The qrcode library is licensed under the 3-clause BSD license (aka "new BSD") |
-| [`libs_luasocket_ltn12`](common/libs/luasocket/ltn12.md) | 18 | LTN12 - Filters, sources, sinks and pumps. |
-| [`libs_luasocket_socket_ftp`](common/libs/luasocket/socket/ftp.md) | 1 | FTP support for the Lua language |
-| [`libs_luasocket_socket_headers`](common/libs/luasocket/socket/headers.md) | 0 | Canonic header field capitalization |
-| [`libs_luasocket_socket_http`](common/libs/luasocket/socket/http.md) | 1 | HTTP/1.1 client support for the Lua language. |
-| [`libs_luasocket_socket_mbox`](common/libs/luasocket/socket/mbox.md) | 8 |  |
-| [`libs_luasocket_socket_mime`](common/libs/luasocket/socket/mime.md) | 2 | MIME support for the Lua language. |
-| [`libs_luasocket_socket_smtp`](common/libs/luasocket/socket/smtp.md) | 2 | SMTP client support for the Lua language. |
-| [`libs_luasocket_socket_socket`](common/libs/luasocket/socket/socket.md) | 4 | LuaSocket helper module |
-| [`libs_luasocket_socket_tp`](common/libs/luasocket/socket/tp.md) | 1 | Unified SMTP/FTP subsystem |
-| [`libs_luasocket_socket_url`](common/libs/luasocket/socket/url.md) | 7 | URI parsing, composition and relative URL resolution |
-| [`libs_lunajson_lunajson`](common/libs/lunajson/lunajson.md) | 0 |  |
-| [`libs_lunajson_lunajson_decoder`](common/libs/lunajson/lunajson/decoder.md) | 0 |  |
-| [`libs_lunajson_lunajson_encoder`](common/libs/lunajson/lunajson/encoder.md) | 0 |  |
-| [`libs_lunajson_lunajson_sax`](common/libs/lunajson/lunajson/sax.md) | 2 |  |
-| [`libs_lustach_src_lustache`](common/libs/lustach/src/lustache.md) | 0 | lustache: Lua mustache template parsing. |
-| [`libs_lustach_src_lustache_context`](common/libs/lustach/src/lustache/context.md) | 4 |  |
-| [`renderer`](common/libs/lustach/src/lustache/renderer.md) | 9 |  |
-| [`libs_lustach_src_lustache_scanner`](common/libs/lustach/src/lustache/scanner.md) | 4 |  |
-| [`libs_resty_template`](common/libs/resty/template.md) | 8 |  |
-| [`libs_resty_template_html`](common/libs/resty/template/html.md) | 0 |  |
-| [`libs_resty_template_microbenchmark`](common/libs/resty/template/microbenchmark.md) | 1 |  |
-| [`libs_slaxml_slaxdom`](common/libs/slaxml/slaxdom.md) | 2 | Optional parser that creates a flat DOM from parsing |
-| [`libs_slaxml_slaxml`](common/libs/slaxml/slaxml.md) | 3 | v0.8 Copyright © 2013-2018 Gavin Kistner <!@phrogz.net>; MIT Licensed |
-| [`libs_timerwheel_timerwheel`](common/libs/timerwheel/timerwheel.md) | 1 | Timer wheel implementation |
-| [`libs_xlsxlib_tests_JUnitXMLWriter`](common/libs/xlsxlib/tests/JUnitXMLWriter.md) | 1 | JUnit XML Writer for test results |
-| [`libs_xlsxlib_tests_TestManager`](common/libs/xlsxlib/tests/TestManager.md) | 0 | Unit Test Manager for the xlsx library |
-| [`libs_xlsxlib_tests_tests`](common/libs/xlsxlib/tests/tests.md) | 12 | Unit tests for the xlsx library |
-| [`libs_xlsxlib_xlsxlib`](common/libs/xlsxlib/xlsxlib.md) | 2 | XLSX Parsing Module for Lua |
+| [✍ `libs_LuLPeg_lulpeg`](common/libs/LuLPeg/lulpeg.md) | 0 | LuLPeg : bibliothèque tierce (Pierre-Yves Gérardy, licence « Romantic WTF »), portage en Lua pur de LPeg (Parsing Expression Grammars de Rob |
+| [✍ `libs_LuaIRC_asyncoperations`](common/libs/LuaIRC/asyncoperations.md) | 7 | Partie de la bibliothèque tierce LuaIRC (client IRC en Lua). Ajoute à la métatable de connexion `irc._META` les commandes d'envoi : message  |
+| [✍ `libs_LuaIRC_handlers`](common/libs/LuaIRC/handlers.md) | 0 | Partie de la bibliothèque tierce LuaIRC (client IRC en Lua). Définit la table globale `irc.handlers` (module "irc") : un gestionnaire par co |
+| [✍ `libs_LuaIRC_init`](common/libs/LuaIRC/init.md) | 11 | Point d'entrée de la bibliothèque tierce LuaIRC (client IRC en Lua, adapté pour BeamNG). Définit le module global `irc` (écriture `module "i |
+| [✍ `libs_LuaIRC_set`](common/libs/LuaIRC/set.md) | 4 | Partie de la bibliothèque tierce LuaIRC. Module "irc.set" : un ensemble de connexions IRC surveillées ensemble avec socket.select. Permet de |
+| [✍ `libs_LuaIRC_util`](common/libs/LuaIRC/util.md) | 0 | Partie de la bibliothèque tierce LuaIRC (client IRC). Module "irc" : analyse des lignes du protocole IRC (parse), des pseudos et préfixes (p |
+| [✍ `libs_LuaJIT_vmdef`](common/libs/LuaJIT/vmdef.md) | 0 | Fichier généré de LuaJIT (jit.vmdef, « DO NOT EDIT ») : tables de noms utilisées par les outils jit.* (dump, bc, v, profileur) pour afficher |
+| [✍ `zone`](common/libs/LuaJIT/zone.md) | 2 | Module jit.zone de LuaJIT (Mike Pall, licence MIT) : pile hiérarchique de « zones » nommées, utilisée par le profileur LuaJIT pour étiqueter |
+| [✍ `libs_StackTracePlus_StackTracePlus`](common/libs/StackTracePlus/StackTracePlus.md) | 9 | StackTracePlus : bibliothèque tierce (Ignacio Burgueño, licence MIT) qui produit des traces de pile Lua détaillées : noms de fonctions devin |
+| [✍ `libs_binaryheap_binaryheap`](common/libs/binaryheap/binaryheap.md) | 15 | binaryheap : bibliothèque tierce (Lua binary heap, utilisée notamment par copas pour ses minuteries) implémentant un tas binaire (file de pr |
+| [✍ `libs_copas_copas`](common/libs/copas/copas.md) | 26 | Copas 2.0.2 : bibliothèque tierce (Kepler Project) — « Coroutine Oriented Portable Asynchronous Services », un répartiteur à base de corouti |
+| [✍ `libs_copas_copas_ftp`](common/libs/copas/copas/ftp.md) | 2 | Sous-module FTP de la bibliothèque tierce Copas : identique à socket.ftp de LuaSocket, mais utilise des sockets Copas asynchrones (copas.wra |
+| [✍ `libs_copas_copas_http`](common/libs/copas/copas/http.md) | 2 | Sous-module HTTP de la bibliothèque tierce Copas : copie complète du client HTTP/1.1 de LuaSocket (Diego Nehab) modifiée pour gérer https, l |
+| [✍ `libs_copas_copas_limit`](common/libs/copas/copas/limit.md) | 5 | Sous-module de la bibliothèque tierce Copas : limite le nombre de tâches exécutées simultanément. Chaque tâche ajoutée est planifiée tout de |
+| [✍ `libs_copas_copas_lock`](common/libs/copas/copas/lock.md) | 3 | Sous-module de la bibliothèque tierce Copas : verrou (mutex) entre coroutines Copas. Une coroutine qui demande un verrou déjà pris cède la m |
+| [✍ `libs_copas_copas_semaphore`](common/libs/copas/copas/semaphore.md) | 5 | Sous-module de la bibliothèque tierce Copas : sémaphore à compteur pour coroutines Copas. take demande des ressources (et attend si elles ma |
+| [✍ `libs_copas_copas_smtp`](common/libs/copas/copas/smtp.md) | 1 | Sous-module SMTP de la bibliothèque tierce Copas : identique à socket.smtp de LuaSocket mais avec des sockets Copas asynchrones. Définit cop |
+| [✍ `libs_copas_copas_timer`](common/libs/copas/copas/timer.md) | 2 | Sous-module de la bibliothèque tierce Copas : minuteries (ponctuelles ou récurrentes) exécutées dans le répartiteur Copas. timer.new arme im |
+| [✍ `libs_ezSVG_EzSVG`](common/libs/ezSVG/EzSVG.md) | 26 | EzSVG : bibliothèque tierce (Patrick Borgeat, 2012, reprise par BeamNG) pour générer des fichiers SVG depuis Lua. On crée des éléments (Circ |
+| [✍ `libs_inspect_inspect`](common/libs/inspect/inspect.md) | 9 | inspect.lua 3.1.0 : bibliothèque tierce (Enrique García Cota, licence MIT) qui transforme n'importe quelle valeur Lua en chaîne lisible : ta |
+| [✍ `libs_lua_MessagePack_MessagePack`](common/libs/lua-MessagePack/MessagePack.md) | 9 | lua-MessagePack (François Perrad, licence MIT, version de base 0.5.1, adaptée par BeamNG en 2022) : sérialisation binaire MessagePack. Cette |
+| [✍ `epnf`](common/libs/lua-luaepnf/epnf.md) | 9 | lua-luaepnf : bibliothèque tierce (Gerhard Lipp) qui facilite la définition de grammaires LPeg en syntaxe EBNF-like, avec arbre syntaxique ( |
+| [✍ `libs_lua_websockets_websocket`](common/libs/lua-websockets/websocket.md) | 0 | Point d'entrée de la bibliothèque tierce lua-websockets (Gerhard Lipp, licence MIT), implémentation WebSocket (RFC 6455) en Lua pur. Ce modu |
+| [✍ `bxor`](common/libs/lua-websockets/websocket/bit.md) | 0 | Petite couche de compatibilité pour les opérations sur bits de lua-websockets. Si la bibliothèque 'bit32' (Lua 5.2) existe, elle est renvoyé |
+| [✍ `client`](common/libs/lua-websockets/websocket/client.md) | 0 | Sélecteur de backend client WebSocket de lua-websockets. Renvoie une table vide dont le __index charge à la demande le module 'websocket/cli |
+| [✍ `libs_lua_websockets_websocket_client_copas`](common/libs/lua-websockets/websocket/client_copas.md) | 5 | Backend client WebSocket de lua-websockets pour la bibliothèque coopérative 'copas' (sockets non bloquants dans des coroutines). Le module r |
+| [✍ `libs_lua_websockets_websocket_client_ev`](common/libs/lua-websockets/websocket/client_ev.md) | 7 | Backend client WebSocket asynchrone de lua-websockets pour la boucle d'événements lua-ev (module 'ev', non fourni par le jeu). Le module ren |
+| [✍ `libs_lua_websockets_websocket_client_sync`](common/libs/lua-websockets/websocket/client_sync.md) | 5 | Backend client WebSocket synchrone (bloquant) de lua-websockets, basé sur luasocket. Le module renvoie une fonction constructeur (aussi acce |
+| [✍ `message_io`](common/libs/lua-websockets/websocket/ev_common.md) | 2 | Fonctions communes aux backends client_ev et server_ev de lua-websockets (boucle d'événements lua-ev) : envoi asynchrone avec tampon et lect |
+| [✍ `libs_lua_websockets_websocket_frame`](common/libs/lua-websockets/websocket/frame.md) | 7 | Encodage et décodage des trames WebSocket (RFC 6455) pour lua-websockets : en-têtes 7/16/64 bits de longueur, masquage XOR côté client, tram |
+| [✍ `libs_lua_websockets_websocket_handshake`](common/libs/lua-websockets/websocket/handshake.md) | 4 | Poignée de main HTTP/1.1 de WebSocket (upgrade) pour lua-websockets : construction de la requête client, analyse des en-têtes, validation cô |
+| [✍ `server`](common/libs/lua-websockets/websocket/server.md) | 0 | Sélecteur de backend serveur WebSocket de lua-websockets. Renvoie une table dont le __index charge à la demande 'websocket/server_copas' ou  |
+| [✍ `libs_lua_websockets_websocket_server_copas`](common/libs/lua-websockets/websocket/server_copas.md) | 6 | Backend serveur WebSocket de lua-websockets pour la bibliothèque coopérative 'copas'. listen ouvre un socket serveur luasocket, réalise la p |
+| [✍ `libs_lua_websockets_websocket_server_ev`](common/libs/lua-websockets/websocket/server_ev.md) | 8 | Backend serveur WebSocket de lua-websockets pour la boucle d'événements lua-ev (module 'ev', non fourni par le jeu). listen accepte les conn |
+| [✍ `libs_lua_websockets_websocket_sync`](common/libs/lua-websockets/websocket/sync.md) | 5 | Cœur synchrone de lua-websockets : extend(obj) ajoute à un objet disposant de sock_send, sock_receive, sock_close (et sock_connect côté clie |
+| [✍ `libs_lua_websockets_websocket_tools`](common/libs/lua-websockets/websocket/tools.md) | 7 | Utilitaires de lua-websockets : lecture/écriture d'entiers 8/16/32 bits en gros-boutiste, SHA-1 (via la bibliothèque 'crypto' si présente, s |
+| [✍ `libs_luamqtt_mqtt_bit53`](common/libs/luamqtt/mqtt/bit53.md) | 4 | Implémentation de secours de quelques fonctions de BitOp (lshift, rshift, bor, band) avec les opérateurs natifs de Lua 5.3 (<<, >>, \|, &). C |
+| [✍ `libs_luamqtt_mqtt_bitwrap`](common/libs/luamqtt/mqtt/bitwrap.md) | 0 | Enveloppe autour du module de bits : renvoie directement require('bit') (BitOp) sous Lua 5.1 ou LuaJIT, require('bit32') sous Lua 5.2, sinon |
+| [✍ `libs_luamqtt_mqtt_client`](common/libs/luamqtt/mqtt/client.md) | 30 | Client MQTT (3.1.1 ou 5.0) de la bibliothèque luamqtt. Gère la connexion à un broker via un connecteur (luasocket par défaut), l'envoi/récep |
+| [✍ `luamqtt_VERSION`](common/libs/luamqtt/mqtt/init.md) | 3 | Point d'entrée de la bibliothèque tierce luamqtt (xHasKx, version 3.4.3 d'après le champ _VERSION), client MQTT 3.1.1 et 5.0 en Lua pur. Le  |
+| [✍ `libs_luamqtt_mqtt_ioloop`](common/libs/luamqtt/mqtt/ioloop.md) | 8 | Boucle d'entrées/sorties de luamqtt : fait vivre plusieurs clients MQTT (et des fonctions utilisateur) dans un même thread, en mode non bloq |
+| [✍ `libs_luamqtt_mqtt_luasocket_copas`](common/libs/luamqtt/mqtt/luasocket-copas.md) | 5 | Connecteur réseau luamqtt pour luasocket combiné à copas (E/S coopératives dans des coroutines). Même interface que le connecteur luasocket  |
+| [✍ `connector`](common/libs/luamqtt/mqtt/luasocket.md) | 5 | Connecteur réseau par défaut de luamqtt, basé sur luasocket. Il manipule une table de connexion 'conn' (host, port, sock, timeout) créée par |
+| [✍ `connector`](common/libs/luamqtt/mqtt/luasocket_ssl.md) | 5 | Connecteur réseau luamqtt pour connexions TLS : ouvre un socket TCP via le connecteur luasocket puis l'enveloppe avec ssl.wrap (module luase |
+| [✍ `libs_luamqtt_mqtt_ngxsocket`](common/libs/luamqtt/mqtt/ngxsocket.md) | 5 | Connecteur réseau luamqtt pour OpenResty/nginx (ngx.socket.tcp). Inutilisable dans BeamNG : le fichier lit la globale ngx à son chargement,  |
+| [✍ `libs_luamqtt_mqtt_protocol`](common/libs/luamqtt/mqtt/protocol.md) | 25 | Briques génériques du protocole MQTT (communes aux versions 3.1.1 et 5.0) de luamqtt : création et lecture d'entiers, chaînes UTF-8 et champ |
+| [✍ `libs_luamqtt_mqtt_protocol4`](common/libs/luamqtt/mqtt/protocol4.md) | 2 | Implémentation du protocole MQTT 3.1.1 de luamqtt : construction (make_packet) et analyse (parse_packet) des paquets. Chargé par client.lua  |
+| [✍ `libs_luamqtt_mqtt_protocol5`](common/libs/luamqtt/mqtt/protocol5.md) | 2 | Implémentation du protocole MQTT 5.0 de luamqtt : construction (make_packet) et analyse (parse_packet) des paquets, avec propriétés et propr |
+| [✍ `libs_luamqtt_mqtt_tools`](common/libs/luamqtt/mqtt/tools.md) | 2 | Deux petits utilitaires de luamqtt : conversion d'une chaîne en hexadécimal et division entière. Utilisés par protocol.lua et pour le déboga |
+| [✍ `libs_luaqrcode_qrencode`](common/libs/luaqrcode/qrencode.md) | 1 | luaqrcode (Patrick Gundlach / speedata, licence BSD 3 clauses) : générateur de QR codes en Lua pur. Il choisit la plus petite version (1 à 4 |
+| [✍ `libs_luasocket_ltn12`](common/libs/luasocket/ltn12.md) | 18 | LTN12 1.0.3 (Diego Nehab, bibliothèque LuaSocket) : cadre de traitement de flux de données par morceaux. Quatre notions : sources (fonctions |
+| [✍ `libs_luasocket_socket_ftp`](common/libs/luasocket/socket/ftp.md) | 13 | Client FTP de LuaSocket (Diego Nehab), bâti sur socket.tp et LTN12. Offre une API haut niveau (get, put, command) acceptant une URL ftp:// o |
+| [✍ `libs_luasocket_socket_headers`](common/libs/luasocket/socket/headers.md) | 0 | Table de mise en forme canonique des noms d'en-têtes (MIME/HTTP) de LuaSocket : associe un nom en minuscules à sa forme usuelle (par ex. 'co |
+| [✍ `libs_luasocket_socket_http`](common/libs/luasocket/socket/http.md) | 9 | Client HTTP/1.1 de LuaSocket (Diego Nehab) : requêtes GET/POST, corps en flux via LTN12, transfert chunked, redirections (jusqu'à 5), authen |
+| [✍ `libs_luasocket_socket_mbox`](common/libs/luasocket/socket/mbox.md) | 8 | Analyseur de boîtes aux lettres au format mbox de LuaSocket : découpe un fichier mbox en messages, sépare en-têtes et corps, interprète les  |
+| [✍ `libs_luasocket_socket_mime`](common/libs/luasocket/socket/mime.md) | 2 | Couche Lua du module MIME de LuaSocket (Diego Nehab, RFC 2045-2049) : encodage et décodage base64 et quoted-printable, découpe de lignes, no |
+| [✍ `libs_luasocket_socket_smtp`](common/libs/luasocket/socket/smtp.md) | 2 | Bibliothèque tierce LuaSocket (auteur Diego Nehab) : client SMTP pour envoyer des e-mails. Elle s'attache à la table `socket` sous `socket.s |
+| [✍ `libs_luasocket_socket_socket`](common/libs/luasocket/socket/socket.md) | 4 | Bibliothèque tierce LuaSocket (Diego Nehab) : module d'aide au-dessus du noyau `socket` natif. Il ajoute connect4/connect6 (connexion forcée |
+| [✍ `libs_luasocket_socket_tp`](common/libs/luasocket/socket/tp.md) | 1 | Bibliothèque tierce LuaSocket (Diego Nehab) : sous-système commun aux protocoles texte SMTP/FTP (« Telnet-like Protocol »). `connect` ouvre  |
+| [✍ `libs_luasocket_socket_url`](common/libs/luasocket/socket/url.md) | 7 | Bibliothèque tierce LuaSocket (Diego Nehab), version « URL 1.0.3 » : analyse, composition et résolution d'URL relatives selon la RFC 2396. U |
+| [✍ `libs_lunajson_lunajson`](common/libs/lunajson/lunajson.md) | 0 | Bibliothèque tierce lunajson (décodeur/encodeur JSON pur Lua, rapide). Ce fichier est le point d'entrée : il crée un décodeur et un encodeur |
+| [✍ `libs_lunajson_lunajson_decoder`](common/libs/lunajson/lunajson/decoder.md) | 0 | Bibliothèque tierce lunajson : décodeur JSON. Le module renvoie une fabrique `newdecoder()` ; chaque appel crée un contexte de décodage indé |
+| [✍ `libs_lunajson_lunajson_encoder`](common/libs/lunajson/lunajson/encoder.md) | 0 | Bibliothèque tierce lunajson : encodeur JSON. Le module renvoie une fabrique `newencoder()` ; chaque appel crée un contexte indépendant et r |
+| [✍ `libs_lunajson_lunajson_sax`](common/libs/lunajson/lunajson/sax.md) | 2 | Bibliothèque tierce lunajson : analyseur JSON de type SAX (événementiel). On lui fournit une table de callbacks ; il les appelle au fil de l |
+| [✍ `libs_lustach_src_lustache`](common/libs/lustach/src/lustache.md) | 0 | Bibliothèque tierce lustache (Olivine Labs, licence MIT, version 1.3.1-0) : moteur de gabarits Mustache en Lua. Ce fichier est le point d'en |
+| [✍ `libs_lustach_src_lustache_context`](common/libs/lustach/src/lustache/context.md) | 4 | Bibliothèque tierce lustache : contexte de rendu Mustache. Un contexte enveloppe la vue (table de données) courante, garde un lien vers le c |
+| [✍ `renderer`](common/libs/lustach/src/lustache/renderer.md) | 9 | Bibliothèque tierce lustache : cœur du moteur Mustache. Le renderer analyse un gabarit (`parse`) en arbre de jetons (texte, variables, secti |
+| [✍ `libs_lustach_src_lustache_scanner`](common/libs/lustach/src/lustache/scanner.md) | 4 | Bibliothèque tierce lustache : scanneur de chaîne utilisé par l'analyseur de gabarits. Il garde la « queue » restante de la chaîne (`tail`)  |
+| [✍ `libs_resty_template`](common/libs/resty/template.md) | 8 | Bibliothèque tierce lua-resty-template (version 1.9, conçue pour OpenResty/nginx mais utilisable en Lua pur) : moteur de gabarits qui conver |
+| [✍ `libs_resty_template_html`](common/libs/resty/template/html.md) | 0 | Bibliothèque tierce lua-resty-template : petit générateur de balises HTML. `html.nom(attributs)(contenu)` ou `html.nom(contenu)` produit `<n |
+| [✍ `libs_resty_template_microbenchmark`](common/libs/resty/template/microbenchmark.md) | 1 | Bibliothèque tierce lua-resty-template : micro-benchmark du moteur (temps d'analyse, de compilation et d'exécution d'un petit gabarit en bou |
+| [✍ `libs_slaxml_slaxdom`](common/libs/slaxml/slaxdom.md) | 2 | Extension de SLAXML (bibliothèque tierce de Gavin Kistner) : ajoute à la table SLAXML un analyseur `dom` qui construit un DOM à plat (avec n |
+| [✍ `libs_slaxml_slaxml`](common/libs/slaxml/slaxml.md) | 3 | Bibliothèque tierce SLAXML v0.8 (Gavin Kistner, licence MIT) : analyseur XML pur Lua de type SAX avec gestion des espaces de noms. On lui pa |
+| [✍ `libs_timerwheel_timerwheel`](common/libs/timerwheel/timerwheel.md) | 6 | Bibliothèque tierce timerwheel (roue de minuteries, issue de l'écosystème Kong/lua-resty) : minuteries de type timeout avec insertion, annul |
+| [✍ `libs_xlsxlib_tests_JUnitXMLWriter`](common/libs/xlsxlib/tests/JUnitXMLWriter.md) | 1 | Écrivain de résultats de tests au format XML JUnit pour les tests de xlsxlib. Construit un DOM (testsuites > testsuite > testcase, avec un é |
+| [✍ `libs_xlsxlib_tests_TestManager`](common/libs/xlsxlib/tests/TestManager.md) | 2 | Gestionnaire de tests unitaires minimal (Thomas Fischer, 2024) propre aux tests de xlsxlib ; c'est l'ancêtre de testFramework/TestManager. I |
+| [✍ `libs_xlsxlib_tests_tests`](common/libs/xlsxlib/tests/tests.md) | 12 | Tests unitaires de xlsxlib (Thomas Fischer, 2024). Chaque test charge `test_input_1.xlsx`, lit une feuille ou une plage et compare le résult |
+| [✍ `libs_xlsxlib_xlsxlib`](common/libs/xlsxlib/xlsxlib.md) | 2 | Bibliothèque BeamNG (Thomas Fischer, 2024) de lecture de classeurs Excel .xlsx. Elle ouvre l'archive ZIP avec l'objet moteur `ZipArchive`, l |
 | [✍ `ljson`](common/ljson.md) | 1 | Ancien parseur SJSON écrit en Lua pur (Lua 5.1), conservé quand json.lua est passé à string.buffer de LuaJIT. Il décode le format SJSON d'Au |
 | [✍ `lpack`](common/lpack.md) | 8 | Sérialiseur/désérialiseur rapide de valeurs Lua (tables, nombres, chaînes, booléens, vec3, quat) vers des chaînes compactes, utilisé pour éc |
 | [✍ `luaBinding`](common/luaBinding.md) | 0 | Colle Lua des liaisons C++ <-> Lua : les fonctions __luaBind* sont les __index / __newindex que le moteur C++ place sur les metatables des c |
 | [✍ `luaCore`](common/luaCore.md) | 0 | Petit module de base chargé dans les deux VM, qui ajoute des utilitaires de langage utilisés partout : require_optional, unrequire, rerequir |
 | [✍ `luaProfiler`](common/luaProfiler.md) | 5 | Petit profileur de sections de code Lua. On crée un profileur avec LuaProfiler(titre), on appelle p:start() au début d'une fonction, p:add(' |
 | [✍ `mathlib`](common/mathlib.md) | 135 | Bibliothèque mathématique chargée dans les deux VM (GE et véhicule). Elle définit les types vec3 (x, y, z, doubles) et quat (x, y, z, w), le |
-| [`mathlib_test`](common/mathlib.test.md) | 17 |  |
+| [✍ `mathlib_test`](common/mathlib.test.md) | 17 | Tests unitaires de mathlib (vec3, quat, helpers scalaires, courbes, géométrie, StackVec3/push3), à exécuter avec testFramework/TestManager.  |
 | [✍ `_`](common/particles.md) | 4 | Charge au démarrage lua/common/particles.json (matériaux physiques et règles de particules entre deux matériaux) et prépare des tables de re |
 | [✍ `quadtree`](common/quadtree.md) | 11 | Quadtree 2D pour boîtes (insertion, suppression, requête, compression). Contrairement aux arbres k-d, on peut insérer et retirer des élément |
 | [✍ `impl`](common/settings.md) | 7 | Accès en lecture aux réglages du jeu depuis Lua (les deux VM). Au chargement il lit /settings/defaults.json (définitions : chaque réglage es |
 | [✍ `tcpServer`](common/tcpServer.md) | 5 | Serveur TCP non bloquant servant aux outils externes (chaîne d'outils d'édition, scripts). Utilise ASIO via createNetworkServer s'il est dis |
-| [`testFramework_ExtensionTest`](common/testFramework/ExtensionTest.md) | 2 |  |
-| [`testFramework_JUnitXMLWriter`](common/testFramework/JUnitXMLWriter.md) | 1 |  |
-| [`testFramework_MockGenerators`](common/testFramework/MockGenerators.md) | 52 |  |
-| [`testFramework_TestManager`](common/testFramework/TestManager.md) | 0 | Unit Test Manager for the BeamNG |
+| [✍ `testFramework_ExtensionTest`](common/testFramework/ExtensionTest.md) | 2 | Lanceur de tests automatiques pour les extensions Lua du jeu (dossiers /lua/common/extensions/ et /lua/<vm>/extensions/). Pour chaque extens |
+| [✍ `testFramework_JUnitXMLWriter`](common/testFramework/JUnitXMLWriter.md) | 1 | Écrivain de résultats de tests au format XML JUnit pour testFramework/TestManager. Construit un DOM (testsuites > testsuite > testcase, avec |
+| [✍ `testFramework_MockGenerators`](common/testFramework/MockGenerators.md) | 52 | Générateurs de données factices pour les tests d'extensions (utilisés par testFramework/ExtensionTest). Chaque fonction `generateMockData_<h |
+| [✍ `testFramework_TestManager`](common/testFramework/TestManager.md) | 5 | Gestionnaire de tests unitaires du jeu (BeamNG GmbH, Thomas Fischer, 2024). Il exécute des fonctions de test regroupées dans une table (clés |
 | [✍ `timeEvents`](common/timeEvents.md) | 4 | Petit planificateur : permet de programmer l'exécution d'une fonction dans X secondes, à la manière de `schedule()`. On crée une liste d'évé |
 | [✍ `utils`](common/utils.md) | 8 | Boîte à outils commune (GE et véhicule) chargée au démarrage de chaque VM Lua. Ce fichier ne renvoie pas de table M : il définit directement |
-| [`utils_test`](common/utils.test.md) | 56 |  |
+| [✍ `utils_test`](common/utils.test.md) | 56 | Tests unitaires des fonctions utilitaires globales de `utils` (couleurs, chaînes, tables, JSON, sérialisation, copie, chemins, itérateurs tr |
 | [✍ `utils_calltracer`](common/utils/calltracer.md) | 4 | Outil de profilage/diagnostic : enregistre, grâce à un hook debug.sethook sur les appels de fonctions, qui appelle qui pendant une période,  |
 | [✍ `utils_dateUtils`](common/utils/dateUtils.md) | 2 | Petits utilitaires de dates : conversion d'une chaîne ISO 8601 en timestamp Unix et calcul du temps écoulé depuis une date. Se charge avec r |
 | [✍ `utils_debugDraw`](common/utils/debugDraw.md) | 5 | Enveloppe rapide (FFI) autour du dessin de debug du moteur (BNG_DBG_DRAW_*). Dans le GE les appels se font dans onPreRender(), côté véhicule |
@@ -2530,23 +2530,23 @@ Généré par tim19Atlas à partir du code Lua du jeu (lecture seule).
 | [✍ `utils_simpleProfiler_report`](common/utils/simpleProfiler/report.md) | 1 | Génère un rapport de profilage à partir du journal du 'simpleProfiler' du moteur (global simpleProfilerGetJournal) : une page HTML interacti |
 | [✍ `utils_torqueScriptParser`](common/utils/torqueScriptParser.md) | 1 | Preuve de concept d'analyseur (parser PEG, via libs/lua-luaepnf/epnf) de fichiers TorqueScript : déclarations 'new/singleton/datablock', pro |
 | [✍ `utils_wsUtils`](common/utils/wsUtils.md) | 1 | Outils pour les WebSockets du moteur (BNGWebWSServer / BNGWSClient). Fournit createOrGetWS qui crée (ou récupère) un serveur WebSocket et ch |
-| [`main`](objectpool/main.md) | 0 |  |
+| [✍ `main`](objectpool/main.md) | 0 | Point d'entrée de la machine virtuelle Lua « objectpool » (vmType = 'objectpool'), qui stocke des objets de véhicule sérialisés (lpack) dans |
 
 ### Extensions (11)
 
 | Nom | Fonctions | Résumé |
 |---|---|---|
-| [`jbeam_jbeamMod`](common/extensions/jbeam/jbeamMod.md) | 2 |  |
-| [`networking_editorToolchain`](common/extensions/networking/editorToolchain.md) | 6 |  |
-| [`ui_flowgraph_editor`](common/extensions/ui/flowgraph/editor.md) | 22 |  |
-| [`ui_flowgraph_editor_api_luaintf`](common/extensions/ui/flowgraph/editor_api_luaintf.md) | 0 |  |
-| [`ui_imgui`](common/extensions/ui/imgui.md) | 2 |  |
-| [`ui_imguiUtils`](common/extensions/ui/imguiUtils.md) | 18 |  |
-| [`ui_imguiWire`](common/extensions/ui/imguiWire.md) | 1 |  |
-| [`ui_imgui_api`](common/extensions/ui/imgui_api.md) | 0 |  |
-| [`ui_imgui_custom_luaintf`](common/extensions/ui/imgui_custom_luaintf.md) | 0 |  |
-| [`ui_imgui_luaintf`](common/extensions/ui/imgui_luaintf.md) | 0 |  |
-| [`ui_improfiler`](common/extensions/ui/improfiler.md) | 1 |  |
+| [✍ `jbeam_jbeamMod`](common/extensions/jbeam/jbeamMod.md) | 2 | Extension d'exemple (commentaire du fichier : « an example of how you could add things into jbeam loading ») qui montre comment se brancher  |
+| [✍ `networking_editorToolchain`](common/extensions/networking/editorToolchain.md) | 6 | Serveur TCP (port 7000, toutes interfaces) qui permet à un outil externe (éditeur JBeam, etc.) de dialoguer avec le jeu. Les clients envoien |
+| [✍ `ui_flowgraph_editor`](common/extensions/ui/flowgraph/editor.md) | 22 | Aide d'interface pour l'éditeur de flowgraph (ui_flowgraph_editor). Elle intègre l'API du moteur de nœuds (editor_api_luaintf), définit les  |
+| [✍ `ui_flowgraph_editor_api_luaintf`](common/extensions/ui/flowgraph/editor_api_luaintf.md) | 19 | Couche d'interface Lua vers l'éditeur de nœuds C++ (Engine.fge, un éditeur de graphes de type « imgui-node-editor »). Le fichier renvoie une |
+| [✍ `ui_imgui`](common/extensions/ui/imgui.md) | 2 | Extension ui_imgui : point d'entrée d'ImGui pour les moddeurs Lua. Dans la VM du jeu (GE) elle devient simplement le module ui/imgui_api (au |
+| [✍ `ui_imguiUtils`](common/extensions/ui/imguiUtils.md) | 18 | Boîte à outils ImGui de haut niveau (ui_imguiUtils) : changement d'échelle d'UI, chargement de textures, boutons-menus déroulants (DropdownB |
+| [✍ `ui_imguiWire`](common/extensions/ui/imguiWire.md) | 1 | Prototype de « câble » ImGui : charge ui_imgui puis remplace chaque fonction de ui_imgui par un wrapper qui, au lieu d'appeler ImGui, enregi |
+| [✍ `ui_imgui_api`](common/extensions/ui/imgui_api.md) | 0 | Module interne qui assemble l'API ImGui : crée la table M avec le champ ctx (contexte ImGui global) puis y injecte les fonctions générées de |
+| [✍ `ui_imgui_custom_luaintf`](common/extensions/ui/imgui_custom_luaintf.md) | 34 | Ajouts écrits à la main à l'API ImGui (par opposition à imgui_luaintf.lua, généré). Le fichier renvoie une fonction qui reçoit la table M d' |
+| [✍ `ui_imgui_luaintf`](common/extensions/ui/imgui_luaintf.md) | 19 | Fichier généré (≈ 2200 lignes, ~485 fonctions) qui expose presque toute l'API Dear ImGui en Lua sous forme de wrappers très fins vers Engine |
+| [✍ `ui_improfiler`](common/extensions/ui/improfiler.md) | 1 | Profileur LuaJIT affiché dans une fenêtre ImGui « LuaJIT Profiler ». La première partie du fichier est le module jit/p de Mike Pall (MIT, 20 |
 
 ## Console
 
@@ -2554,21 +2554,21 @@ Généré par tim19Atlas à partir du code Lua du jeu (lecture seule).
 
 | Nom | Fonctions | Résumé |
 |---|---|---|
-| [`bananabench_async`](console/bananabench-async.md) | 0 |  |
-| [`bananabench_csv`](console/bananabench-csv.md) | 0 |  |
-| [`bananabench_json`](console/bananabench-json.md) | 0 |  |
-| [`bananabench_print`](console/bananabench-print.md) | 0 |  |
-| [`bananabench_xml`](console/bananabench-xml.md) | 0 |  |
-| [`bananabench`](console/bananabench.md) | 3 |  |
-| [`benchphysics`](console/benchphysics.md) | 0 |  |
-| [`console_lib`](console/console-lib.md) | 3 |  |
-| [`json_performance`](console/json-performance.md) | 0 |  |
-| [`main`](console/main.md) | 0 |  |
-| [`resave_pcs`](console/resave-pcs.md) | 0 |  |
-| [`servertests`](console/servertests.md) | 0 |  |
-| [`simpleload`](console/simpleload.md) | 0 |  |
-| [`simtest`](console/simtest.md) | 0 |  |
-| [`test`](console/test.md) | 0 |  |
-| [`test_dyncol`](console/test_dyncol.md) | 0 |  |
-| [`unittests`](console/unittests.md) | 0 |  |
+| [✍ `bananabench_async`](console/bananabench-async.md) | 0 | Ancienne version (0.4) du banc d'essai bananabench, asynchrone : `benchPhysics` tourne dans une coroutine pilotée image par image (`coroutin |
+| [✍ `bananabench_csv`](console/bananabench-csv.md) | 0 | Script de la VM console : exécute le benchmark bananabench (bench.physics()) puis écrit les résultats au format CSV (colonnes Vehicle, Count |
+| [✍ `bananabench_json`](console/bananabench-json.md) | 0 | Script de la VM console : met stdout en mode ligne par ligne (pour que le processus parent lise la progression en direct), exécute bench.phy |
+| [✍ `bananabench_print`](console/bananabench-print.md) | 0 | Script de la VM console le plus simple : lance bench.physics() de bananabench et ne garde que l'affichage texte (tableau MBeams/s et % temps |
+| [✍ `bananabench_xml`](console/bananabench-xml.md) | 4 | Script de la VM console : lance bananabench sur une liste fixe de 9 véhicules (barstow, burnside, etki, fullsize, moonhawk, pessima, pickup, |
+| [✍ `bananabench`](console/bananabench.md) | 3 | Banc d'essai « bananabench » de la physique des véhicules (version 0.5), exécuté dans la VM console (BeamNG sans interface). Il initialise u |
+| [✍ `benchphysics`](console/benchphysics.md) | 0 | Très ancien petit benchmark de mise à l'échelle de la physique : pour 0 à 8 véhicules, mesure le temps moyen par mise à jour sur 1000 images |
+| [✍ `console_lib`](console/console-lib.md) | 3 | Bibliothèque d'aide de la VM console (BeamNG sans jeu) : crée des objets Lua factices pour que le code de véhicule/physique puisse tourner h |
+| [✍ `json_performance`](console/json-performance.md) | 0 | Script de benchmark de la console (hors jeu) : il compare la vitesse de décodage JSON, d'encodage/décodage lpack (texte et binaire) et de st |
+| [✍ `main`](console/main.md) | 0 | Point d'entrée de la VM Lua « Console » (utilisée pour des outils en ligne de commande, hors jeu). Il règle package.path/cpath, charge exten |
+| [✍ `resave_pcs`](console/resave-pcs.md) | 0 | Script utilitaire de la console qui rouvre puis ré-enregistre toutes les configurations de véhicule (*.pc) du dossier vehicles/. Pour chaque |
+| [✍ `servertests`](console/servertests.md) | 0 | Mini script de la console : il recharge lua/console/unittests via rerequire. Les autres lignes (benchphysics, sp, ul) sont commentées. Aucun |
+| [✍ `simpleload`](console/simpleload.md) | 0 | Script de test de la console : il supprime tous les objets (BeamEngine:deleteAllObjects) puis fait apparaître le véhicule vehicles/pickup à  |
+| [✍ `simtest`](console/simtest.md) | 0 | Script de benchmark de la console : il crée un véhicule pickup avec newVehicle():spawn en (0, 0, 0.1), active BeamEngine.enabled puis mesure |
+| [✍ `test`](console/test.md) | 0 | Fichier de test principal de la console : il charge lua/console/benchphysics et définit deux fonctions globales de test, loadOneVehicle (spa |
+| [✍ `test_dyncol`](console/test_dyncol.md) | 0 | Script de test de la console pour les collisions dynamiques : supprime tous les objets, fait apparaître un pickup en (0, 0, 0.1) puis lance  |
+| [✍ `unittests`](console/unittests.md) | 0 | Tests unitaires de la console pour le type vec3 de mathlib : exactitude (constructeur, tostring, opérateurs + - * / et unaire, égalité) et p |
 

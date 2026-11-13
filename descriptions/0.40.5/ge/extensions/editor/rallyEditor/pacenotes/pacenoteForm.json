@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/editor/rallyEditor/pacenotes/pacenoteForm.lua",
+  "module": "Formulaire principal d'édition d'un pacenote dans l'éditeur de rallye. Il affiche le nom, les actions (Place Vehicle, TODO, Done, Delete..., fusion avec le précédent/suivant), le statut, puis le sous-formulaire selon le mode audio (structuré via structuredForm, personnalisé via customForm, ou freeform avec champ texte, lecture audio et « Generate from Structured »), les métadonnées de calibration, les mesures, et les options (override du mode audio, type de déclencheur). Une confirmation modale précède la suppression. Le module renvoie un constructeur de classe C.",
+  "notes": [
+    "Aucune fonction exportée : on obtient une instance avec require(...)(pacenoteToolsWindow).",
+    "Une aide « Playback Rules » est définie (variables currLap et maxLap, code Lua libre évalué) ; le champ de saisie correspondant est commenté dans ce fichier."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance du formulaire de pacenote.",
+      "functions": {
+        "init": {"desc": "Constructeur : mémorise la fenêtre d'outils et son état, sans pacenote.", "params": {"pacenoteToolsWindow": {"type": "table", "desc": "Fenêtre d'outils des pacenotes (fournit pacenoteToolsState)."}}, "internal": true},
+        "setPacenote": {"desc": "Définit le pacenote édité et réinitialise StructuredForm, CustomForm et MeasurementsForm.", "params": {"pacenote": {"type": "table|nil", "desc": "Pacenote à éditer, ou nil."}}, "internal": false},
+        "clearState": {"desc": "Remet à zéro l'état d'édition (édition en cours, confirmation de suppression) et retire le pacenote.", "internal": false},
+        "draw": {"desc": "Dessine le formulaire dans une zone enfant imgui, ou « No pacenote selected ».", "internal": true}
+      }
+    }
+  }
+}

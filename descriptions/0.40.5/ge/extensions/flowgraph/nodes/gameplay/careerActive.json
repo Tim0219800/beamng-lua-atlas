@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/careerActive.lua",
+  "module": "Nœud flowgraph « Career Active » (catégorie repeat_instant). Teste si le mode carrière est actif via career_career.isActive(). Sorties : enabled (flux si actif), disabled (flux sinon), active (bool caché). Met aussi flow à vrai.",
+  "notes": ["Déclare une dépendance à gameplay_walk alors qu'il utilise career_career (copier-coller probable).", "Le pin de sortie « flow » n'est pas déclaré dans pinSchema mais work y écrit."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Renseigne enabled, disabled et active selon career_career.isActive().", "params": {"args": {"type": "table", "desc": "Arguments du flowgraph"}}},
+        "drawMiddle": {"desc": "Affiche une icône coche ou croix.", "internal": true}
+      }
+    }
+  }
+}

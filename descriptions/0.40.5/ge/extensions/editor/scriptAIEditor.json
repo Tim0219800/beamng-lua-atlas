@@ -1,0 +1,21 @@
+{
+  "path": "lua/ge/extensions/editor/scriptAIEditor.lua",
+  "module": "Éditeur de scénarios ScriptAI : mode d'édition 'Edit ScriptAI Scenario' (icône BNGMicrochip de la barre d'outils) pour créer, éditer et exécuter des trajectoires de véhicules scriptées et un chemin de caméra. Il ouvre plusieurs fenêtres : Script AI Editor (barre de temps lecture/pause/boucle), Scene Vehicles (véhicules et enregistrement), Scene Trajectories (liste), jusqu'à trois fenêtres de trajectoire individuelle, Camera Trajectory et Draw Trajectory. Les trajectoires sont soit basées sur le temps (nodes x, y, z, t), soit sur la vitesse (nodes x, y, z, v). À l'exécution, chaque trajectoire est envoyée au véhicule par ai.startFollowing(...) et le chemin de caméra est joué par core_paths.playPath.",
+  "notes": [
+    "Constantes : incrément de vitesse 0.2778 m/s (1 km/h), vitesse minimale 0.1 m/s, maximale 41.67 m/s (150 km/h) ; axes standard avant (0,1,0) et haut (0,0,1).",
+    "Au lancement, pour une trajectoire basée sur le temps dont le premier noeud a t > 0, ce t devient startDelay et est retranché de tous les noeuds.",
+    "Si la caméra est incluse (isOnExecute), des noeuds de caméra sont ajoutés à t = 0 et t = tEnd s'ils manquent ; le FOV est fixé à 65 et bullettime à 1.",
+    "Sauvegarde/chargement via editor_fileDialog en JSON : les données sont encodées avec lpack.encode dans le champ data (trajectoires, caméra, véhicules {jBeam, config}, temps courant, fenêtres visibles).",
+    "onVehicleSubmitRecording ne fait rien si le mode d'édition actif n'est pas 'Edit ScriptAI Scenario' ; sinon il crée une trajectoire 'recorded_N' (basée sur la vitesse si path[1].v existe, sinon sur le temps).",
+    "onDeactivate masque toutes les fenêtres de l'outil ; onActivate vide la sélection d'objets et affiche la fenêtre principale.",
+    "Les trois fenêtres de trajectoire individuelle sont un maximum fixé par le code (name1 à name3)."
+  ],
+  "functions": {
+    "onEditorGui": {"desc": "Hook de dessin appelé chaque frame de l'UI de l'éditeur : gère souris et gizmos (sélection, glisser, dessin libre), dessine les trajectoires et toutes les fenêtres de l'outil (principale, véhicules, liste, trajectoires, caméra, dessin).", "params": {}, "returns": [], "internal": true},
+    "onEditorInitialized": {"desc": "Hook appelé à l'initialisation du monde-éditeur : crée le mode d'édition scriptAIEditMode (onActivate/onDeactivate, icône, hideObjectIcons) et enregistre les huit fenêtres ; ré-affiche celles qui étaient visibles avant un rechargement.", "params": {}, "returns": [], "internal": true},
+    "onVehicleSubmitRecording": {"desc": "Hook appelé quand l'enregistrement d'un véhicule s'arrête (ai.stopRecording renvoyé à la GE) : détache l'ancienne trajectoire du véhicule et crée une nouvelle trajectoire 'recorded_N' à partir de data.path.", "params": {"vid": {"type": "integer", "desc": "Id du véhicule enregistré."}, "data": {"type": "table", "desc": "Enregistrement contenant path (noeuds avec t ou v)."}}, "returns": [], "internal": true},
+    "onVehicleReplaced": {"desc": "Hook appelé quand un véhicule est remplacé : met à jour le texte et le jBeam des trajectoires liées à cet id.", "params": {"vid": {"type": "integer", "desc": "Id du véhicule remplacé."}}, "returns": [], "internal": true},
+    "onSerialize": {"desc": "Hook de sérialisation (rechargement Lua) : renvoie {d = lpack.encode{...}} avec trajectoires, caméra, temps, sélections et alphas de boutons ; les fenêtres sont notées non visibles.", "params": {}, "returns": [{"type": "table", "desc": "Table {d = chaîne encodée}."}], "internal": true},
+    "onDeserialized": {"desc": "Hook de restauration après rechargement Lua : décode data.d et restaure trajectoires, caméra, temps, identifiants uniques et état des fenêtres.", "params": {"dataIn": {"type": "table", "desc": "Table renvoyée par onSerialize ({d = ...})."}}, "returns": [], "internal": true}
+  }
+}

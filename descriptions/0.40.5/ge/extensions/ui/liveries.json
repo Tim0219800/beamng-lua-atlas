@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/ui/liveries.lua",
+  "module": "Orchestrateur de l'éditeur de livrées (peinture/décalcomanies) de l'UI. Il s'appuie sur l'API d'éditeur `editor_api_dynamicDecals` : à l'ouverture il mémorise le skin actuel du véhicule joueur, active le skin `dynamicTextures`, prépare la pile de calques (livrée vierge à la couleur du véhicule ou sauvegarde existante) et démarre la caméra. À la fermeture il restaure le skin d'origine.",
+  "usage": "ui_liveries.setup()          -- livrée vierge\nui_liveries.setup('maSauvegarde') -- charge une sauvegarde\n-- ...\nui_liveries.teardown()",
+  "notes": [
+    "setup renvoie true sans rien refaire si l'éditeur tourne déjà ; renvoie false si l'API de décalcomanies est absente.",
+    "La valeur renvoyée par setup est le succès du chargement de la pile de calques (false si la sauvegarde n'a pas pu être chargée : une livrée vierge est alors créée quand même).",
+    "Le curseur de décalcomanie live n'est affiché que lorsque l'écran de transformation le demande (setProjectDynamicDecalsState(false) au démarrage)."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "editor_api_dynamicDecals, ui_liveries_camera, ui_liveries_fill, ui_liveries_saves."}
+  },
+  "functions": {
+    "setup": {
+      "desc": "Démarre l'éditeur de livrées sur le véhicule joueur (skin dynamicTextures, calques, historique vidé, caméra).",
+      "params": {"saveName": {"type": "string|nil", "desc": "Nom d'une sauvegarde à charger ; nil = livrée vierge à la couleur du véhicule."}},
+      "returns": [{"type": "boolean", "desc": "true si la pile de calques a été initialisée correctement."}]
+    },
+    "teardown": {
+      "desc": "Arrête l'éditeur : caméra, désactivation de l'API, restauration du skin précédent et nettoyage du fill. Sans effet si non démarré.",
+      "returns": [{"type": "nil", "desc": ""}]
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque image par le système d'extensions ; appelle api.onUpdate_() tant que l'éditeur tourne.",
+      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."}, "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}},
+      "internal": true
+    },
+    "isRunning": {
+      "desc": "Indique si l'éditeur de livrées est actif.",
+      "returns": [{"type": "boolean", "desc": "true entre setup et teardown."}]
+    }
+  }
+}

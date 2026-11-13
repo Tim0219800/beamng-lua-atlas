@@ -4,52 +4,59 @@
 
 **Accès :** `require("libs/inspect/inspect")`
 
-inspect.lua 3.1.0
-   http://github.com/kikito/inspect.lua
-   MIT LICENSE
-   Copyright (c) 2013 Enrique García Cota
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the
-   "Software"), to deal in the Software without restriction, including
-   without limitation the rights to use, copy, modify, merge, publish,
-   distribute, sublicense, and/or sell copies of the Software, and to
-   permit persons to whom the Software is furnished to do so, subject to
-   the following conditions:
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-   IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-   CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+inspect.lua 3.1.0 : bibliothèque tierce (Enrique García Cota, licence MIT) qui transforme n'importe quelle valeur Lua en chaîne lisible : tables triées, indentation, références circulaires repérées par <id>, métatables affichées. Le module est appelable : inspect(t, options). Pratique pour déboguer.
+
+## Exemple
+
+```lua
+local inspect = require("libs/inspect/inspect")
+print(inspect({1, 2, a = {b = true}}, {depth = 2}))
+```
+
+## Remarques
+
+- Options de inspect.inspect : depth (profondeur max, défaut illimitée), newline (défaut "\n"), indent (défaut deux espaces), process (fonction process(item, path) appliquée récursivement avant l'affichage).
+- Les fonctions, userdata et threads sont affichés sous la forme <type id>.
+- Les champs KEY et METATABLE sont des marqueurs internes utilisés dans process (déduit du code).
+- `i` est listé comme globale affectée par l'extracteur automatique ; c'est en pratique une variable de boucle locale du fichier (à vérifier, non essentiel).
 
 ## Fonctions
 
 | Fonction | Description | Ligne |
 |---|---|---|
-| `libs_inspect_inspect.inspect(root, options)` |  | 298 |
+| `libs_inspect_inspect.inspect(root, options)` | Renvoie une représentation textuelle de root. Peut aussi s'appeler directement : inspect(root, options). | 298 |
+
+### Détail des paramètres
+
+#### `libs_inspect_inspect.inspect(root, options)`
+
+Renvoie une représentation textuelle de root. Peut aussi s'appeler directement : inspect(root, options).
+
+- `root` (*any*) : Valeur à afficher
+- `options` (*table|nil*) : {depth, newline, indent, process}
+- **renvoie** : string Texte formaté
 
 ## Champs
 
 | Champ | Type | Description |
 |---|---|---|
-| `KEY` | any |  |
-| `METATABLE` | any |  |
+| `KEY` | any | Marqueur de clé utilisé dans le chemin passé à options.process. |
+| `METATABLE` | any | Marqueur de métatable utilisé dans le chemin passé à options.process. |
 
 ## Classe `Inspector`
 
+Objet interne qui accumule le texte dans un tampon pendant le parcours de la valeur.
+
 | Méthode | Description | Ligne |
 |---|---|---|
-| `Inspector:alreadyVisited(v)` |  | 208 |
-| `Inspector:down(f)` |  | 198 |
-| `Inspector:getId(v)` |  | 212 |
-| `Inspector:putKey(k)` |  | 223 |
-| `Inspector:putTable(t)` |  | 230 |
-| `Inspector:putValue(v)` |  | 281 |
-| `Inspector:puts(...)` |  | 188 |
-| `Inspector:tabify()` |  | 204 |
+| `Inspector:alreadyVisited(v)` | Indique si la valeur a déjà un identifiant (table déjà rencontrée). | 208 |
+| `Inspector:down(f)` | Exécute f un niveau plus profond (incrémente puis décrémente le niveau). | 198 |
+| `Inspector:getId(v)` | Renvoie l'identifiant numérique de la valeur, selon son type, en le créant au besoin. | 212 |
+| `Inspector:putKey(k)` | Écrit une clé de table : identifiant brut ou [clé] entre crochets. | 223 |
+| `Inspector:putTable(t)` | Écrit une table : parties séquentielle et non séquentielle, métatable, limite de profondeur, références répétées. | 230 |
+| `Inspector:putValue(v)` | Écrit une valeur selon son type (chaîne échappée, nombre, booléen, table, ou <type id>). | 281 |
+| `Inspector:puts(...)` | Ajoute des morceaux de texte au tampon. | 188 |
+| `Inspector:tabify()` | Ajoute un saut de ligne suivi de l'indentation du niveau courant. | 204 |
 
 **Globales affectées :** `i`
 

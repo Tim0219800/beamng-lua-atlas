@@ -1,0 +1,56 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/scriptAI/playRecording.lua",
+  "module": "Nœud « Play ScriptAI Recording » (couleur ai, repeat_p_duration). Fait rejouer à un véhicule un enregistrement ScriptAI lu dans un fichier .track.json. Entrées : start (impulsion), stop (impulsion), fileName, vehId (sans valeur = joueur), loopCount (-1 par défaut si vide). Le fichier est cherché relativement au projet puis dans /replays/scriptai/tracks/. Donnée renderDebug : dessine le tracé. Pas de pins de sortie.",
+  "notes": [
+    "Le commentaire du fichier précise que la catégorie est techniquement f_duration mais qu'aucun callback n'existe pour des pins de fin."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Initialise recording=nil, data.renderDebug=false et running=false.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Limite le sélecteur de fichier de fileName aux fichiers .track.json.",
+          "internal": true
+        },
+        "getVeh": {
+          "desc": "Renvoie le véhicule dont l'id est donné en entrée, ou le véhicule du joueur (getPlayerVehicle(0)) sans entrée.",
+          "internal": false
+        },
+        "play": {
+          "desc": "Charge l'enregistrement, fixe loopCount et loopType « firstOnlyTeleport » puis envoie ai.startFollowing(recording).",
+          "internal": false
+        },
+        "stop": {
+          "desc": "Passe running à false et envoie ai.stopFollowing() au véhicule.",
+          "internal": false
+        },
+        "loadRecording": {
+          "desc": "Lit le fichier JSON en essayant trois emplacements (relatif au projet, dossier des pistes, dossier des pistes + extension) et le mémorise.",
+          "internal": false
+        },
+        "work": {
+          "desc": "Appelle play sur l'impulsion start, ou stop sur l'impulsion stop.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche un bouton Load, l'état et les infos de l'enregistrement (véhicule, niveau, nombre de points, durée) ; dessine le tracé si renderDebug.",
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "Constructeur de nœud."
+            },
+            "style": {
+              "type": "table",
+              "desc": "Style du nœud."
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

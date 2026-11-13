@@ -1,0 +1,28 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/starThresholds.lua",
+  "module": "Calcule les seuils de temps des étoiles (or, argent, bronze) d'une spéciale de rallye à partir d'un temps de référence créé à la main (baseline) et de la longueur de l'étape. Or = baseline x 1,03 (rythme serré, aucune marge pour les resets). Argent et bronze = baseline x multiplicateur d'allure + une marge additive qui pardonne un certain nombre de resets par km.",
+  "usage": "local t = gameplay_rally_starThresholds.compute(600, 12.5)\n-- t.gold, t.silver, t.bronze en secondes (arrondis au dixième)",
+  "notes": [
+    "Formules : gold = base*goldMult ; silver = base*silverPaceMult + silverResetsPerKm*lengthKm*perResetSeconds ; bronze = base*bronzePaceMult + bronzeResetsPerKm*lengthKm*perResetSeconds.",
+    "Si la longueur est absente ou nulle, la marge de resets vaut 0 (seuils d'allure uniquement)."
+  ],
+  "fields": {
+    "goldMult": {"type": "number", "desc": "Multiplicateur d'allure de l'or (1.03), volontairement serré."},
+    "silverPaceMult": {"type": "number", "desc": "Multiplicateur d'allure de l'argent (1.13)."},
+    "bronzePaceMult": {"type": "number", "desc": "Multiplicateur d'allure du bronze (1.23)."},
+    "silverResetsPerKm": {"type": "number", "desc": "Resets par km pardonnés pour l'argent (0.9, soit ~2 resets sur les plus courtes spéciales d'environ 2,2 km)."},
+    "bronzeResetsPerKm": {"type": "number", "desc": "Resets par km pardonnés pour le bronze (2.233, soit ~5 resets sur les plus courtes spéciales)."},
+    "perResetSeconds": {"type": "number", "desc": "Secondes ajoutées par reset dans la marge : pénalité de chrono (~5 s) plus perte d'élan (~3,5 s), soit 8.5."}
+  },
+  "functions": {
+    "compute": {
+      "desc": "Calcule les seuils or/argent/bronze en secondes, arrondis au dixième.",
+      "params": {
+        "baselineSeconds": {"type": "number|string", "desc": "Temps de référence de l'étape en secondes (converti par tonumber, 0 si invalide)"},
+        "lengthKm": {"type": "number|string", "desc": "Longueur de l'étape en km (0 si invalide)"}
+      },
+      "returns": [{"type": "table", "desc": "{gold=number, silver=number, bronze=number} en secondes"}],
+      "internal": false
+    }
+  }
+}

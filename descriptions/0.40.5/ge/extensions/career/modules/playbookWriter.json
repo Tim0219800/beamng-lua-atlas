@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/career/modules/playbookWriter.lua",
+  "module": "Enregistre l'historique des missions jouées (missionId et étoiles) dans playbook.json du dossier career de la sauvegarde. Chargé seulement quand la carrière est active.",
+  "notes": [
+    "Le fichier est ignoré (liste vide) si info.json de la sauvegarde a une version < moduleVersion (42).",
+    "La liste n'est jamais lue par ce module : il ne fait qu'ajouter et sauvegarder."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : career_career."}
+  },
+  "functions": {
+    "addMissionPlayedEntry": {
+      "desc": "Ajoute {missionId, stars} à la fin du playbook en mémoire.",
+      "params": {
+        "missionId": {"type": "string", "desc": "Identifiant de la mission."},
+        "stars": {"type": "any", "desc": "Résultat en étoiles (déduit du code)."}
+      },
+      "internal": false
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook au chargement de l'extension : charge le playbook si la carrière est active (renvoie false sinon).",
+      "params": {},
+      "internal": true
+    },
+    "onCareerActive": {
+      "desc": "Hook : recharge le playbook quand la carrière devient active.",
+      "params": {"active": {"type": "boolean", "desc": "Rien si false."}},
+      "internal": true
+    },
+    "onSaveCurrentProfile": {
+      "desc": "Hook de sauvegarde : écrit le playbook dans <save>/career/playbook.json.",
+      "params": {"currentSavePath": {"type": "string", "desc": "Dossier de sauvegarde."}},
+      "internal": true
+    }
+  }
+}

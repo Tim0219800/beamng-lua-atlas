@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/gridCap.lua",
+  "module": "Construit un « chapeau » (capot) de triangles sur un contour qui doit suivre un champ de hauteur : une grille carrée alignée sur le fil (grain) du contour, découpée à ce contour. Chaque cellule entièrement dans le contour donne deux triangles aux hauteurs du champ ; seules les cellules traversées par le contour sont découpées (polyBool), ce qui évite les triangles très longs ou en éclat. Un passage de Delaunay améliore ensuite le maillage.",
+  "notes": [
+    "build renvoie toujours la même table 'mesh' réutilisée : { x, y, z (positions), tri (indices 1-based, 3 par triangle), nv, nt }. Elle n'est valable que jusqu'au prochain build : copier si besoin.",
+    "Les points sont soudés au dixième de millimètre (WELD = 1e4) ; les cellules découpées avec trous sont mises en cache (20000 par génération, deux générations conservées).",
+    "Un point d'un anneau dont les noeuds portent une hauteur (p.z) garde la droite entre eux ; un anneau sans hauteur prend celle du champ."
+  ],
+  "functions": {
+    "build": {
+      "desc": "Construit le chapeau sur les anneaux donnés (le contour extérieur, puis ses trous ; ouverts ou fermés) en coordonnées monde. Travaille dans le repère du grain où les cellules sont carrées. Renvoie nil si aucun triangle n'est produit.",
+      "params": {
+        "rings": {"type": "table[]", "desc": "Anneaux de points {x, y, z?} : le contour puis les trous."},
+        "cf": {"type": "table", "desc": "Le grain : ax, ay (le long), inX, inY (en travers)."},
+        "zAt": {"type": "function", "desc": "Champ de hauteur zAt(x, y) -> z, en monde."},
+        "cell": {"type": "number", "desc": "Pas de la grille (m)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Le maillage plat { x, y, z, tri, nv, nt } ou nil."}],
+      "internal": false
+    },
+    "reaching": {
+      "desc": "Filtre les anneaux qui peuvent toucher une cellule de la grille sur laquelle le chapeau du contour 'outer' est posé (boîte dans le repère du grain, arrondie à la grille, plus un petit jeu). Les autres ne changent rien au résultat.",
+      "params": {
+        "outer": {"type": "table", "desc": "Contour extérieur."},
+        "rings": {"type": "table[]", "desc": "Anneaux candidats."},
+        "cf": {"type": "table", "desc": "Le grain (ax, ay, inX, inY)."},
+        "cell": {"type": "number", "desc": "Pas de la grille (m)."}
+      },
+      "returns": [{"type": "table[]", "desc": "Sous-liste des anneaux atteignables."}],
+      "internal": false
+    }
+  }
+}

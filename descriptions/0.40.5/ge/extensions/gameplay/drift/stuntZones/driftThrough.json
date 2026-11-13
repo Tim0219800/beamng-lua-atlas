@@ -1,0 +1,34 @@
+{
+  "path": "lua/ge/extensions/gameplay/drift/stuntZones/driftThrough.lua",
+  "module": "Type de zone de cascade « driftThrough » (passage serré) : le joueur doit traverser en drift une boîte orientée (OBB, centre pos, demi-axes dérivés de rot et scl) et en ressortir. Le module renvoie un constructeur appelé par gameplay_drift_stuntZones.setStuntZones ; ce n'est pas une extension. En cas de réussite, émet onAnyStuntZoneAccomplished avec le sous-hook onDriftThroughAccomplished (angle de drift et points de base driftThrough).",
+  "notes": [
+    "La zone est validée à la sortie de la boîte : tant que le joueur est dedans il n'y a rien ; au premier relevé « dehors » usedFlag passe à vrai, puis detectStunt appelle accomplish. Détails : isPlayerInside n'est appelé que quand le joueur drifte, donc la sortie n'est détectée que s'il drifte encore.",
+    "Si aucun driftActiveData n'existe (test imgui), l'angle envoyé vaut 30°.",
+    "Cooldown de zoneData.cooldown secondes après réussite. Dessin : deux lignes qui se colorent (vert prêt, blanc/rouge pendant le cooldown)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Zone driftThrough. Champs : data = {id, zoneData = {pos, scl (vec3), rot (quat), cooldown}, x, y, z (demi-axes), drawData = {pointA..D}}, activeData = {isActive, currCooldown, usedFlag}.",
+      "functions": {
+        "reset": {"desc": "Réinitialise activeData (cooldown 0, usedFlag false)."},
+        "init": {
+          "desc": "Constructeur interne : mémorise les données de la zone et appelle reset().",
+          "params": {"data": {"type": "table", "desc": "{id, zoneData, x, y, z, drawData, nearDist}."}},
+          "internal": true
+        },
+        "accomplish": {"desc": "Réussite : remet usedFlag à false, démarre le cooldown et émet onAnyStuntZoneAccomplished (sous-hook onDriftThroughAccomplished avec currDegAngle et points)."},
+        "detectStunt": {"desc": "Appelé quand le joueur drifte dans la zone ; appelle accomplish si usedFlag est vrai."},
+        "isAvailable": {
+          "desc": "Indique si le cooldown est écoulé.",
+          "returns": [{"type": "boolean", "desc": "true si la zone peut être validée."}]
+        },
+        "isPlayerInside": {
+          "desc": "Teste avec containsOBB_point si le véhicule est dans la boîte ; s'il n'y est pas, met usedFlag à true.",
+          "returns": [{"type": "boolean", "desc": "true si le joueur est dans la boîte."}]
+        },
+        "onUpdate": {"desc": "Appelé à chaque frame par le gestionnaire : dessine les lignes.", "internal": true},
+        "sendDecals": {"desc": "Dessine les deux bords de la zone avec debugDrawer:drawLineInstance (si le tracé est activé).", "internal": true}
+      }
+    }
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "path": "lua/ge/extensions/gameplay/util/damageAssessment.lua",
+  "module": "Évalue les dégâts d'un véhicule : niveau global (aucun, léger, modéré, sévère) d'après map.objects[id].damage, et répartition par zone. Pour la répartition, la boîte orientée du véhicule est découpée en 27 cellules (3x3x3) dont on lit les dégâts de poutres et de collision ; les cellules sont regroupées en zones nommées (Front, Front Left, Rear, Top, Left…). Utilisé par gameplay_util_crashDetection pour dire où un impact a eu lieu.",
+  "usage": "local lvl = gameplay_util_damageAssessment.getOverallDamageLevel(be:getPlayerVehicleID(0))\nprint(lvl.damageName, lvl.damageSeverity)\nlocal avant = gameplay_util_damageAssessment.getSectionsDamageInfoRaw(vehId)\n-- ... collision ...\nlocal res = gameplay_util_damageAssessment.getTextualCollisionDamageLocations({vehId = vehId, oldSectionsDamageRaw = avant})\nprint(res.mostDamagedLocation)",
+  "notes": [
+    "Seuils de getOverallDamageLevel : <= 50 « No damage » (gravité 0) ; au-dessus, Minor jusqu'à 10000, Moderate dès 10000, Severe dès 30000 (et au-delà de 50000).",
+    "Les cellules sont indexées de 0 à 26 ; x = floor((i%9)/3), y = floor(i/9), z = i%3.",
+    "BUG probable : damageLocationScore n'est jamais renseigné (seul damageScore l'est), donc bestDamageLocation vaut toujours nil et bestDamageScore 0 ; seul mostDamagedLocation est exploitable.",
+    "BUG probable : la clé de zone s'appelle `fontLeft` (faute de frappe, sans effet sur le nom affiché « Front Left »). Les ids 7 sont dupliqués (rearCenter et top) et le nom « Rear » est utilisé à la fois par rearCenter et rear : dans damagedLocations, la seconde entrée écrase la première.",
+    "Si aucune cellule n'a subi de dégât, intensity divise par 0 (maxCellDamage = 0) et peut produire NaN.",
+    "getTextualCollisionDamageLocations / getTextualBeamDamageLocations modifient la table `data` reçue : ses oldSectionsDamageRaw (et newSectionsDamageInfoRaw s'il est fourni) sont remplacés par de simples nombres par cellule.",
+    "Sans oldSectionsDamageRaw, l'état précédent est supposé à 0 pour toutes les cellules ; sans vehId, le véhicule du joueur 0 est utilisé.",
+    "Les dégâts affichés en debug (setDebug(true)) dessinent les 27 cellules en magenta chaque image."
+  ],
+  "functions": {
+    "getOverallDamageLevel": {
+      "desc": "Renvoie le niveau de dégâts global d'un véhicule d'après map.objects[vehId].damage.",
+      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule (doit exister dans map.objects)."}},
+      "returns": [{"type": "table", "desc": "{damageName = \"No damage\"|\"Minor\"|\"Moderate\"|\"Severe\", damageSeverity = 0..3}"}],
+      "internal": false
+    },
+    "getSectionsDamageInfoRaw": {
+      "desc": "Lit les dégâts de poutres et de collision des 27 cellules du véhicule.",
+      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule ; joueur 0 si nil."}},
+      "returns": [{"type": "table<integer, table>", "desc": "Indices 0 à 26 -> {sectionBeamDamage, sectionCollisionDamage}."}],
+      "internal": false
+    },
+    "calculateDamageVariation": {
+      "desc": "Mesure l'hétérogénéité d'une série de dégâts : écart-type divisé par la moitié de maxValue, plafonné à 1.",
+      "params": {
+        "tableNumbers": {"type": "number[]", "desc": "Dégâts par cellule."},
+        "maxValue": {"type": "number|nil", "desc": "Valeur de référence (500000 par défaut)."}
+      },
+      "returns": [{"type": "number", "desc": "0 (uniforme ou moins de 2 valeurs) à 1."}],
+      "internal": false
+    },
+    "getTextualCollisionDamageLocations": {
+      "desc": "Compare les dégâts de collision actuels à un état précédent et renvoie, par zone nommée, total, maximum, moyenne, variation, intensité et score. Sert à savoir où un impact a eu lieu.",
+      "params": {"data": {"type": "table|nil", "desc": "{vehId, oldSectionsDamageRaw (sortie de getSectionsDamageInfoRaw), newSectionsDamageInfoRaw (facultatif)}."}},
+      "returns": [{"type": "table", "desc": "{damagedLocations (par nom de zone), mostDamagedLocation, totalDamage, bestDamageLocation, bestDamageScore}"}],
+      "internal": false
+    },
+    "getTextualBeamDamageLocations": {
+      "desc": "Identique à getTextualCollisionDamageLocations mais sur les dégâts de poutres (déformation), pour savoir où le véhicule s'est abîmé.",
+      "params": {"data": {"type": "table|nil", "desc": "Même format."}},
+      "returns": [{"type": "table", "desc": "Même format."}],
+      "internal": false
+    },
+    "onSerialize": {
+      "desc": "Hook appelé lors du rechargement des extensions : sauvegarde le drapeau debug.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{debug}"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook appelé après rechargement : restaure le drapeau debug.",
+      "params": {"data": {"type": "table", "desc": "Table de onSerialize."}},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque image ; en mode debug, redessine les cellules du véhicule du joueur.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "setDebug": {
+      "desc": "Active ou désactive le dessin de debug des cellules de dégâts.",
+      "params": {"newDebug": {"type": "boolean", "desc": "true pour activer."}},
+      "returns": [],
+      "internal": false
+    }
+  }
+}
