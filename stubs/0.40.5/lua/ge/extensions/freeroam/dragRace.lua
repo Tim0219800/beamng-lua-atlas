@@ -1,0 +1,123 @@
+---@meta
+-- tim19Atlas stub generated from lua/ge/extensions/freeroam/dragRace.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
+-- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
+
+--- Course de dragster au quart de mile contre une IA (« drag_opponent ») sur les dragstrips des niveaux gridmap_v2 et west_coast_usa. Gère l'arbre de départ (lumières de pré-stage, stage, ambres, vert, rouge), la mise en place de l'adversaire IA (positions, pré-stage/stage/départ, nitro/JATO), l'alignement du joueur sur la ligne, la détection de faux départ, le chronométrage jusqu'au déclencheur d'arrivée, les afficheurs 7 segments (temps et vitesse) et l'écran de résultats UI. S'appuie sur des objets de scène nommés (Prestagelight_l, Amberlight1_R, display_time_1_l, dragTrigger, startTrigger_L…) et sur les BeamNGTrigger du niveau. Global : freeroam_dragRace.
+--- Accès : extension `freeroam_dragRace` : `extensions.load("freeroam_dragRace")`, puis la globale `freeroam_dragRace`
+---@class freeroam_dragRace
+freeroam_dragRace = {}
+
+--- Appelé par le bouton « Accept/Configure » du dialogue du dragstrip : ouvre l'écran d'aperçu (displayOverview(true, false)) qui passe la simulation au ralenti (1/100) et navigue vers menu.dragRaceOverview.
+---Source : lua/ge/extensions/freeroam/dragRace.lua:728
+function freeroam_dragRace.accept() end
+
+--- Ferme l'aperçu : remet la simulation à 1x, le FOV à 65 et rétablit la caméra précédente.
+---Source : lua/ge/extensions/freeroam/dragRace.lua:298
+function freeroam_dragRace.closeOverview() end
+
+--- Lit ou règle l'utilisation de la caméra cinématique (externe) pendant la course.
+---Source : lua/ge/extensions/freeroam/dragRace.lua:808
+---@param value boolean|nil Nouvelle valeur ; nil pour seulement lire.
+---@return boolean  Valeur actuelle.
+function freeroam_dragRace.enableCinematicCam(value) end
+
+--- Lit ou règle l'arbre « pro » (compte à rebours de 2 s puis les 3 ambres 0.4 s puis le vert) au lieu de l'arbre classique (ambres successifs 1.0/1.5/2.0 s, vert à 2.5 s).
+---Source : lua/ge/extensions/freeroam/dragRace.lua:815
+---@param val boolean|nil Nouvelle valeur ; nil pour seulement lire.
+---@return boolean  Valeur actuelle.
+function freeroam_dragRace.enableProTree(val) end
+
+--- Quitte la course : masque le menu, ferme le dialogue et l'aperçu, supprime l'objet scène drag_opponent, oublie l'adversaire et ré-initialise le module (onExtensionLoaded).
+---Source : lua/ge/extensions/freeroam/dragRace.lua:732
+function freeroam_dragRace.exit() end
+
+--- Hook des déclencheurs du niveau : dialogue d'entrée/sortie (dragTrigger), arrivée (endTrigger : mise à jour des afficheurs et des résultats, arrêt de l'IA), voie adverse (laneTrigger_L), enregistrement des véhicules (startTrigger_R/L) et préparation (dragTrigger_L).
+---*(interne : appelée par le moteur ou la boucle principale)*
+---Source : lua/ge/extensions/freeroam/dragRace.lua:620
+---@param data table {triggerName, event ('enter'|'exit'), subjectID}
+function freeroam_dragRace.onBeamNGTrigger(data) end
+
+--- Hook de fin de niveau : vide les références de lumières, afficheurs, véhicules, déclencheurs et résultats.
+---*(interne : appelée par le moteur ou la boucle principale)*
+---Source : lua/ge/extensions/freeroam/dragRace.lua:867
+function freeroam_dragRace.onClientEndMission() end
+
+--- Hook de chargement : cherche les lumières, afficheurs (display_time_i_l/r, display_speed_i_l/r, i = 1..5) et déclencheurs de la scène, masque les afficheurs et fixe les positions de reset selon le niveau.
+---*(interne : appelée par le moteur ou la boucle principale)*
+---Source : lua/ge/extensions/freeroam/dragRace.lua:742
+function freeroam_dragRace.onExtensionLoaded() end
+
+--- Hook de déchargement : masque le menu, ferme dialogue et aperçu, supprime drag_opponent.
+---*(interne : appelée par le moteur ou la boucle principale)*
+---Source : lua/ge/extensions/freeroam/dragRace.lua:859
+function freeroam_dragRace.onExtensionUnloaded() end
+
+--- Hook avant rendu, cœur de la course : fait progresser le compte à rebours (starttimer en temps simulé), le chrono, les messages d'alignement du joueur (distance à la ligne en m), le faux départ et les phases pré-stage/stage/départ de l'IA.
+---*(interne : appelée par le moteur ou la boucle principale)*
+---Source : lua/ge/extensions/freeroam/dragRace.lua:333
+---@param dtReal number Durée réelle (s).
+---@param dtSim number Durée simulée (s), utilisée pour les timers.
+---@param dtRaw number Durée brute (s).
+function freeroam_dragRace.onPreRender(dtReal, dtSim, dtRaw) end
+
+--- Exporté mais valant nil (aucune fonction locale onUpdate définie). (assignée dynamiquement)
+---*(interne : appelée par le moteur ou la boucle principale)*
+---Source : lua/ge/extensions/freeroam/dragRace.lua:dyn
+function freeroam_dragRace.onUpdate() end
+
+--- Hook de suppression de véhicule : oublie le joueur ou l'adversaire et masque les lumières.
+---*(interne : appelée par le moteur ou la boucle principale)*
+---Source : lua/ge/extensions/freeroam/dragRace.lua:550
+---@param id integer Id du véhicule.
+function freeroam_dragRace.onVehicleDestroyed(id) end
+
+--- Hook de reset de véhicule : ferme le dialogue si c'est le joueur dans le déclencheur ; repositionne l'adversaire (setupVehicle) s'il s'agit de drag_opponent.
+---*(interne : appelée par le moteur ou la boucle principale)*
+---Source : lua/ge/extensions/freeroam/dragRace.lua:791
+---@param vid integer Id du véhicule.
+function freeroam_dragRace.onVehicleResetted(vid) end
+
+--- Hook d'apparition : si c'est l'adversaire, masque le menu et le place (setupVehicle) ; retrouve aussi le véhicule joueur nommé « thePlayer ».
+---*(interne : appelée par le moteur ou la boucle principale)*
+---Source : lua/ge/extensions/freeroam/dragRace.lua:541
+---@param vehicleID integer Id du véhicule.
+function freeroam_dragRace.onVehicleSpawned(vehicleID) end
+
+--- Cache tous les objets lumineux de l'arbre de départ.
+---Source : lua/ge/extensions/freeroam/dragRace.lua:107
+function freeroam_dragRace.resetLights() end
+
+--- Redémarre : reset de l'adversaire et du joueur, retour au menu, simulation à vitesse normale, caméra orbit.
+---Source : lua/ge/extensions/freeroam/dragRace.lua:717
+function freeroam_dragRace.restartRace() end
+
+--- Choisit et fait apparaître l'adversaire (core_vehicles.spawnNewVehicle avec vehicleName 'drag_opponent', plaque '2slow'), réinitialise la course et les afficheurs, et replace le joueur sur la ligne de départ si besoin.
+---Source : lua/ge/extensions/freeroam/dragRace.lua:822
+---@param selection table {model, config, color} (par ex. un élément de selectRandomOpponent).
+function freeroam_dragRace.selectOpponent(selection) end
+
+--- Tire au hasard une config de voiture ou camion ; avec sameClass=true, restreint aux configs dont le 0-100 km/h est à ±1 s de celui du véhicule du joueur. Ajoute Brand et Country du modèle pour l'UI.
+---Source : lua/ge/extensions/freeroam/dragRace.lua:562
+---@param sameClass boolean|nil true pour une classe de performance similaire.
+---@return table  Entrée de config véhicule (model_key, key, Brand, Country…).
+function freeroam_dragRace.selectRandomOpponent(sameClass) end
+
+--- Choisit le niveau pour lequel les positions et caméras sont codées (gridmap_v2 ou west_coast_usa) et réinitialise le module.
+---Source : lua/ge/extensions/freeroam/dragRace.lua:878
+---@param lvl string Nom du niveau.
+function freeroam_dragRace.setLevel(lvl) end
+
+--- Allume le pré-stage de l'IA et fait avancer ou retenir l'adversaire selon que le joueur est prêt ; voir le bug (queLuaComuemand) dans les notes.
+---*(interne : appelée par le moteur ou la boucle principale)*
+---Source : lua/ge/extensions/freeroam/dragRace.lua:158
+function freeroam_dragRace.setupPrestage() end
+
+--- Allume le feu de stage de l'IA et la fait s'approcher de la ligne (vitesse 5, agressivité 0).
+---*(interne : appelée par le moteur ou la boucle principale)*
+---Source : lua/ge/extensions/freeroam/dragRace.lua:179
+function freeroam_dragRace.setupStage() end
+
+--- Exporté mais valant nil : aucune implémentation dans ce fichier (voir notes). (assignée dynamiquement)
+---Source : lua/ge/extensions/freeroam/dragRace.lua:dyn
+function freeroam_dragRace.startRace() end
+

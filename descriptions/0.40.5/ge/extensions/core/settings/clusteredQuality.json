@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/core/settings/clusteredQuality.lua",
+  "module": "Préréglages de qualité pour l'éclairage « clustered » (lumières locales groupées) et leurs ombres. Chaque niveau (Lowest, Low, Normal, High, Ultra) fixe des propriétés de l'objet moteur global ClusterShading. Utilisé par le système de réglages graphiques (graphic.lua) ; un moddeur peut appeler applyLevel directement.",
+  "usage": "core_settings_clusteredQuality.applyLevel(\"High\")",
+  "notes": [
+    "Si ClusterShading n'existe pas ou si le niveau est inconnu, applyLevel ne fait rien (retour silencieux).",
+    "Contrairement aux autres modules de qualité, il n'utilise pas VariableRegistry : il écrit directement dans ClusterShading."
+  ],
+  "fields": {
+    "qualityLevels": {
+      "type": "table<string, table>",
+      "desc": "Préréglages par nom de niveau. Chaque entrée contient minLightScreenSize (taille écran minimale d'une lumière, fraction), lightFlares (boolean), shadowMaxCasters (nombre max de lumières projetant une ombre), shadowFallbackFrames (nombre d'images), shadowOversample (facteur de suréchantillonnage), shadowBubble (facteur). Niveaux : Lowest, Low, Normal, High, Ultra."
+    }
+  },
+  "functions": {
+    "applyLevel": {
+      "desc": "Copie le préréglage du niveau demandé dans les propriétés de ClusterShading (minLightScreenSize, lightFlares, shadowMaxCasters, shadowFallbackFrames, shadowOversample, shadowBubble).",
+      "params": {"level": {"type": "string", "desc": "Nom du niveau : Lowest, Low, Normal, High ou Ultra."}},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

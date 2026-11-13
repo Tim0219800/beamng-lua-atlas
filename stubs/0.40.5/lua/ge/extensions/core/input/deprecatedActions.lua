@@ -1,0 +1,93 @@
+---@meta
+-- tim19Atlas stub generated from lua/ge/extensions/core/input/deprecatedActions.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
+-- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
+
+--- Table de données (le fichier retourne une table) qui associe d'anciens noms d'actions d'entrée à leur remplaçant (`replacement`) ou les déclare abandonnés (`obsolete = true`). Consultée par core_input_actions.upgradeAction pour migrer les anciens fichiers de bindings. Un moddeur ne l'appelle pas directement ; il peut y chercher le nom actuel d'une ancienne action.
+--- Accès : extension `core_input_deprecatedActions` : `extensions.load("core_input_deprecatedActions")`, puis la globale `core_input_deprecatedActions`
+---@class core_input_deprecatedActions
+---@field accelerate_direct table {replacement = 'accelerate'}.
+---@field annotatedScreenShot table
+---@field brake_direct table {replacement = 'brake'}.
+---@field camera_hotkey_0 table
+---@field camera_hotkey_0_mod1 table
+---@field camera_hotkey_1 table
+---@field camera_hotkey_1_mod1 table
+---@field camera_hotkey_2 table
+---@field camera_hotkey_2_mod1 table
+---@field camera_hotkey_3 table
+---@field camera_hotkey_3_mod1 table
+---@field camera_hotkey_4 table
+---@field camera_hotkey_4_mod1 table
+---@field camera_hotkey_5 table
+---@field camera_hotkey_5_mod1 table
+---@field camera_hotkey_6 table
+---@field camera_hotkey_6_mod1 table
+---@field camera_hotkey_7 table
+---@field camera_hotkey_7_mod1 table
+---@field camera_hotkey_8 table
+---@field camera_hotkey_8_mod1 table
+---@field camera_hotkey_9 table
+---@field camera_hotkey_9_mod1 table
+---@field clear_console table
+---@field clutch_direct table {replacement = 'clutch'}.
+---@field cui_advanced table
+---@field cui_cancel table
+---@field cycle_metrics_back table
+---@field cycle_metrics_fwd table
+---@field debugmode_toggle_coltris table
+---@field decrease_gamepad_zoom table
+---@field decrease_gamepad_zoom2 table
+---@field delete_ai_node table
+---@field delete_decal table
+---@field delete_meshRoad_node table
+---@field delete_river_node table
+---@field delete_road_node table
+---@field gamepadPitch table
+---@field gamepadYaw table
+---@field grabNodeForce table
+---@field grabNodeLock table
+---@field grabNodeModeToggle table
+---@field grabNodeToggle table
+---@field handle_escape table {replacement = 'toggleMenues'}.
+---@field hide_ui table {replacement = 'toggleUi'}.
+---@field increase_gamepad_zoom table
+---@field increase_gamepad_zoom2 table
+---@field joystickPitch table
+---@field joystickYaw table
+---@field key_a table
+---@field key_d table
+---@field key_e table
+---@field key_f table
+---@field key_g table
+---@field key_h table
+---@field key_q table
+---@field key_r table
+---@field key_s table
+---@field key_t table
+---@field key_w table
+---@field key_y table
+---@field oldEditorToggle table
+---@field realtime_motion table
+---@field reload_bindings table
+---@field reload_system_lua table
+---@field select_all_meshRoad_nodes table
+---@field select_all_river_nodes table
+---@field select_all_road_nodes table
+---@field setZoomFOV table
+---@field show_metrics table
+---@field slow_motion table {replacement = 'toggle_slow_motion'} (idem realtime_motion).
+---@field steer table {replacement = 'steering'} (idem steer_direct).
+---@field steer_direct table
+---@field switch_camera table {replacement = 'switch_camera_next'}.
+---@field switch_next_vehicle_multiseat table
+---@field switch_reset_vehicle table
+---@field toggleConsole table {replacement = 'toggleConsoleNG'}.
+---@field toggleFPS table
+---@field toggleFreeLook table
+---@field toggleQuickAccess table
+---@field toggleRadialMenu table
+---@field toggleZoom table
+---@field toggle_dashboard table
+---@field toggle_physics table {replacement = 'pause'}.
+core_input_deprecatedActions = {}
+

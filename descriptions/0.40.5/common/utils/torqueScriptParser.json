@@ -1,0 +1,22 @@
+{
+  "path": "lua/common/utils/torqueScriptParser.lua",
+  "module": "Preuve de concept d'analyseur (parser PEG, via libs/lua-luaepnf/epnf) de fichiers TorqueScript : déclarations 'new/singleton/datablock', propriétés, fonctions (corps ignoré). Le fichier lui-même annonce 'pas complètement fonctionnel, loin d'être prêt'. Se charge avec require('utils/torqueScriptParser').",
+  "usage": "local ts = require('utils/torqueScriptParser')\nlocal ok, ast = ts.parse(readFile('/levels/xxx/main.cs'))",
+  "notes": [
+    "Le JIT est coupé (jit.off) pendant le chargement d'epnf car lulpeg tenterait d'utiliser l'indexation VLA non supportée.",
+    "parse renvoie directement le résultat de pcall : (true, ast) ou (false, message d'erreur).",
+    "Le corps des fonctions TorqueScript n'est pas analysé (accolades équilibrées uniquement)."
+  ],
+  "fields": {},
+  "functions": {
+    "parse": {
+      "desc": "Analyse un texte TorqueScript avec la grammaire interne (epnf.parsestring) dans un pcall.",
+      "params": {"s": {"type": "string", "desc": "Texte TorqueScript"}},
+      "returns": [
+        {"type": "boolean", "desc": "true si l'analyse a réussi"},
+        {"type": "table|string", "desc": "Arbre syntaxique si succès, message d'erreur sinon"}
+      ]
+    }
+  },
+  "classes": {}
+}

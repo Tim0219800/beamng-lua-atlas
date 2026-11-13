@@ -1,0 +1,67 @@
+{
+  "path": "lua/vehicle/controller/controlModes.lua",
+  "module": "Contrôleur auxiliaire qui remappe les entrées du conducteur (direction, accélérateur, frein, ou accélérateur-frein combiné) vers des valeurs `electrics.values` personnalisées, selon un « mode de contrôle » choisi (par exemple pour piloter une grue ou des vérins). Chaque mode liste les electrics actifs ; chaque electric est configuré avec une entrée source, des lissages, une vitesse et des bornes. Ajoute un menu radial pour choisir le mode.",
+  "notes": [
+    "Clés jbeam lues par init : `modes` (table d'en-tête avec `name`, `electrics` : liste de noms d'electrics actifs dans le mode), `config` (table d'en-tête avec `electric`, `input`, `smoothIn`, `smoothOut`, `speed`, `min`, `max`), `defaultControlModeIndex` (1).",
+    "Entrées possibles dans `config.input` : steering, throttle, brake, throttlebrake (= throttle - brake), ou un nom défini via setInputValue.",
+    "Calcul à chaque frame : valeur = clamp(valeur + lissage(entrée) × speed × dt, min, max) : l'entrée pilote donc une vitesse de variation, pas la position (effet intégrateur).",
+    "controlModeName et controlModeIndex valent nil tant qu'init n'a pas tourné ; ils sont remplis par init.",
+    "Il n'y a pas de fonction `reset` : controller.reset rappelle init.",
+    "État sauvegardé sous la clé `<nom>_modeIndex`."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "controlModeName": {"type": "string|nil", "desc": "Nom du mode actif ; nil avant init."},
+    "controlModeIndex": {"type": "integer|nil", "desc": "Index du mode actif (1 = premier) ; nil avant init."}
+  },
+  "functions": {
+    "updateGFX": {
+      "desc": "Chaque frame : lit les entrées et fait évoluer les electrics du mode actif (intégration lissée bornée).",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "setControlModeIndex": {
+      "desc": "Choisit le mode par son index (ignoré si inexistant) et affiche son nom sauf si silent.",
+      "params": {
+        "index": {"type": "integer", "desc": "Index du mode (1 = premier)."},
+        "silent": {"type": "boolean|nil", "desc": "true pour ne pas afficher de message."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "toggleControlMode": {
+      "desc": "Décale l'index de mode de `value` avec retour circulaire (au-delà du dernier : premier ; en dessous du premier : dernier).",
+      "params": {"value": {"type": "integer", "desc": "+1 ou -1 en pratique."}},
+      "returns": [],
+      "internal": false
+    },
+    "setInputValue": {
+      "desc": "Définit une entrée personnalisée utilisable dans `config.input`.",
+      "params": {
+        "name": {"type": "string", "desc": "Nom d'entrée."},
+        "value": {"type": "number", "desc": "Valeur de l'entrée."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "init": {
+      "desc": "Lit les modes et la configuration depuis le jbeam, crée les lisseurs, met les electrics à 0 et enregistre le menu radial (une seule fois).",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "returns": [],
+      "internal": true
+    },
+    "getState": {
+      "desc": "Renvoie l'index de mode actif sous la clé `<nom>_modeIndex`.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Table d'état."}],
+      "internal": false
+    },
+    "setState": {
+      "desc": "Restaure l'index de mode s'il est valide (silencieusement).",
+      "params": {"data": {"type": "table|nil", "desc": "Table d'état."}},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

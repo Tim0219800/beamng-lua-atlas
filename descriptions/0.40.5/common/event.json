@@ -1,0 +1,48 @@
+{
+  "path": "lua/common/event.lua",
+  "module": "Petite classe d'événements (délégués) exposée comme global Event. On crée un objet avec Event.new(), on y abonne des fonctions avec add, et on les déclenche avec call ou en appelant l'objet directement.",
+  "usage": "local ev = Event.new()\nlocal function cb(x) print('reçu', x) end\nev:add(cb)\nev(42)      -- ou ev:call(42)\nev:remove(cb)",
+  "notes": [
+    "Les abonnés sont stockés comme clés d'une table : l'ordre d'appel n'est pas garanti et ajouter deux fois la même fonction ne la compte qu'une fois.",
+    "add et remove lèvent error('Wrong parameter type: must be a function') si l'argument n'est pas une fonction.",
+    "Les fonctions sont des champs de la table globale Event (appel conseillé en notation ':')."
+  ],
+  "fields": {},
+  "functions": {
+    "Event.new": {
+      "desc": "Crée un nouvel événement vide.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Objet Event avec une table __subscribers vide."}],
+      "internal": false
+    },
+    "Event.add": {
+      "desc": "Abonne une fonction à l'événement.",
+      "params": {
+        "self": {"type": "table", "desc": "Objet Event."},
+        "fun": {"type": "function", "desc": "Fonction à appeler à chaque déclenchement."}
+      },
+      "internal": false
+    },
+    "Event.remove": {
+      "desc": "Désabonne une fonction précédemment ajoutée.",
+      "params": {
+        "self": {"type": "table", "desc": "Objet Event."},
+        "fun": {"type": "function", "desc": "Fonction à retirer."}
+      },
+      "internal": false
+    },
+    "Event.clear": {
+      "desc": "Supprime tous les abonnés.",
+      "params": {"self": {"type": "table", "desc": "Objet Event."}},
+      "internal": false
+    },
+    "Event.call": {
+      "desc": "Appelle chaque fonction abonnée avec les arguments fournis. Aussi accessible via __call : ev(...).",
+      "params": {
+        "self": {"type": "table", "desc": "Objet Event."},
+        "...": {"type": "any", "desc": "Arguments transmis à chaque abonné."}
+      },
+      "internal": false
+    }
+  }
+}

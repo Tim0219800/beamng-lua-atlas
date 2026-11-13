@@ -1,0 +1,61 @@
+{
+  "path": "lua/ge/extensions/core/vehicle/thumbnail.lua",
+  "module": "Extension GE `core_vehicle_thumbnail` : génère les miniatures (.jpg) des configurations de véhicule sauvegardées, soit directement dans vehicles/<modèle>/<config>.jpg, soit sous forme de capture temporaire d'aperçu (dossier /screenshots/vehicleConfigTemp) que l'utilisateur peut valider ou annuler avant la sauvegarde. Délègue la prise de vue à util_screenshotCreator_currentConfigThumbnail. Utilisée par core_vehicle_partmgmt.",
+  "usage": "local r = core_vehicle_thumbnail.captureTemporaryThumbnail()\nif r.success then\n  -- l'UI reçoit le guihook VehicleConfigThumbnailPreviewReady {captureId, success, path}\nend\n-- à la sauvegarde :\ncore_vehicle_thumbnail.commitTemporaryThumbnail(r.captureId, 'vehicles/pickup/ma_config.jpg')",
+  "notes": [
+    "Les captures temporaires sont suivies par un identifiant numérique croissant (captureId). Le guihook VehicleConfigThumbnailPreviewReady est émis avec {captureId, success, path?} à la fin de chaque capture.",
+    "La copie de fichier est atomique : copie vers un .tmp, sauvegarde éventuelle de l'ancien fichier en .bak, puis renommage ; restauration en cas d'échec.",
+    "generateThumbnail utilise `vehicle.jbeam or vehicle.JBeam` pour le nom du modèle (deux casses testées)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "core_vehicle_manager, core_vehicle_configTarget, util_screenshotCreator_currentConfigThumbnail."}
+  },
+  "functions": {
+    "generateConfigThumbnail": {
+      "desc": "Génère la miniature de la config nommée pour le véhicule configuré, dans vehicles/<modèle>/<nom>.jpg, via util_screenshotCreator_currentConfigThumbnail.",
+      "params": {"configName": {"type": "string", "desc": "nom de config (le chemin et les extensions .pc/.jpg sont retirés)"}},
+      "returns": [{"type": "boolean", "desc": "true si la prise de vue a démarré"}]
+    },
+    "captureTemporaryThumbnail": {
+      "desc": "Démarre une capture temporaire (aperçu) pour la config courante du véhicule configuré ; le fichier est /screenshots/vehicleConfigTemp/save-preview-<id>.jpg.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{success = true, captureId, path} ou {success = false, reason = 'noCurrentConfig'|'busy'}"}]
+    },
+    "getTemporaryThumbnail": {
+      "desc": "Renvoie la capture temporaire prête la plus récente.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{captureId, path} ou {path = nil} s'il n'y en a pas"}]
+    },
+    "cancelTemporaryThumbnail": {
+      "desc": "Annule une capture (supprime le fichier ; si elle est encore en cours, elle sera supprimée à son terme).",
+      "params": {"captureId": {"type": "integer", "desc": "identifiant de la capture"}},
+      "returns": [{"type": "table", "desc": "{success, captureId} ou {success = false, reason = 'captureNotFound', captureId}"}]
+    },
+    "clearTemporaryThumbnail": {
+      "desc": "Annule une capture précise, ou toutes si captureId est nil.",
+      "params": {"captureId": {"type": "integer|nil", "desc": "identifiant ; nil = toutes"}},
+      "returns": [{"type": "table", "desc": "{success = true} (ou résultat de cancelTemporaryThumbnail)"}]
+    },
+    "isValidTemporaryThumbnail": {
+      "desc": "Indique si le chemin correspond à une capture temporaire prête, non annulée et existante.",
+      "params": {"path": {"type": "string", "desc": "chemin du fichier"}},
+      "returns": [{"type": "boolean", "desc": "true si valide"}]
+    },
+    "copyThumbnailFile": {
+      "desc": "Copie un fichier miniature vers une destination en remplaçant l'ancien de manière sûre (création du dossier si nécessaire).",
+      "params": {
+        "sourcePath": {"type": "string", "desc": "fichier source existant"},
+        "targetPath": {"type": "string", "desc": "fichier destination"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si la copie a réussi"}]
+    },
+    "commitTemporaryThumbnail": {
+      "desc": "Valide une capture prête : la copie vers targetPath puis supprime le fichier temporaire.",
+      "params": {
+        "captureId": {"type": "integer", "desc": "capture prête"},
+        "targetPath": {"type": "string", "desc": "chemin du .jpg définitif"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si copiée"}]
+    }
+  }
+}

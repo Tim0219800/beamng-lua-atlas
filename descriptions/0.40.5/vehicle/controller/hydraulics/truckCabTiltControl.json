@@ -1,0 +1,48 @@
+{
+  "path": "lua/vehicle/controller/hydraulics/truckCabTiltControl.lua",
+  "module": "Contrôleur auxiliaire pour la bascule de cabine d'un camion : quand au moins un verrou de cabine (contrôleur de groupe) est « attached », les vérins de bascule sont en mode de vanne \"float\" ; sinon \"closed\" (modes réglables).",
+  "notes": [
+    "Clés jbeam (défaut) : cabLatchControllers (noms de contrôleurs exposant getGroupState()), cabTiltCylinders (noms de vérins hydrauliques), tiltCylinderValveModeLatched (\"float\"), tiltCylinderValveModeUnlatched (\"closed\")."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Lit les noms de contrôleurs de verrou, de vérins et les modes de vanne.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Ne fait rien.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Chaque image : règle le type de vanne des vérins selon l'état des verrous.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

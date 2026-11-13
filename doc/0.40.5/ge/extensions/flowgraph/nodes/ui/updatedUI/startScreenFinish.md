@@ -1,0 +1,20 @@
+# `flowgraph_nodes_ui_updatedUI_startScreenFinish`
+
+*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenFinish.lua` · VM : Game Engine (GE) · 27 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+
+**Accès :** `require("extensions/flowgraph/nodes/ui/updatedUI/startScreenFinish")` (fichier sous extensions/ mais pas une extension classique)
+
+## Classe `C`
+
+| Méthode | Description | Ligne |
+|---|---|---|
+| `C:work()` |  | 21 |
+
+## Hooks émis
+
+Évènements diffusés aux extensions par `extensions.hook` :
+
+- `onStartScreenFinishedBuilding` — écouté par 1 module(s)
+
+---
+*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenFinish.lua`.*

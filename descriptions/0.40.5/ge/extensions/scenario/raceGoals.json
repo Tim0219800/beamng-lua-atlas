@@ -1,0 +1,72 @@
+{
+  "path": "lua/ge/extensions/scenario/raceGoals.lua",
+  "module": "Distributeur des objectifs (goals) d'un scénario. À l'initialisation il lit les goals déclarés dans scenario.vehicles[nom].goal du JSON, crée scenario.goals.vehicles, valide les options avec un schéma, charge dynamiquement le module de chaque goal ('scenario/<id>' ou 'scenario/<id>goal') et appelle son init. Ensuite il relaie les évènements de course (onRaceInit, onRaceStart, onRaceTick, onRaceWaypointReached, onRaceResult, onCountdownEnded) vers goal.processState(scenario, nomEtat, données).",
+  "usage": "-- Dans le JSON d'un scénario :\n-- \"vehicles\": { \"scenario_player0\": { \"goal\": { \"nomove\": {\"msg\":\"Ne bougez pas\"}, \"damage\": {\"damageLimit\":3000} } } }\n-- '*' sert de valeur par défaut pour les véhicules non listés.",
+  "notes": [
+    "Schéma de validation des goals (type attendu par option) : timeLimit {msg, maxTime, countdown, waitTime}, nomove {msg, triggerEndOnly}, position {msg, purpose, endPoint}, damage {msg, purpose, damageLimit, damageThreshold}, distance {msg, purpose, maxDistance, minDistance, distanceEnable, target}, speed {msg, purpose, maxSpeed, minSpeed, maxTimeout, wayPointNum, delay}, drift {msg, failMsg, minDrift, maxDrift, timeAllowance}, finishRace {passed, failed, mustWin}, wayPointAction {wayPointNum, wayPointMsg}. 'localizedString' accepte une chaîne ou une table avec txt.",
+    "Un écart au schéma n'est que journalisé (log E 'Schema error in scenario json') : le goal est quand même chargé.",
+    "Une valeur string de type localizedString qui ne commence pas par 'scenarios.' déclenche un avertissement de localisation manquante.",
+    "Forme du goal dans le JSON : soit une liste de noms (goal.id = nom, value = {msg='you hit something'}), soit une table nom -> options. La détection se fait avec la fonction locale istable (présence d'une clé non numérique).",
+    "Le module d'un goal doit exister dans lua/ge/extensions/scenario/ sous le nom <id>.lua ou <id>Goal.lua et exposer init, processState, updateFinalStatus.",
+    "M.onRaceEnd est exporté mais vaut nil (variable jamais définie).",
+    "onRaceResult mémorise le statut final dans scenario.finalStatus avant de relayer l'état.",
+    "initialiseGoals met scenario.targetName à '' et émet le hook extensions.hook('onRaceGoalsInitilised', scenario) (orthographe du code)."
+  ],
+  "fields": {
+    "state": {"type": "table", "desc": "{goals = {}} : table nom de goal -> module chargé, remplie par initialiseGoals."}
+  },
+  "functions": {
+    "initialiseGoals": {
+      "desc": "Construit scenario.goals.vehicles à partir des véhicules du scénario (scenario.vehicleNameToId), valide le schéma, charge les modules de goals et appelle init sur chacun, puis émet le hook onRaceGoalsInitilised.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGoalsFinalStatus": {
+      "desc": "Appelle updateFinalStatus(scenario) sur chaque goal chargé, pour enregistrer les résultats finaux.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onRaceInit": {
+      "desc": "Hook de course : relaie l'état 'onRaceInit' à tous les goals.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onRaceStart": {
+      "desc": "Hook de course : relaie l'état 'onRaceStart' à tous les goals.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onRaceTick": {
+      "desc": "Hook appelé périodiquement pendant la course : relaie 'onRaceTick' avec {raceTickTime, scenarioTimer} à tous les goals.",
+      "params": {
+        "raceTickTime": {"type": "number", "desc": "Temps du tick de course."},
+        "scenarioTimer": {"type": "number", "desc": "Chronomètre du scénario."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onRaceWaypointReached": {
+      "desc": "Hook appelé quand un véhicule atteint un waypoint : relaie 'onRaceWaypointReached' avec les données reçues aux goals.",
+      "params": {"data": {"type": "table", "desc": "Données du waypoint (vehicleId, next, time...)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onRaceResult": {
+      "desc": "Hook appelé à la fin de la course : enregistre scenario.finalStatus et relaie 'onRaceResult' aux goals.",
+      "params": {"status": {"type": "table", "desc": "Résultat final de la course."}},
+      "returns": [],
+      "internal": true
+    },
+    "onCountdownEnded": {
+      "desc": "Hook appelé à la fin du compte à rebours : relaie 'onCountdownEnded' aux goals.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {}
+}

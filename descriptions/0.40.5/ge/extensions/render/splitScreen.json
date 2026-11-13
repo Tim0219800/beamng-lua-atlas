@@ -1,0 +1,133 @@
+{
+  "path": "lua/ge/extensions/render/splitScreen.lua",
+  "module": "Écran partagé (multiseat) : crée une vue de rendu par joueur (RenderViewManagerInstance, vues nommées 'splitscreen0', 'splitscreen1'...), calcule la disposition à l'écran avec render_splitScreenLayouts selon le nombre de joueurs et le réglage multiseatLayout<N>, gère les contextes caméra par joueur, les étiquettes de joueurs et le HUD Vue 'multiseat'. L'extension s'active dès son chargement (onExtensionLoaded appelle enable) et se désactive au déchargement. Un moddeur ou une mission peut imposer la liste des joueurs avec setCustomPlayers.",
+  "usage": "extensions.load('render_splitScreen')\nrender_splitScreen.setCustomPlayers({0, 1})  -- deux vues, joueurs 0 et 1\n-- ...\nrender_splitScreen.clearCustomPlayers()\nextensions.unload('render_splitScreen')",
+  "notes": [
+    "Dépend de core_playerPersonas, render_playerTags et render_playerCompassMarkers (chargés avant).",
+    "Maximum 64 vues (une par joueur). Liste de joueurs vide : renvoie {0}.",
+    "Pour économiser le rendu, chaque vue reçoit un facteur de qualité (meshDetailAdjust et groundCoverScale multipliés) : 1.0 pour 1 vue, 0.75 pour 2, 0.6 pour 3, 0.5 pour 4 et au-delà. Les miroirs et réflexions dynamiques des véhicules sont coupés sauf pour la vue en solo. Les réglages graphiques de l'utilisateur ne sont pas modifiés.",
+    "En activant l'extension : les actions 'vehicleMenues' et 'nodegrabber' sont bloquées, le réglage 'multiseat' est mis à true et la route de jeu 'multiseat' est installée.",
+    "Mode 'shared' (disposition partagée) : une seule vue principale est rendue ; mode 'split' : une vue par joueur.",
+    "La fonction 'performance preset' (setPerformancePreset) existe mais son appel est commenté : inutilisée.",
+    "Hooks émis : onSplitScreenChanged(enabled, playerCount, layoutId, mode) à l'activation et quand les joueurs ou la disposition changent (false seul à la désactivation), et onSplitScreenLayoutChanged() à chaque nouveau calcul de disposition. Évènement UI : MultiseatHudData(count, layout, players, mode) ou MultiseatHudData(0)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : core_playerPersonas, render_playerTags, render_playerCompassMarkers."}
+  },
+  "functions": {
+    "getPlayers": {
+      "desc": "Renvoie la liste ordonnée des indices de joueurs qui ont une vue : la liste personnalisée de setCustomPlayers si elle existe, sinon core_multiseat.getPlayers. Limitée à 64 ; contient {0} si vide.",
+      "params": {"result": {"type": "integer[]|nil", "desc": "Table à remplir et renvoyer (réutilisable pour éviter une allocation) ; créée si nil."}},
+      "returns": [{"type": "integer[]", "desc": "Indices de joueurs."}],
+      "internal": false
+    },
+    "getCurrentConfiguration": {
+      "desc": "Renvoie la configuration d'affichage courante.",
+      "params": {},
+      "returns": [
+        {"type": "boolean", "desc": "false si l'écran partagé est inactif."},
+        {"type": "integer|nil", "desc": "Nombre de joueurs."},
+        {"type": "string|nil", "desc": "Identifiant de disposition."},
+        {"type": "string|nil", "desc": "Mode : 'shared' ou 'split'."}
+      ],
+      "internal": false
+    },
+    "isSharedView": {
+      "desc": "Vrai si l'écran partagé est actif, rendu en vue partagée et sans vue solo.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "État."}],
+      "internal": false
+    },
+    "setCustomPlayers": {
+      "desc": "Impose la liste des joueurs qui doivent avoir une vue (par exemple pour une mission), ou la supprime avec nil. Une liste vide équivaut à nil. Si l'écran partagé est actif, recalcule tout de suite.",
+      "params": {"players": {"type": "integer[]|nil", "desc": "Indices de joueurs ordonnés, ou nil pour effacer la surcharge."}},
+      "returns": [],
+      "internal": false
+    },
+    "clearCustomPlayers": {
+      "desc": "Raccourci pour setCustomPlayers(nil).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "toggleFreeCam": {
+      "desc": "Passe la vue propre à ce joueur au groupe de caméras suivant (core_camera.cycleCameraGroup).",
+      "params": {"player": {"type": "integer", "desc": "Indice du joueur."}},
+      "returns": [{"type": "boolean", "desc": "false si le joueur n'a pas de vue d'écran partagé (l'appelant peut alors utiliser le basculement de caméra principale)."}],
+      "internal": false
+    },
+    "refreshLayout": {
+      "desc": "Force le recalcul de la disposition au prochain passage (réinitialise la taille mémorisée) et le fait tout de suite si actif.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "beginSoloView": {
+      "desc": "Affiche temporairement un seul joueur en plein écran sans changer la liste des participants ni l'état du HUD. Avec options.mainView = true, utilise la vue principale ; sinon agrandit la vue du joueur avec une caméra 'orbit'. Les étiquettes de joueurs sont supprimées pendant la vue solo.",
+      "params": {
+        "player": {"type": "integer", "desc": "Indice du joueur (converti par tonumber)."},
+        "options": {"type": "table|nil", "desc": "{mainView = boolean}."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si player n'est pas numérique ou n'est pas dans la liste des joueurs configurés (ou sans vue) ; true sinon."}],
+      "internal": false
+    },
+    "endSoloView": {
+      "desc": "Termine la vue solo et restaure la caméra du contexte et la disposition.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si une vue solo était active."}],
+      "internal": false
+    },
+    "onAfterRouteChange": {
+      "desc": "Hook de changement de route de l'UI : renvoie l'état du HUD à chaque entrée dans la route 'multiseat', car la vue Vue est remontée avec sa route.",
+      "params": {"context": {"type": "table", "desc": "Contexte de navigation (context.toRoute.name)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook de fin de mission : termine la vue solo (endSoloView).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook appelé après un rechargement Lua GE : restaure la liste de joueurs sauvegardée et réactive l'écran partagé.",
+      "params": {"data": {"type": "table", "desc": "Données de onSerialize (customPlayers)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook de chargement de l'extension : restaure customPlayers si des données sont fournies et active l'écran partagé.",
+      "params": {"data": {"type": "table|nil", "desc": "Données sérialisées éventuelles."}},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook de déchargement : alias de disable(preserveRoute). Détruit les vues, rend le monde sur la vue principale, remet l'exposition à zéro et rétablit la route de jeu 'play' sauf si preserveRoute.",
+      "params": {"preserveRoute": {"type": "boolean|nil", "desc": "Si vrai, ne change pas la route de jeu."}},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook appelé avant un rechargement Lua GE : renvoie {customPlayers} et désactive l'écran partagé en conservant la route, pour détruire les vues C++.",
+      "params": {"reason": {"type": "string", "desc": "Raison de la sérialisation (utilisée dans le log)."}},
+      "returns": [{"type": "table", "desc": "{customPlayers = ...}."}],
+      "internal": true
+    },
+    "onSettingsChanged": {
+      "desc": "Hook appelé quand les réglages changent : reconstruit les surcharges de qualité des vues, qui sont un instantané des réglages globaux.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque image : recalcule la configuration (joueurs, taille de fenêtre, disposition) et met à jour les marqueurs de boussole des joueurs.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Durée réelle de l'image (s)."},
+        "dtSim": {"type": "number", "desc": "Durée simulée (s), non utilisée."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {}
+}

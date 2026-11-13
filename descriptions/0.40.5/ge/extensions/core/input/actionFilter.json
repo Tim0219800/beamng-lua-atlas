@@ -1,0 +1,103 @@
+{
+  "path": "lua/ge/extensions/core/input/actionFilter.lua",
+  "module": "Extension GE `core_input_actionFilter` : bloque ou autorise des actions d'entrée par « filtre » nommé (ex. scénario, mode compétitif). Gère des groupes d'actions, des modèles d'actions prédéfinis (téléportation, menus véhicule, caméras, triche…) et des masques de joueurs par ActionMap (pour le split-screen). Un moddeur l'utilise pour désactiver temporairement des touches (reset, menus, caméra libre) pendant une activité.",
+  "usage": "local f = core_input_actionFilter\nlocal tpl = f.getActionTemplates()\nf.setGroup('noCheats', tpl.competitive)\nf.addAction('myMod', 'noCheats', true)   -- bloque tout le groupe sous le filtre 'myMod'\n-- plus tard\nf.clear('myMod')",
+  "notes": [
+    "Le premier argument `filter` est un nom (chaîne) de filtre ; chaque filtre garde sa propre liste de blocages, donc plusieurs mods peuvent bloquer sans s'écraser. Une action est bloquée tant qu'au moins un filtre la bloque (isActionBlocked).",
+    "addAction(filter, name, filtered): `name` peut être un groupe défini par setGroup (alors toutes ses actions sont filtrées) ou un nom d'action seul.",
+    "Masques joueur : un masque est un entier bit-à-bit (bit n = joueur n autorisé, -1 = tous). Plusieurs propriétaires (`owner`) peuvent définir un masque pour la même ActionMap ; le masque effectif est le ET binaire de tous. Le nom d'ActionMap reçoit le suffixe 'ActionMap' s'il manque.",
+    "Piège dans createActionTemplate : le paramètre actionWhitelist agit comme une LISTE D'EXCLUSION (les actions du modèle qui sont dans la liste ne sont PAS ajoutées), et actionBlackList est AJOUTÉE telle quelle au résultat. Les noms sont inversés par rapport à leur sens.",
+    "Piège : actionTemplates.physicsControls reçoit par arrayConcat les actions de nodegrabber à la création du module, donc physicsControls inclut déjà nodegrabber.",
+    "Modèles prédéfinis (clés de getActionTemplates) : vehicleTeleporting, vehicleMenues, nodegrabber, physicsControls, aiControls, vehicleSwitching, editor, freeCam, gameCam, funStuff, walkingMode, photoMode, trackBuilder, bigMap, couplers, vehicleTriggers, radialMenu, pause, missionPopup, resetPhysics, vehicleRecovery, vehicleTeleportOnly, appedit, miniMap, radialMenuActivate, setShifterMode, uiReloading, competitive (= teleporting + menus véhicule + physique + IA + changement de véhicule + caméra libre + fun + éditeur).",
+    "Hook émis : `onActionFilterUpdated` après chaque mise à jour d'un filtre."
+  ],
+  "functions": {
+    "addAction": {
+      "desc": "Ajoute (ou retire si filtered = false) une action ou un groupe au filtre, puis reconstruit entièrement ce filtre côté C++ et émet onActionFilterUpdated.",
+      "params": {
+        "filter": {"type": "string", "desc": "Nom du filtre."},
+        "actionName": {"type": "string", "desc": "Nom d'action, ou nom d'un groupe défini par setGroup."},
+        "filtered": {"type": "boolean", "desc": "true = bloquer, false/nil = ne plus bloquer."}
+      },
+      "returns": []
+    },
+    "clear": {
+      "desc": "Supprime tous les blocages d'un filtre (ActionMap.clearFilters). N'émet pas onActionFilterUpdated.",
+      "params": {"filter": {"type": "string", "desc": "Nom du filtre."}},
+      "returns": []
+    },
+    "setGroup": {
+      "desc": "Définit un groupe d'actions nommé, utilisable ensuite dans addAction.",
+      "params": {
+        "name": {"type": "string", "desc": "Nom du groupe."},
+        "arrayValues": {"type": "string[]", "desc": "Noms d'actions du groupe."}
+      },
+      "returns": []
+    },
+    "getGroup": {
+      "desc": "Renvoie la liste d'un groupe.",
+      "params": {"name": {"type": "string", "desc": "Nom du groupe."}},
+      "returns": [{"type": "string[]|nil", "desc": "Actions du groupe."}]
+    },
+    "isActionBlocked": {
+      "desc": "Indique si une action est bloquée par au moins un filtre.",
+      "params": {"actionName": {"type": "string", "desc": "Nom d'action (pas un groupe)."}},
+      "returns": [{"type": "boolean|nil", "desc": "true si bloquée, sinon nil."}]
+    },
+    "createActionTemplate": {
+      "desc": "Fabrique une liste d'actions à partir de modèles existants. Voir notes : les noms des paramètres facultatifs sont inversés par rapport à leur effet.",
+      "params": {
+        "templateNames": {"type": "string[]", "desc": "Noms de modèles à concaténer."},
+        "actionWhitelist": {"type": "string[]|nil", "desc": "Si fourni : actions à EXCLURE des modèles (déduit du code)."},
+        "actionBlackList": {"type": "string[]|nil", "desc": "Actions ajoutées à la fin du résultat."}
+      },
+      "returns": [{"type": "string[]", "desc": "Liste d'actions."}]
+    },
+    "getActionTemplates": {
+      "desc": "Renvoie la table des modèles d'actions (clé = nom du modèle, valeur = liste d'actions).",
+      "params": {},
+      "returns": [{"type": "table<string, string[]>", "desc": "Modèles."}]
+    },
+    "getBlockedActions": {
+      "desc": "Debug : table filtre -> {action = true} des actions réellement bloquées côté C++.",
+      "params": {},
+      "returns": [{"type": "table<string, table<string, boolean>>", "desc": "Blocages."}]
+    },
+    "setActionMapPlayerMask": {
+      "desc": "Définit le masque de joueurs autorisés d'une ActionMap pour un propriétaire et applique le ET de tous les masques à actionMap.playerMask.",
+      "params": {
+        "owner": {"type": "string", "desc": "Nom du propriétaire du masque."},
+        "mapName": {"type": "string", "desc": "Nom de l'ActionMap (suffixe 'ActionMap' ajouté si absent)."},
+        "playerMask": {"type": "integer", "desc": "Masque binaire (bit n = joueur n), -1 = tous."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si un argument est invalide."}]
+    },
+    "clearActionMapPlayerMask": {
+      "desc": "Retire le masque d'un propriétaire pour une ActionMap et réapplique.",
+      "params": {
+        "owner": {"type": "string", "desc": "Propriétaire."},
+        "mapName": {"type": "string", "desc": "Nom de l'ActionMap."}
+      },
+      "returns": []
+    },
+    "clearActionMapPlayerMasks": {
+      "desc": "Retire tous les masques d'un propriétaire sur toutes les ActionMap.",
+      "params": {"owner": {"type": "string", "desc": "Propriétaire."}},
+      "returns": []
+    },
+    "setActionMapPlayerBlocked": {
+      "desc": "Bloque ou débloque un joueur (un bit) dans le masque d'un propriétaire pour une ActionMap.",
+      "params": {
+        "owner": {"type": "string", "desc": "Propriétaire."},
+        "mapName": {"type": "string", "desc": "Nom de l'ActionMap."},
+        "player": {"type": "integer", "desc": "Indice du joueur (0, 1…)."},
+        "blocked": {"type": "boolean", "desc": "true = retire le bit du joueur, false = le remet."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si arguments invalides."}]
+    },
+    "onSerialize": {"desc": "Hook de sauvegarde avant rechargement : renvoie groupes, blocages et masques.", "params": {}, "returns": [{"type": "table", "desc": "{actionGroups, blockedActionGroups, actionMapPlayerMasks}."}], "internal": true},
+    "onDeserialized": {"desc": "Hook de restauration : recharge les données sauvegardées et réapplique les masques de joueurs.", "params": {"v": {"type": "table", "desc": "Table renvoyée par onSerialize."}}, "returns": [], "internal": true},
+    "onInputBindingsChanged": {"desc": "Hook appelé quand les bindings changent : réapplique les masques de joueurs (les ActionMap ont pu être recréées).", "params": {}, "returns": [], "internal": true},
+    "onExtensionUnloaded": {"desc": "Hook de déchargement de l'extension : remet playerMask à -1 sur les ActionMap touchées.", "params": {}, "returns": [], "internal": true}
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/smooth.lua",
+  "module": "Filtre de lissage de position : trois ressorts temporels (newTemporalSpring) sur x, y, z de data.res.pos. Masqué. Renvoie un constructeur.",
+  "notes": ["La page extraite indique init(damp, pos) mais le code définit init(spring, damp, pos). Valeurs par défaut : spring 30, damp 10."],
+  "classes": {
+    "C": {
+      "desc": "Filtre de lissage de position.",
+      "functions": {
+        "init": {"desc": "Crée les ressorts ; si pos est donné, les initialise à cette position.", "params": {"spring": {"type": "number|nil", "desc": "raideur (30)"}, "damp": {"type": "number|nil", "desc": "amortissement (10)"}, "pos": {"type": "vec3|nil", "desc": "position initiale des ressorts"}}},
+        "update": {"desc": "Lisse data.res.pos axe par axe avec data.dt.", "params": {"data": {"type": "table", "desc": "camData"}}, "returns": [{"type": "boolean", "desc": "toujours true"}], "internal": true}
+      }
+    }
+  }
+}

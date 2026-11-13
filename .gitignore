@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.pyc
+
+# Raw data: published as a release asset (donnees-<version>.zip), not tracked in git
+donnees/
+
+# Build outputs
+site/
+dist/

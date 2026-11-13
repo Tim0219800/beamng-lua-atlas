@@ -1,0 +1,39 @@
+{
+  "path": "lua/ge/extensions/core/supportReport.lua",
+  "module": "Envoi d'un rapport de support au serveur BeamNG depuis l'UI. send déclenche Engine.SupportReport.send ; le moteur rappelle onSupportReportSent avec l'identifiant de support (ou une erreur). L'identifiant est gardé 15 minutes dans settings/lastSupportReport.json puis oublié. L'état est publié à l'UI par guihooks 'SupportReportState'.",
+  "notes": [
+    "L'état envoyé à l'UI : {sending, supportId, expires, error, outdated}. expires est l'heure (os.time) d'expiration, 0 s'il n'y a pas d'identifiant.",
+    "Les erreurs serveur contenant du HTML (ex. page 502 d'un proxy) sont réduites à leur titre ou à leur texte brut."
+  ],
+  "fields": {},
+  "functions": {
+    "requestState": {
+      "desc": "Oublie le rapport expiré (supprime le fichier) puis envoie l'état courant à l'UI (guihooks SupportReportState).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "send": {
+      "desc": "Lance l'envoi du rapport (Engine.SupportReport.send) s'il n'y en a pas déjà un en cours, puis publie l'état.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onSupportReportSent": {
+      "desc": "Callback du moteur quand l'envoi se termine. Si supportId n'est pas vide, le mémorise (fichier JSON) ; sinon mémorise l'erreur et l'indicateur outdated. Republie l'état.",
+      "params": {
+        "supportId": {"type": "string", "desc": "Identifiant de support, '' en cas d'échec."},
+        "err": {"type": "string", "desc": "Message d'erreur en cas d'échec."},
+        "outdated": {"type": "boolean", "desc": "Vrai si le jeu est trop ancien pour envoyer un rapport (déduit du code)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook de chargement : relit le dernier rapport sauvegardé et oublie celui qui a expiré.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

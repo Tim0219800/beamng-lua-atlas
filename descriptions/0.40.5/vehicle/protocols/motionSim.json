@@ -1,0 +1,30 @@
+{
+  "path": "lua/vehicle/protocols/motionSim.lua",
+  "module": "Protocole UDP « MotionSim » (format 'BNG1') pour piloter une plateforme de mouvement : envoie position, vitesse, accélération (sans gravité), vecteur haut, angles, vitesses et accélérations angulaires du véhicule joueur. Chargé et géré par protocols.lua (jamais appelé directement). Adresse, port et fréquence viennent des réglages protocols_motionSim_address, _port et _maxUpdateRate. Utilise le pas de physique, donc coûteux mais précis (jusqu'à 2000 Hz).",
+  "usage": "-- Activation : réglage 'protocols_motionSim_enabled'. Les paquets sont émis sur UDP vers protocols_motionSim_address:protocols_motionSim_port.",
+  "notes": [
+    "Paquet (struct C, tous les flottants sont 32 bits) : char format[4] = \"BNG1\" ; posX,posY,posZ ; velX,velY,velZ ; accX,accY,accZ ; upX,upY,upZ ; rollPos,pitchPos,yawPos ; rollVel,pitchVel,yawVel ; rollAcc,pitchAcc,yawAcc. Les valeurs viennent des champs correspondants de protocols.lua (lissées).",
+    "Documentation externe du format : https://go.beamng.com/protocols (indiquée dans le code ; toute modification de la struct doit y être reportée).",
+    "Les commentaires de fin de ligne du code (« return 4567 », « return \"127.0.0.1\" ») sont des valeurs d'exemple/défaut : le code lit réellement les réglages utilisateur.",
+    "Aucune validation : si les lisseurs de protocols.lua ne sont pas encore initialisés, des champs peuvent être nil lors de fillStruct (valeur 0 attendue par ffi)."
+  ],
+  "fields": {},
+  "functions": {
+    "init": {"desc": "Initialisation du protocole (ne fait rien).", "params": {}, "returns": [], "internal": true},
+    "reset": {"desc": "Réinitialisation du protocole (ne fait rien).", "params": {}, "returns": [], "internal": true},
+    "getAddress": {"desc": "Adresse IP de destination, lue dans le réglage protocols_motionSim_address.", "params": {}, "returns": [{"type": "string", "desc": "Adresse IP (par défaut typique 127.0.0.1)."}], "internal": true},
+    "getPort": {"desc": "Port UDP de destination, lu dans le réglage protocols_motionSim_port.", "params": {}, "returns": [{"type": "integer", "desc": "Numéro de port."}], "internal": true},
+    "getMaxUpdateRate": {"desc": "Fréquence maximale d'envoi en Hz, lue dans le réglage protocols_motionSim_maxUpdateRate.", "params": {}, "returns": [{"type": "number", "desc": "Hz."}], "internal": true},
+    "isPhysicsStepUsed": {"desc": "Indique que ce protocole est mis à jour à chaque pas de physique.", "params": {}, "returns": [{"type": "boolean", "desc": "Toujours true."}], "internal": true},
+    "getStructDefinition": {"desc": "Renvoie la définition C de la structure du paquet (texte passé à ffi.cdef).", "params": {}, "returns": [{"type": "string", "desc": "Corps de la struct C."}], "internal": true},
+    "fillStruct": {
+      "desc": "Remplit le paquet avec les valeurs courantes de protocols.lua (position, vitesse, accélération, vecteur haut, angles, vitesses et accélérations angulaires).",
+      "params": {
+        "o": {"type": "cdata", "desc": "Struct C du paquet à remplir."},
+        "dtSim": {"type": "number", "desc": "Temps de simulation accumulé depuis le dernier envoi (non utilisé ici)."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

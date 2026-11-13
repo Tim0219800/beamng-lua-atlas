@@ -1,0 +1,87 @@
+{
+  "path": "lua/vehicle/controller/braking/hydraulicPumpBrake.lua",
+  "module": "Contrôleur auxiliaire pour un freinage hydraulique alimenté par la pompe du moteur (véhicules lourds ou anciens). Les freins avant et arrière (`brakeF`, `brakeR`) ne fonctionnent que moteur tournant ; sans pression ou si des poutres de dommage sont cassées, le frein de stationnement est serré automatiquement. Propose une assistance en côte (frein arrière résiduel sans accélérateur) et un blocage des freins avant. Ordre d'appel : `defaultOrder = 50` (tôt).",
+  "notes": [
+    "Clés jbeam lues par init : `relevantEngineName` (\"mainEngine\"), `frontDamageBeamTag`, `rearDamageBeamTag` (tags de poutres de `beamstate.tagBeamMap` ; leur casse coupe le frein avant ou arrière).",
+    "Le moteur est considéré en marche si `outputAV1` > 10 rad/s ; le coefficient est lissé.",
+    "Electrics écrits : brakeF, brakeR, frontBrakeLockOut (1/0), hillAssist (0..1). Lit electrics throttle et brake.",
+    "Assistance en côte : tant que le coefficient est > 0 et que l'accélérateur est <= 0, ajoute jusqu'à 0.8 au frein arrière.",
+    "Le frein de stationnement est serré via `controller.mainController.smartParkingBrake` s'il existe, sinon via `input.event(\"parkingbrake\", 1, FILTER_KBD)`.",
+    "Attention : updateGFX suppose que les tags jbeam sont définis ; avec un tag nil, `beamstate.tagBeamMap[nil]` est lu (renvoie nil, donc table vide)."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "defaultOrder": {"type": "number", "desc": "50 : rang d'appel par défaut, tôt dans la liste triée."}
+  },
+  "functions": {
+    "updateGFX": {
+      "desc": "Chaque frame : calcule brakeF/brakeR en tenant compte du moteur en marche, de l'assistance en côte, du blocage avant et des poutres cassées ; gère le frein de stationnement automatique et publie les electrics.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "beamBroken": {
+      "desc": "Hook de rupture de poutre : si la poutre est dans les tags de dommage avant ou arrière, désactive le frein correspondant jusqu'au reset.",
+      "params": {
+        "id": {"type": "integer", "desc": "cid de la poutre."},
+        "energy": {"type": "number", "desc": "Énergie de rupture (non utilisée)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setHillAssistCoef": {
+      "desc": "Fixe le coefficient d'assistance en côte (0 à 1, remis à 0 s'il est <= 0.01) et affiche un message UI sauf si silent.",
+      "params": {
+        "coef": {"type": "number", "desc": "Coefficient 0 à 1."},
+        "silent": {"type": "boolean|nil", "desc": "true pour ne pas afficher de message."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "changeHillAssistCoef": {
+      "desc": "Ajoute une variation au coefficient d'assistance en côte.",
+      "params": {"change": {"type": "number", "desc": "Variation (peut être négative)."}},
+      "returns": [],
+      "internal": false
+    },
+    "setFrontLockOutEnabled": {
+      "desc": "Active ou désactive le blocage du frein avant (le frein avant est coupé quand actif).",
+      "params": {
+        "enabled": {"type": "boolean", "desc": "true pour couper le frein avant."},
+        "silent": {"type": "boolean|nil", "desc": "true pour ne pas afficher de message."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "toggleFrontLockOutEnabled": {
+      "desc": "Inverse l'état du blocage du frein avant.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "reset": {
+      "desc": "Réinitialise le lisseur du moteur, les coefficients de dommage et le frein de stationnement automatique.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Retrouve le moteur et les listes de poutres de dommage (via les tags jbeam).",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "returns": [],
+      "internal": true
+    },
+    "getState": {
+      "desc": "Renvoie l'assistance en côte et le blocage avant pour la sauvegarde d'état.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Clés `<nom>_hillAssistCoef` et `<nom>_frontLockOutEnabled`."}],
+      "internal": false
+    },
+    "setState": {
+      "desc": "Restaure ces deux valeurs (silencieusement).",
+      "params": {"data": {"type": "table|nil", "desc": "Table d'état."}},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

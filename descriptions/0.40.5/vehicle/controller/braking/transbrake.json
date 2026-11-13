@@ -1,0 +1,60 @@
+{
+  "path": "lua/vehicle/controller/braking/transbrake.lua",
+  "module": "Contrôleur auxiliaire de transbrake (frein de boîte de drag racing) : il bloque la boîte via `gearbox:setLock(value)`. Le blocage est actif quand `gearbox.lockCoef == 0`. Publie cet état dans `electrics.values[electricsName]` et ajoute une entrée au menu radial. Peut aussi être commandé par l'évènement de gameplay `controller:<nom>`.",
+  "usage": "controller.getControllerSafe(\"transbrake\").setTransbrake(true)\n-- ou, côté jeu :\n-- onGameplayEvent(\"controller:transbrake\", {\"setTransbrake\", true})",
+  "notes": [
+    "Clés jbeam lues par init : `gearboxName` (\"gearbox\"), `electricsName` (\"transbrake\").",
+    "`M.updateGFX` est déclaré à `nop` en bas du fichier mais init le remplace par la vraie fonction si la boîte existe (sinon il reste `nop`).",
+    "Hook onGameplayEvent : l'évènement doit être \"controller:<typeName ou name>\" et `eventData` une table {\"setTransbrake\", boolean} ; un type incorrect est loggué en erreur.",
+    "Ce contrôleur est déplacé : l'ancien nom `transbrake` est redirigé vers `braking/transbrake`.",
+    "État sauvegardé sous la clé `<nom>Active` (boolean)."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "updateGFX": {"type": "function", "desc": "nop par défaut, remplacé dans init par la fonction qui publie l'electrics quand la boîte existe."}
+  },
+  "functions": {
+    "getState": {
+      "desc": "Renvoie si le transbrake est actif.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Clé `<nom>Active` (boolean)."}],
+      "internal": false
+    },
+    "init": {
+      "desc": "Retrouve la boîte, choisit la fonction updateGFX et ajoute l'entrée du menu radial (une seule fois).",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "returns": [],
+      "internal": true
+    },
+    "onGameplayEvent": {
+      "desc": "Hook de controller.lua. Si le nom d'évènement est \"controller:<typeName>\" ou \"controller:<name>\", exécute la commande contenue dans eventData : {\"setTransbrake\", boolean}. Exemple : onGameplayEvent(\"controller:transbrake\", {\"setTransbrake\", true}).",
+      "params": {
+        "event": {"type": "string", "desc": "Nom de l'évènement."},
+        "eventData": {"type": "table", "desc": "{nomDeCommande, valeur}."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setState": {
+      "desc": "Active ou désactive le transbrake pour correspondre à l'état sauvegardé (silencieusement).",
+      "params": {"data": {"type": "table|nil", "desc": "Table d'état."}},
+      "returns": [],
+      "internal": false
+    },
+    "setTransbrake": {
+      "desc": "Active ou relâche le blocage de la boîte (`gearbox:setLock`) et affiche un message sauf si silent.",
+      "params": {
+        "value": {"type": "boolean", "desc": "true pour bloquer."},
+        "silent": {"type": "boolean|nil", "desc": "true pour ne pas afficher de message."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "toggleTransbrake": {
+      "desc": "Inverse l'état du transbrake.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

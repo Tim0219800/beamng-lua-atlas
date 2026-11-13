@@ -1,0 +1,49 @@
+{
+  "path": "lua/common/utils/perf.lua",
+  "module": "Petite bibliothèque de mesure de performance par hook : pendant qu'elle est activée, chaque appel/retour de fonction Lua est chronométré, et des statistiques par fonction sont calculées par fenêtres de temps. Se charge avec require('utils/perf'). Réservé au débogage, ralentit fortement l'exécution ; peut alimenter l'UI de debug via un évènement guihooks.",
+  "usage": "local perf = require('utils/perf')\nperf.enable(1)\n-- code à mesurer, et perf.update() à chaque frame\nperf.disable()\nperf.saveDataToCSV('vehicleloading.csv')",
+  "notes": [
+    "enable() remplace tout hook debug existant ; disable() le retire (debug.sethook()).",
+    "M.update vaut nop tant que enable() n'a pas été appelé : il faut appeler perf.update() à chaque frame une fois activé.",
+    "M.data contient {frameCount, size, memory, fcts = {{f=nom, t=temps cumulé, c=nombre d'appels, s=score}}} plus les champs de srcData ; la mémoire vient de gcinfo().",
+    "Le score s = t * c / (windowSize * 1000) : produit temps cumulé x appels (formule étrange, déduit du code ; il ne s'agit pas d'un simple temps moyen).",
+    "Incohérence : la fenêtre par défaut de enable() est 10 s alors que la variable de module windowSize est initialisée à 2.",
+    "saveDataToCSV écrit l'en-tête ';function, time' puis des lignes 'nom, score' triées par score décroissant ; renvoie false si le fichier ne s'ouvre pas, mais rien (nil) en cas de succès."
+  ],
+  "fields": {
+    "data": {"type": "table", "desc": "Dernières statistiques calculées (voir notes). Vide tant qu'aucune fenêtre n'est terminée."},
+    "update": {"type": "function", "desc": "nop tant que désactivé ; devient la fonction de mise à jour (à appeler chaque frame) après enable()."}
+  },
+  "functions": {
+    "enable": {
+      "desc": "Active le profilage par hook (événements 'call' et 'return').",
+      "params": {
+        "_windowSize": {"type": "number|nil", "desc": "Durée d'une fenêtre de statistiques en secondes, 10 par défaut"},
+        "_guiHook": {"type": "string|nil", "desc": "Nom d'évènement guihooks.trigger auquel envoyer M.data à chaque fenêtre"},
+        "_srcData": {"type": "table|nil", "desc": "Champs ajoutés tels quels à M.data"}
+      },
+      "returns": []
+    },
+    "disable": {
+      "desc": "Désactive le profilage et remet M.update à nop.",
+      "params": {},
+      "returns": []
+    },
+    "getData": {
+      "desc": "Force le calcul des statistiques de la fenêtre en cours (et remet les compteurs à zéro), puis renvoie M.data.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Statistiques (voir notes)"}]
+    },
+    "saveDataToCSV": {
+      "desc": "Calcule les statistiques courantes et les écrit dans un CSV, trié par score décroissant.",
+      "params": {"filename": {"type": "string", "desc": "Fichier de sortie"}},
+      "returns": [{"type": "boolean|nil", "desc": "false si ouverture impossible, nil sinon"}]
+    },
+    "update": {
+      "desc": "À appeler à chaque frame une fois activé : compte les frames et déclenche le calcul des statistiques à chaque fenêtre écoulée. nop si désactivé.",
+      "params": {},
+      "returns": []
+    }
+  },
+  "classes": {}
+}

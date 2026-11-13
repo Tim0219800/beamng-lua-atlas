@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/scenario/waypointAction.lua",
+  "module": "But de scénario « wayPointAction » : affiche un message à l'écran quand un véhicule atteint certains waypoints de la course. Chargé par scenario_raceGoals (init, processState, updateFinalStatus) ; déclaré dans goals.vehicles avec id 'wayPointAction'.",
+  "usage": "-- JSON : {\"id\":\"wayPointAction\", \"vehicle\":\"scenario_player0\", \"value\":{\"wayPointNum\":[2,4], \"wayPointMsg\":[\"Moitié !\", \"Presque fini\"]}}",
+  "notes": [
+    "Sur l'évènement 'onRaceWaypointReached' (seulement si scenario.state == 'running' et raceState == 'racing'), compare vehWpData.cur (index de waypoint courant, via scenario_waypoints.getVehicleWaypointData) à chaque entrée de value.wayPointNum et affiche value.wayPointMsg[i] pendant 2 s (helper.flashUiMessage) à l'index correspondant.",
+    "Bug/incohérence : init met value.wayPointMsg à la chaîne \" \" si absent ; l'indexer comme un tableau (wayPointMsg[i]) donne nil et le message affiché est vide/nil.",
+    "Bug/incohérence : init ne vérifie pas que wayPointNum existe ; s'il est nil, processState appelle next(nil) et lève une erreur Lua.",
+    "Bug/incohérence : si getVehicleWaypointData renvoie nil (véhicule sans données de waypoint), vehWpData.cur lève une erreur.",
+    "updateFinalStatus est vide."
+  ],
+  "fields": {
+    "instances": {"type": "table<integer, table>", "desc": "Instances du but 'wayPointAction' pour le scénario courant, remplies par init."}
+  },
+  "functions": {
+    "init": {"desc": "Reconstruit M.instances à partir de scenario.goals.vehicles (id == 'wayPointAction') après validation du type de wayPointNum (tableau).", "params": {"scenario": {"type": "table", "desc": "scénario courant"}}, "returns": [], "internal": true},
+    "processState": {"desc": "Appelée par scenario_raceGoals ; ne réagit qu'à 'onRaceWaypointReached' pendant la course et affiche le message du waypoint atteint.", "params": {"scenario": {"type": "table", "desc": "scénario courant"}, "state": {"type": "string", "desc": "nom du hook"}, "stateData": {"type": "table|nil", "desc": "données du hook (non utilisées)"}}, "returns": [], "internal": true},
+    "updateFinalStatus": {"desc": "Appelée en fin de scénario ; ne fait rien.", "params": {"scenario": {"type": "table", "desc": "scénario courant"}, "instance": {"type": "table", "desc": "non utilisé"}}, "returns": [], "internal": true}
+  }
+}

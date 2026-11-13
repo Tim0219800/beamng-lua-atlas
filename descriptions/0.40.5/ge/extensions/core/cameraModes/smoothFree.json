@@ -1,0 +1,5 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/smoothFree.lua",
+  "module": "Caméra libre cinématique : construit une caméra du mode free, fixe groupOrder = 20 (après la caméra libre simple) et active le lissage via setSmoothedCam(true). Sert de second membre du groupe de caméras non liées : la touche caméra alterne free <-> smoothFree. Pas de classe propre : le constructeur renvoie un objet « free ».",
+  "functions": {}
+}

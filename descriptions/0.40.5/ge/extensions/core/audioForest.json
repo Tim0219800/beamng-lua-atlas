@@ -1,0 +1,131 @@
+{
+  "path": "lua/ge/extensions/core/audioForest.lua",
+  "module": "Extension GE (core_audioForest) : coordinateur d'exécution des émetteurs audio de forêt. À partir des arbres/objets du Forest du niveau, elle construit un nuage de noeuds audio éclaircis (audioForestCommon), puis à chaque frame calcule la position moyenne pondérée des noeuds autour de l'auditeur (rayon 150 m) et déplace un émetteur SFX unique (le 'main emitter') à ce point en réglant ses paramètres FMOD (RTPC). Un émetteur 'roomtone' indépendant peut aussi jouer une ambiance. Les réglages par niveau sont lus dans levels/<niveau>/dynamicAudioEmitters/forestData.audioSFX.json (créé par l'éditeur). Les RTPC : volume = intensité, pitch = densité de noeuds, color = taille de la végétation, texture = inutilisé ; le paramètre global g_ForestHeight = hauteur de l'auditeur par rapport au barycentre de la forêt (ou au terrain).",
+  "usage": "-- Piloté par l'éditeur ou par le fichier de niveau. Contrôle manuel :\ncore_audioForest.setMainEvent('event:>Ambiance>Forest>Mon_event')\ncore_audioForest.setEnabled(true)",
+  "notes": [
+    "Format du fichier de niveau : JSON lignes (une ligne 'meta' puis une ligne 'shape' par modèle de forêt avec include, classSel, classOvr).",
+    "Au chargement du niveau (onClientCustomObjectSpawning) et après un rechargement Lua (onDeserialized), l'état est reconstruit depuis le fichier ; onSerialize ne renvoie rien d'utile ({}).",
+    "Le calcul du nuage de noeuds est étalé sur plusieurs frames (runtimeLoadStepCount = 10000 objets par frame) via startRuntimePrepass/stepRuntimePrepass.",
+    "Constantes internes : rayon d'écoute 150 m, gain de volume 30, seuil d'écriture de g_ForestHeight 0,05 m, émetteur surélevé de 0,05 m.",
+    "Risque : onUpdate appelle em:setPosition / em:setVolumePitchCT sans tester que l'émetteur principal existe ; si enabled est vrai alors que mainEventName est vide (donc pas d'émetteur), cela déclenche une erreur sur nil (déduit du code).",
+    "Les coordonnées de noeuds sont en mètres monde ; la profondeur d'un noeud (nodeDepth) est la hauteur de l'objet multipliée par nodeHeightBlend (0,5)."
+  ],
+  "fields": {},
+  "functions": {
+    "setEnabled": {
+      "desc": "Active ou désactive le système. À l'activation, crée l'émetteur principal s'il y a un événement et des noeuds ; à la désactivation, le supprime.",
+      "params": {"v": {"type": "boolean", "desc": "true pour activer"}},
+      "returns": []
+    },
+    "setNodeCloud": {
+      "desc": "Installe un nuage de noeuds produit par audioForestCommon.buildNodeCloudFromForest (utilisé par l'éditeur ou le runtime). Récupère le terrain (core_terrain.getTerrain) et les paramètres globaux audio ; renvoie false et vide l'état si le nuage est invalide ou s'il n'y a pas de terrain.",
+      "params": {"cloud": {"type": "table", "desc": "Nuage : nodeCount, nodeX, nodeY, nodeZ, nodeDepth, nodeAvgNormVol, nodeSourceCount, pitchDensityInv, kdNodes"}},
+      "returns": [{"type": "boolean", "desc": "true si installé"}]
+    },
+    "setMainEvent": {
+      "desc": "Définit l'événement FMOD de l'émetteur principal (sans toucher à la roomtone). Chaîne vide : supprime l'émetteur. Sinon met à jour l'émetteur existant ou le crée si le système est actif et a des noeuds.",
+      "params": {"eventName": {"type": "string|nil", "desc": "Nom de l'événement FMOD"}},
+      "returns": []
+    },
+    "setRoomtoneEnabled": {
+      "desc": "Active ou coupe l'émetteur 'roomtone' indépendant (le crée s'il y a un événement roomtone).",
+      "params": {"v": {"type": "boolean", "desc": "true pour activer"}},
+      "returns": []
+    },
+    "setRoomtoneEvent": {
+      "desc": "Définit l'événement de la roomtone. Sans effet visible tant que la roomtone n'est pas activée ; chaîne vide : supprime l'émetteur.",
+      "params": {"eventName": {"type": "string|nil", "desc": "Nom de l'événement FMOD"}},
+      "returns": []
+    },
+    "setRoomtoneZ": {
+      "desc": "Fixe l'altitude de l'émetteur roomtone (positionné en x=0, y=0).",
+      "params": {"v": {"type": "number|nil", "desc": "Altitude en mètres, 0 par défaut"}},
+      "returns": []
+    },
+    "setPitchDensityInv": {
+      "desc": "Remplace la normalisation automatique du pitch (inverse du nombre de sources de référence). nil ou valeur <= 0 : revient à l'automatique.",
+      "params": {"v": {"type": "number|nil", "desc": "Facteur 1 / nombre de sources"}},
+      "returns": []
+    },
+    "getEmitterNodeIds": {
+      "desc": "Pour l'éditeur : renvoie la table {[1] = id du noeud représentatif le plus proche} et la taille 1.",
+      "params": {},
+      "returns": [
+        {"type": "table<integer, integer>", "desc": "Tableau d'ids de noeuds (0 si aucun)"},
+        {"type": "integer", "desc": "Nombre d'émetteurs (toujours 1)"}
+      ]
+    },
+    "getMainEmitterDebugState": {
+      "desc": "Pour la visualisation éditeur : état actuel de l'émetteur principal.",
+      "params": {},
+      "returns": [
+        {"type": "boolean", "desc": "true si l'émetteur est actif (des noeuds sont dans le rayon)"},
+        {"type": "number", "desc": "x (m)"},
+        {"type": "number", "desc": "y (m)"},
+        {"type": "number", "desc": "z (m)"},
+        {"type": "integer", "desc": "id du noeud représentatif"}
+      ]
+    },
+    "clearMainAudio": {
+      "desc": "Supprime uniquement le chemin audio principal (émetteur et nom d'événement).",
+      "params": {},
+      "returns": []
+    },
+    "clear": {
+      "desc": "Réinitialise tout l'état d'exécution (émetteurs, noeuds, état d'outil, réglages).",
+      "params": {},
+      "returns": []
+    },
+    "setPersistedToolState": {
+      "desc": "Mémorise l'état de l'outil d'édition pour la sauvegarde du niveau.",
+      "params": {"st": {"type": "table|nil", "desc": "Etat : version, mainEvent, roomtoneEnabled, roomtoneEvent, roomtoneZ, includeByShape, classSelByShape, classOverrideByShape, nodeVisDrawRadius, nodeVisSphereRadius, showNodes, selectedRow"}},
+      "returns": []
+    },
+    "getPersistedToolState": {
+      "desc": "Renvoie l'état d'outil actuellement chargé.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "État d'outil (voir setPersistedToolState)"}]
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque frame par le système d'extensions : fait avancer la pré-passe de chargement, puis déplace l'émetteur principal et règle ses RTPC selon les noeuds proches de l'auditeur (SFXSystem.getPositionXYZ).",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Pas de temps réel (s)"},
+        "dtSim": {"type": "number", "desc": "Pas de temps simulation (s)"},
+        "dtRaw": {"type": "number", "desc": "Pas de temps brut (s)"}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onClientCustomObjectSpawning": {
+      "desc": "Hook appelé quand les objets du niveau sont créés : charge la configuration du niveau et lance la pré-passe.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook appelé à la fin d'un niveau : réinitialise tout l'état.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorBeforeSaveLevel": {
+      "desc": "Hook appelé par l'éditeur avant la sauvegarde du niveau : écrit l'état d'outil mémorisé dans levels/<niveau>/dynamicAudioEmitters/forestData.audioSFX.json.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook de sérialisation avant rechargement Lua : renvoie une table vide.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{}"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook après rechargement Lua : relit la configuration du niveau et reconstruit l'état.",
+      "params": {"data": {"type": "table", "desc": "Données de onSerialize (ignorées)"}},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {}
+}

@@ -1,0 +1,35 @@
+{
+  "path": "lua/common/utils/calltracer.lua",
+  "module": "Outil de profilage/diagnostic : enregistre, grâce à un hook debug.sethook sur les appels de fonctions, qui appelle qui pendant une période, puis exporte le graphe d'appels au format TGF (ouvrable dans yEd). Se charge avec require('utils/calltracer'). Réservé au débogage.",
+  "usage": "local calltracer = require('utils/calltracer')\ncalltracer.reset()\ncalltracer.start()\n-- code à examiner\ncalltracer.stop()\ncalltracer.save('callgraph.tgf')",
+  "notes": [
+    "Les fonctions C et les fonctions sans nom (debug.getinfo().name nil) sont ignorées.",
+    "Chaque noeud est identifié par nom + source + ligne de définition ; une arête relie l'appelant de l'appelant (s2) à l'appelant immédiat (s1).",
+    "Le hook remplace tout hook debug existant (debug.sethook / debug.sethook() sans argument pour l'arrêt).",
+    "save() écrit via la globale writeFile ; le tableau des noeuds n'est pas vidé après sauvegarde, utiliser reset()."
+  ],
+  "fields": {},
+  "functions": {
+    "start": {
+      "desc": "Installe le hook d'appels (debug.sethook(trace, 'c')) : les appels sont enregistrés dès cet instant.",
+      "params": {},
+      "returns": []
+    },
+    "stop": {
+      "desc": "Retire le hook (debug.sethook()). Les noeuds déjà enregistrés sont conservés.",
+      "params": {},
+      "returns": []
+    },
+    "save": {
+      "desc": "Écrit le graphe d'appels enregistré au format TGF (liste de noeuds numérotés, ligne '#', puis les arêtes) dans un fichier.",
+      "params": {"filename": {"type": "string", "desc": "Fichier de sortie, ex. 'callgraph.tgf'"}},
+      "returns": []
+    },
+    "reset": {
+      "desc": "Efface tous les noeuds et arêtes enregistrés.",
+      "params": {},
+      "returns": []
+    }
+  },
+  "classes": {}
+}

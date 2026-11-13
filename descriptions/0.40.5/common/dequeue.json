@@ -1,0 +1,43 @@
+{
+  "path": "lua/common/dequeue.lua",
+  "module": "File à double extrémité (deque) : on peut ajouter et retirer des éléments au début comme à la fin. Bibliothèque de Pierre Chapuis (licence MIT en en-tête). Utile pour des historiques ou tampons glissants. L'objet est une table indexée par des entiers entre head+1 et tail.",
+  "usage": "local dq = require('dequeue').new()\ndq:push_right(1); dq:push_right(2); dq:push_left(0)\nprint(dq:pop_left(), dq:length())  -- 0  2",
+  "notes": [
+    "Les éléments nil sont interdits par push (assert).",
+    "new(data) réutilise la table fournie comme file (head/tail initialisés à 0 si absents) et marque _serialize = true.",
+    "rotate_* sur une file vide renvoie nil ; remove_left/right ne retirent que la première occurrence trouvée et décalent les éléments.",
+    "push_left/pop_left utilisent des indices <= 0 : la table n'est plus un tableau Lua pur (# n'est pas fiable, utiliser length())."
+  ],
+  "fields": {},
+  "functions": {
+    "new": {
+      "desc": "Crée une deque vide, ou transforme la table fournie en deque.",
+      "params": {"data": {"type": "table|nil", "desc": "Table existante à réutiliser (peut contenir head/tail)."}},
+      "returns": [{"type": "table", "desc": "Objet deque."}],
+      "internal": false
+    }
+  },
+  "classes": {
+    "deque": {
+      "desc": "Objet renvoyé par new. Champs : head, tail, _serialize.",
+      "functions": {
+        "push_right": {"desc": "Ajoute x à la fin.", "params": {"x": {"type": "any", "desc": "Élément (non nil)."}}},
+        "push_left": {"desc": "Ajoute x au début.", "params": {"x": {"type": "any", "desc": "Élément (non nil)."}}},
+        "peek_right": {"desc": "Renvoie le dernier élément sans le retirer.", "params": {}, "returns": [{"type": "any", "desc": "Dernier élément ou nil."}]},
+        "peek_left": {"desc": "Renvoie le premier élément sans le retirer.", "params": {}, "returns": [{"type": "any", "desc": "Premier élément ou nil."}]},
+        "pop_right": {"desc": "Retire et renvoie le dernier élément.", "params": {}, "returns": [{"type": "any", "desc": "Élément ou nil si vide."}]},
+        "pop_left": {"desc": "Retire et renvoie le premier élément.", "params": {}, "returns": [{"type": "any", "desc": "Élément ou nil si vide."}]},
+        "rotate_right": {"desc": "Fait passer n éléments de la fin vers le début.", "params": {"n": {"type": "integer|nil", "desc": "Nombre de rotations (défaut 1)."}}},
+        "rotate_left": {"desc": "Fait passer n éléments du début vers la fin.", "params": {"n": {"type": "integer|nil", "desc": "Nombre de rotations (défaut 1)."}}},
+        "remove_right": {"desc": "Supprime la première occurrence de x en cherchant depuis la fin.", "params": {"x": {"type": "any", "desc": "Valeur à retirer."}}, "returns": [{"type": "boolean", "desc": "true si un élément a été retiré."}]},
+        "remove_left": {"desc": "Supprime la première occurrence de x en cherchant depuis le début.", "params": {"x": {"type": "any", "desc": "Valeur à retirer."}}, "returns": [{"type": "boolean", "desc": "true si un élément a été retiré."}]},
+        "iter_right": {"desc": "Itérateur de la fin vers le début.", "params": {}, "returns": [{"type": "function", "desc": "Itérateur (for x in q:iter_right())."}]},
+        "iter_left": {"desc": "Itérateur du début vers la fin.", "params": {}, "returns": [{"type": "function", "desc": "Itérateur (for x in q:iter_left())."}]},
+        "length": {"desc": "Nombre d'éléments.", "params": {}, "returns": [{"type": "integer", "desc": "tail - head."}]},
+        "is_empty": {"desc": "Indique si la file est vide.", "params": {}, "returns": [{"type": "boolean", "desc": "true si vide."}]},
+        "contents": {"desc": "Copie le contenu dans un tableau ordonné de 1 à length().", "params": {}, "returns": [{"type": "table", "desc": "Tableau des éléments."}]},
+        "reset": {"desc": "Remet head et tail à 0 (les anciens éléments ne sont pas effacés de la table).", "params": {}}
+      }
+    }
+  }
+}

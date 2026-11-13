@@ -1,0 +1,36 @@
+{
+  "path": "lua/common/utils/heatmap.lua",
+  "module": "Preuve de concept : génère une image SVG (2048x2048) du réseau routier de la carte (map.getMap()) avec un point rouge par véhicule à chaque appel de update(). Se charge avec require('utils/heatmap'). Sert à visualiser des trajectoires ; l'image est écrite avec la bibliothèque libs/EzSVG.",
+  "usage": "local heatmap = require('utils/heatmap')\nheatmap.init('trace.svg')\n-- chaque frame : heatmap.update()\nheatmap.destroy() -- sauvegarde puis libère",
+  "notes": [
+    "Taille fixée à 2048 (terrainSize), non lue du terrain (commentaire dans le code) ; les coordonnées sont décalées par la position du TerrainBlock et l'axe Y est inversé.",
+    "Routes dont la valeur de lien (difficulté) est < 0.7 : brun (terre), sinon noir. Largeur = 2 x rayon du noeud.",
+    "init() suppose qu'un TerrainBlock existe dans la scène (scenetree.findClassObjects('TerrainBlock')[1]) : plante sinon.",
+    "update() ajoute un cercle SVG par véhicule et par appel : le document grossit à chaque frame.",
+    "destroy() appelle save() avant de libérer ; init() appelle destroy() d'abord, ce qui sauvegarde l'ancien document éventuel (dans le NOUVEAU nom de fichier, car filename est déjà remplacé)."
+  ],
+  "fields": {},
+  "functions": {
+    "init": {
+      "desc": "Crée le document SVG, mémorise la position du terrain et dessine les routes et noeuds de la carte.",
+      "params": {"_filename": {"type": "string", "desc": "Fichier SVG de sortie"}},
+      "returns": []
+    },
+    "update": {
+      "desc": "À appeler à chaque frame (y compris en menu, sans rendu 3D) : dessine un cercle rouge à la position de chaque objet de map.objects.",
+      "params": {},
+      "returns": []
+    },
+    "save": {
+      "desc": "Écrit le SVG courant dans le fichier choisi à init(). Ne fait rien si aucun document.",
+      "params": {},
+      "returns": []
+    },
+    "destroy": {
+      "desc": "Sauvegarde puis libère le document et la position du terrain.",
+      "params": {},
+      "returns": []
+    }
+  },
+  "classes": {}
+}

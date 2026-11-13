@@ -1,0 +1,147 @@
+{
+  "path": "lua/ge/extensions/freeroam/bigMapPoiProvider.lua",
+  "module": "Fournisseur de données pour la grande carte : transforme les POI bruts (missions, garages, stations-service, concessionnaires, points de départ, drift, drag, crawl, véhicules du joueur, livraison…) en une structure prête pour l'interface (poiData), des groupes (groupData : rating_, type_, distance_, difficulty_, branch_, missionType_…) et des filtres prédéfinis (freeroam ou carrière). Gère aussi l'état de visibilité de chaque groupe et envoie le tout à l'interface par le hook UI BigmapMissionData. Un moddeur qui ajoute des POI les voit apparaître via gameplay_rawPois ; ce module décide dans quel groupe ils tombent.",
+  "usage": "-- masquer le groupe des stations-service puis renvoyer les données à la grande carte\nfreeroam_bigMapPoiProvider.setGroupVisibility('type_gasStation', false)\nfreeroam_bigMapPoiProvider.sendCurrentLevelMissionsToBigmap()",
+  "notes": [
+    "Les visibilités de groupes sont stockées en mémoire seulement ; un groupe inconnu est considéré visible (getGroupVisibility renvoie vrai sauf si la valeur est false). Les groupes par défaut sont initialisés à visible à la première construction des groupes.",
+    "Les données (cachedGroupData, cachedPoiData, cachedFilters) sont reconstruites par sendCurrentLevelMissionsToBigmap ; les accesseurs getCached* la déclenchent si le cache est invalide.",
+    "Bug : sendCurrentLevelMissionsToBigmap appelle d'abord invalidateCache() puis teste isCacheValid(), donc le cache n'est jamais réutilisé : tout est recalculé à chaque appel (et gameplay_rawPois.clear() est appelé dans buildPoiDataCache).",
+    "Bug/incohérence : le tri par distance est neutralisé (distance fixée à 10, calcul commenté), donc tous les POI sont dans le groupe distance_veryClose.",
+    "sendMissionLocationsToMinimap ne fait que mettre le drapeau sendToMinimap à false ; elle n'envoie rien à la minicarte. forceSend, onClientStartMission et requestMissionLocationsForMinimap le remettent à true. clearMissionsFromMinimap envoie NavigationStaticMarkers avec une liste vide.",
+    "Les fonctions de formatage et de construction supposent que les modules career_* (career_career, career_branches, career_modules_tutorial, career_modules_testDrive, career_modules_delivery_general) existent comme globales.",
+    "Filtres : en carrière -> careerPois, un filtre par domaine (domain_<id>) et delivery si le mode livraison est actif ; en freeroam -> missionsByType, freeroamActivities, freeroamPois.",
+    "gameMode envoyé à l'interface : 'freeroam' par défaut, 'career' si la carrière est active, 'mission' si une mission est au premier plan (priorité à ce dernier)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "gameplay_missions_missions, freeroam_bigMapMode, gameplay_rawPois, gameplay_playmodeMarkers."}
+  },
+  "functions": {
+    "clearMissionsFromMinimap": {
+      "desc": "Vide les marqueurs de missions de la minicarte (hook UI NavigationStaticMarkers avec la clé 'missions' et une liste vide) si un niveau est chargé.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "forceSend": {
+      "desc": "Marque le drapeau sendToMinimap à true : le prochain onPreRender rappellera sendMissionLocationsToMinimap. Sert aussi de onClientStartMission et requestMissionLocationsForMinimap.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "formatMissionForBigmap": {
+      "desc": "Convertit une mission en table pour l'interface : id, icône, nom, description, miniature, aperçus, difficulté, voyage rapide disponible/débloqué, progression, classement (rating), clé de classement, etc.",
+      "params": {"elemData": {"type": "table", "desc": "Données du POI de mission (utilise missionId et idInCluster)."}},
+      "returns": [{"type": "table|nil", "desc": "Table formatée, nil si la mission n'existe pas."}],
+      "internal": false
+    },
+    "formatPoiForBigmap": {
+      "desc": "Convertit un POI non mission en table pour l'interface (id, icône issue de bigmapMarker.cardIcon ou du type, nom, description, miniature, aperçus, voyage rapide, canSetRoute, agrégats). Le voyage rapide n'est disponible qu'hors carrière ou pendant le tutoriel de carrière.",
+      "params": {"poi": {"type": "table", "desc": "POI brut de gameplay_rawPois avec markerInfo.bigmapMarker."}},
+      "returns": [{"type": "table", "desc": "Table formatée pour la grande carte."}],
+      "internal": false
+    },
+    "getActiveGroupIds": {
+      "desc": "Clés des groupes actuellement visibles (selon l'état mémorisé).",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Clés de groupes visibles."}],
+      "internal": false
+    },
+    "getAllActiveGroupPoiIds": {
+      "desc": "Ids des POI appartenant aux groupes visibles des filtres du cache (reconstruit si besoin). Un POI présent dans plusieurs groupes apparaît plusieurs fois.",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Ids de POI."}],
+      "internal": false
+    },
+    "getAllGroupIds": {
+      "desc": "Clés de tous les groupes connus (visibles ou non).",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Clés de groupes."}],
+      "internal": false
+    },
+    "getCachedFilters": {
+      "desc": "Filtres de la grande carte (freeroam ou carrière), reconstruits si le cache est invalide.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Liste de filtres {key, icon, title, groups}."}],
+      "internal": false
+    },
+    "getCachedGroupData": {
+      "desc": "Groupes indexés par clé (label, icon, elements, visible, groupKey), reconstruits si le cache est invalide.",
+      "params": {},
+      "returns": [{"type": "table<string, table>", "desc": "Données des groupes."}],
+      "internal": false
+    },
+    "getCachedPoiData": {
+      "desc": "Données formatées des POI indexées par id, chacune avec filterData (groupTags, sortingValues).",
+      "params": {},
+      "returns": [{"type": "table<string, table>", "desc": "POI formatés."}],
+      "internal": false
+    },
+    "getGroupVisibility": {
+      "desc": "Indique si un groupe est visible (vrai par défaut si inconnu).",
+      "params": {"groupKey": {"type": "string", "desc": "Clé du groupe, par ex. 'type_garage'."}},
+      "returns": [{"type": "boolean", "desc": "true si visible."}],
+      "internal": false
+    },
+    "invalidateCache": {
+      "desc": "Efface le cache de groupes, POI et filtres ; il sera reconstruit à la prochaine demande.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onClientStartMission": {
+      "desc": "Hook appelé au démarrage d'un niveau : équivaut à forceSend().",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onPreRender": {
+      "desc": "Hook appelé à chaque image : si l'état de jeu a des marqueurs de mode de jeu et qu'un niveau est chargé et que sendToMinimap est vrai, appelle sendMissionLocationsToMinimap (qui remet le drapeau à false).",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Temps réel écoulé (s)."},
+        "dtSim": {"type": "number", "desc": "Temps de simulation écoulé (s)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "requestMissionLocationsForMinimap": {
+      "desc": "Demande un nouvel envoi des positions de missions à la minicarte (équivaut à forceSend).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "resetAllGroupsToVisible": {
+      "desc": "Remet tous les groupes connus à visible.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "sendCurrentLevelMissionsToBigmap": {
+      "desc": "Reconstruit tout (groupes, POI, filtres), détermine gameMode et règles (canSetRoute), appelle freeroam_bigMapMode.setOnlyIdsVisible avec les POI des groupes visibles, puis envoie le tout à l'interface via guihooks.trigger('BigmapMissionData', data).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "sendMissionLocationsToMinimap": {
+      "desc": "Remet le drapeau interne sendToMinimap à false ; n'envoie en réalité rien (corps réduit à ce drapeau).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setGroupVisibility": {
+      "desc": "Définit la visibilité d'un groupe ; l'effet n'apparaît qu'après un nouvel envoi à la grande carte.",
+      "params": {
+        "groupKey": {"type": "string", "desc": "Clé du groupe."},
+        "isVisible": {"type": "boolean", "desc": "true pour afficher."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "toggleGroupVisibility": {
+      "desc": "Inverse la visibilité d'un groupe (la mise à jour de la grande carte est commentée dans le code).",
+      "params": {"groupKey": {"type": "string", "desc": "Clé du groupe."}},
+      "returns": [],
+      "internal": false
+    }
+  },
+  "classes": {}
+}

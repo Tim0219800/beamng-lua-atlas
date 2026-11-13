@@ -1,0 +1,36 @@
+{
+  "path": "lua/vehicle/controller/drivingDynamics/supervisors/yawProviders/STMEstimate.lua",
+  "module": "Fournisseur de lacet attendu (type \"auxiliary\", defaultOrder 80, providerOrder 20) pour le superviseur yawControl. Il estime le taux de lacet que le conducteur demande avec le modèle de bicyclette à rigidité de dérive (angle de roue avant, empattement, vitesse caractéristique), limité par une accélération latérale maximale. S'enregistre via yawControl.registerYawProvider ; si yawControl est absent, il se désactive.",
+  "notes": [
+    "Clé jbeam : maxLateralAcceleration (défaut 12 m/s²).",
+    "Formule : min( |angleRoueAvant| / empattement * v / (1 + v² / vc²), maxLateralAcceleration / v ) avec v = vitesse virtuelle si virtualSpeed est entièrement fiable (>= 1) sinon vitesse de roue. Le résultat est toujours positif (le signe est géré par yawControl).",
+    "Incohérence : yawControl appelle yawProvider.calculateExpectedYaw(speed, dt), mais la fonction est déclarée calculateExpectedYaw(dt) : le paramètre dt reçoit en fait la vitesse. Sans conséquence car il n'est pas utilisé.",
+    "Paramètres modifiables : isEnabled, maxLateralAcceleration. isEnabled n'est pas consulté dans calculateExpectedYaw (le fournisseur répond toujours)."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "defaultOrder": {"type": "number", "desc": "Ordre d'exécution par défaut (80)."},
+    "providerOrder": {"type": "number", "desc": "Priorité parmi les fournisseurs de lacet (20)."},
+    "isActive": {"type": "boolean", "desc": "Vrai après init, faux si yawControl est absent."}
+  },
+  "functions": {
+    "init": {"desc": "Passe isActive à true.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
+    "initSecondStage": {"desc": "S'enregistre auprès de yawControl et lit maxLateralAcceleration.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
+    "initLastStage": {"desc": "Ne fait rien.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
+    "reset": {"desc": "Ne fait rien.", "params": {}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Vide (version debug : envoie isEnabled).", "params": {"dt": {"type": "number", "desc": "Pas de temps graphique (s)."}}, "returns": [], "internal": true},
+    "calculateExpectedYaw": {
+      "desc": "Renvoie le taux de lacet attendu (rad/s, positif) d'après l'angle de roue avant et la vitesse ; appelé par yawControl à chaque pas fixe.",
+      "params": {"dt": {"type": "number", "desc": "Déclaré dt mais reçoit la vitesse (voir notes) ; non utilisé."}},
+      "returns": [{"type": "number", "desc": "Lacet attendu en rad/s."}],
+      "internal": true
+    },
+    "setDebugMode": {"desc": "Active/désactive les paquets de debug.", "params": {"debugEnabled": {"type": "boolean", "desc": "Vrai pour activer."}}, "returns": []},
+    "registerCMU": {"desc": "Mémorise la référence au CMU.", "params": {"cmu": {"type": "table", "desc": "Contrôleur CMU."}}, "returns": [], "internal": true},
+    "shutdown": {"desc": "Désactive le fournisseur.", "params": {}, "returns": []},
+    "setParameters": {"desc": "Applique isEnabled et maxLateralAcceleration.", "params": {"parameters": {"type": "table<string, any>", "desc": "Paramètres à appliquer."}}, "returns": []},
+    "setConfig": {"desc": "Remplace la configuration.", "params": {"configTable": {"type": "table", "desc": "Table {isEnabled, maxLateralAcceleration}."}}, "returns": []},
+    "getConfig": {"desc": "Renvoie une copie de la configuration.", "params": {}, "returns": [{"type": "table", "desc": "Copie."}]},
+    "sendConfigData": {"desc": "Envoie la configuration au CMU.", "params": {}, "returns": []}
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/chase.lua",
+  "module": "Mode de caméra 'chase' (poursuite) lié au véhicule : la caméra se place derrière le véhicule, à distance fixe (par défaut 5 m, FOV 65), regarde la cible et suit son cap avec un lissage ; elle bascule automatiquement devant le véhicule quand il recule. Choix du mode : camera.lua charge chaque fichier de cameraModes et crée, pour chaque véhicule, une instance par mode (ici sous le nom 'chase'), configurée par la section jbeam de caméra (cameraChase est converti en 'chase' par jbeam/sections/camera.lua). 'chase' figure dans la liste de configuration par défaut {orbit, driver, onboard.hood, external, relative, chase, droneChase} mais disabledByDefault = true : elle n'est pas dans le cycle de touches tant que l'utilisateur ne l'active pas dans Options > Caméras ; on peut aussi l'appeler explicitement via core_camera.setByName(player, 'chase'). Le module renvoie un constructeur : require('core/cameraModes/chase')(options).",
+  "usage": "core_camera.setByName(0, 'chase', true)",
+  "notes": [
+    "Contrôles : yaw/pitch (relatifs ou axes) ne tournent pas librement : au-delà du seuil 0.05 la caméra saute à des positions fixes (gauche/droite à ±90°, derrière à 180°, plus haut de 30° en pitch) ; le zoom bascule entre la distance min (distanceMin, 3 m par défaut), la distance par défaut (distance, 5 m par défaut) et le double de la distance.",
+    "Options de configuration jbeam utilisées : defaultRotation (vec3 degrés ; son y est inversé, défaut (0,-17,0)), distance, distanceMin, mode ('ref' par défaut ou 'center' qui vise le centre de la boîte du véhicule), fov, offset (vec3, mis à l'échelle par les longueurs des axes du véhicule).",
+    "Réglages utilisateur : cameraOrbitRelaxation (défaut 3, lue mais non utilisée dans update) et cameraChaseRollSmoothing (défaut 1 ; 0 ou presque désactive le roulis et garde la caméra à l'horizontale).",
+    "La caméra se retourne devant le véhicule quand la vitesse avant lissée dépasse -1.5 m/s en marche arrière (et revient derrière au-delà de +1.5 m/s).",
+    "update met data.res.collisionCompatible = true et délègue à cameraModes/collision pour éviter que la caméra traverse le décor ; si les noeuds de référence sont confondus (longueur nulle) il renvoie false avec une orientation par défaut.",
+    "setRefNodes a pour vraie signature (centerNodeID, leftNodeID, backNodeID) (l'index automatique en affiche deux)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Instance du mode 'chase' pour un véhicule. Champs principaux : defaultRotation, camRot, distance, defaultDistance, camMinDist, camDist, mode, fov, offset, refNodes {ref,left,back}, forwardLooking, rollSmoothing, collision.",
+      "functions": {
+        "init": {
+          "desc": "Initialise les lisseurs, l'état de suivi, le module de collision et applique la configuration, les réglages et un reset. Appelé par le constructeur.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "onVehicleCameraConfigChanged": {
+          "desc": "Applique la configuration jbeam de la caméra : defaultRotation (y inversé, défaut (0,-17,0)), distances, mode ('ref' par défaut), FOV (65 par défaut), offset. Appelé à la création et quand les données jbeam du véhicule changent.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "onSettingsChanged": {
+          "desc": "Relit les réglages (cameraOrbitRelaxation, cameraChaseRollSmoothing), prévient le module de collision et fait un reset. Appelé quand les réglages changent.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "listParams": {
+          "desc": "Renvoie la liste des réglages ajustables pour l'UI de contrôle de caméra / flux vidéo : uniquement le FOV (10 à 140 degrés, pas 1, défaut 65) car la distance est recalculée à chaque frame.",
+          "params": {},
+          "returns": [{"type": "table", "desc": "Liste de descripteurs {key='fov', icon, title, kind='range', type='int', value, default, min, max, step, unit}"}]
+        },
+        "setParam": {
+          "desc": "Applique un réglage ajustable. Seule la clé 'fov' est gérée.",
+          "params": {
+            "key": {"type": "string", "desc": "Clé du réglage ('fov')"},
+            "value": {"type": "number|string", "desc": "Nouvelle valeur (convertie par tonumber)"}
+          },
+          "returns": []
+        },
+        "reset": {
+          "desc": "Remet la caméra derrière le véhicule (rotation par défaut, x à 0, regard vers l'avant) et force un recalage au prochain frame.",
+          "params": {},
+          "returns": []
+        },
+        "update": {
+          "desc": "Calcul par frame, appelé par cameraUpdate quand ce mode est la caméra focalisée : lit les entrées MoveManager, calcule la direction et le haut du véhicule depuis les noeuds de référence, positionne la caméra derrière la cible (lissage de rotation et de distance) et écrit data.res.pos, rot, fov, targetPos, puis applique la collision.",
+          "params": {"data": {"type": "table", "desc": "Données de frame : veh, pos, dt, res {pos, rot, fov, targetPos...}"}},
+          "returns": [{"type": "boolean", "desc": "true si le résultat est valide, false si les noeuds de référence sont dégénérés"}]
+        },
+        "setRefNodes": {
+          "desc": "Mémorise les noeuds de référence du véhicule (centre, gauche, arrière), appelé par camera.lua à la création de la caméra.",
+          "params": {
+            "centerNodeID": {"type": "integer", "desc": "Noeud central (ref)"},
+            "leftNodeID": {"type": "integer", "desc": "Noeud à gauche"},
+            "backNodeID": {"type": "integer", "desc": "Noeud à l'arrière"}
+          },
+          "returns": []
+        },
+        "mouseLocked": {
+          "desc": "Hook appelé quand la souris est verrouillée ou libérée : à la libération, remet à zéro l'entrée relative accumulée (relYaw, relPitch).",
+          "params": {"locked": {"type": "boolean", "desc": "true si la souris est verrouillée"}},
+          "returns": [],
+          "internal": true
+        }
+      }
+    }
+  }
+}

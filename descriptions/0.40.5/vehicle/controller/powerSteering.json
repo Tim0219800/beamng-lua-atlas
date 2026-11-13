@@ -1,0 +1,18 @@
+{
+  "path": "lua/vehicle/controller/powerSteering.lua",
+  "module": "Contrôleur auxiliaire d'assistance de direction. Règle hydros.wheelPowerSteeringCoef (coefficient d'assistance appliqué par le moteur de direction) : valeur fixe 1 + constantOffset, ou, si les paramètres le permettent, une valeur qui varie linéairement avec la vitesse des roues entre speedSlow et speedFast.",
+  "notes": [
+    "Clés jbeam lues dans init : strengthFast (1), strengthSlow (1), speedSlow (0 m/s), speedFast (0 m/s), constantOffset (-0.2).",
+    "La variation avec la vitesse n'est activée que si speedFast > speedSlow ET strengthFast > strengthSlow ; sinon M.updateGFX reste nil et seul le coefficient fixe 1 + constantOffset est appliqué (une assistance qui diminuerait avec la vitesse n'est donc pas gérée).",
+    "Formule : coef = max(max((strengthFast-strengthSlow) * (min(vitesse, speedFast) - speedSlow) / (speedFast-speedSlow) + strengthSlow, 0) + constantOffset, 0), vitesse = electrics.values.wheelspeed (m/s).",
+    "M.updateGFX est nil à la déclaration et réaffecté dans init."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "updateGFX": {"type": "function|nil", "desc": "Fonction de mise à jour de l'assistance selon la vitesse ; nil si le contrôleur ne varie pas."}
+  },
+  "functions": {
+    "init": {"desc": "Lit les clés jbeam, fixe hydros.wheelPowerSteeringCoef = 1 + constantOffset et active updateGFX si l'assistance varie avec la vitesse.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
+    "reset": {"desc": "Remet hydros.wheelPowerSteeringCoef à 1 + constantOffset.", "internal": true}
+  }
+}

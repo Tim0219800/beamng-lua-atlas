@@ -1,0 +1,31 @@
+{
+  "path": "lua/vehicle/energyStorage/electricBattery.lua",
+  "module": "Type de stockage d'énergie 'electricBattery' : batterie de véhicule électrique. L'énergie est gardée en joules (energyType 'electricEnergy') et configurée en kWh dans le jbeam. Instanciée par energyStorage.lua à partir d'une entrée jbeam de `type = \"electricBattery\"` ; les moteurs électriques la consomment via les périphériques du powertrain.",
+  "usage": "-- jbeam\n-- \"energyStorage\": [[\"name\",\"type\",\"batteryCapacity\",\"startingCapacity\"],[\"mainBattery\",\"electricBattery\",60,60]]",
+  "notes": [
+    "Champs jbeam lus : name, type, batteryCapacity (kWh, défaut 0), startingCapacity (kWh, défaut = batteryCapacity).",
+    "Conversion : 1 kWh = 3 600 000 J. storedEnergy, energyCapacity, initialStoredEnergy sont en joules.",
+    "Anomalie de nommage : remainingVolume contient storedEnergy / 3600000, c'est-à-dire l'énergie en kWh, pas un volume.",
+    "updateGFX réécrit storedEnergy via setStoredEnergy chaque frame pour recalculer remainingVolume et remainingRatio ; aucune limite (clamp) n'est appliquée à storedEnergy à ce stade.",
+    "setRemainingRatio ne met à jour que storedEnergy (le reste est recalculé à la frame suivante).",
+    "Pas de fuite, pas de onBreak, pas de serialize/deserialize pour ce type."
+  ],
+  "fields": {},
+  "functions": {
+    "new": {"desc": "Crée un stockage de type batterie électrique à partir de l'entrée jbeam. Le stockage renvoyé est une table avec name, type, energyType, assignedDevices, capacity (kWh), startingCapacity (kWh), energyCapacity (J), initialStoredEnergy (J), storedEnergy, remainingRatio, remainingVolume, jbeamData et les méthodes listées dans la classe 'storage'.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam fusionnées du stockage."}}, "returns": [{"type": "table", "desc": "Instance de stockage (classe 'storage')."}], "internal": true}
+  },
+  "classes": {
+    "storage": {
+      "desc": "Instance renvoyée par new(jbeamData). Les méthodes s'appellent avec la syntaxe `storage:methode(...)`.",
+      "functions": {
+        "setStoredEnergy": {"desc": "Fixe l'énergie stockée et recalcule remainingVolume (kWh) et remainingRatio.", "params": {"energy": {"type": "number", "desc": "Énergie en joules."}}},
+        "setRemainingRatio": {"desc": "Fixe l'énergie à energyCapacity * ratio (ratio borné entre 0 et 1).", "params": {"ratio": {"type": "number", "desc": "Niveau de charge de 0 à 1."}}},
+        "updateGFX": {"desc": "Appelé chaque frame par energyStorage.updateGFX : recalcule les valeurs dérivées.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (inutilisé)."}}},
+        "registerDevice": {"desc": "Enregistre un périphérique du powertrain dans assignedDevices (par son nom).", "params": {"device": {"type": "table", "desc": "Périphérique avec un champ name."}}},
+        "setPartCondition": {"desc": "Restaure l'état depuis la condition de pièce : un nombre est interprété comme fraction de energyCapacity, une table doit contenir storedEnergy.", "params": {"odometer": {"type": "number", "desc": "Inutilisé."}, "integrity": {"type": "number|table", "desc": "Fraction (0 à 1) ou {storedEnergy = J}."}, "visual": {"type": "any", "desc": "Inutilisé."}}},
+        "getPartCondition": {"desc": "Renvoie l'intégrité (toujours 1) et l'état {storedEnergy}.", "params": {}, "returns": [{"type": "number", "desc": "integrityValue (1)."}, {"type": "table", "desc": "{storedEnergy = J}."}]},
+        "reset": {"desc": "Restaure la charge de départ (startingCapacity en kWh convertie en J).", "params": {}}
+      }
+    }
+  }
+}

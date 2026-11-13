@@ -1,0 +1,1607 @@
+{
+  "path": "lua/ge/ge_utils.lua",
+  "module": "Fonctions utilitaires globales de la VM GE, chargées par main.lua (require('ge_utils')) avant les extensions. Elles sont accessibles partout sans require : getPlayerVehicle, getObjectByID, getAllVehicles, vehiclesIterator, scenetree, spawnPrefab, castRay, getTimeOfDay/setTimeOfDay, sanitizeVehicleSpawnOptions, translateDistance/translateVelocity, etc. Le fichier définit aussi la globale scenetree (lecture seule : scenetree.NomObjet renvoie l'objet de scène) et un chargeur de modules (advancedModuleLoader) installé en 2e position de package.loaders.",
+  "usage": "local veh = getPlayerVehicle(0)\nif veh then\n  local pos = veh:getPosition()\n  local hit = castRay(pos, pos - vec3(0,0,5), true, false)\n  if hit then log('I','', 'sol à '..hit.pt.z) end\nend\nfor vid, v in vehiclesIterator() do print(vid, v:getJBeamFilename()) end\nsetTimeOfDay('13:30')",
+  "notes": [
+    "Cache : getPlayerVehicle(player) et getObjectByID(id) mémorisent leur résultat (false interne, renvoyé comme nil). main.lua appelle invalidatePlayerVehicles() / invalidateVehicleCache() à chaque vehicleSpawned, vehicleSwitched, vehicleDestroyed. getAllVehicles() renvoie la table mise en cache : ne pas la modifier.",
+    "vehiclesIterator(ctx) renvoie (id, objet) ; l'itération se fait sur le cache créé au premier appel. activeVehiclesIterator ne retient que les véhicules avec veh:getActive() vrai.",
+    "Globales définies : scenetree (singleton read-only dont __index fait findObject), TorqueScriptLua (call obsolète : ne fait que loguer une erreur ; callNoReturn l'appelle ; exec -> TorqueScript.exec ; getBoolVar/getVar/setVar obsolètes -> VariableRegistry), moduleLoaderFallback, serializeJsonToFile (= jsonWriteFile, obsolète), string.c_str (rétrocompatibilité).",
+    "Table scenetree : findObject(nom), findObjectById(id), objectExists(id), objectExistsById(id), decalRoadContainsPoint(id, point), findClassObjects(className) (liste de noms ou nil), findSubClassObjects(className), getAllObjects() (noms ou nil). Toute autre clé est traitée comme un nom d'objet : scenetree.MissionGroup. Les écritures sont ignorées.",
+    "Les chaînes de position/rotation/échelle de spawnPrefab pour un PrefabV2 sont lues avec le motif [0-9]* : les nombres négatifs ou décimaux ne sont pas reconnus (bug probable ; passer des vec3/QuatF plutôt que des chaînes).",
+    "Bug/incohérence : convertVehicleColorsToPaints logue la variable inexistante 'colors' (au lieu de colorTable) ; convertVehicleNameKeysToVehicleIdKeys logue 'vid' qui n'existe pas dans cette fonction (valeur nil dans le message).",
+    "Bug/incohérence : canSpawnAnotherVehicle renvoie true sauf sur PS5/PS5 Pro ; quand la mémoire manque, la fonction se termine sans return explicite (renvoie donc nil, pas false).",
+    "Bug/incohérence : translateDistance ne renvoie rien si le réglage uiUnitLength n'est ni 'metric' ni 'imperial' ; translateVelocity échouerait alors.",
+    "Bug/incohérence : le motif de getDirs exclut les entrées contenant un point après un '/', donc ignore les dossiers dont le nom contient un point.",
+    "Fonctions de test/dev non documentées en détail : scenetree_tests, scenetree_test_fields, test_GE_fields, testGBitmap, testZIP, collisionReloadTest, testSounds, test_lua, testRaycasting. Fonctions locales du fichier (colorDifference, prefabFilenameToTemplateName, comparisons...) non exportées.",
+    "the_high_sea_crap_detector, appelée par main.lua, cherche des fichiers .url à la racine dont le hash SHA1 est connu, et renvoie true si trouvé (affecte la globale sailingTheHighSeas).",
+    "getTimeOfDay/setTimeOfDay : l'objet TimeOfDay stocke time comme fraction de jour décalée de 0,5 (heures = ((time+0.5)%1)*24). Les fonctions font la conversion ; heure en 24 h. setTimeOfDay accepte 'HH', 'HH:MM', 'HH:MM:SS' ou {hours, mins, secs}."
+  ],
+  "fields": {},
+  "functions": {
+    "triggerDelayedStartGenerator": {
+      "desc": "Renvoie une fonction (via core_jobsystem.wrap) qui, une fois appelée, exécute func dans un job ; avec waitForCleanup, attend 3 frames de rendu pour laisser les ressources GPU se libérer.",
+      "params": {
+        "logTag": {
+          "type": "string",
+          "desc": "tag de log"
+        },
+        "startType": {
+          "type": "string",
+          "desc": "texte du message de log"
+        },
+        "func": {
+          "type": "function",
+          "desc": "fonction à exécuter après l'attente"
+        },
+        "waitForCleanup": {
+          "type": "boolean",
+          "desc": "attendre 3 frames avant d'exécuter func"
+        }
+      },
+      "returns": [
+        {
+          "type": "function",
+          "desc": "fonction wrapper à appeler pour lancer le job"
+        }
+      ],
+      "internal": false
+    },
+    "deleteObject": {
+      "desc": "Supprime l'objet de scène portant ce nom s'il existe.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "nom de l'objet"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "prefabIsChildOfGroup": {
+      "desc": "Indique si obj est dans le SimGroup nommé groupName, soit directement, soit via son prefab parent.",
+      "params": {
+        "obj": {
+          "type": "table|nil",
+          "desc": "objet de scène"
+        },
+        "groupName": {
+          "type": "string",
+          "desc": "nom du SimGroup"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true si contenu"
+        }
+      ],
+      "internal": false
+    },
+    "getOwningPrefab": {
+      "desc": "Remonte les parents Prefab (v1) de obj et renvoie le prefab de plus haut niveau.",
+      "params": {
+        "obj": {
+          "type": "table",
+          "desc": "objet de scène"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "prefab racine, nil s'il n'y en a pas"
+        }
+      ],
+      "internal": false
+    },
+    "getOwningPrefabInstance": {
+      "desc": "Idem pour les instances de PrefabV2 (Engine.Prefab.findContainingPrefabInstance), renvoie l'instance de plus haut niveau.",
+      "params": {
+        "obj": {
+          "type": "table",
+          "desc": "objet de scène"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "instance racine ou nil"
+        }
+      ],
+      "internal": false
+    },
+    "createObject": {
+      "desc": "Crée un objet de la classe C++ exposée en globale (ex. 'SimGroup', 'TSStatic') et incrémente son compteur de références. Logue une erreur et renvoie nil si la classe n'existe pas. Il faut ensuite appeler :registerObject(nom).",
+      "params": {
+        "className": {
+          "type": "string",
+          "desc": "nom de la classe"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "nouvel objet"
+        }
+      ],
+      "internal": false
+    },
+    "collisionReloadTest": {
+      "desc": "Debug : recharge la collision (be:reloadCollision) et affiche la durée en ms.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "invalidatePlayerVehicles": {
+      "desc": "Vide les caches de getPlayerVehicle et getObjectByID. Appelée par main.lua à chaque spawn, changement ou destruction de véhicule.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "getPlayerVehicle": {
+      "desc": "Version avec cache de be:getPlayerVehicle(player) (évite de générer du garbage). Renvoie le véhicule contrôlé par le joueur, ou nil.",
+      "params": {
+        "player": {
+          "type": "integer",
+          "desc": "index du joueur (0 = joueur principal)"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "objet BeamNGVehicle"
+        }
+      ],
+      "internal": false
+    },
+    "getObjectByID": {
+      "desc": "Version avec cache de be:getObjectByID(id) : renvoie le véhicule d'id donné.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "id de l'objet véhicule"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "objet BeamNGVehicle"
+        }
+      ],
+      "internal": false
+    },
+    "vehicleSetPositionRotation": {
+      "desc": "Place un véhicule à une position et une rotation (quaternion). Logue une erreur si le véhicule n'existe pas.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "id du véhicule"
+        },
+        "px": {
+          "type": "number",
+          "desc": "x (m)"
+        },
+        "py": {
+          "type": "number",
+          "desc": "y (m)"
+        },
+        "pz": {
+          "type": "number",
+          "desc": "z (m)"
+        },
+        "rx": {
+          "type": "number",
+          "desc": "quaternion x"
+        },
+        "ry": {
+          "type": "number",
+          "desc": "quaternion y"
+        },
+        "rz": {
+          "type": "number",
+          "desc": "quaternion z"
+        },
+        "rw": {
+          "type": "number",
+          "desc": "quaternion w"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getVehicleColor": {
+      "desc": "Renvoie la couleur principale du véhicule sous forme de chaîne 'r g b a metallic roughness clearcoat clearcoatRoughness' (valeurs arrondies à 0,01). Véhicule joueur 0 si vehicleID est nil ; chaîne vide si introuvable.",
+      "params": {
+        "vehicleID": {
+          "type": "integer|nil",
+          "desc": "id du véhicule"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "chaîne de 8 valeurs séparées par des espaces"
+        }
+      ],
+      "internal": false
+    },
+    "getVehicleColorPalette": {
+      "desc": "Comme getVehicleColor mais pour colorPalette<index> (index 0 ou 1 selon le véhicule), avec les données métalliques courantes.",
+      "params": {
+        "index": {
+          "type": "integer",
+          "desc": "numéro de palette"
+        },
+        "vehicleId": {
+          "type": "integer|nil",
+          "desc": "id du véhicule (joueur 0 par défaut)"
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "chaîne de 8 valeurs, nil si pas de véhicule"
+        }
+      ],
+      "internal": false
+    },
+    "invalidateVehicleCache": {
+      "desc": "Invalide le cache de getAllVehicles / vehiclesIterator. Appelée par main.lua.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "getAllVehicles": {
+      "desc": "Renvoie la liste (en cache) de tous les objets BeamNGVehicle présents dans le niveau.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table<integer, table>",
+          "desc": "véhicules"
+        }
+      ],
+      "internal": false
+    },
+    "getAllVehiclesByType": {
+      "desc": "Filtre getAllVehicles par type de modèle (core_vehicles.getModel(veh.jbeam).model.Type).",
+      "params": {
+        "typeList": {
+          "type": "table<integer, string>|nil",
+          "desc": "types voulus ; défaut {'Car','Truck','Automation','Traffic'}"
+        }
+      },
+      "returns": [
+        {
+          "type": "table<integer, table>",
+          "desc": "véhicules retenus"
+        }
+      ],
+      "internal": false
+    },
+    "vehiclesIterator": {
+      "desc": "Itérateur générique sur tous les véhicules : for id, veh in vehiclesIterator() do ... end.",
+      "params": {
+        "ctx": {
+          "type": "table|nil",
+          "desc": "contexte réutilisable pour éviter l'allocation"
+        }
+      },
+      "returns": [
+        {
+          "type": "function",
+          "desc": "itérateur"
+        },
+        {
+          "type": "table",
+          "desc": "contexte"
+        }
+      ],
+      "internal": false
+    },
+    "activeVehiclesIterator": {
+      "desc": "Comme vehiclesIterator mais ne parcourt que les véhicules actifs (veh:getActive()).",
+      "params": {
+        "ctx": {
+          "type": "table|nil",
+          "desc": "contexte réutilisable"
+        }
+      },
+      "returns": [
+        {
+          "type": "function",
+          "desc": "itérateur"
+        },
+        {
+          "type": "table",
+          "desc": "contexte"
+        }
+      ],
+      "internal": false
+    },
+    "getClosestVehicle": {
+      "desc": "Cherche le véhicule actif le plus proche de requesterID et rappelle le Lua du véhicule demandeur : callbackfct(id, distance) ou callbackfct(-1,-1) si aucun.",
+      "params": {
+        "requesterID": {
+          "type": "integer",
+          "desc": "id du véhicule demandeur"
+        },
+        "callbackfct": {
+          "type": "string",
+          "desc": "nom d'une fonction côté VLua du demandeur"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "forEachAudioChannel": {
+      "desc": "Appelle callback(nom, canal) pour chaque objet SFXSourceChannel de la scène.",
+      "params": {
+        "callback": {
+          "type": "function",
+          "desc": "fonction(name, channel)"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getAudioChannelsVolume": {
+      "desc": "Renvoie les volumes courants de tous les canaux audio.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table<string, number>",
+          "desc": "volume par nom de canal"
+        }
+      ],
+      "internal": false
+    },
+    "setAudioChannelsVolume": {
+      "desc": "Applique des volumes à des canaux audio par nom (format de getAudioChannelsVolume).",
+      "params": {
+        "data": {
+          "type": "table<string, number>",
+          "desc": "volume par nom de canal"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "testSounds": {
+      "desc": "Test de dev (marqué TODO remove) : crée des SFXParameterGroup et sources audio de test.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "getObjectByClass": {
+      "desc": "Renvoie le premier objet de scène de la classe donnée (ex. 'TimeOfDay').",
+      "params": {
+        "className": {
+          "type": "string",
+          "desc": "classe C++"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "objet ou nil"
+        }
+      ],
+      "internal": false
+    },
+    "getObjectsByClass": {
+      "desc": "Renvoie tous les objets de scène de la classe donnée (ex. 'CloudLayer').",
+      "params": {
+        "className": {
+          "type": "string",
+          "desc": "classe C++"
+        }
+      },
+      "returns": [
+        {
+          "type": "table<integer, table>|nil",
+          "desc": "objets ; nil si aucun"
+        }
+      ],
+      "internal": false
+    },
+    "getTimeOfDay": {
+      "desc": "Renvoie l'heure du jeu (objet TimeOfDay), format 24 h. Nil s'il n'y a pas d'objet TimeOfDay dans la scène.",
+      "params": {
+        "asString": {
+          "type": "boolean|nil",
+          "desc": "true : chaîne 'HH:MM:SS' ; sinon table {hours, mins, secs}"
+        }
+      },
+      "returns": [
+        {
+          "type": "string|table|nil",
+          "desc": "heure"
+        }
+      ],
+      "internal": false
+    },
+    "setTimeOfDay": {
+      "desc": "Règle l'heure du jeu.",
+      "params": {
+        "inp": {
+          "type": "string|table",
+          "desc": "'13:00', '13:00:30' ou {hours=, mins=, secs=}"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "false s'il n'y a pas d'objet TimeOfDay ; nil sinon"
+        }
+      ],
+      "internal": false
+    },
+    "loadPrefabv2Template": {
+      "desc": "Charge un fichier prefab PrefabV2 comme modèle nommé d'après son chemin (/ -> _, _ -> __).",
+      "params": {
+        "filename": {
+          "type": "string",
+          "desc": "chemin du .prefab.json"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "addPrefab": {
+      "desc": "Crée un objet Prefab (v1, chargement manuel) sans le charger. Logue une erreur et renvoie nil si le nom existe déjà.",
+      "params": {
+        "objName": {
+          "type": "string",
+          "desc": "nom du prefab"
+        },
+        "objFileName": {
+          "type": "string",
+          "desc": "fichier prefab"
+        },
+        "objPos": {
+          "type": "string",
+          "desc": "position 'x y z' (champ TorqueScript)"
+        },
+        "objRotation": {
+          "type": "string",
+          "desc": "rotation 'x y z angle'"
+        },
+        "objScale": {
+          "type": "string",
+          "desc": "échelle 'x y z'"
+        },
+        "useGlobalTranslation": {
+          "type": "boolean|nil",
+          "desc": "défaut false"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "prefab créé"
+        }
+      ],
+      "internal": false
+    },
+    "spawnPrefab": {
+      "desc": "Crée et charge un prefab dans MissionGroup. Si le fichier se termine par .prefab.json et décrit une classe PrefabV2, instancie le modèle (créé au besoin) ; sinon utilise addPrefab + load. Active la reconstruction de collision si l'éditeur est actif.",
+      "params": {
+        "objName": {
+          "type": "string",
+          "desc": "nom de l'instance"
+        },
+        "objFileName": {
+          "type": "string",
+          "desc": "fichier prefab"
+        },
+        "objPos": {
+          "type": "string|vec3",
+          "desc": "position"
+        },
+        "objRotation": {
+          "type": "string|QuatF",
+          "desc": "rotation"
+        },
+        "objScale": {
+          "type": "string|vec3",
+          "desc": "échelle"
+        },
+        "useGlobalTranslation": {
+          "type": "boolean|nil",
+          "desc": "seulement pour les prefabs v1"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "prefab ou instance créé"
+        }
+      ],
+      "internal": false
+    },
+    "removePrefab": {
+      "desc": "Décharge et supprime le prefab de ce nom s'il existe.",
+      "params": {
+        "objName": {
+          "type": "string",
+          "desc": "nom du prefab"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "pushActionMap": {
+      "desc": "Active l'ActionMap nommée <map>ActionMap (push).",
+      "params": {
+        "map": {
+          "type": "string",
+          "desc": "nom sans le suffixe ActionMap"
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "résultat de push, ou false si introuvable"
+        }
+      ],
+      "internal": false
+    },
+    "pushActionMapHighestPriority": {
+      "desc": "Comme pushActionMap mais avec priorité maximale (pushFirst).",
+      "params": {
+        "map": {
+          "type": "string",
+          "desc": "nom sans le suffixe ActionMap"
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "résultat, ou false si introuvable"
+        }
+      ],
+      "internal": false
+    },
+    "popActionMap": {
+      "desc": "Désactive l'ActionMap nommée <map>ActionMap (pop).",
+      "params": {
+        "map": {
+          "type": "string",
+          "desc": "nom sans le suffixe ActionMap"
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "résultat, ou false si introuvable"
+        }
+      ],
+      "internal": false
+    },
+    "queueCallbackInVehicle": {
+      "desc": "Exécute vluaCommand dans le Lua du véhicule puis rappelle la fonction GE geluaFunctionName avec le résultat de la commande suivi de ...  Préférer l'API vehicleBridge quand c'est possible.",
+      "params": {
+        "veh": {
+          "type": "table",
+          "desc": "objet véhicule"
+        },
+        "geluaFunctionName": {
+          "type": "string",
+          "desc": "nom de fonction GE (globale ou chemin)"
+        },
+        "vluaCommand": {
+          "type": "string",
+          "desc": "expression Lua évaluée côté véhicule"
+        },
+        "...": {
+          "type": "any",
+          "desc": "arguments additionnels sérialisables"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getSceneWaypointRadius": {
+      "desc": "Rayon d'un waypoint de scène : le plus grand des 3 composantes de l'échelle.",
+      "params": {
+        "o": {
+          "type": "table",
+          "desc": "objet de scène"
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "rayon (m)"
+        }
+      ],
+      "internal": false
+    },
+    "checkVehicleProperty": {
+      "desc": "Teste si le champ propertyName de l'objet de scène du véhicule vaut value.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "id du véhicule"
+        },
+        "propertyName": {
+          "type": "string",
+          "desc": "champ"
+        },
+        "value": {
+          "type": "any",
+          "desc": "valeur comparée"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "résultat (nil/false si introuvable)"
+        }
+      ],
+      "internal": false
+    },
+    "setVehicleProperty": {
+      "desc": "Écrit le champ propertyName de l'objet de scène du véhicule.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "id du véhicule"
+        },
+        "propertyName": {
+          "type": "string",
+          "desc": "champ"
+        },
+        "value": {
+          "type": "any",
+          "desc": "valeur"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getMaxVehicleAmount": {
+      "desc": "Estime le nombre maximal de véhicules : nombre de cœurs physiques, limité par la mémoire disponible en Go et par limit.",
+      "params": {
+        "limit": {
+          "type": "integer|nil",
+          "desc": "plafond (128 par défaut)"
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "nombre estimé"
+        }
+      ],
+      "internal": false
+    },
+    "setMaxVehicleAmountForTraffic": {
+      "desc": "Règle les réglages trafficAmount et trafficParkingAmount à (max estimé - 1, minimum 1). Utilisée par les options principales.",
+      "params": {
+        "limit": {
+          "type": "integer|nil",
+          "desc": "plafond (8 par défaut)"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "logMemoryInfo": {
+      "desc": "Journalise les statistiques de RAM (Engine.Platform.getMemoryInfo) au niveau de log donné.",
+      "params": {
+        "lovLevel": {
+          "type": "string",
+          "desc": "niveau de log ('I','W'...) ; nom du paramètre tel quel dans le code"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "canSpawnAnotherVehicle": {
+      "desc": "Sur PS5/PS5 Pro uniquement, vérifie qu'il reste assez de mémoire (défaut 1 Go) ; sinon affiche un toast, journalise et émet onVehicleSpawnBlocked(availableGB, minGB). Sur les autres plateformes renvoie toujours true.",
+      "params": {
+        "minGB": {
+          "type": "number|nil",
+          "desc": "mémoire libre minimale (Go)"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "true si possible, nil sinon (pas de return explicite)"
+        }
+      ],
+      "internal": false
+    },
+    "recordPlayerAction": {
+      "desc": "Enregistre une action dans un tampon circulaire du moteur, imprimé au log en cas de crash ou à l'arrêt ; les actions identiques consécutives sont fusionnées.",
+      "params": {
+        "text": {
+          "type": "string",
+          "desc": "texte de l'action"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "test_lua": {
+      "desc": "Test de dev : crée/supprime un SimGroup 'hey'.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "convertVehicleColorsToPaints": {
+      "desc": "Convertit une liste de couleurs {r,g,b,a} en liste de paints (createVehiclePaint + validateVehiclePaint).",
+      "params": {
+        "colorTable": {
+          "type": "table<integer, number[]>",
+          "desc": "couleurs à 4 composantes"
+        }
+      },
+      "returns": [
+        {
+          "type": "table<integer, table>",
+          "desc": "paints"
+        }
+      ],
+      "internal": false
+    },
+    "createVehiclePaint": {
+      "desc": "Construit une table paint {baseColor={r,g,b,a}, metallic, roughness, clearcoat, clearcoatRoughness}. Valeurs par défaut : couleur blanche, metallic 0.2, roughness 0.5, clearcoat 0.8, clearcoatRoughness 0.",
+      "params": {
+        "color": {
+          "type": "table|nil",
+          "desc": "{x,y,z,w} (r,g,b,a)"
+        },
+        "metallicData": {
+          "type": "table|nil",
+          "desc": "{metallic=,roughness=,clearcoat=,clearcoatRoughness=} ou tableau de 4 nombres"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "paint"
+        }
+      ],
+      "internal": false
+    },
+    "getVehiclePaint": {
+      "desc": "Paint actuel d'un véhicule (couleur et données métalliques de l'objet de scène).",
+      "params": {
+        "vehicleId": {
+          "type": "integer|nil",
+          "desc": "id (joueur 0 par défaut)"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "paint"
+        }
+      ],
+      "internal": false
+    },
+    "validateVehiclePaint": {
+      "desc": "Complète une table paint avec les valeurs par défaut manquantes (modifie et renvoie la table).",
+      "params": {
+        "paint": {
+          "type": "table",
+          "desc": "paint"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "paint validé"
+        }
+      ],
+      "internal": false
+    },
+    "vehicleMetallicPaintDataFromColor": {
+      "desc": "Extrait metallic, roughness, clearcoat, clearcoatRoughness des éléments 5 à 8 d'un tableau de couleur.",
+      "params": {
+        "colorTable": {
+          "type": "table",
+          "desc": "tableau de 8 nombres"
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "metallic"
+        },
+        {
+          "type": "number",
+          "desc": "roughness"
+        },
+        {
+          "type": "number",
+          "desc": "clearcoat"
+        },
+        {
+          "type": "number",
+          "desc": "clearcoatRoughness"
+        }
+      ],
+      "internal": false
+    },
+    "vehicleMetallicPaintString": {
+      "desc": "Formate 4 valeurs en chaîne 'metallic roughness clearcoat clearcoatRoughness'.",
+      "params": {
+        "metallic": {
+          "type": "number",
+          "desc": "metallic"
+        },
+        "roughness": {
+          "type": "number",
+          "desc": "roughness"
+        },
+        "clearcoat": {
+          "type": "number",
+          "desc": "clearcoat"
+        },
+        "clearcoatRoughness": {
+          "type": "number",
+          "desc": "clearcoatRoughness"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "chaîne"
+        }
+      ],
+      "internal": false
+    },
+    "validateVehicleDataColor": {
+      "desc": "Normalise une couleur (chaîne ou table de 4 valeurs) en chaîne 'r g b a' à 2 décimales ; défaut '1 1 1 1'.",
+      "params": {
+        "color": {
+          "type": "string|table|nil",
+          "desc": "couleur"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "chaîne normalisée"
+        }
+      ],
+      "internal": false
+    },
+    "getRandomPaint": {
+      "desc": "Tire un paint au hasard parmi ceux du modèle. Avec commonPaintProb, favorise des couleurs réelles courantes (blanc, noir, gris, argent, bleu, rouge) en choisissant le paint du modèle le plus proche. Modèle de repli : 'pessima'.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "id du véhicule modèle"
+        },
+        "commonPaintProb": {
+          "type": "number|nil",
+          "desc": "probabilité 0 à 1 de viser une couleur courante (0 par défaut)"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "nom du paint"
+        },
+        {
+          "type": "table",
+          "desc": "paint"
+        }
+      ],
+      "internal": false
+    },
+    "fillVehicleSpawnOptionDefaults": {
+      "desc": "Complète une table d'options de spawn de véhicule : résout config (.pc ou nom), paints (color/paintName/paint pour 1 à 3 couleurs), config par défaut du modèle. Modifie et renvoie opt.",
+      "params": {
+        "modelName": {
+          "type": "string",
+          "desc": "nom du modèle de véhicule"
+        },
+        "opt": {
+          "type": "table|nil",
+          "desc": "options (config, color, paintName, paint…)"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "options complétées"
+        }
+      ],
+      "internal": false
+    },
+    "sanitizeVehicleSpawnOptions": {
+      "desc": "Appelle fillVehicleSpawnOptionDefaults, valide les paints, recopie licenseText et vehicleName, et calcule pos/rot par défaut : à 5 m à gauche du véhicule joueur et même orientation, ou devant la caméra libre.",
+      "params": {
+        "model": {
+          "type": "string",
+          "desc": "modèle"
+        },
+        "opt": {
+          "type": "table",
+          "desc": "options de spawn"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "options finales (pos vec3, rot quat, paint, paint2, paint3…)"
+        }
+      ],
+      "internal": false
+    },
+    "createPlayerSpawningData": {
+      "desc": "Construit la table {model=, options={config, paint, licenseText, vehicleName, pos, rot}} pour le spawn d'un véhicule joueur.",
+      "params": {
+        "model": {
+          "type": "string",
+          "desc": "modèle"
+        },
+        "config": {
+          "type": "string",
+          "desc": "configuration"
+        },
+        "color": {
+          "type": "string|table|nil",
+          "desc": "couleur"
+        },
+        "licenseText": {
+          "type": "string|nil",
+          "desc": "plaque"
+        },
+        "vehicleName": {
+          "type": "string|nil",
+          "desc": "nom de l'objet"
+        },
+        "pos": {
+          "type": "vec3|nil",
+          "desc": "position"
+        },
+        "rot": {
+          "type": "quat|nil",
+          "desc": "rotation"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "données de spawn"
+        }
+      ],
+      "internal": false
+    },
+    "extractVehicleData": {
+      "desc": "Extrait {config, licenseText, color, model, vehicleName} d'un véhicule de la scène, ou renvoie le véhicule utilisateur de la campagne en cours s'il y en a un.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "id du véhicule"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "données ; nil et avertissement si l'id est invalide"
+        }
+      ],
+      "internal": false
+    },
+    "castRay": {
+      "desc": "Raycast lent (Engine.castRay) entre deux points. Renvoie nil sans impact, sinon la table du moteur avec pt et norm convertis en vec3.",
+      "params": {
+        "origin": {
+          "type": "vec3",
+          "desc": "point de départ (m)"
+        },
+        "target": {
+          "type": "vec3",
+          "desc": "point d'arrivée (m)"
+        },
+        "includeTerrain": {
+          "type": "boolean|nil",
+          "desc": "inclure le terrain (false par défaut)"
+        },
+        "renderGeometry": {
+          "type": "boolean|nil",
+          "desc": "utiliser la géométrie de rendu (false par défaut)"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "résultat avec pt et norm"
+        }
+      ],
+      "internal": false
+    },
+    "castRayDebug": {
+      "desc": "Comme castRay avec dessin debug (sphères de départ/arrivée, ligne verte si impact, rouge sinon, normale).",
+      "params": {
+        "origin": {
+          "type": "vec3",
+          "desc": "départ"
+        },
+        "target": {
+          "type": "vec3",
+          "desc": "arrivée"
+        },
+        "includeTerrain": {
+          "type": "boolean|nil",
+          "desc": "terrain"
+        },
+        "renderGeometry": {
+          "type": "boolean|nil",
+          "desc": "géométrie de rendu"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "résultat"
+        }
+      ],
+      "internal": false
+    },
+    "testRaycasting": {
+      "desc": "Test de dev : balaie un castRayDebug animé ; à appeler chaque frame avec dtReal.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "delta temps (s)"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "convertVehicleIdKeysToVehicleNameKeys": {
+      "desc": "Transforme une table indexée par id de véhicule en table indexée par nom de véhicule (champ 'name').",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "table par id"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "table par nom ; nil si data n'est pas une table"
+        }
+      ],
+      "internal": false
+    },
+    "convertVehicleNameKeysToVehicleIdKeys": {
+      "desc": "Inverse : transforme une table indexée par nom de véhicule en table indexée par id.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "table par nom"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "table par id (vide si erreur)"
+        }
+      ],
+      "internal": false
+    },
+    "isOfficialContent": {
+      "desc": "Vrai si le chemin réel commence par le dossier du jeu.",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "chemin réel"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "résultat"
+        }
+      ],
+      "internal": false
+    },
+    "isOfficialContentVPath": {
+      "desc": "Idem pour un chemin virtuel (résolu par FS:getFileRealPath).",
+      "params": {
+        "vpath": {
+          "type": "string",
+          "desc": "chemin virtuel"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "résultat"
+        }
+      ],
+      "internal": false
+    },
+    "isPlayerVehConfig": {
+      "desc": "Vrai si le fichier est un .pc situé dans le dossier vehicles/ de l'utilisateur (config créée par le joueur).",
+      "params": {
+        "vpath": {
+          "type": "string",
+          "desc": "chemin virtuel du .pc"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "résultat"
+        }
+      ],
+      "internal": false
+    },
+    "imageExistsDefault": {
+      "desc": "Renvoie path s'il existe, sinon fallbackPath ou '/ui/images/appDefault.png'.",
+      "params": {
+        "path": {
+          "type": "string|nil",
+          "desc": "image"
+        },
+        "fallbackPath": {
+          "type": "string|nil",
+          "desc": "image de repli"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "chemin retenu"
+        }
+      ],
+      "internal": false
+    },
+    "dirContent": {
+      "desc": "Liste récursive de tout le contenu (fichiers) de path via FS:findFiles.",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "dossier"
+        }
+      },
+      "returns": [
+        {
+          "type": "table<integer, string>",
+          "desc": "chemins"
+        }
+      ],
+      "internal": false
+    },
+    "fileExistsOrNil": {
+      "desc": "Renvoie path s'il s'agit d'un fichier existant, sinon nil.",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "fichier"
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "chemin ou nil"
+        }
+      ],
+      "internal": false
+    },
+    "getDirs": {
+      "desc": "Liste des sous-dossiers de path sur recursiveLevels niveaux (filtre les entrées ressemblant à des fichiers).",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "dossier"
+        },
+        "recursiveLevels": {
+          "type": "integer",
+          "desc": "niveaux de récursion (-1 illimité)"
+        }
+      },
+      "returns": [
+        {
+          "type": "table<integer, string>",
+          "desc": "dossiers uniques"
+        }
+      ],
+      "internal": false
+    },
+    "getFileSize": {
+      "desc": "Taille d'un fichier en octets (ouvert avec io.open), -1 s'il est illisible.",
+      "params": {
+        "filename": {
+          "type": "string",
+          "desc": "fichier"
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "taille ou -1"
+        }
+      ],
+      "internal": false
+    },
+    "escape_magic": {
+      "desc": "Échappe les caractères magiques d'un motif Lua pour un usage littéral.",
+      "params": {
+        "str": {
+          "type": "string",
+          "desc": "texte"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "texte échappé"
+        }
+      ],
+      "internal": false
+    },
+    "translateDistance": {
+      "desc": "Convertit une distance en m vers l'unité du réglage uiUnitLength : km/m en métrique, mi/ft en impérial. big=true force la grande unité, 'auto' choisit à partir de 1000 m (métrique) ou 1 mile.",
+      "params": {
+        "value": {
+          "type": "number|nil",
+          "desc": "distance en mètres (0 si nil)"
+        },
+        "big": {
+          "type": "boolean|string|nil",
+          "desc": "true, false ou 'auto'"
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "valeur convertie"
+        },
+        {
+          "type": "string",
+          "desc": "unité : 'km','m','mi','ft'"
+        },
+        {
+          "type": "string",
+          "desc": "système 'metric' ou 'imperial'"
+        },
+        {
+          "type": "boolean",
+          "desc": "grande unité utilisée"
+        }
+      ],
+      "internal": false
+    },
+    "translateVelocity": {
+      "desc": "Convertit une vitesse en m/s vers l'unité du réglage : km/h ou m/s (métrique), mph ou ft/s (impérial). big=true multiplie la valeur par 3600 pour les grandes unités.",
+      "params": {
+        "value": {
+          "type": "number",
+          "desc": "vitesse en m/s"
+        },
+        "big": {
+          "type": "boolean|string|nil",
+          "desc": "true pour km/h ou mph (valeur x3600 après conversion de distance) ; sinon m/s ou ft/s"
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "valeur convertie"
+        },
+        {
+          "type": "string",
+          "desc": "unité"
+        },
+        {
+          "type": "string",
+          "desc": "système"
+        },
+        {
+          "type": "boolean|string",
+          "desc": "big tel que passé"
+        }
+      ],
+      "internal": false
+    },
+    "tableChooseRandomKey": {
+      "desc": "Renvoie une clé choisie au hasard dans la table (seed math.random au premier appel).",
+      "params": {
+        "t": {
+          "type": "table|nil",
+          "desc": "table"
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "clé, ou nil"
+        }
+      ],
+      "internal": false
+    },
+    "randomASCIIString": {
+      "desc": "Génère une chaîne aléatoire de chiffres et lettres.",
+      "params": {
+        "len": {
+          "type": "integer",
+          "desc": "longueur"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "chaîne"
+        }
+      ],
+      "internal": false
+    },
+    "stringToTable": {
+      "desc": "Découpe une chaîne selon un séparateur (motif de classe de caractères, défaut '%s' = espaces) ; les champs vides sont ignorés.",
+      "params": {
+        "str": {
+          "type": "string",
+          "desc": "chaîne"
+        },
+        "sep": {
+          "type": "string|nil",
+          "desc": "contenu d'une classe [^...] ; défaut '%s'"
+        }
+      },
+      "returns": [
+        {
+          "type": "table<integer, string>",
+          "desc": "morceaux"
+        }
+      ],
+      "internal": false
+    },
+    "spaceSeparated4Values": {
+      "desc": "Concatène 4 valeurs avec des espaces en réutilisant une table interne (pas d'allocation).",
+      "params": {
+        "a": {
+          "type": "any",
+          "desc": "valeur 1"
+        },
+        "b": {
+          "type": "any",
+          "desc": "valeur 2"
+        },
+        "c": {
+          "type": "any",
+          "desc": "valeur 3"
+        },
+        "d": {
+          "type": "any",
+          "desc": "valeur 4"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "'a b c d'"
+        }
+      ],
+      "internal": false
+    },
+    "copyfile": {
+      "desc": "Copie un fichier texte (modes 'r'/'w' : peut altérer un fichier binaire sous Windows). Renvoie nil si ouverture impossible.",
+      "params": {
+        "src": {
+          "type": "string",
+          "desc": "source"
+        },
+        "dst": {
+          "type": "string",
+          "desc": "destination"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getDirectories": {
+      "desc": "Liste les sous-dossiers immédiats (chemins complets) de path.",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "dossier"
+        }
+      },
+      "returns": [
+        {
+          "type": "table<integer, string>",
+          "desc": "dossiers"
+        }
+      ],
+      "internal": false
+    },
+    "newFPSLimiter": {
+      "desc": "Crée un limiteur de fréquence : limiter:update(dt) renvoie true environ targetFPS fois par seconde. À appeler depuis onPreRender/onUpdate.",
+      "params": {
+        "targetFPS": {
+          "type": "number",
+          "desc": "fréquence voulue (Hz)"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "objet avec update(self, dt)"
+        }
+      ],
+      "internal": false
+    },
+    "the_high_sea_crap_detector": {
+      "desc": "Détecte des fichiers .url connus à la racine du jeu (version piratée) ; appelée par main.lua pour définir sailingTheHighSeas.",
+      "params": {},
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true si détecté"
+        }
+      ],
+      "internal": true
+    },
+    "getDateTimeUTCString": {
+      "desc": "Date et heure UTC courantes au format ISO 8601 avec millisecondes, ex. 2023-01-01T12:00:00.123Z.",
+      "params": {},
+      "returns": [
+        {
+          "type": "string",
+          "desc": "horodatage"
+        }
+      ],
+      "internal": false
+    },
+    "parseISO8601Date": {
+      "desc": "Convertit une chaîne ISO 8601 (YYYY-MM-DDTHH:MM:SS.mmmZ) en os.time ; les millisecondes sont ignorées et le fuseau est celui de la machine (os.time).",
+      "params": {
+        "isoString": {
+          "type": "string",
+          "desc": "date"
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "secondes epoch"
+        }
+      ],
+      "internal": false
+    },
+    "getFunctionParameters": {
+      "desc": "Renvoie les noms des paramètres d'une fonction Lua (debug.getlocal) et si elle est variadique. Lent.",
+      "params": {
+        "func": {
+          "type": "function",
+          "desc": "fonction"
+        }
+      },
+      "returns": [
+        {
+          "type": "table<integer, string>",
+          "desc": "noms"
+        },
+        {
+          "type": "boolean",
+          "desc": "variadique"
+        }
+      ],
+      "internal": false
+    },
+    "generateObjectNameForClass": {
+      "desc": "Génère un nom objectName + (plus grand id d'objet de la classe + 1).",
+      "params": {
+        "className": {
+          "type": "string",
+          "desc": "classe"
+        },
+        "objectName": {
+          "type": "string",
+          "desc": "préfixe"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "nom"
+        }
+      ],
+      "internal": false
+    },
+    "getComparisonOps": {
+      "desc": "Renvoie la liste des opérateurs de comparaison {opSymbol, op, opName, opNameLc} : ==, <, >, <=, >=, ~=.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table<integer, table>",
+          "desc": "opérateurs"
+        }
+      ],
+      "internal": false
+    },
+    "moduleLoaderFallback": {
+      "desc": "Chargeur de repli appelé quand le chargeur par défaut ne trouve pas un module : sait charger les plugins workbench/panels/... depuis leur chemin VFS littéral.",
+      "params": {
+        "modulename": {
+          "type": "string",
+          "desc": "nom du module"
+        }
+      },
+      "returns": [
+        {
+          "type": "function|nil",
+          "desc": "chunk chargé ou nil"
+        }
+      ],
+      "internal": true
+    },
+    "dumpGfxResourcesMemory": {
+      "desc": "Journalise la mémoire GPU par catégorie (Engine.Render.calculateGfxMemory), en Mo, pour celles dépassant 1 Mo.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setCEFFocus": {
+      "desc": "OBSOLÈTE : n'a plus d'effet, journalise une erreur (au plus 5 fois).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "replace_char": {
+      "desc": "Remplace le caractère à la position pos de str par r.",
+      "params": {
+        "pos": {
+          "type": "integer",
+          "desc": "position (1 = premier)"
+        },
+        "str": {
+          "type": "string",
+          "desc": "chaîne"
+        },
+        "r": {
+          "type": "string",
+          "desc": "remplacement"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "str dont le caractère à pos est remplacé par r"
+        }
+      ],
+      "internal": false
+    },
+    "scenetree_tests": {
+      "desc": "Tests de dev de scenetree (marqués à convertir en vrais tests unitaires).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "scenetree_test_fields": {
+      "desc": "Tests de dev des champs d'objets de scène.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "test_GE_fields": {
+      "desc": "Tests de dev des champs GE.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "testGBitmap": {
+      "desc": "Test de dev de GBitmap (chargement, couleurs).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "testZIP": {
+      "desc": "Test de dev de la lecture de ZIP.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

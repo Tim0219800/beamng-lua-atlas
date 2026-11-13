@@ -1,0 +1,34 @@
+{
+  "path": "lua/ge/extensions/core/input/vehicleSwitching.lua",
+  "module": "Extension GE `core_input_vehicleSwitching` : implémente le passage au véhicule suivant/précédent (touches de changement de véhicule). Il peut suivre un ordre personnalisé (liste d'ids définie par setVehicleOrder) ou parcourir tous les véhicules actifs utilisables, en ignorant le 'unicycle', les véhicules playerUsable == false et ceux que gameplay_seatOccupants refuse. En multijoueur, la demande est déléguée à multiplayer_vehicleSync.",
+  "usage": "-- passer au véhicule suivant pour le joueur 0\ncore_input_vehicleSwitching.switchCycleVehicle(0, 1)\n-- imposer un ordre\ncore_input_vehicleSwitching.setVehicleOrder({idA, idB, idC})",
+  "notes": [
+    "dir : +1 = suivant, -1 = précédent (le calcul utilise dir * step avec modulo).",
+    "Si un ordre personnalisé est défini mais que le joueur n'est pas dans la liste (et aucun lastIndex), ou qu'aucune cible valide n'existe, l'ordre est supprimé (vehicleOrder = nil) et on retombe sur le comportement par défaut. L'ordre n'est donc valable qu'une fois.",
+    "Hooks émis lors d'un changement : trackNewVeh, onVehicleSwitchPerformendByUser (faute de frappe 'Performend' dans le nom du hook, à utiliser tel quel), onVehicleCycleSwitchPerformedByUser(dir, player, vehId).",
+    "Incohérences : lastIndex vaut toujours -1 et n'est jamais modifié ; dans applySwitchCycleVehicle, be est utilisé (be:getPlayerVehicleID) avant le test `if be`."
+  ],
+  "functions": {
+    "switchCycleVehicle": {
+      "desc": "Point d'entrée : change de véhicule pour le joueur. En multijoueur (multiplayer_vehicleSync présent), envoie requestSwitchCycleVehicle ; sinon appelle applySwitchCycleVehicle.",
+      "params": {
+        "player": {"type": "integer|nil", "desc": "Indice du joueur, défaut 0 ; -1 = ignoré."},
+        "dir": {"type": "integer", "desc": "+1 suivant, -1 précédent."}
+      },
+      "returns": []
+    },
+    "applySwitchCycleVehicle": {
+      "desc": "Effectue réellement le changement : cherche la cible (ordre personnalisé puis ordre par défaut), appelle be:enterVehicle et émet les hooks.",
+      "params": {
+        "player": {"type": "integer|nil", "desc": "Indice du joueur, défaut 0 ; -1 = ignoré."},
+        "dir": {"type": "integer", "desc": "+1 suivant, -1 précédent."}
+      },
+      "returns": []
+    },
+    "setVehicleOrder": {
+      "desc": "Définit l'ordre personnalisé de parcours des véhicules (liste d'ids). nil pour revenir à l'ordre par défaut.",
+      "params": {"order": {"type": "integer[]|nil", "desc": "Ids de véhicules."}},
+      "returns": []
+    }
+  }
+}

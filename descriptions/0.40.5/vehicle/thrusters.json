@@ -1,0 +1,85 @@
+{
+  "path": "lua/vehicle/thrusters.lua",
+  "module": "Applique des poussées au véhicule : propulseurs jbeam (section 'thrusters', commandés par une valeur electrics ou en mode 'auto' qui fabrique une poussée proportionnelle à la vitesse relative entre deux noeuds), impulsions de force entre deux noeuds, et accélérations/vitesses imposées à un cluster de noeuds. Un moddeur ou un outil (scénarios, script) s'en sert pour pousser ou lancer un véhicule pendant une durée donnée. Le module n'est actif dans la boucle de physique que lorsqu'il y a quelque chose à appliquer.",
+  "usage": "-- pousser le véhicule vers l'avant (déduit : base arrière -> avant) pendant 0.5 s\nthrusters.applyImpulseBody(5000, 0.5)\n-- imposer une accélération de 20 m/s² vers le haut pendant 0.2 s\nthrusters.applyAccel(vec3(0, 0, 20), 0.2)",
+  "notes": [
+    "Clés jbeam d'un thruster (v.data.thrusters) : id1 (noeud source), id2 (noeud destination), control (nom d'une valeur electrics, ou 'auto'), factor (1 par défaut), thrustLimit (poussée max en N, infinie par défaut). La force appliquée est min(electrics[control]*factor, thrustLimit) sur la paire de noeuds (id2, id1), calculée dans updateGFX et appliquée à chaque pas de physique.",
+    "Mode 'auto' : vel = -vitesse du noeud id2 par rapport à id1 ; si vel > 0.3 m/s, poussée = vel² * factor, bornée par thrustLimit ; si d'autres propulseurs sont actifs, on ajoute la force mesurée entre les noeuds (max(0, force)). Note : factor et thrustLimit n'ont pas de défaut pour les auto (seul le chemin activeThrusters les initialise) : sans factor ou thrustLimit définis, l'arithmétique ou la comparaison peut échouer.",
+    "Un control qui n'existe pas dans electrics provoque un log d'erreur une seule fois (invalidThrusterControlWarned) ; il est recommandé d'utiliser des bindings de véhicule ou un canal electrics.",
+    "applyImpulse/applyImpulseBody/applyAccel activent update() (physique) ; lorsque plus rien n'est actif, M.update repasse à nop et updateCorePhysicsStepEnabled() est rappelée pour désactiver le pas physique.",
+    "Bug/incohérence : applyImpulse et applyImpulseBody remplacent dt par lastDt (`dt or lastDt`) seulement quand l'impulsion existe déjà ; pour une nouvelle impulsion elles insèrent le dt brut ; si dt est nil, thruster[4] est nil et le calcul `ttl - physicsDt` de update() lève une erreur. Toujours passer dt.",
+    "Unités : forces en N, accélérations en m/s², vitesses en m/s, durées en s ; angularAccel est une accélération angulaire (rad/s², vec3).",
+    "lastDt et physicsDt, updateCorePhysicsStepEnabled sont des variables globales du jeu (non définies dans ce fichier)."
+  ],
+  "fields": {
+    "update": {"type": "function", "desc": "nop, ou la fonction de physique de ce module quand au moins un propulseur, impulsion ou cluster est actif. Appelée à chaque pas de physique. ⚠ nop est un global du jeu."},
+    "updateGFX": {"type": "function", "desc": "nop, ou la fonction qui recalcule les poussées commandées par electrics à chaque frame graphique si le véhicule a des thrusters jbeam."}
+  },
+  "functions": {
+    "init": {
+      "desc": "Charge les propulseurs jbeam du véhicule (séparés en auto et commandés), remet à zéro les impulsions et choisit update/updateGFX. Si le véhicule n'a pas de thrusters, met les deux à nop.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Identique à init (M.reset = init) : réinitialise les propulseurs.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "isPhysicsStepUsed": {
+      "desc": "Indique si le module est actuellement appelé à chaque pas de physique (M.update == update).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true s'il y a des poussées en cours."}],
+      "internal": true
+    },
+    "applyImpulse": {
+      "desc": "Applique une force constante entre deux noeuds pendant dt secondes ; si l'impulsion existe déjà pour cette paire de noeuds, met à jour sa force et sa durée.",
+      "params": {
+        "n1": {"type": "integer", "desc": "Noeud (cid) auquel la force est appliquée en premier."},
+        "n2": {"type": "integer", "desc": "Noeud (cid) de l'autre extrémité."},
+        "force": {"type": "number", "desc": "Force en N (obj:applyForce(n1, n2, force))."},
+        "dt": {"type": "number", "desc": "Durée en secondes (à fournir : voir bug dans notes)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "applyImpulseBody": {
+      "desc": "Comme applyImpulse mais entre le noeud ref et le noeud back du véhicule (refNodes[0].ref et .back), c'est-à-dire selon l'axe longitudinal du châssis.",
+      "params": {
+        "force": {"type": "number", "desc": "Force en N."},
+        "dt": {"type": "number", "desc": "Durée en secondes."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "applyAccel": {
+      "desc": "Impose une accélération linéaire (et angulaire facultative) au cluster de noeuds contenant nodeId pendant dt secondes (obj:applyClusterLinearAngularAccel). Une seule accélération par nodeId à la fois : un nouvel appel remplace l'ancien.",
+      "params": {
+        "accel": {"type": "vec3", "desc": "Accélération linéaire en m/s² (modifiée sur place en fin de durée)."},
+        "dt": {"type": "number|nil", "desc": "Durée en secondes (lastDt par défaut)."},
+        "nodeId": {"type": "integer|nil", "desc": "Noeud du cluster (noeud ref par défaut, ou 0)."},
+        "angularAccel": {"type": "vec3|nil", "desc": "Accélération angulaire en rad/s² (zéro par défaut)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "applyVelocity": {
+      "desc": "Fait atteindre une vitesse donnée au cluster en une durée dt, en appliquant l'accélération (velocity - vitesse actuelle hors roues) / dt. Ne fait rien si dt vaut 0.",
+      "params": {
+        "velocity": {"type": "vec3", "desc": "Vitesse cible en m/s."},
+        "dt": {"type": "number|nil", "desc": "Durée en secondes (lastDt par défaut)."},
+        "nodeId": {"type": "integer|nil", "desc": "Noeud du cluster (noeud ref par défaut)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getAccelDt": {
+      "desc": "Renvoie la durée restante d'une accélération appliquée par applyAccel/applyVelocity sur ce noeud.",
+      "params": {"nodeId": {"type": "integer", "desc": "Noeud du cluster."}},
+      "returns": [{"type": "number", "desc": "Durée restante en secondes (0 s'il n'y en a pas)."}],
+      "internal": false
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "path": "lua/vehicle/extensions/perfectLaunch.lua",
+  "module": "Aide au départ arrêté 'parfait' (launch control) pour dragsters : gaz à fond, puis contrôle PI de la patinage des roues motrices et du lacet en modulant les gaz, avec maintien de la trajectoire via l'extension straightLine. Séquence : prepare(cible) (véhicule gelé, gaz à fond), go() (dégel, départ), stop() (remise à zéro).",
+  "usage": "extensions.perfectLaunch.prepare(vec3(0, 400, 0))\nextensions.perfectLaunch.go()\n-- M.launchFailed passe à true si le véhicule part en tête-à-queue",
+  "notes": [
+    "États : idle, prepareThrottle, prepareBrake (attend), go. prepare gèle le véhicule (controller.mainController.setFreeze(1)), met la boîte en mode 'arcade', pause l'action ESC et appelle straightLine.setTargetDirection(cible, 'road').",
+    "En 'go', les gaz sont calculés ainsi : slipError = (patinage max des roues avec différentiel - 0,2) + lacet parasite * 80 (doublé si négatif) ; throttle = clamp(1 - (0,5 * slipError + 3,5 * intégrale), 0,05, 1), à 1 au-delà de 0,95. Les gaz sont envoyés par input.event('throttle', throttle, 2).",
+    "launchFailed devient true si le taux de lacet lissé dépasse 0,5.",
+    "onInit recharge l'extension straightLine (extensions.reload) et la ré-initialise ; il est aussi utilisé comme onReset.",
+    "Dépend de drivetrain.esc.isExisting (champ absent du faux objet esc de drivetrain.lua : toujours nil, donc l'ESC n'est jamais mis en pause) et de la globale straightLine."
+  ],
+  "fields": {
+    "launchFailed": {"type": "boolean", "desc": "true si un tête-à-queue (lacet lissé > 0,5) a été détecté pendant le départ."}
+  },
+  "functions": {
+    "onInit": {"desc": "Hook d'initialisation : état 'idle', remise à zéro des régulations, mode de boîte 'arcade' et rechargement de straightLine.", "params": {}, "returns": [], "internal": true},
+    "onReset": {"desc": "Même fonction que onInit.", "params": {}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Appelé chaque frame : exécute la machine à états et le contrôle des gaz, puis straightLine.updateGFX.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "returns": [], "internal": true},
+    "prepare": {"desc": "Prépare le départ : gèle le véhicule, gaz à fond, donne la direction cible à straightLine.", "params": {"target": {"type": "vec3|table", "desc": "Cible ou direction passée à straightLine.setTargetDirection (déduit du code)."}}, "returns": [], "internal": false},
+    "go": {"desc": "Lance le départ : dégèle le véhicule et passe en état 'go'.", "params": {}, "returns": [], "internal": false},
+    "stop": {"desc": "Arrête tout : relâche frein à main, frein et gaz, dégèle, arrête straightLine et réinitialise.", "params": {}, "returns": [], "internal": false}
+  }
+}

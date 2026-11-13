@@ -1,0 +1,40 @@
+{
+  "path": "lua/ge/extensions/core/vehicleMirrors.lua",
+  "module": "Extension GE `core_vehicleMirrors` : ébauche de rendu des reflets de rétroviseurs. Suit le véhicule du joueur 0, demande ses données de miroirs via le hook onVehicleMirrorsChanged, puis contient (renderMirrors) le code qui calcule la direction de réflexion et appelle veh:renderCameraToMaterial vers une texture 128x128 (FOV 70). En l'état, ce rendu est désactivé : l'appel à renderMirrors et à l'UI de réglage sont commentés dans onPreRender. L'extension est donc pratiquement inerte.",
+  "notes": [
+    "Distinct de core_vehicle_mirror (réglage des angles).",
+    "Le module appelle lui-même extensions.hook('onVehicleMirrorsChanged', vehId, vData.mirrors or {}) depuis onPreRender, puis reçoit ce hook (onVehicleMirrorsChanged) comme n'importe quelle extension ; `vData.mirrors` est lu sur le bundle du véhicule (le champ jbeam est plutôt vData.vdata.mirrors, d'où probablement toujours {}).",
+    "Le code du rendu (non exécuté) suppose pour chaque miroir les champs id1, id2, id3 (noeuds), textureTarget et userCorrection (vec3 ajouté par ce module)."
+  ],
+  "fields": {},
+  "functions": {
+    "onVehicleSwitched": {
+      "desc": "Hook : le joueur change de véhicule (ne fait rien).",
+      "params": {
+        "oldVehId": {"type": "integer", "desc": "ancien véhicule"},
+        "newVehId": {"type": "integer", "desc": "nouveau véhicule"}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onPreRender": {
+      "desc": "Hook par frame avant le rendu : détecte un changement de véhicule du joueur 0 et déclenche une demande de données de miroirs (hook onVehicleMirrorsChanged). Le rendu des miroirs lui-même est commenté.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "temps réel (s)"},
+        "dtSim": {"type": "number", "desc": "temps de simulation (s)"},
+        "dtRaw": {"type": "number", "desc": "temps brut (s)"}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleMirrorsChanged": {
+      "desc": "Hook (émis par ce module) : reçoit les données de miroirs du véhicule suivi (ignorées pour un autre véhicule), les mémorise et ajoute à chaque miroir un champ userCorrection (vec3 nul).",
+      "params": {
+        "id": {"type": "integer", "desc": "véhicule"},
+        "data": {"type": "table", "desc": "table de miroirs"}
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

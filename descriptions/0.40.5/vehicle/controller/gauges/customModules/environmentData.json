@@ -1,0 +1,69 @@
+{
+  "path": "lua/vehicle/controller/gauges/customModules/environmentData.lua",
+  "module": "Module de données pour genericGauges : fournit la température extérieure et l'heure système.",
+  "notes": [
+    "temperatureEnv en °C (obj:getEnvTemperature() - 273.15) ; time = chaîne \"HH:MM\" de l'heure locale réelle de l'ordinateur (os.date), pas l'heure du jeu."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Ne fait rien.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Réinitialise l'état interne du module.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Ne fait rien (la mise à jour se fait par updateGaugeData).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setupGaugeData": {
+      "desc": "Appelé par genericGauges avec les propriétés demandées dans displayData.customModules : aucune propriété n'est lue ; produit toujours temperatureEnv et time.",
+      "params": {
+        "properties": {
+          "type": "table<string, boolean>",
+          "desc": "Ensemble des propriétés demandées (clé = nom, valeur = true)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGaugeData": {
+      "desc": "Appelé par genericGauges avant chaque envoi : remplit moduleData avec les valeurs demandées.",
+      "params": {
+        "moduleData": {
+          "type": "table",
+          "desc": "Table de données du module, envoyée ensuite à la page HTML."
+        },
+        "dt": {
+          "type": "number",
+          "desc": "Temps écoulé depuis le dernier envoi (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

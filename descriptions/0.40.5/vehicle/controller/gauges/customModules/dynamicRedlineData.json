@@ -1,0 +1,70 @@
+{
+  "path": "lua/vehicle/controller/gauges/customModules/dynamicRedlineData.lua",
+  "module": "Module de données pour genericGauges : calcule une zone rouge/jaune de compte-tours qui dépend de la température d'huile (moteur froid = régime max réduit) et un voyant de changement de rapport. Les valeurs sont converties en une échelle de sortie entière (ex. nombre de segments d'une barre de LED).",
+  "notes": [
+    "Clés jbeam du module (défaut) : minOutput (0), maxOutput (20), minOutputRPM (0), maxOutputRPM (10000), minOilTemp (50, °C), maxOilTemp (90), yellowOutputOffset (-2), coldOilRPMCoef (0.5).",
+    "Régime rouge ajusté = maxrpm * interpolation linéaire du coefficient entre coldOilRPMCoef (huile froide) et 1 (huile chaude). shiftLight vrai à partir de 95 % de ce régime, sauf au dernier rapport (gearIndex >= maxGearIndex)."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Lit les paramètres jbeam de l'échelle de sortie et de la température d'huile.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Réinitialise l'état interne du module.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Ne fait rien (la mise à jour se fait par updateGaugeData).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setupGaugeData": {
+      "desc": "Appelé par genericGauges avec les propriétés demandées dans displayData.customModules : aucune propriété n'est lue ; produit toujours yellow, red (entiers) et shiftLight (booléen).",
+      "params": {
+        "properties": {
+          "type": "table<string, boolean>",
+          "desc": "Ensemble des propriétés demandées (clé = nom, valeur = true)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGaugeData": {
+      "desc": "Appelé par genericGauges avant chaque envoi : remplit moduleData avec les valeurs demandées.",
+      "params": {
+        "moduleData": {
+          "type": "table",
+          "desc": "Table de données du module, envoyée ensuite à la page HTML."
+        },
+        "dt": {
+          "type": "number",
+          "desc": "Temps écoulé depuis le dernier envoi (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

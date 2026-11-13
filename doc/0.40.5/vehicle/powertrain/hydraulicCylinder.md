@@ -1,0 +1,71 @@
+# `hydraulicCylinder`
+
+*Fichier : `lua/vehicle/powertrain/hydraulicCylinder.lua` · VM : Véhicule · 818 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+
+**Accès :** type de composant powertrain `hydraulicCylinder` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+
+Vérin hydraulique : ce n'est PAS un composant powertrain autonome. C'est un « consommateur » hydraulique créé par hydraulicPump.new pour chaque entrée de `v.data.powertrainHydros` dont `connectedPump` est le nom de la pompe et dont `type` vaut 'hydraulicCylinder'. Le vérin pousse ou tire des poutres (repérées par `beamTags`) via obj:actuateBeam selon la position de la vanne (valeur electrics `directionElectricsName`, -1 à 1) et la pression fournie par la pompe, renvoie à la pompe le débit consommé, supporte plusieurs types de distributeur (float, closed, tandem, drop, bypass), des étages télescopiques et un mode de commande en position (PID).
+
+## Exemple
+
+```lua
+-- jbeam (section powertrainHydros) : un vérin lié à la pompe "hydraulicPump"
+-- {"name":"liftCyl", "type":"hydraulicCylinder", "connectedPump":"hydraulicPump", "beamTags":["lift"], "directionElectricsName":"liftInput", "pistonDiameter":0.1, "shaftDiameter":0.06, "minExtend":1, "maxExtend":2, "maxSpeed":0.5}
+electrics.values.liftInput = 1 -- commande -1..1
+```
+
+## Remarques
+
+- Clés lues (cylinderData = fusion de l'entrée powertrainHydros et de v.data[nom]) : name, direction (signe : -1 inverse le sens), valveType ('closed' par défaut, 'float', 'tandem', 'drop', 'bypass'), hasRegen (false), regenDirection (1), dropInputThreshold (-0.8), tandemCenterFlowCoef (0.1), cylinderReliefPressure (Pa, 50000000), cylinderReliefSlipSpeedLimit (m/s, 0.1), minimumDragCoef (10000000), maximumDragCoef (100000000), frictionCoef (N, 1), stageTransitionZoneWidth (m, 0.03), maxSpeed (m/s, obligatoire), minExtend et maxExtend (m, obligatoires), virtualMassOut (-1), virtualMass (= virtualMassOut), directionElectricsName, currentExtendElectricsName, currentExtendPercentElectricsName, cylinderForceSmoothing (100), cylinderVelocitySmoothing (20), maxBypassSpeed (= cylinderReliefSlipSpeedLimit), pistonDiameter (m, min 0.001), shaftDiameter (m, min 0.0001), stages (liste de {stageExtendStart, stageExtendEnd, pistonDiameter, shaftDiameter}), beamTags, et pour les sons : movementLoopEvent, movementLoopNode, movementLoopVelocitySmoothing(In|Out)Rate, ...StartAccel, ...StopAccel, movementLoopVolumeMin/Max, movementLoopVolumeMinVelocity/MaxVelocity, showDebugGraphSound.
+- Champs publics du vérin : name, connectedPump (device pompe), valveType, valveMode ('direct' ou 'position'), valvePosition (-1..1 après courbe racine quatrième), valveSign (-1, 0 ou 1), currentExtend (m, moyenne des longueurs de poutre), currentExtendPercent (0..1), velocity (m/s), cylinderFlow (m³/s, débit consommé), targetPosition (0..1, utilisée en mode position), minExtend, maxExtend, maxSpeed, beamCids, beamCount, stages, currentStageId.
+- Valeur de retour de update(inputPressure, dt) : deux nombres (débit consommé en m³/s, débit renvoyé au réservoir en m³/s). Le premier est toujours >= 0. Seul le distributeur 'tandem' renvoie un débit de réservoir non nul.
+- Types de distributeurs : float = A et B vers le réservoir, pas de force de maintien, pression * |position vanne| ; closed = A, B, P, T bloqués (force de maintien élevée) ; tandem = comme closed mais P relié au réservoir au centre (débit de fuite) ; drop = au-delà du seuil dropInputThreshold, A et B sont reliés au réservoir (le vérin chute, utile pour un godet de chargeuse) ; bypass = le fluide peut entrer sans résistance quand la charge est dans le sens de l'actionnement. Un type inconnu journalise une erreur et installe la fonction update qui ne fait rien.
+- Mode position : setState avec une position cible hors de la zone morte (0.005) active valveMode = 'position' ; un PID (1, 0.4, 0) calcule alors la position de vanne ; le vérin repasse en mode 'direct' dès que l'erreur passe sous la zone morte.
+- Étages télescopiques : si stages contient plusieurs éléments, des étages de transition de largeur stageTransitionZoneWidth sont insérés et leurs surfaces sont interpolées linéairement selon l'extension.
+- Bug mineur : dans updateGFX, valvePosition * cylinder.direction or 1 n'applique jamais le « or 1 » (cylinder.direction n'est jamais nil). getValvePosition renvoie nil si valveMode n'est ni 'direct' ni 'position'. Sans poutre trouvée (beamTags inconnus), le vérin installe updateDummy et écrit une erreur dans le log.
+- Le module n'expose que `new` ; M.deviceCategories et M.outputPorts n'existent pas.
+
+## Fonctions
+
+| Fonction | Description | Ligne |
+|---|---|---|
+| `hydraulicCylinder.new(cylinderData, pumpDevice)` | Construit un vérin hydraulique : surfaces de piston et de tige (ou étages télescopiques), poutres à actionner depuis les tags beamTags, distributeur, lisseurs, PID de position. Appelée par hydraulicPump.new pour chaque consommateur déclaré. *(interne)* | 592 |
+
+### Détail des paramètres
+
+#### `hydraulicCylinder.new(cylinderData, pumpDevice)`
+
+Construit un vérin hydraulique : surfaces de piston et de tige (ou étages télescopiques), poutres à actionner depuis les tags beamTags, distributeur, lisseurs, PID de position. Appelée par hydraulicPump.new pour chaque consommateur déclaré.
+
+- `cylinderData` (*table*) : Données du vérin (entrée powertrainHydros fusionnée avec v.data[nom]).
+- `pumpDevice` (*table*) : Device hydraulicPump auquel le vérin est connecté (son nom sert à nommer les clés d'état).
+- **renvoie** : table Le vérin (classe `cylinder`).
+
+## Classe `cylinder`
+
+Objet renvoyé par new(cylinderData, pumpDevice). La méthode update change selon le type de distributeur (setValveType).
+
+Objet `cylinder` construit dans le module (par ex. par `new`), avec ces méthodes :
+
+| Méthode | Description | Ligne |
+|---|---|---|
+| `cylinder:getCylinderStage()` | Renvoie l'étage actif du vérin pour l'extension courante. Version conventionnelle : toujours le premier étage. Version télescopique : étage brut, avec surfaces interpolées si c'est une transition. | 94 |
+| `cylinder:getRawCylinderStage()` | Cherche dans la liste des étages celui qui contient l'extension courante, en partant de l'étage courant (recherche locale). Mémorise currentStageId. | 40 |
+| `cylinder:getState()` | Renvoie l'état sauvegardable : clé '<pompe>_<vérin>_target_position' = extension courante en pourcentage (0..1). | 563 |
+| `cylinder:initSounds(cylinderData)` | Crée la boucle sonore de mouvement (si movementLoopEvent est défini) et les lisseurs de vitesse et de volume. | 490 |
+| `cylinder:reset(jbeamData)` | Remet à zéro vitesse, lisseurs, position de vanne, mode (direct), position cible (position courante), PID, étage courant et réinitialise les valeurs electrics d'extension. | 520 |
+| `cylinder:resetSounds(cylinderData)` | Remet à zéro le lisseur de vitesse du son de mouvement. | 516 |
+| `cylinder:setState(data)` | Restaure la position cible (nombre fini, borné à 0..1) depuis data['<pompe>_<vérin>_target_position'] et passe en mode 'position' si l'écart dépasse la zone morte, sinon en mode 'direct'. | 568 |
+| `cylinder:setValveType(valveType)` | Choisit le type de distributeur : 'float', 'closed', 'tandem', 'drop' ou 'bypass'. Un type invalide journalise une erreur et installe une fonction update vide. | 399 |
+| `cylinder:update(inputPressure, dt)` | Appelée par la pompe à chaque pas physique (consumer:update). Calcule la force du vérin depuis la pression d'entrée et la surface active, actionne chaque poutre (obj:actuateBeam) avec limite de vitesse, force de glissement (pression de décharge) et traînée, met à jour extension, vitesse et débit consommé. Sa version dépend du distributeur : updateFloat, updateClosed, updateTandem, updateDrop, updateBypass ou updateDummy. | 106 |
+| `cylinder:updateBlendedStage(stage)` | Pour un étage de transition : interpole les surfaces entre les deux étages voisins selon l'extension (facteur 0 à 1). | 28 |
+| `cylinder:updateGFX(dt)` | Appelée à chaque image par la pompe : lit la valeur electrics de direction (ou la position PID en mode position), calcule valvePosition, valveSign, les surfaces actives et le coefficient de traînée, puis publie l'extension et le pourcentage d'extension dans les electrics demandées. | 456 |
+| `cylinder:updateSounds(dt)` | Règle le volume de la boucle sonore de mouvement selon la vitesse du vérin (lissée). | 478 |
+| `cylinder:updateStageActiveArea(stage)` | Choisit la surface active de l'étage : surface d'extension si valveSign >= 0, surface de rétraction sinon. | 452 |
+
+## Appels vers le moteur (C++)
+
+- `obj:` `actuateBeam`, `createSFXSource2`, `getBeamLength`, `getBeamRestLength`, `getBeamStress`, `playSFX`, `setVolumePitchCT`
+
+---
+*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/powertrain/hydraulicCylinder.lua`.*

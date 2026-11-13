@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/serverConnection.lua",
+  "module": "Déconnexion de la session locale (arrêt de la simulation, nettoyage) et passage de l'état de monde prêt. Il sert quand on quitte un niveau pour revenir au menu : arrêt de la physique, restauration du curseur, arrêt de l'éclairage de mission, destruction du serveur local et vidage du nom de mission. Il fait aussi passer worldReadyState de 0 à 1 une fois la première caméra définie.",
+  "usage": "serverConnection.disconnect(function() print('niveau quitté') end, true)",
+  "notes": [
+    "worldReadyState est une variable globale (hors module) : 0 au chargement, passée à 1 par onCameraHandlerSetInitial ; l'étape suivante (2) est faite dans la mise à jour de frame (commentaire du code).",
+    "disconnect (disconnectWrapper) passe par core_gamestate.requestEnterLoadingScreen quand loadingScreen est vrai : la déconnexion réelle (disconnectActual) n'a lieu qu'une fois l'écran de chargement affiché, de façon asynchrone. Le callback est appelé à la fin de disconnectActual.",
+    "disconnectActual n'est pas exporté : le code précise qu'il ne faut pas l'appeler directement (état du jeu incohérent)."
+  ],
+  "fields": {},
+  "functions": {
+    "disconnect": {
+      "desc": "Quitte la session en cours : affiche l'écran de chargement (par défaut), puis arrête la physique, restaure le curseur, coupe l'éclairage de mission, détruit le serveur (server.destroy), vide le nom de mission, quitte l'écran de chargement et appelle callback.",
+      "params": {
+        "callback": {"type": "function|nil", "desc": "Fonction appelée à la fin de la déconnexion ; sa valeur de retour est ignorée (disconnectWrapper ne renvoie rien)."},
+        "loadingScreen": {"type": "boolean|nil", "desc": "true par défaut (nil compte comme true). false : déconnecte tout de suite sans écran de chargement."},
+        "p": {"type": "table|nil", "desc": "Profileur optionnel (objet avec :add(label)) pour mesurer les étapes."}
+      },
+      "returns": []
+    },
+    "noLoadingScreenDisconnect": {
+      "desc": "Déconnexion immédiate sans écran de chargement et sans callback (disconnect(nop, false, p)). Utilisée depuis du code externe (commentaire '.cs').",
+      "params": {"p": {"type": "table|nil", "desc": "Profileur optionnel."}},
+      "returns": []
+    },
+    "onCameraHandlerSetInitial": {
+      "desc": "Hook appelé quand la première caméra/objet de contrôle est défini par le serveur. Si worldReadyState vaut 0, active le masquage du curseur inactif, met worldReadyState à 1 et diffuse le hook onWorldReadyState(1).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

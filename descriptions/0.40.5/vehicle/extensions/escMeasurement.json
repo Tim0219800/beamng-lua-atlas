@@ -1,0 +1,26 @@
+{
+  "path": "lua/vehicle/extensions/escMeasurement.lua",
+  "module": "Outil interne de mesure/calibration automatique de l'ESC (contrôleur drivingDynamics/CMU), piloté depuis le GE par util_calibrateESC. Une coroutine de travail lance un test de rigidité de dérive (skew stiffness) en balayant vitesses (30 à 150 km/h, pas de 2 m/s) et angles de braquage (0,5° à 20°), puis écrit le résultat dans vehicles/<modèle>/drivingDynamics/<config>.stat.json. Un second test (STM, mesures de lacet à 200 km/h) existe mais est désactivé dans performTests.",
+  "usage": "-- appelé par le GE : extensions.escMeasurement.performTests('vivace', 'base')",
+  "notes": [
+    "performTests(vehicleName, configName) crée une coroutine reprise à chaque updateGFX ; à sa fin (état Testend) elle écrit les fichiers, arrête le test, puis le VM appelle util_calibrateESC.vehicleDone() (killswitch) côté GE. updateGFX envoie aussi util_calibrateESC.heartbeat() à chaque frame (watchdog).",
+    "Nécessite exactement un contrôleur 'drivingDynamics/CMU' ; sinon log d'erreur et état Testend.",
+    "États : Idling, Initialization (mesure l'angle de roue maximal en braquant à fond 2 x 2 s), Settling (régulateur interne vers la vitesse cible, braquage lissé), Measuring (moyenne sur 100 mesures de rigidité avant/arrière), Finished, Testend.",
+    "Le régulateur de vitesse interne (updateCC) écrit electrics.values.throttleOverride, limite l'accélération transversale à environ 1,6 g et impose setAggressionOverride(1) au vehicleController.",
+    "Sortie : skewStiffnessFront/Rear arrondies au millier inférieur (N/rad, déduit du code) dans le .stat.json ; STMMeasurements.csv (vitesse, angle de roue, lacet moyen) si des mesures STM existent.",
+    "Pendant le test, be:setPhysicsSpeedFactor(2) est demandé au GE ; remis à 0 à la fin.",
+    "Anomalie : startSkewStiffnessTest enregistre M.updateFixedStepCallback via M.* ; si le module est rechargé, la référence peut changer. Le test STM (startSTMMeasurementsTest) n'est pas exporté.",
+    "Anomalie : dans stopSkewStiffnessTest, setState(finishedState) ne produit plus de sortie fichier ; l'écriture est faite par combineTestData appelé avant dans la coroutine."
+  ],
+  "fields": {},
+  "functions": {
+    "onInit": {"desc": "Hook d'initialisation : remet état, compteurs, mesures et vitesse physique à zéro (état Idling).", "params": {}, "returns": [], "internal": true},
+    "onReset": {"desc": "Même fonction que onInit.", "params": {}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Appelé chaque frame : reprend la coroutine de travail, envoie le heartbeat au GE et déclenche le killswitch quand elle est terminée.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (non utilisé)."}}, "returns": [], "internal": true},
+    "startSkewStiffnessTest": {"desc": "Démarre le test de rigidité de dérive : récupère le CMU, enregistre le callback de pas fixe, désactive les systèmes ESC pour la calibration et passe en Initialization.", "params": {}, "returns": [], "internal": false},
+    "stopSkewStiffnessTest": {"desc": "Arrête le test : coupe le régulateur interne, remet la vitesse physique normale, état Finished.", "params": {}, "returns": [], "internal": false},
+    "performTests": {"desc": "Lance la séquence complète de calibration dans une coroutine et mémorise modèle/config pour le nom du fichier de sortie.", "params": {"vehicleName": {"type": "string", "desc": "Nom du modèle (dossier vehicles/)."}, "configName": {"type": "string", "desc": "Nom de la configuration."}}, "returns": [], "internal": false},
+    "updateFixedStepCallback": {"desc": "Callback appelé par le CMU à pas de physique fixe : exécute la logique du test de rigidité de dérive.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "returns": [], "internal": true},
+    "updateGFXCallback": {"desc": "Callback GFX du CMU ; vide.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "returns": [], "internal": true}
+  }
+}

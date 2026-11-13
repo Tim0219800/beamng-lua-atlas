@@ -1,0 +1,100 @@
+{
+  "path": "lua/ge/extensions/core/groundMarkers.lua",
+  "module": "Extension GE `core_groundMarkers` : navigation au sol. Calcule un itinéraire (route planner) du véhicule joueur vers un ou plusieurs points, dessine des décalques de flèches bleues sur la route devant le véhicule (rendu par DynamicDecalMgr), met à jour les flèches flottantes aux intersections (core_groundMarkerArrows) et envoie le tracé à l'UI (appli de navigation). Un moddeur l'utilise pour guider le joueur vers une destination : setPath(points).",
+  "usage": "-- guider vers une position monde puis vider le tracé à l'arrivée\ncore_groundMarkers.setPath(vec3(100, 200, 30), {clearPathOnReachingTarget = true})\n-- plusieurs étapes, calcul asynchrone\ncore_groundMarkers.setPath({vec3(0,0,0), vec3(500,0,0)}, {async = true, onComplete = function() print('prêt') end})\ncore_groundMarkers.setPath(nil)   -- efface",
+  "notes": [
+    "setPath(wp, options) : wp peut être un vec3, un nom de nœud de la carte routière (string), une table {x,y,z} (3 éléments), ou une liste de ces éléments. wp nil ou liste vide efface le tracé et les flèches. Les noms de nœuds inconnus sont ignorés avec un avertissement.",
+    "options reconnues : step (espacement des décalques en m, défaut 3), color ({r,g,b} 0..1 ; défaut le jeu de couleurs M.colorSet = 'blue' (0,0.4,1) ou 'green'), cutOffDrivability, penaltyAboveCutoff, penaltyBelowCutoff, dirMult, wD, wZ (paramètres du routeur : setRouteParams), renderDecals (false = pas de décalques), lockFixedNodes, clearPathOnReachingTarget, async (true = calcul par job, le tracé n'est disponible qu'au callback), onComplete (appelé quand le chemin est prêt).",
+    "Rendu : décalques dessinés dans la zone de M.decalDrawingDistance = 120 m devant le véhicule ; opacité croissante de 0 (à 1 m, decalBlendOffset) à 1 (à 10 m, decalBlendStart), pleine jusqu'à 100 m (decalBlendEnd), puis décroissante jusqu'à 120 m. Régénérés quand le véhicule a bougé de plus de 1 m, ou en continu si la grande carte est ouverte. Rien n'est dessiné en mode photo.",
+    "Réglages utilisateur lus : showNavigationGroundmarkers (décalques) et showNavigationArrows (flèches flottantes).",
+    "L'UI reçoit 'NavigationGroundMarkersUpdate' {markers = [x1,y1,x2,y2,…], color = '#RRGGBBFF'} lors d'un nouveau tracé et toutes les 0,25 s pendant le rendu.",
+    "Le tracé est effacé en fin de niveau (onClientEndMission), au déchargement de l'extension et au début/arrêt de toute mission (onAnyMissionChanged 'started' ou 'stopped').",
+    "Incohérences : deprecationWarning utilise une variable `logTag` qui n'est pas définie dans ce fichier (nil) ; onSerialize ne renvoie rien (efface seulement les flèches), donc le tracé n'est pas conservé après un rechargement d'extensions ; M.stepDistance, M.endWP, M.color, M.activeDecalCount ne sont initialisés que par setPath ; setFocus est déprécié (setPath)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{'core_groundMarkerArrows'}."},
+    "routePlanner": {"type": "table", "desc": "Instance de gameplay/route/route (calcul du chemin, trackVehicle, path[] avec pos, distToTarget, wp, linkCount)."},
+    "debugPath": {"type": "boolean", "desc": "true = dessine les points du chemin (sphères, prismes, numéros) à chaque rendu. Faux par défaut."},
+    "colorSet": {"type": "string", "desc": "Jeu de couleurs actif : 'blue' (défaut) ou 'green' (clés de colorSets)."},
+    "colorSets": {"type": "table<string, {decals: number[], arrows: number[]}>", "desc": "Couleurs RGB 0..1 des décalques et des flèches : blue {0,0.4,1}/{0,0.48,0.77}, green {0,1,0}/{0,1,0}."},
+    "decalPool": {"type": "table[]", "desc": "Pool de données de décalques réutilisées à chaque image (champs texture, position, forwardVec, color, scale, fadeStart, fadeEnd)."},
+    "decalPoolCount": {"type": "integer", "desc": "Nombre d'entrées dans decalPool."},
+    "decalDrawingDistance": {"type": "number", "desc": "120 : distance maximale des décalques devant le véhicule, en mètres."},
+    "decalBlendOffset": {"type": "number", "desc": "1 m : distance sous laquelle les décalques sont invisibles."},
+    "decalBlendStart": {"type": "number", "desc": "10 m : distance à partir de laquelle l'opacité est complète."},
+    "decalBlendEnd": {"type": "number", "desc": "100 m : distance à partir de laquelle l'opacité décroît vers 0 à decalDrawingDistance."}
+  },
+  "functions": {
+    "setPath": {
+      "desc": "Définit (ou efface) l'itinéraire de navigation vers un ou plusieurs points. Réinitialise le pool de décalques, calcule le chemin depuis la position du véhicule joueur (ou de la caméra), crée les flèches et prévient l'UI.",
+      "params": {
+        "wp": {"type": "vec3|string|table|table[]|nil", "desc": "Destination(s) : vec3, nom de nœud de la carte, {x,y,z}, ou liste de ceux-ci. nil efface."},
+        "options": {"type": "table|nil", "desc": "Voir notes : step, color, cutOffDrivability, penaltyAboveCutoff, penaltyBelowCutoff, dirMult, wD, wZ, renderDecals, lockFixedNodes, clearPathOnReachingTarget, async, onComplete."}
+      },
+      "returns": []
+    },
+    "setFocus": {
+      "desc": "Déprécié : ancienne API convertie en options pour setPath (warning loggué une fois). Les paramètres _fadeStart, _fadeEnd, _endPos, _disableVeh sont ignorés.",
+      "params": {
+        "wp": {"type": "any", "desc": "Destination(s), comme setPath."},
+        "step": {"type": "number|nil", "desc": "Espacement des décalques."},
+        "_fadeStart": {"type": "any", "desc": "Ignoré."},
+        "_fadeEnd": {"type": "any", "desc": "Ignoré."},
+        "_endPos": {"type": "any", "desc": "Ignoré."},
+        "_disableVeh": {"type": "any", "desc": "Ignoré."},
+        "_color": {"type": "number[]|nil", "desc": "Couleur RGB."},
+        "_cutOffDrivability": {"type": "number|nil", "desc": "Voir setPath."},
+        "_penaltyAboveCutoff": {"type": "number|nil", "desc": "Voir setPath."},
+        "_penaltyBelowCutoff": {"type": "number|nil", "desc": "Voir setPath."},
+        "_renderDecals": {"type": "boolean|nil", "desc": "Voir setPath."}
+      },
+      "returns": []
+    },
+    "unflagFirstFixedNode": {
+      "desc": "Retire la première destination de la liste (étape atteinte) et le marquage de nœud fixe correspondant dans le routeur ; s'il n'y en a plus, efface tout.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "false s'il n'y avait aucun tracé actif, sinon true."}]
+    },
+    "getPathLength": {
+      "desc": "Longueur restante du chemin jusqu'à la destination, d'après distToTarget du premier point.",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Mètres ; math.huge si un calcul asynchrone est en cours ; 0 s'il n'y a pas de chemin."}]
+    },
+    "currentlyHasTarget": {
+      "desc": "Indique si un tracé est actif.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si une destination est définie."}]
+    },
+    "getTargetPos": {
+      "desc": "Première destination restante telle que fournie à setPath.",
+      "params": {},
+      "returns": [{"type": "vec3|string|table|nil", "desc": "Destination (peut être un nom de nœud) ou nil."}]
+    },
+    "generateRouteDecals": {
+      "desc": "Remplit le pool de décalques le long du chemin à partir de la position donnée (jusqu'à decalDrawingDistance) avec l'opacité calculée, puis met à jour les flèches flottantes si le réglage est actif. Appelée à chaque rendu par onPreRender.",
+      "params": {"startPos": {"type": "vec3", "desc": "Position de départ (véhicule joueur ou caméra)."}},
+      "returns": []
+    },
+    "sendToApp": {
+      "desc": "Envoie à l'UI le tracé courant : guihooks 'NavigationGroundMarkersUpdate' {markers = x,y à plat, color = '#RRGGBBFF'}.",
+      "params": {},
+      "returns": []
+    },
+    "resetAll": {
+      "desc": "Efface le tracé (setPath(nil)), réinitialise les paramètres du routeur et supprime les flèches.",
+      "params": {},
+      "returns": []
+    },
+    "onPreRender": {
+      "desc": "Hook de rendu : suit le véhicule sur le chemin, régénère les décalques si besoin, dessine le debug, ajoute les décalques à Engine.Render.DynamicDecalMgr et envoie le tracé à l'UI toutes les 0,25 s. Ne fait rien sans destination ou en mode photo.",
+      "params": {"dt": {"type": "number", "desc": "Delta temps du rendu en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "onClientEndMission": {"desc": "Hook de fin de niveau : appelle resetAll.", "params": {}, "returns": [], "internal": true},
+    "onExtensionUnloaded": {"desc": "Hook de déchargement de l'extension : appelle resetAll.", "params": {}, "returns": [], "internal": true},
+    "onSerialize": {"desc": "Hook avant rechargement des extensions : supprime les flèches ; ne renvoie rien.", "params": {}, "returns": [], "internal": true},
+    "onSettingsChanged": {"desc": "Hook de changement de réglages : crée ou supprime les flèches flottantes selon showNavigationArrows et force la régénération des décalques selon showNavigationGroundmarkers.", "params": {}, "returns": [], "internal": true},
+    "onAnyMissionChanged": {"desc": "Hook de changement d'état d'une mission : efface le tracé quand l'état est 'started' ou 'stopped'.", "params": {"state": {"type": "string", "desc": "État de la mission."}}, "returns": [], "internal": true}
+  }
+}

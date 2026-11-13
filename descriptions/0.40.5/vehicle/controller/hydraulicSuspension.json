@@ -1,0 +1,147 @@
+{
+  "path": "lua/vehicle/controller/hydraulicSuspension.lua",
+  "module": "Contrôleur auxiliaire de suspension hydraulique (type \"auxiliary\") : pilote la longueur de référence de poutres (vérins de suspension) regroupées en groupes nommés. Une pompe virtuelle limite la vitesse d'extension ; la descente se fait à vitesse fixe ; en mode « bleed » la poutre est relâchée (ressort nul, amortissement variable) et suit librement. Il joue aussi les sons de pompe et de décharge. Un moddeur appelle setGroupsPosition / setGroupsBleed / setGroupsMomentaryIncrease depuis des entrées ou d'autres contrôleurs.",
+  "usage": "local hs = controller.getControllerSafe('hydraulicSuspension')\nhs.setGroupsPosition({\"front\", \"rear\"}, 1)   -- tout en haut\nhs.setGroupsBleed({\"front\"}, 1)              -- relâche l'avant",
+  "notes": [
+    "Clés jbeam du contrôleur : hydraulicBeams (nom de la table de v.data qui décrit les poutres, défaut \"hydraulicsData\" ; chaque entrée contient beamName, groupName, min, max), basePumpSpeed (0.5, variation du ratio de longueur par seconde), maxPumpSpeed (défaut basePumpSpeed*20), pumpSample (événement sonore, défaut \"event:>Vehicle>Hydraulics>Pump_01\"), releaseSample (défaut \"event:>Vehicle>Hydraulics>Release_01\"), pumpNode (nœud d'émission du son).",
+    "Clés jbeam portées par les poutres : name (obligatoire pour être trouvées), hydraulicsMinDamp (0, amortissement minimal en mode bleed), defaultBleedCoef (1, borné 0..1). Les positions sont des ratios de la longueur de référence de la poutre (obj:setBeamLengthRefRatio).",
+    "Une poutre en mode bleed (bleedCoef > 0) a un ressort de 0 ; à bleedCoef = 0 elle reprend son ressort d'origine et un amortissement d'origine. La montée est limitée par min(basePumpSpeed*speedCoef, maxPumpSpeed) ; la descente se fait à 10 (ratio/s).",
+    "Au reset toutes les poutres reviennent à leur position d'origine avec bleedCoef = 1 (relâchées).",
+    "Les noms de groupe inexistants sont ignorés avec un avertissement dans le journal.",
+    "getState/setState sauvegardent par poutre : currentPosition, targetPosition, bleedCoef, speedCoef."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Construit les groupes de poutres à partir de la table hydraulique jbeam, mémorise les paramètres de pompe.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "initSounds": {
+      "desc": "Crée les sources sonores de pompe et de décharge sur pumpNode. Appelé par le gestionnaire de contrôleurs lors de l'initialisation des sons.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "resetSounds": {
+      "desc": "Remet à zéro l'état des sons de pompe et de décharge.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet toutes les poutres à leur position d'origine et en mode relâché.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateFixedStep": {
+      "desc": "Chaque pas physique : fait avancer chaque poutre vers sa position cible à la vitesse de pompe et applique la longueur et le ressort/amortissement.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Chaque image : gère le son de pompe (volume 0.5, hauteur selon le débit) et le son de décharge selon les poutres relâchées qui raccourcissent.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setGroupsPosition": {
+      "desc": "Fixe la position cible de tous les groupes nommés : position 0 = extension min, 1 = extension max de chaque poutre. Désactive le bleed de ces poutres.",
+      "params": {
+        "groupNames": {
+          "type": "string[]",
+          "desc": "Noms de groupes (groupName dans la table hydraulique)."
+        },
+        "position": {
+          "type": "number",
+          "desc": "0..1, interpolation entre min et max de chaque poutre."
+        },
+        "speedCoef": {
+          "type": "number|nil",
+          "desc": "Multiplicateur de la vitesse de pompe (1 par défaut)."
+        }
+      },
+      "returns": []
+    },
+    "setGroupsBleed": {
+      "desc": "Relâche les groupes : bleedCoef > 0 supprime le ressort et laisse la poutre suivre librement ; l'amortissement dépend de 1 - bleedCoef.",
+      "params": {
+        "groupNames": {
+          "type": "string[]",
+          "desc": "Noms de groupes."
+        },
+        "bleedCoef": {
+          "type": "number",
+          "desc": "0 (pas de relâchement) à 1 (relâchement complet), borné."
+        }
+      },
+      "returns": []
+    },
+    "setGroupsMomentaryIncrease": {
+      "desc": "Active/désactive l'augmentation continue de la cible des groupes (à la vitesse de base de la pompe) tant que enabled est vrai, dans les limites min/max de chaque poutre.",
+      "params": {
+        "groupNames": {
+          "type": "string[]",
+          "desc": "Noms de groupes."
+        },
+        "enabled": {
+          "type": "boolean",
+          "desc": "Vrai pour monter en continu."
+        },
+        "speedCoef": {
+          "type": "number|nil",
+          "desc": "Multiplicateur de vitesse (1 par défaut)."
+        }
+      },
+      "returns": []
+    },
+    "getState": {
+      "desc": "Renvoie l'état de toutes les poutres pour la sauvegarde/synchronisation.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table<string, number>",
+          "desc": "Table d'état (réutilisée)."
+        }
+      ]
+    },
+    "setState": {
+      "desc": "Restaure l'état renvoyé par getState (valeurs numériques valides uniquement).",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Table d'état."
+        }
+      },
+      "returns": []
+    }
+  }
+}

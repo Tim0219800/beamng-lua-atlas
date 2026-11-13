@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/core/input/deprecatedActions.lua",
+  "module": "Table de données (le fichier retourne une table) qui associe d'anciens noms d'actions d'entrée à leur remplaçant (`replacement`) ou les déclare abandonnés (`obsolete = true`). Consultée par core_input_actions.upgradeAction pour migrer les anciens fichiers de bindings. Un moddeur ne l'appelle pas directement ; il peut y chercher le nom actuel d'une ancienne action.",
+  "notes": [
+    "Chaque entrée est {replacement = 'nouvelleAction'} ou {obsolete = true}. upgradeAction suit les remplacements récursivement.",
+    "Exemples de remplacements : steer/steer_direct -> steering, accelerate_direct -> accelerate, brake_direct -> brake, clutch_direct -> clutch, handle_escape/toggleQuickAccess/toggle_dashboard -> toggleMenues, hide_ui -> toggleUi, camera_hotkey_N -> camera_N (camera_hotkey_0 -> camera_10), grabNode* -> nodegrabber*, slow_motion/realtime_motion -> toggle_slow_motion, toggle_physics -> pause, toggleConsole -> toggleConsoleNG, oldEditorToggle -> editorToggle.",
+    "Obsolètes (ignorées sans remplacement) : setZoomFOV, toggleZoom, reload_bindings, cui_advanced, toggleFreeLook, camera_hotkey_N_mod1, reload_system_lua, toggleRadialMenu, clear_console, annotatedScreenShot, switch_next_vehicle_multiseat, key_q/e/w/s/a/d/t/f/g/h/r/y.",
+    "Chaînes de remplacement : show_metrics -> cycle_metrics_back -> cycle_metrics, toggleFPS -> cycle_metrics_fwd -> cycle_metrics ; debugmode_toggle_coltris -> debugmode_coltris_fwd."
+  ],
+  "fields": {
+    "hide_ui": {"type": "table", "desc": "{replacement = 'toggleUi'}."},
+    "steer": {"type": "table", "desc": "{replacement = 'steering'} (idem steer_direct)."},
+    "accelerate_direct": {"type": "table", "desc": "{replacement = 'accelerate'}."},
+    "brake_direct": {"type": "table", "desc": "{replacement = 'brake'}."},
+    "clutch_direct": {"type": "table", "desc": "{replacement = 'clutch'}."},
+    "handle_escape": {"type": "table", "desc": "{replacement = 'toggleMenues'}."},
+    "toggleConsole": {"type": "table", "desc": "{replacement = 'toggleConsoleNG'}."},
+    "toggle_physics": {"type": "table", "desc": "{replacement = 'pause'}."},
+    "switch_camera": {"type": "table", "desc": "{replacement = 'switch_camera_next'}."},
+    "slow_motion": {"type": "table", "desc": "{replacement = 'toggle_slow_motion'} (idem realtime_motion)."}
+  },
+  "functions": {}
+}

@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/pacenoteOrbit.lua",
+  "module": "Caméra orbitale globale autour d'un point fixe (fixedTargetPos), utilisée par les outils d'annotations de rallye (pacenotes). Rotation à la souris, aux touches (gauche/droite, avant/arrière) ou aux entrées de lacet/tangage ; zoom entre 10 et 1500 m (300 par défaut), FOV 65. La caméra est maintenue à au moins 1 m au-dessus du terrain (core_terrain). Renvoie un constructeur.",
+  "notes": ["update remet MoveManager.zoomIn/zoomOut à zéro après les avoir lus (le zoom continu est donc limité à l'image).", "reset teste self.cameraResetted == 0 alors que ce champ n'est jamais défini dans ce fichier (nil) : la fonction ne fait rien (code mort) ; camLastTargetPos2 non plus.", "onSettingsChanged appelle core_camera.clearInputs() (commentaire du code : « is this really necessary? »)."],
+  "classes": {
+    "C": {
+      "desc": "Orbite autour d'un point. Champs : fixedTargetPos, fov, camRot (vec3 degrés : x lacet, y tangage), camDist, defaultDistance, camMinDist, camMaxDist.",
+      "functions": {
+        "init": {"desc": "isGlobal = true, FOV 65, puis setupStuff, onSettingsChanged, reset.", "internal": true},
+        "setupStuff": {"desc": "Définit rotation par défaut (0, -17, 0), bornes de distance 10-1500 m et distance par défaut 300 m."},
+        "onSettingsChanged": {"desc": "Hook : relit les réglages cameraOrbit* (fovModifier, relaxation, maxDynamicFov, maxDynamicPitch, maxDynamicOffset, smoothing).", "internal": true},
+        "reset": {"desc": "Code mort (voir notes)."},
+        "setRef": {"desc": "Définit le point autour duquel orbiter ; seul center est utilisé.", "params": {"center": {"type": "vec3", "desc": "point cible monde"}, "left": {"type": "any", "desc": "ignoré"}, "back": {"type": "any", "desc": "ignoré"}}},
+        "setDefaultDistance": {"desc": "Change defaultDistance (sans modifier la distance courante camDist).", "params": {"d": {"type": "number", "desc": "mètres"}}},
+        "update": {"desc": "Calcule la position orbitale, la clippe au terrain et écrit data.res (collisionCompatible = true).", "params": {"data": {"type": "table", "desc": "camData"}}, "returns": [{"type": "boolean", "desc": "true"}], "internal": true}
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "path": "lua/common/jbeam/sections/occupantSlots.lua",
+  "module": "Traite la section jbeam « occupantSlots » (places d'occupants). Normalise chaque entrée : id (id, name ou clé de table), defaultPermissionMode (driver, passenger ou unrestricted ; déduit de la caméra sinon), seatSide (left/right/center, déduit de exitSide, driverSide ou du suffixe L/R de l'id), cameraName 'occupant.<id>', entryTrigger 'enterSeat_<id>', cargoGroup '<id>Occupant' et actionMaps (toujours une table). Produit vehicle.occupantSlotsById et active vehicle.occupantSystem.enabled s'il y a des places ou si une pièce active expose un slot de type 'seat_occupant'.",
+  "notes": [
+    "Les identifiants en double sont rejetés avec une erreur de journal (la seconde entrée est ignorée).",
+    "Un defaultPermissionMode invalide produit un avertissement puis est remplacé : 'driver' si cameraName vaut 'driver', sinon 'passenger'.",
+    "cameraName est toujours réécrit en 'occupant.<id>', quelle que soit la valeur d'origine ; la valeur d'origine ne sert qu'à déduire le mode de permission.",
+    "Le premier paramètre (objID) est ignoré ; appelé seulement côté GE (vmType == 'game')."
+  ],
+  "fields": {},
+  "functions": {
+    "process": {
+      "desc": "Normalise les occupantSlots du véhicule et active le système d'occupants si nécessaire.",
+      "params": {
+        "_": {"type": "any", "desc": "Identifiant du véhicule (ignoré)."},
+        "vehicle": {"type": "table", "desc": "Données jbeam (occupantSlots, occupantSystem)."},
+        "activePartsData": {"type": "table<string, table>|nil", "desc": "Pièces actives (pour détecter un slot seat_occupant)."}
+      },
+      "internal": true
+    }
+  }
+}

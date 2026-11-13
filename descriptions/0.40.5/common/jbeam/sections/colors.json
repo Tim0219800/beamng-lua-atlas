@@ -1,0 +1,20 @@
+{
+  "path": "lua/common/jbeam/sections/colors.lua",
+  "module": "Applique la couleur de carrosserie héritée de la configuration du véhicule (vehicleConfig.colors, ancien format) à l'objet véhicule : colors[1] -> vehicleObj.color, colors[2] -> colorPalette0, colors[3] -> colorPalette1. Chaque entrée est un tableau {r, v, b, a} converti en couleur linéaire. Remplacé par jbeam/sections/paints pour le format actuel (paints).",
+  "notes": [
+    "Aucune validation : une entrée de moins de 4 composantes donnera des nil dans ColorF.",
+    "Appelé dans loadBundle côté GE avant paints.process, qui peut écraser les mêmes propriétés."
+  ],
+  "fields": {},
+  "functions": {
+    "process": {
+      "desc": "Définit color, colorPalette0 et colorPalette1 de l'objet véhicule à partir de vehicleConfig.colors s'il existe.",
+      "params": {
+        "vehicleObj": {"type": "userdata", "desc": "Objet véhicule moteur."},
+        "vehicleConfig": {"type": "table", "desc": "Configuration du véhicule (champ colors)."},
+        "vehicle": {"type": "table", "desc": "Données jbeam (non utilisé)."}
+      },
+      "internal": true
+    }
+  }
+}

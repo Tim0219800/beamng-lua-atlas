@@ -1,0 +1,112 @@
+{
+  "path": "lua/vehicle/powertrain/rangeBox.lua",
+  "module": "Composant powertrain `rangeBox` : boîte de gamme (réducteur à deux plages « high » / « low », ex. boîte de transfert 4x4 réduite ou gamme de camion). Le rapport ne change que par setMode : 'high' sélectionne le rapport le plus petit, 'low' le plus grand. La transmission reste toujours engagée (pas de neutre ni de synchro). Un moddeur l'utilise pour basculer entre gamme haute et basse ; le contrôle utilisateur passe par powertrain.toggleDeviceMode(nom) ou le bouton d'interface simple.",
+  "usage": "local rb = powertrain.getDevice(\"rangebox\")\nrb:setMode(\"low\")  -- gamme basse (rapport le plus grand)\nprint(rb.mode, rb.gearRatio)",
+  "notes": [
+    "Clés jbeam lues : name, type, inputName, inputIndex, gearRatio (valeur initiale, remplacée), friction (N·m), dynamicFriction (N·m par rad/s), torqueLossCoef (0..1), gearRatios (liste obligatoire de rapports ; les valeurs >= 0 prennent les indices 0, 1, 2…, les valeurs < 0 les indices -1, -2… dans l'ordre de la liste).",
+    "Champs principaux : inputAV (rad/s côté parent = outputAV1 * gearRatio), outputAV1 (rad/s, posé par l'enfant), outputTorque1 (N·m), gearRatio, gearIndex, gearRatios (table indexée), lowGearIndex, highGearIndex, minGearIndex, maxGearIndex, minGearRatio, maxGearRatio, gearCount, mode ('low' ou 'high'), availableModes ({'high','low'}), defaultMode, cumulativeInertia, cumulativeGearRatio, maxCumulativeGearRatio, isBroken.",
+    "À la construction, le mode initial est 'low' si l'indice de gamme basse est 0, sinon 'high'. L'indice de rapport est mis à 0 (setGearIndex(0, true), sans recalcul d'inertie).",
+    "Particularité d'indexation par rapport à manualGearbox : ici gearRatios[0] est le premier élément de la liste (il n'y a pas de neutre à rapport 0) ; les marches arrière négatives sont numérotées -1, -2… dans l'ordre de la liste.",
+    "Bugs / pièges : lowGearIndex/highGearIndex sont déterminés pendant l'itération (comparaison à maxGearRatio/minGearRatio mis à jour après), ce qui donne le bon résultat pour des rapports croissants mais pas forcément pour une liste désordonnée. reset ne remet pas gearIndex, gearRatio ni le mode à leurs valeurs initiales. new ne définit ni onBreak ni validate alors que setPartCondition peut appeler onBreak. setMode ignore toute valeur autre que 'high' ou 'low' (silencieusement) et ne tient pas compte de availableModes."
+  ],
+  "fields": {
+    "outputPorts": {"type": "table<integer, boolean>", "desc": "{[1]=true}."},
+    "deviceCategories": {"type": "table<string, boolean>", "desc": "{gearbox=true}."},
+    "requiredExternalInertiaOutputs": {"type": "table<integer, integer>", "desc": "{1}."}
+  },
+  "functions": {
+    "new": {
+      "desc": "Construit la boîte de gamme : table des rapports (avant et arrière), indices de gamme haute et basse, mode initial et état sauvegardable.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant (gearRatios obligatoire)."}},
+      "returns": [{"type": "table", "desc": "Le device (classe `device`)."}],
+      "internal": true
+    }
+  },
+  "classes": {
+    "device": {
+      "desc": "Objet renvoyé par new(jbeamData).",
+      "functions": {
+        "velocityUpdate": {
+          "desc": "Appelée à chaque pas physique : inputAV = outputAV1 * gearRatio, écrit dans le parent.",
+          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (inutilisé)."}},
+          "returns": [],
+          "internal": true
+        },
+        "torqueUpdate": {
+          "desc": "Appelée à chaque pas physique : outputTorque1 = (couple parent - frottements) * gearRatio.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "setGearIndex": {
+          "desc": "Choisit le rapport par son indice (borné à [minGearIndex, maxGearIndex]) et recalcule l'inertie du groupe motopropulseur, sauf si omitInertiaCaculation est vrai.",
+          "params": {
+            "index": {"type": "integer", "desc": "Indice de rapport voulu."},
+            "omitInertiaCaculation": {"type": "boolean|nil", "desc": "true pour ne pas appeler powertrain.calculateTreeInertia()."}
+          },
+          "returns": [],
+          "internal": false
+        },
+        "updateSimpleControlButtons": {
+          "desc": "Si plusieurs modes et uiSimpleModeControl : met à jour le bouton d'interface simple (icônes powertrain_rangebox_high / low) pour powertrain.toggleDeviceMode(nom).",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "setMode": {
+          "desc": "Passe en gamme 'high' (rapport le plus petit) ou 'low' (rapport le plus grand). Toute autre valeur est ignorée. Met à jour le bouton UI.",
+          "params": {"mode": {"type": "string", "desc": "'high' ou 'low'."}},
+          "returns": [],
+          "internal": false
+        },
+        "getState": {
+          "desc": "Renvoie stateData avec la clé '<nom>Mode' = mode courant (pour la sauvegarde).",
+          "params": {},
+          "returns": [{"type": "table", "desc": "stateData."}],
+          "internal": false
+        },
+        "setState": {
+          "desc": "Restaure le mode depuis data['<nom>Mode'] si c'est une chaîne différente du mode actuel.",
+          "params": {"data": {"type": "table|nil", "desc": "Table d'état produite par getState."}},
+          "returns": [],
+          "internal": false
+        },
+        "applyDeformGroupDamage": {
+          "desc": "Augmente le coefficient de frottement de dégâts (0.01 de dégât = +0.1).",
+          "params": {"damageAmount": {"type": "number", "desc": "Quantité de dégâts du groupe de déformation."}},
+          "returns": [],
+          "internal": true
+        },
+        "setPartCondition": {
+          "desc": "Applique l'usure (odomètre, coefficient de 1 à 2) et les dégâts (intégrité nombre 0..1 ou table) ; appelle onBreak si isBroken, qui n'est pas défini sur ce device.",
+          "params": {
+            "subSystem": {"type": "any", "desc": "Non utilisé."},
+            "odometer": {"type": "number", "desc": "Distance parcourue en mètres."},
+            "integrity": {"type": "number|table", "desc": "Nombre 0..1 ou table {damageFrictionCoef, isBroken}."},
+            "visual": {"type": "any", "desc": "Non utilisé."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "getPartCondition": {
+          "desc": "Renvoie l'intégrité 0..1 (0 si cassé) et {damageFrictionCoef, isBroken}.",
+          "params": {},
+          "returns": [{"type": "number", "desc": "Intégrité 0..1."}, {"type": "table", "desc": "État sauvegardable."}],
+          "internal": true
+        },
+        "calculateInertia": {
+          "desc": "Prend l'inertie et les rapports cumulés du premier enfant ; cumulativeInertia = inertie / gearRatio² (maxGearRatio si le rapport est 0).",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "reset": {
+          "desc": "Remet à zéro vitesses, couple, inertie cumulée, coefficients d'usure/dégâts et isBroken ; relit friction. Ne remet pas le rapport.",
+          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
+          "returns": [],
+          "internal": true
+        }
+      }
+    }
+  }
+}

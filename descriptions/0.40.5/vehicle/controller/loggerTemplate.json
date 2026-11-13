@@ -1,0 +1,70 @@
+{
+  "path": "lua/vehicle/controller/loggerTemplate.lua",
+  "module": "Modèle de contrôleur d'enregistrement de données (type \"auxiliary\", defaultOrder 100000) : à chaque image il ajoute à un CSV en mémoire (bibliothèque csvlib) temps, accélérateur, frein, énergie stockée des batteries électriques et puissance des moteurs électriques. saveLogToCSV écrit le fichier « testLog ». À copier comme point de départ pour un enregistreur personnalisé.",
+  "notes": [
+    "Aucune clé jbeam n'est lue. Le chrono est incrémenté par update(dt) ; csvData:write('testLog') écrit le fichier sans extension explicite (comportement de csvlib).",
+    "La puissance est outputTorque1 * outputAV1 (W) sommée sur les dispositifs de type \"electricMotor\"."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "defaultOrder": {
+      "type": "number",
+      "desc": "100000."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Crée le CSV (colonnes time, throttle, brake, batteryCapacity, motorPower) et remet le chrono à 0.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Recrée un CSV vide et remet le chrono à 0.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Ajoute une ligne de données au CSV.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateFixedStep": {
+      "desc": "Ne fait rien.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "update": {
+      "desc": "Incrémente le chrono interne.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "saveLogToCSV": {
+      "desc": "Écrit le CSV sur disque sous le nom testLog.",
+      "params": {},
+      "returns": []
+    }
+  }
+}

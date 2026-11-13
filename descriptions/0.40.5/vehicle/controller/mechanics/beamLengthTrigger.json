@@ -1,0 +1,53 @@
+{
+  "path": "lua/vehicle/controller/mechanics/beamLengthTrigger.lua",
+  "module": "Contrôleur de mécanique (type \"auxiliary\") qui met une valeur electrics à une valeur de déclenchement quand la longueur d'une ou plusieurs poutres (par tag) devient plus courte ou plus longue qu'un seuil, sinon à 0.",
+  "notes": [
+    "Clés jbeam (défaut) : triggerBeamTag (obligatoire), triggerLengthThreshold (nombre en m, obligatoire), comparison (\"shorter\" ou \"longer\", obligatoire), aggregation (si plusieurs poutres : \"average\" par défaut, \"minimum\" ou \"maximum\"), electricsName (\"<nomContrôleur>_trigger\"), electricsTriggerValue (1).",
+    "En cas de configuration invalide, une erreur est journalisée et updateGFX reste nil (contrôleur inactif)."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "updateGFX": {
+      "type": "function|nil",
+      "desc": "Défini à l'init si la configuration est valide."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Lit la configuration, retrouve les poutres et choisit les fonctions de comparaison et d'agrégation.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet la valeur electrics à 0.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Écrit la valeur electrics selon la longueur mesurée.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

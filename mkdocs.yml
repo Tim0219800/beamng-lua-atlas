@@ -1,0 +1,46 @@
+site_name: tim19Atlas — BeamNG.drive Lua API
+site_description: Detailed BeamNG.drive Lua API reference and LuaLS stubs (unofficial)
+site_url: https://tim0219800.github.io/beamng-lua-atlas/
+repo_url: https://github.com/Tim0219800/beamng-lua-atlas
+repo_name: Tim0219800/beamng-lua-atlas
+docs_dir: doc
+use_directory_urls: false
+theme:
+  name: material
+  language: fr
+  features:
+    - navigation.indexes
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - scheme: slate
+      primary: deep orange
+      toggle:
+        icon: material/brightness-4
+        name: Light mode
+    - scheme: default
+      primary: deep orange
+      toggle:
+        icon: material/brightness-7
+        name: Dark mode
+plugins:
+  - search
+markdown_extensions:
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+validation:
+  links:
+    not_found: ignore
+    unrecognized_links: ignore
+    absolute_links: ignore
+  omitted_files: ignore
+nav:
+  - Home: index.md
+  - 0.40.5:
+      - Index: 0.40.5/index.md
+      - Hooks: 0.40.5/hooks.md
+      - C++ objects: 0.40.5/cpp.md

@@ -1,0 +1,44 @@
+{
+  "path": "lua/common/jbeam/expressionParser.lua",
+  "module": "Évalue les expressions JBeam de la forme \"$=...\" (valeurs calculées dans les fichiers jbeam). L'expression est transformée en code Lua (le préfixe '$=' est retiré, chaque '$' devient 'var_'), compilée dans un environnement restreint (fonctions math, round, square, clamp, smoothstep, case, vec3, quat, include...) puis exécutée. Les variables jbeam ($nom) sont lues dans la table vars fournie. Utilisé par le chargeur jbeam, pas par les mods directement.",
+  "usage": "local ep = require('jbeam/expressionParser')\nlocal v = ep.parseSafe('$=$width * 2 + sin(0.5)', {['$width'] = 1.5})\nlocal f, vars = ep.compileSafe('$=$a + 1')\nvars['$a'] = 4\nprint(f())  -- 5",
+  "notes": [
+    "Les affectations (un '=' isolé) sont refusées ; les opérateurs >=, <=, == et ~= restent permis.",
+    "Environnement de l'expression : toutes les fonctions de math, round, square, clamp, smoothstep, smootherstep, smoothmin, sign, case, vec3, quat, concat (table.concat), include, print(val, label) (affiche et renvoie val), var(nom) (renvoie '$nom'), et la lecture de variables par var_nom. La table est en lecture seule (toute écriture lève une erreur).",
+    "Variables jbeam : une valeur de vars qui est une table est lue via son champ val.",
+    "case(selector, ...) : avec un booléen, renvoie le 1er argument suivant le sélecteur si true, le 2e si false ; avec un nombre n, renvoie le n-ième argument (indice 1-based sur les arguments après le sélecteur, tronqué), et le dernier si n est hors plage ou 0. Le commentaire du code parle de n+1 mais le code indexe directement arg[floor(n)].",
+    "include(uri, feuille, cellule) lit un fichier .csv (csvlib.readFileCSV) ou .xlsx (libs/xlsxlib) ; autre extension : erreur journalisée et renvoie nil, message.",
+    "parse n'a aucune protection : une expression qui ne compile pas fait appeler nil (erreur Lua) et une erreur d'exécution n'est pas interceptée. Préférer parseSafe ou compileSafe.",
+    "Dans compileSafe, le contexte est recréé à chaque appel ; la table de variables renvoyée est celle qu'il faut remplir avant d'appeler la fonction compilée."
+  ],
+  "fields": {},
+  "functions": {
+    "parseSafe": {
+      "desc": "Évalue l'expression dans un pcall : en cas d'assignation interdite, de syntaxe invalide ou d'erreur d'exécution, journalise une erreur et renvoie nil.",
+      "params": {
+        "expr": {"type": "string", "desc": "Expression commençant par '$='."},
+        "vars": {"type": "table<string, any>", "desc": "Variables jbeam (clés '$nom')."}
+      },
+      "returns": [{"type": "any|nil", "desc": "Résultat de l'expression, nil en cas d'erreur."}],
+      "internal": false
+    },
+    "parse": {
+      "desc": "Évalue l'expression sans protection (voir notes). Les assignations sont refusées et renvoient nil.",
+      "params": {
+        "expr": {"type": "string", "desc": "Expression commençant par '$='."},
+        "vars": {"type": "table<string, any>", "desc": "Variables jbeam."}
+      },
+      "returns": [{"type": "any|nil", "desc": "Résultat."}],
+      "internal": false
+    },
+    "compileSafe": {
+      "desc": "Compile une expression pour la réutiliser sans recompiler : renvoie la fonction et la table de variables qu'elle lira.",
+      "params": {"expr": {"type": "string", "desc": "Expression commençant par '$='."}},
+      "returns": [
+        {"type": "function|nil", "desc": "Fonction sans argument qui évalue l'expression ; nil en cas d'erreur."},
+        {"type": "table|nil", "desc": "Table de variables (clés '$nom') à remplir avant l'appel."}
+      ],
+      "internal": false
+    }
+  }
+}

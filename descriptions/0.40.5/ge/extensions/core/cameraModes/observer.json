@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/observer.lua",
+  "module": "Caméra globale « observateur » pour les scénarios : se place sur un objet caméra du niveau (nommé par cameraName, champs optionnels Speed, blendSpeed, PositionMove, targetFOV, showApps) et regarde la position du véhicule suivi (ou d'un objet targetOverride). Le FOV vaut targetFOV, sinon 90 - 3 * distance (min 10). Si l'objet a un champ Speed numérique, règle simTimeAuthority sur 1/Speed (ralenti) et masque les apps UI. Renvoie un constructeur.",
+  "classes": {
+    "C": {
+      "desc": "Caméra observateur.",
+      "functions": {
+        "init": {"desc": "isGlobal = true, hidden = true, aucun objet caméra associé."},
+        "update": {"desc": "Calcule position, rotation et FOV depuis l'objet caméra ; fondu de position vers PositionMove à la vitesse blendSpeed (50).", "params": {"data": {"type": "table", "desc": "camData"}}, "returns": [{"type": "boolean|nil", "desc": "true si appliqué ; nil sans caméra associée"}], "internal": true},
+        "setCustomData": {"desc": "Appelé par setGlobalCameraByName lors du passage à ce mode : appelle setCamera(customData.cam, customData.targetOverride).", "params": {"customData": {"type": "table", "desc": "{cam = objet caméra, targetOverride = nom d'objet à viser}"}}},
+        "setCamera": {"desc": "Choisit l'objet caméra (par son nom), relance le fondu et rétablit la vitesse de simulation normale.", "params": {"targetOverride": {"type": "string|nil", "desc": "nom d'un objet de scenetree à viser au lieu du véhicule"}}},
+        "onCameraChanged": {"desc": "Hook : quand ce mode prend le focus, envoie onCameraNameChanged à l'UI et le hook onCameraModeChanged('observer') ; en le perdant, recharge la disposition d'apps « scenario » et oublie la caméra.", "params": {"focused": {"type": "boolean", "desc": "vrai si le mode prend le focus"}}, "internal": true},
+        "onScenarioRestarted": {"desc": "Hook : oublie la caméra associée.", "internal": true},
+        "onScenarioChange": {"desc": "Hook : oublie la caméra si le scénario disparaît.", "params": {"scenario": {"type": "table|nil", "desc": "nouveau scénario"}}, "internal": true}
+      }
+    }
+  },
+  "notes": ["setCamera a la signature (cam, targetOverride) ; la page extraite n'en listait que targetOverride (déduit du code). Dans setCamera/setCustomData, cam est un objet C++ dont le champ 'name' est lu via getField."]
+}

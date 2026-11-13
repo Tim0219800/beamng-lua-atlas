@@ -1,0 +1,18 @@
+{
+  "path": "lua/vehicle/controller/sound/AVAS.lua",
+  "module": "Contrôleur auxiliaire de système d'alerte sonore pour piétons (AVAS) des véhicules électriques. Joue une boucle « avant » en modes D/S, une boucle « arrière » en R, et rien sinon ou au-dessus de la vitesse maximale (+1 m/s) ; le paramètre de pitch/volume dépend de la vitesse.",
+  "notes": [
+    "Clés jbeam lues dans initSounds : forwardSoundEvent (\"event:>Engine>Pedestrian Warning>Forward_01\"), reverseSoundEvent (\"..._Reverse_01\"), forwardSoundNode_nodes et reverseSoundNode_nodes (premier élément = nœud, 0 sinon), warningMaxSpeed (50/3.6 m/s), warningVolume (0.5).",
+    "Lit electrics.values.gear (nom du rapport) et wheelspeed. Le paramètre CT (ControlTrigger) de vitesse est linéaire de 0 à warningMaxSpeed.",
+    "reset appelle obj:stopSFX sur des sources qui ne sont créées que dans initSounds (nil possible si reset est appelé avant)."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "init": {"desc": "Ne fait rien (la configuration est lue dans initSounds).", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "initSounds": {"desc": "Crée les deux sources sonores en boucle et lit vitesse maximale et volume. Appelé par le moteur à l'initialisation des sons.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "reset": {"desc": "Arrête les deux sons et remet l'état à « stopped ».", "internal": true},
+    "updateGFX": {"desc": "Chaque frame : choisit l'état (avant/arrière/arrêté) selon le rapport et la vitesse, joue/arrête les sons et ajuste le paramètre de vitesse.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true}
+  }
+}

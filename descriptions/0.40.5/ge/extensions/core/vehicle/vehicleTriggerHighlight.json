@@ -1,0 +1,75 @@
+{
+  "path": "lua/ge/extensions/core/vehicle/vehicleTriggerHighlight.lua",
+  "module": "Extension GE `core_vehicle_vehicleTriggerHighlight` : met en surbrillance dans le monde 3D des triggers de véhicule (zones d'interaction définies dans le jbeam). Chaque frame, onUpdate dessine avec debugDrawer une sphère (avec un cercle face caméra) ou une boîte pulsante (alpha oscillant) et, si demandé, une étiquette 'id - nom [section]'. Utile pour les outils de debug/édition de triggers.",
+  "usage": "core_vehicle_vehicleTriggerHighlight.setHighlightedTriggerByName(vehId, 'hood_trigger', {showTriggerIdAsLabel = true})\n-- ...\ncore_vehicle_vehicleTriggerHighlight.clearHighlightedTrigger()",
+  "notes": [
+    "Les identifiants sont mémorisés sous forme de chaînes ; `triggerId` est le cid du trigger (clé de vdata.triggers et argument de veh:getTrigger).",
+    "Options par trigger : showTriggerIdAsLabel (true par défaut ; false masque l'étiquette).",
+    "Le trigger est déterminé comme sphère si trg.type == 'sphere' (ou type absent et size nombre) et comme boîte si trg.type == 'box' (ou type absent et size table) ; rayon d'une sphère = size, sinon radius, sinon la moitié de la diagonale de size, sinon 0.1.",
+    "drawOneHighlightedTrigger modifie la couleur partagée SPHERE_COLOR (champ alpha) à chaque dessin : les triggers dessinés dans la même frame partagent la même couleur.",
+    "Les étiquettes utilisent debugDrawer:drawTextAdvanced ; les boîtes sont tracées en triangles pleins + arêtes."
+  ],
+  "fields": {},
+  "functions": {
+    "hasHighlightedTriggers": {
+      "desc": "Indique si au moins un trigger est en surbrillance.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true s'il y en a"}]
+    },
+    "isHighlightedTrigger": {
+      "desc": "Indique si un trigger donné est en surbrillance.",
+      "params": {
+        "vehId": {"type": "integer", "desc": "véhicule"},
+        "triggerId": {"type": "integer|string", "desc": "cid du trigger"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si en surbrillance"}]
+    },
+    "setHighlightedTrigger": {
+      "desc": "Ajoute un trigger à la surbrillance (n'efface pas les autres).",
+      "params": {
+        "vehId": {"type": "integer", "desc": "véhicule"},
+        "triggerId": {"type": "integer|string", "desc": "cid du trigger"},
+        "options": {"type": "table|nil", "desc": "{showTriggerIdAsLabel = boolean}"}
+      },
+      "returns": []
+    },
+    "setHighlightedTriggerByName": {
+      "desc": "Comme setHighlightedTrigger mais retrouve le trigger par son nom, son id jbeam ou son cid dans vdata.triggers du véhicule.",
+      "params": {
+        "vehId": {"type": "integer", "desc": "véhicule"},
+        "triggerName": {"type": "string|number", "desc": "nom, id ou cid du trigger"},
+        "options": {"type": "table|nil", "desc": "{showTriggerIdAsLabel = boolean}"}
+      },
+      "returns": [{"type": "boolean", "desc": "false si le trigger est introuvable"}]
+    },
+    "unhighlightTrigger": {
+      "desc": "Retire un trigger de la surbrillance.",
+      "params": {
+        "vehId": {"type": "integer", "desc": "véhicule"},
+        "triggerId": {"type": "integer|string", "desc": "cid du trigger"}
+      },
+      "returns": []
+    },
+    "clearHighlightedTrigger": {
+      "desc": "Retire toutes les surbrillances de tous les véhicules.",
+      "params": {},
+      "returns": []
+    },
+    "getSerializedHighlightedTriggerData": {
+      "desc": "Exporte les surbrillances sous forme de liste sérialisable.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "liste de {vehId, triggerId, options}"}]
+    },
+    "setSerializedHighlightedTriggerData": {
+      "desc": "Remplace toutes les surbrillances par celles de la liste donnée (format de getSerialized…). Accepte aussi l'ancien format d'un seul tuple {vehId, triggerId}.",
+      "params": {"data": {"type": "table", "desc": "liste de {vehId, triggerId, options}"}},
+      "returns": []
+    },
+    "onUpdate": {
+      "desc": "Hook par frame : dessine chaque trigger en surbrillance (sphère ou boîte pulsante, étiquette).",
+      "params": {"dt": {"type": "number", "desc": "temps écoulé (s), sert à faire pulser l'alpha"}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

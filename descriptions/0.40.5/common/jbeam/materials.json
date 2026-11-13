@@ -1,0 +1,22 @@
+{
+  "path": "lua/common/jbeam/materials.lua",
+  "module": "Étape de chargement côté GE qui prépare les changements de matériaux dynamiques d'un véhicule : (1) la section jbeam glowMap (matériaux qui s'allument, avec simpleFunction ou advancedFunction pilotées par des valeurs d'électriques), (2) les groupes de déformation des flexbodies (deformGroup, deformMaterialBase, deformMaterialDamaged) reliés aux poutres de même deformGroup. Elle crée les « material switches » via le moteur, précompile les matériaux en les faisant passer par leurs états, et stocke le résultat dans vehicle._materials pour la VM véhicule.",
+  "notes": [
+    "Produit vehicle._materials = {mv (variables lues par les expressions), triggerList (noms des variables déclencheurs), triggers (copie des glowmaps sans la fonction compilée), matState (état courant par switch), deformMeshes (flexbodies avec deformSound par deformGroup)}. Le côté véhicule recompile les expressions à partir de evalFunctionString.",
+    "glowMap : pour chaque matériau d'origine, un switch est créé pour chaque mesh qui le contient. simpleFunction est soit un nom de variable, soit une table nom -> coefficient (somme pondérée) ; advancedFunction = {triggers = liste de variables, cmd = expression Lua}. Les expressions sont compilées avec load dans un environnement limité à mv.",
+    "Chaque beam portant un deformGroup reçoit b.deformSwitches (switch -> {switch, dmgMat, mesh, deformGroup}) pour que les poutres cassées changent le matériau du flexbody ; le matériau endommagé est préchargé.",
+    "Le matériau d'origine d'un glowMap est créé comme objet Material (non sauvegardable) s'il n'existe pas dans le scenetree.",
+    "Bug mineur : le message d'erreur « failed to create materialSwitch » du glowmap utilise la variable k (non définie à cet endroit, donc nil) et switchName hors de sa portée ; il n'affichera pas les bonnes informations."
+  ],
+  "fields": {},
+  "functions": {
+    "process": {
+      "desc": "Prépare tous les switches de matériaux (glowMap et groupes de déformation) pour le véhicule et remplit vehicle._materials. Fait passer chaque switch par ses états on/on_intense/off pour précompiler les shaders.",
+      "params": {
+        "vehicleObj": {"type": "userdata", "desc": "Objet véhicule moteur (getMeshsMaterialsTbl, getSwitchableMaterial, switchMaterial, resetMaterials, getMeshesContainingMaterial)."},
+        "vehicle": {"type": "table", "desc": "Données jbeam du véhicule (flexbodies, beams, glowMap ; _materials est écrit)."}
+      },
+      "internal": true
+    }
+  }
+}

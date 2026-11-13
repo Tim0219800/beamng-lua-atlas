@@ -1,0 +1,17 @@
+{
+  "path": "lua/vehicle/extensions/gameplayInterfaceModules/interactSpecialLights.lua",
+  "module": "Module de gameplayInterface pour les feux spéciaux : lecture et fixation de l'état du feu de taxi via les contrôleurs 'lights/taxiLights'.",
+  "usage": "gameplayInterface.executeAction(0, 20, 'setTaxiLightState', 'on')",
+  "notes": [
+    "Action 'setTaxiLightState'(state:string) : appelle setTaxiState(state) sur tous les contrôleurs de type lights/taxiLights.",
+    "Lookup 'taxiLightState'() : renvoie {result = getTaxiState()} du premier contrôleur lights/taxiLights, ou nil s'il n'y en a pas."
+  ],
+  "fields": {
+    "moduleActions": {"type": "table<string, function>", "desc": "Actions : setTaxiLightState."},
+    "moduleLookups": {"type": "table<string, function>", "desc": "Lookups : taxiLightState."}
+  },
+  "functions": {
+    "onExtensionLoaded": {"desc": "Appelé au chargement : remplit moduleActions et moduleLookups.", "params": {}, "returns": [], "internal": true},
+    "requestRegistration": {"desc": "Enregistre les actions et lookups auprès de gameplayInterface.", "params": {"gi": {"type": "table", "desc": "Le module gameplayInterface."}}, "returns": [], "internal": true}
+  }
+}

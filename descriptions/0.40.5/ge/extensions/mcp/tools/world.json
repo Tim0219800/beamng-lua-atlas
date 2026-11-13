@@ -1,0 +1,50 @@
+{
+  "path": "lua/ge/extensions/mcp/tools/world.lua",
+  "module": "Outils MCP « monde » : lister et charger des niveaux, déclencher une action d'entrée liée (comme une touche), récupérer ou supprimer un véhicule, et interroger le sol (hauteur, adhérence/drivabilité) en un point.",
+  "notes": [
+    "Incohérence : list_levels renvoie la clé `file` pour chaque niveau, alors que la description du schéma annonce `[{name, title, path}]`.",
+    "load_level est disruptif (recharge le monde). Il cherche le niveau par levelName dans core_levels.getList(), sinon par path.getPathLevelMain(name).",
+    "trigger_action utilise core_input_actions.triggerDown/triggerUp/triggerDownUp ; sans state c'est un appui bref."
+  ],
+  "fields": {
+    "schemas": {"type": "table<string, table>", "desc": "Schémas des outils monde."}
+  },
+  "functions": {
+    "list_levels": {
+      "desc": "Liste les niveaux installés : name (levelName), title, file (fullfilename ou misFilePath).",
+      "params": {},
+      "returns": [{"type": "string", "desc": "JSON."}, {"type": "boolean", "desc": "true si core_levels indisponible."}],
+      "internal": false
+    },
+    "load_level": {
+      "desc": "Charge un niveau (core_levels.startLevel) par chemin ou par nom.",
+      "params": {"args": {"type": "table", "desc": "{path?: string, name?: string}"}},
+      "returns": [{"type": "string", "desc": "« loading level: … »."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "trigger_action": {
+      "desc": "Déclenche une action d'entrée du jeu par son nom (ex. recover_vehicle, toggleCamera, switch_next_vehicle).",
+      "params": {"args": {"type": "table", "desc": "{action: string, state?: 'down'|'up'}"}},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "recover_vehicle": {
+      "desc": "Replace le véhicule sur la dernière route et le répare (spawn.teleportToLastRoad avec resetVehicle).",
+      "params": {"args": {"type": "table|nil", "desc": "{id?: integer}"}},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "remove_vehicle": {
+      "desc": "Supprime un véhicule (veh:delete()).",
+      "params": {"args": {"type": "table|nil", "desc": "{id?: integer}"}},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true si le véhicule n'existe pas."}],
+      "internal": false
+    },
+    "get_ground_at_point": {
+      "desc": "Hauteur de surface sous un point (be:getSurfaceHeightBelow) et drivabilité du terrain (be:getTerrainDrivability) dans un rayon.",
+      "params": {"args": {"type": "table|nil", "desc": "{pos?: {x,y,z} (défaut position du véhicule joueur), radius?: number m (défaut 2)}"}},
+      "returns": [{"type": "string", "desc": "JSON {pos, surfaceHeight, drivability}."}, {"type": "boolean", "desc": "true si aucun point."}],
+      "internal": false
+    }
+  }
+}

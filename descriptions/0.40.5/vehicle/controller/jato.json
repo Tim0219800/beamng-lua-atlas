@@ -1,0 +1,90 @@
+{
+  "path": "lua/vehicle/controller/jato.lua",
+  "module": "Contrôleur auxiliaire de propulseurs JATO (fusées d'appoint, type \"auxiliary\", defaultOrder 1100). Quand electrics.values.jatoInput > 0, ou quand l'accélérateur est à fond en mode manette/direct et en avant, il consomme du carburant (fuel), émet des particules aux nœuds des tuyères et joue un son de boucle. Écrit electrics.values.jato (0..1) et jatofuel (carburant restant, ratio 0..1). Un bouton « JATO » est ajouté au panneau de contrôle simplifié du groupe motopropulseur.",
+  "notes": [
+    "Clés jbeam (défaut) : fuel (20, unités de temps de poussée à pleine consommation), thrusterNodes_nodes (liste plate de paires de nœuds : nœud d'émission, nœud de direction ; le nombre d'éléments doit être pair sinon erreur journalisée), thrusterLoopName (\"event:>Vehicle>Thrusters\").",
+    "La poussée elle-même (force) n'est pas appliquée par ce fichier : il ne produit que fumée, son et valeurs electrics (jato, jatofuel) ; la force doit venir d'autres éléments jbeam qui lisent electrics.values.jato.",
+    "Fonction cachée : le code Konami « uuddlrlrba » saisi enregistré par extensions.inputAnalyzer.registerInputString bascule fuelCoef entre 1 et 0 (carburant infini quand 0) et affiche \"When in doubt, JATO\".",
+    "Le bouton de l'interface met electrics.values.jatoInput à 1 - jatoInput. Le champ M.fuelCoef (1 par défaut) multiplie la consommation."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "defaultOrder": {
+      "type": "number",
+      "desc": "1100."
+    },
+    "fuelCoef": {
+      "type": "number",
+      "desc": "Coefficient de consommation de carburant (1 normal, 0 = infini)."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Lit fuel et les nœuds de tuyères, initialise electrics.values.jatoInput/jato et enregistre le code secret.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet le carburant au niveau initial, arrête les sons et remet jatoInput/jato à 0.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Consomme le carburant, émet particules et sons, écrit electrics.values.jato et jatofuel.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "inputStringCallback": {
+      "desc": "Appelé par inputAnalyzer quand le code secret est saisi : alterne fuelCoef entre 1 et 0.",
+      "params": {
+        "string": {
+          "type": "string",
+          "desc": "Chaîne saisie."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateSimpleControlButtons": {
+      "desc": "(Re)crée le bouton « JATO » du panneau simplifié avec le ratio de carburant restant.",
+      "params": {},
+      "returns": []
+    },
+    "getState": {
+      "desc": "Renvoie fuel et fuelCoef pour la sauvegarde.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Table d'état (réutilisée)."
+        }
+      ]
+    },
+    "setState": {
+      "desc": "Restaure fuel (borné 0..fuel initial) et fuelCoef (0..1).",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Table d'état."
+        }
+      },
+      "returns": []
+    }
+  }
+}

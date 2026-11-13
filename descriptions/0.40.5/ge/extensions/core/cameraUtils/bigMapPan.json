@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/core/cameraUtils/bigMapPan.lua",
+  "module": "Aide partagée de déplacement et de zoom fluides pour les modes de caméra de la grande carte (bigMap / bigMapOrtho). Placée hors de cameraModes/ car les fichiers de ce dossier sont chargés automatiquement comme constructeurs de caméra. Les fonctions modifient directement les champs du mode de caméra passé en paramètre (cam).",
+  "usage": "local pan = core_cameraUtils_bigMapPan\npan.setTarget(cam, vec3(100, 200, 0), cam.camToLookAtPoint)\npan.zoomToFactor(cam, 0.5)\n-- à chaque image dans cam:update :\npan.update(cam, data.dt, userMoving)",
+  "notes": [
+    "Champs lus/écrits sur cam : bigMapCamPosition (vec3), panTarget, zoomTarget, fovMin, fovMax, manualzoom.fov.",
+    "Le lissage utilise t = clamp(dt*6, 0, 1) ; la cible est supprimée quand l'écart est inférieur à 0.1 m (carré < 0.01) pour le déplacement, ou 0.01 pour le zoom (fov).",
+    "update lit MoveManager.zoomIn / zoomOut : un zoom manuel annule zoomTarget ; un déplacement utilisateur annule panTarget et zoomTarget."
+  ],
+  "functions": {
+    "setTarget": {
+      "desc": "Fixe cam.panTarget pour centrer la vue sur worldPos : x,y = worldPos moins le décalage ; z = celui de cam.bigMapCamPosition (sinon celui de worldPos). Ne fait rien si worldPos est nil.",
+      "params": {
+        "cam": {"type": "table", "desc": "mode de caméra appelant"},
+        "worldPos": {"type": "vec3|nil", "desc": "point du monde à centrer"},
+        "lookAtOffset": {"type": "vec3|nil", "desc": "vecteur caméra -> point visé (camToLookAtPoint) du mode appelant ; (0,0,0) par défaut"}
+      }
+    },
+    "zoomToFactor": {
+      "desc": "Fixe cam.zoomTarget par interpolation entre fovMax (facteur 0, dézoomé) et fovMin (facteur 1, zoomé).",
+      "params": {
+        "cam": {"type": "table", "desc": "mode de caméra appelant"},
+        "factor": {"type": "number", "desc": "0 = dézoomé (fovMax), 1 = zoomé (fovMin) ; borné à [0,1], non numérique = 0"}
+      }
+    },
+    "update": {
+      "desc": "À appeler à chaque image : rapproche manualzoom.fov de zoomTarget et bigMapCamPosition (x,y) de panTarget, et annule les cibles si l'utilisateur bouge ou zoome.",
+      "params": {
+        "cam": {"type": "table", "desc": "mode de caméra appelant"},
+        "dt": {"type": "number", "desc": "durée de l'image en secondes"},
+        "userMoving": {"type": "boolean", "desc": "vrai si l'utilisateur déplace la caméra (annule les cibles)"}
+      }
+    }
+  }
+}

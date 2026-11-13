@@ -1,0 +1,32 @@
+{
+  "path": "lua/vehicle/energyStorage/n2oTank.lua",
+  "module": "Type de stockage d'énergie 'n2oTank' : bouteille de protoxyde d'azote (nitrous). Capacité exprimée en masse (kg), l'énergie stockée étant la masse multipliée par une densité énergétique fictive. Fonctionne comme fuelTank (masse des nœuds ajustée, fuite en 60 s si la poutre déclencheuse casse). Instancié par energyStorage.lua pour `type = \"n2oTank\"`.",
+  "usage": "local n2o = energyStorage.getStorage(\"n2oTank\")\nn2o:setRemainingMass(5)  -- 5 kg restants",
+  "notes": [
+    "Champs jbeam lus : name, type, capacity (kg, défaut 0), startingCapacity (kg, limité à capacity), energyDensity, breakTriggerBeam, nodes._engineGroup_nodes.",
+    "energyDensity par défaut = 41,5e6 / 5 (rapport carburant:N2O de 1:5, pour que les deux réservoirs perdent la même énergie). Le commentaire du code dit MJ/kg mais la valeur est en J/kg.",
+    "energyType est fixé à 'n2o'. brokenLeakRate = capacity / 60 (kg/s).",
+    "Utilise la globale `v` et `obj:setNodeMass` du moteur ; les nœuds reçoivent masse initiale + storedEnergy * nodeMassCoef."
+  ],
+  "fields": {},
+  "functions": {
+    "new": {"desc": "Crée l'instance de bouteille N2O à partir de l'entrée jbeam.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam fusionnées du stockage."}}, "returns": [{"type": "table", "desc": "Instance de stockage (classe 'storage')."}], "internal": true}
+  },
+  "classes": {
+    "storage": {
+      "desc": "Instance renvoyée par new(jbeamData). Champs notables : name, type, energyType ('n2o'), storedEnergy (J), energyCapacity (J), initialStoredEnergy, capacity (kg), startingCapacity (kg), remainingMass (kg), remainingRatio, currentLeakRate (kg/s), brokenLeakRate, energyDensity, assignedDevices.",
+      "functions": {
+        "updateGFX": {"desc": "Appelé chaque frame : recalcule remainingMass/remainingRatio, applique la masse aux nœuds et applique la fuite si active.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}},
+        "setRemainingMass": {"desc": "Fixe la masse restante (bornée entre 0 et capacity).", "params": {"mass": {"type": "number", "desc": "Masse en kg."}}},
+        "setRemainingRatio": {"desc": "Fixe storedEnergy à energyCapacity * ratio (ratio borné entre 0 et 1).", "params": {"ratio": {"type": "number", "desc": "0 à 1."}}},
+        "onBreak": {"desc": "Appelé à la rupture d'une poutre déclencheuse : active la fuite.", "params": {}},
+        "registerDevice": {"desc": "Enregistre un périphérique dans assignedDevices.", "params": {"device": {"type": "table", "desc": "Périphérique avec un champ name."}}},
+        "setPartCondition": {"desc": "Restaure l'état depuis la condition de pièce (nombre = fraction, ou table {storedEnergy}).", "params": {"odometer": {"type": "number", "desc": "Inutilisé."}, "integrity": {"type": "number|table", "desc": "Fraction 0 à 1 ou table d'état."}, "visual": {"type": "any", "desc": "Inutilisé."}}},
+        "getPartCondition": {"desc": "Renvoie l'intégrité (toujours 1) et {storedEnergy}.", "params": {}, "returns": [{"type": "number", "desc": "integrityValue."}, {"type": "table", "desc": "État."}]},
+        "reset": {"desc": "Remplit la bouteille au niveau de départ, supprime la fuite et réapplique la masse aux nœuds.", "params": {}},
+        "serialize": {"desc": "Renvoie {remainingMass}.", "params": {}, "returns": [{"type": "table", "desc": "{remainingMass = kg}."}]},
+        "deserialize": {"desc": "Restaure remainingMass si présent.", "params": {"data": {"type": "table", "desc": "Table contenant remainingMass."}}}
+      }
+    }
+  }
+}

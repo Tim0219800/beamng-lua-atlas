@@ -1,0 +1,20 @@
+{
+  "path": "lua/vehicle/extensions/debug/advancedExternalDebug.lua",
+  "module": "Extension de débogage qui envoie des paquets JSON par UDP à un outil externe (AED, 'Advanced External Debug') sur 127.0.0.1:43812, à 30 envois par seconde, avec un heartbeat prévu à 1 Hz. Les modules du véhicule y déposent leurs paquets via debugPacket ; l'extension y ajoute à chaque frame un paquet principal indiquant si ce véhicule est celui du joueur.",
+  "usage": "extensions.debug_advancedExternalDebug.debugPacket({sourceType = 'MON_MODULE', packetType = 'data', valeur = 42})",
+  "notes": [
+    "Chaque paquet reçoit vehicleID = objectId. Les paquets en attente sont envoyés en un seul tableau JSON toutes les 1/30 s (jsonEncode(debugPackets)), puis la liste est vidée.",
+    "Au chargement et à onInit : crée un socket UDP non bloquant (si la globale `socket` existe), pointe vers 127.0.0.1:43812 (peerIP et peerPort sont codés en dur, debugSettings est une table vide) et enregistre un paquet {sourceType='AED', packetType='init'}.",
+    "La réception de commandes (RequestConfig, EnableDebugMode, SetConfig, SetProperty) est codée mais désactivée : l'appel receiveDebugCommands() est commenté dans updateGFX. Si elle était activée, elle utiliserait `subControllerLookup`, une variable qui n'est définie nulle part dans ce fichier.",
+    "sendDebugHeartbeat (envoi de la chaîne 'BNGAED') est défini mais jamais appelé.",
+    "Si udpSocket:send échoue, l'erreur est affichée (print) à chaque tentative."
+  ],
+  "fields": {},
+  "functions": {
+    "onInit": {"desc": "Hook d'initialisation : crée la liaison UDP et signale un nouveau véhicule à l'outil.", "params": {}, "returns": [], "internal": true},
+    "onReset": {"desc": "Hook de reset : vide la file de paquets.", "params": {}, "returns": [], "internal": true},
+    "onExtensionLoaded": {"desc": "Appelé au chargement de l'extension : appelle onInit.", "params": {}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Appelé chaque frame : ajoute le paquet principal puis envoie les paquets accumulés au rythme de 30 Hz.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "returns": [], "internal": true},
+    "debugPacket": {"desc": "Ajoute un paquet à la file d'envoi (vehicleID est ajouté automatiquement).", "params": {"packet": {"type": "table", "desc": "Table sérialisable en JSON, avec de préférence sourceType et packetType."}}, "returns": [], "internal": false}
+  }
+}

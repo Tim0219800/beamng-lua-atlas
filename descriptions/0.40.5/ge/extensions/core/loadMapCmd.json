@@ -1,0 +1,77 @@
+{
+  "path": "lua/ge/extensions/core/loadMapCmd.lua",
+  "module": "Extension GE `core_loadMapCmd` : exécute la commande de lancement 'openMap' (lien du type beamng:v1/openMap/{level:\"levels/gridmap/info.json\",camPos:[x,y,z],camRot:[x,y,z,w]}). Elle attend que le gestionnaire de mods soit prêt, démarre le niveau demandé en freeroam, puis, une fois le monde prêt, place la caméra libre, règle le FOV, l'heure et charge éventuellement une piste (trackBuilder). Le moddeur s'en sert rarement directement, mais peut appeler set() pour ouvrir une carte avec une caméra donnée.",
+  "usage": "core_loadMapCmd.set({\n  level = 'levels/gridmap_v2/info.json',\n  camPos = {0, 0, 100},\n  camRot = {0, 0, 0, 1},\n  fov = 70,\n  timeOfDay = 0.5,\n})",
+  "notes": [
+    "Champs de la table `data` de set : level (obligatoire, chaîne du genre 'levels/<nom>/info.json'), camPos {x,y,z}, camRot {x,y,z,w} (quaternion), fov (degrés, utilisé si > 0), timeOfDay (nombre passé à core_environment.setTimeOfDay), track (chemin d'une piste passé à util/trackBuilder/splineTrack.load).",
+    "parseMapPath ne garde que les deux premiers segments utiles : 'levels/gridmap/info.json' ou '/levels/gridmap/info.json' donne 'levels/gridmap/'. Si data.level est nil, split plante : toujours fournir level.",
+    "Le niveau n'est lancé que quand la cible existe, ou quand le gestionnaire de mods est prêt (core_modmanager.isReady) : un niveau venant d'un mod peut donc être monté avant d'être testé. Si la carte n'existe toujours pas, un toast d'erreur 'map not found, you may need to add a mod' est affiché.",
+    "Si le jeu est déjà en freeroam sur la même carte, le niveau n'est pas relancé ; onWorldReadyState(2) est appelée directement pour appliquer la caméra, l'heure, etc.",
+    "Le drapeau ignoreStartupCmd est mis à true lors d'un rechargement Lua (onSerialize), pour que la commande de démarrage ne soit pas rejouée : set(data, true) est alors ignoré.",
+    "onUpdate appelle changeMapWhenModManagerReady à chaque frame tant que args.mapName est défini ; une fois lancé, args.mapName est mis à nil et l'appel ne fait plus rien."
+  ],
+  "fields": {},
+  "functions": {
+    "set": {
+      "desc": "Enregistre une commande d'ouverture de carte et tente de la lancer (la carte démarre dès que la cible existe et que les mods sont prêts).",
+      "params": {
+        "data": {"type": "table|nil", "desc": "Voir notes : { level, camPos, camRot, fov, timeOfDay, track }. nil : ne fait rien."},
+        "startCmd": {"type": "boolean|nil", "desc": "Vrai si la commande vient de la ligne de commande de démarrage : ignorée après un rechargement Lua."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement de l'extension ; ne fait rien.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook appelé au déchargement de l'extension ; ne fait rien.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onModManagerReady": {
+      "desc": "Hook émis par core_modmanager quand les mods sont montés : relance la tentative de changement de carte.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onClientPostStartMission": {
+      "desc": "Hook appelé après le démarrage d'un niveau ; ne fait rien.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque frame : retente le changement de carte tant qu'il est en attente.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Temps réel écoulé (s), non utilisé."},
+        "dtSim": {"type": "number", "desc": "Temps de simulation écoulé (s), non utilisé."},
+        "dtRaw": {"type": "number", "desc": "Temps brut (s), non utilisé."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onWorldReadyState": {
+      "desc": "Hook appelé quand l'état du monde change. À l'état 2 (monde prêt), applique camPos/camRot (caméra libre), fov, timeOfDay et charge la piste demandée, puis oublie la commande.",
+      "params": {"state": {"type": "integer", "desc": "Étape de chargement ; seule la valeur 2 déclenche l'action."}},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Avant un rechargement Lua : renvoie { ignoreStartupCmd = true } pour ne pas rejouer la commande de lancement.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{ ignoreStartupCmd = true }"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Après un rechargement Lua : restaure le drapeau ignoreStartupCmd.",
+      "params": {"d": {"type": "table", "desc": "Table renvoyée par onSerialize."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

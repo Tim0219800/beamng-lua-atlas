@@ -1,0 +1,110 @@
+{
+  "path": "lua/ge/extensions/scenario/quickRace.lua",
+  "module": "Logique d'une course rapide (quickrace) : charge les prefabs et le flowgraph de la piste, crée le véhicule du joueur à la position de départ, convertit le chemin de course (fichier raceFile) en noeuds et configuration de tour (lapConfig) pour le système de scénario, puis enregistre les temps et les highscores. Elle ne s'active que pour les scénarios fabriqués par scenario_quickRaceLoader (scenario.isQuickRace).",
+  "notes": [
+    "Les hooks onRaceWaypointReached et onRaceResult sortent immédiatement si le scénario courant n'a pas isQuickRace.",
+    "M.addCheckPoint et M.loadCheckpoints sont exportés mais valent nil (variables locales jamais définies) : à ne pas utiliser.",
+    "Dans onRaceWaypointReached, le temps de chaque tour est obtenu en retranchant les temps cumulés précédents ; les highscores du tour seul utilisent la clé getConfigKey(false, nil, 0).",
+    "Dans onRaceWaypointReached, la boucle qui incrémente scenario.highscores.singleRound utilise l'index k au lieu de v : comportement douteux."
+  ],
+  "fields": {
+    "timeTrialOpen": {"type": "boolean|nil", "desc": "Mis à jour par changeTimeTrialConfig : true quand le menu quickrace est ouvert depuis la course."}
+  },
+  "functions": {
+    "onLoadCustomPrefabs": {
+      "desc": "Hook appelé par le chargeur de scénario. Si la piste (sc.track) définit un flowgraph, le charge et le lance en mode transitoire ; si elle définit raceFile, lit le JSON, construit un gameplay/race/path dans sc.path et calcule sc.track.startTransform selon rollingStart et reverse. Termine par loadVehicle(sc).",
+      "params": {"sc": {"type": "table", "desc": "Scénario quickrace (sc.track, sc.vehicle)."}},
+      "returns": [],
+      "internal": true
+    },
+    "getNodesOnBranch": {
+      "desc": "Parcourt récursivement les segments d'un chemin de course et renvoie la liste des noms de noeuds générés (_generatedName) ; aux embranchements, ajoute une sous-liste de marqueurs '__b<id>' et remplit config.branches.",
+      "params": {
+        "segment": {"type": "table", "desc": "Segment de départ (objet de path.segments)."},
+        "config": {"type": "table", "desc": "Table de configuration modifiée : reçoit config.branches."}
+      },
+      "returns": [{"type": "table", "desc": "Liste ordonnée de noms de noeuds (pouvant contenir des sous-listes pour les embranchements)."}],
+      "internal": true
+    },
+    "onCustomWaypoints": {
+      "desc": "Hook appelé par le chargeur de scénario. Inverse le chemin si track.reverse, lance path:autoConfig(), génère sc.generatedNodes (noeuds nommés '__generated_from_path__<id>' avec pos, radius, rot), sc.startTimerCheckpoint, sc.lapConfig, sc.initialLapConfig, et éventuellement sc.BranchLapConfig et sc.lapConfigBranches, puis les fusionne dans sc.nodes.",
+      "params": {"sc": {"type": "table", "desc": "Scénario quickrace."}},
+      "returns": [],
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook de fin de mission : arrête et supprime le flowgraph de la piste s'il existe.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onScenarioLoaded": {
+      "desc": "Hook appelé quand le scénario est chargé. Allume les antibrouillards et les feux du véhicule joueur si track.tod vaut 0, 1 ou 8 (nuit), et inverse la direction (rot) des noeuds si track.reverse.",
+      "params": {"sc": {"type": "table", "desc": "Scénario quickrace."}},
+      "returns": [],
+      "internal": true
+    },
+    "loadVehicle": {
+      "desc": "Crée le véhicule du joueur (scenario.vehicle) nommé 'scenario_player0' avec core_vehicles.spawnNewVehicle, à la position de départ calculée (startTransform du raceFile, ou à défaut la spawnSphere standing/rolling[/Reverse] de la piste), puis l'ajoute au groupe ScenarioObjectsGroup. Si la spawnSphere est introuvable, utilise 0/0/0 avec une erreur dans le log.",
+      "params": {"scenario": {"type": "table", "desc": "Scénario quickrace (scenario.vehicle, scenario.track)."}},
+      "returns": [],
+      "internal": false
+    },
+    "onCountdownEnded": {
+      "desc": "Hook appelé par l'UI à la fin du compte à rebours : dégèle le véhicule joueur (controller.setFreeze(0)) et vide la liste des temps.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "getConfigKey": {
+      "desc": "Construit la clé de configuration utilisée pour les highscores : 'standing' ou 'rolling', suffixe 'Reverse' si reverse, puis le nombre de tours. Les arguments nil se rabattent sur scenario.rollingStart, scenario.isReverse et scenario.lapCount.",
+      "params": {
+        "rolling": {"type": "boolean|nil", "desc": "Départ lancé."},
+        "reverse": {"type": "boolean|nil", "desc": "Sens inverse."},
+        "laps": {"type": "integer|nil", "desc": "Nombre de tours."}
+      },
+      "returns": [{"type": "string", "desc": "Par exemple 'rollingReverse3'."}],
+      "internal": false
+    },
+    "onRaceWaypointReached": {
+      "desc": "Hook appelé par le système de course à chaque waypoint. Au dernier waypoint (ou retour au premier), calcule le temps du tour, l'enregistre dans les highscores (core_highscores.setScenarioHighscoresCustom) et met à jour scenario.highscores.singleRound.",
+      "params": {"wpInfo": {"type": "table", "desc": "Informations de waypoint : next, time (temps cumulé)."}},
+      "returns": [],
+      "internal": true
+    },
+    "getVehicleBrand": {
+      "desc": "Renvoie la marque du véhicule du scénario (scenario.vehicle.file.Brand).",
+      "params": {"scenario": {"type": "table", "desc": "Scénario quickrace."}},
+      "returns": [{"type": "string", "desc": "Marque."}],
+      "internal": false
+    },
+    "getVehicleName": {
+      "desc": "Renvoie le nom du véhicule du scénario (scenario.vehicle.file.Name).",
+      "params": {"scenario": {"type": "table", "desc": "Scénario quickrace."}},
+      "returns": [{"type": "string", "desc": "Nom."}],
+      "internal": false
+    },
+    "onRaceResult": {
+      "desc": "Hook appelé à la fin de la course. Enregistre le temps final (final.finalTime en secondes, converti en ms) dans les highscores, remplit scenario.highscores (scores, place, singleScores) et scenario.detailedRecord pour l'écran de résultats.",
+      "params": {"final": {"type": "table", "desc": "Résultat final, avec finalTime en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "changeTimeTrialConfig": {
+      "desc": "Bascule l'écran de configuration quickrace en cours de course : ouvre le menu 'menu.quickrace' en mettant la simulation en pause, ou ferme et reprend (simTimeAuthority.pause).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onUiChangedState": {
+      "desc": "Hook appelé quand l'état de l'UI change : si on revient de 'menu.quickrace' vers 'menu' alors que timeTrialOpen est vrai, referme la configuration.",
+      "params": {
+        "curUIState": {"type": "string", "desc": "Nouvel état de l'UI."},
+        "prevUIState": {"type": "string", "desc": "État précédent."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {}
+}

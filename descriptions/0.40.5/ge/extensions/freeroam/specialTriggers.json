@@ -1,0 +1,103 @@
+{
+  "path": "lua/ge/extensions/freeroam/specialTriggers.lua",
+  "module": "Déclencheurs spéciaux pilotés par données : relie des BeamNGTrigger (ou zones) à l'affichage/masquage d'objets de scène (TSStatic, lumières PointLight/SpotLight, SimGroup) avec délais, ordre aléatoire et pas aléatoires, et à des commandes Lua (GE ou VM véhicule) à l'entrée/sortie d'un véhicule. Au démarrage du niveau il lit `triggers.json` dans le dossier du niveau. Un moddeur l'utilise pour animer des éclairages ou décors quand le joueur entre dans une zone, sans écrire de Lua. Global : freeroam_specialTriggers.",
+  "usage": "freeroam_specialTriggers.addTrigger('monTrigger', {\n  subjectType = 'player',\n  objects = { MonGroupeLumieres = { enterDelay = 0.5, exitDelay = 2, enterRandomMin = 0.05, enterRandomMax = 0.2, randomOrder = true } },\n  enterCommand = \"print('entre')\",\n  enterVehCommand = \"electrics.set_warn_signal(1)\"\n})",
+  "notes": [
+    "Format de triggers.json : objet { nomDuTrigger = { type, triggers, subjectType, subjectIds, objects, enterCommand, exitCommand, enterVehCommand, exitVehCommand } }. `type` = 'trigger' ou 'zone'. `triggers` (liste de noms) crée des alias : plusieurs BeamNGTrigger pilotent le même déclencheur, qui ne passe à inactif que si tous les triggers du groupe sont inactifs. subjectType : 'player' (défaut), 'notPlayer', 'all' ; subjectIds : ids de véhicules acceptés en plus.",
+    "`objects` : table nomObjetScène -> {enterDelay, exitDelay, enterRandomMin, enterRandomMax, exitRandomMin, exitRandomMax, randomOrder}. Les délais sont en secondes de simulation (dtSim). Si Random Max vaut 0 ou si l'objet n'est pas un groupe, l'état est appliqué d'un coup après le délai ; sinon les enfants du SimGroup sont activés un par un avec un délai aléatoire entre min et max (ordre mélangé si randomOrder). Les SimGroup imbriqués sont traités en parallèle (isNested).",
+    "setState mémorise l'état d'origine de chaque objet (`isEnabled` pour PointLight/SpotLight, `hidden` pour les autres) ; si l'état d'origine est « caché/éteint », la logique est inversée pour que « actif » rende l'objet visible. reset(true) restaure l'état d'origine.",
+    "enterCommand/exitCommand sont du Lua GE compilé avec load() et exécuté sous pcall ; enterVehCommand/exitVehCommand sont envoyés par queueLuaCommand à la VM du véhicule concerné.",
+    "Le test des zones (onTick) est désactivé : la fonction fait `if true then return end` juste après la vérification d'activité, donc les triggers de type 'zone' ne se déclenchent pas automatiquement.",
+    "onSerialize utilise `ipairs(triggers)` sur une table indexée par noms : la boucle ne s'exécute jamais (restauration d'états inactive lors d'un rechargement Lua).",
+    "setTriggerActive contient un print(tostring(active)) de debug quand `active` est nil (bascule).",
+    "M.active (true par défaut) désactive toutes les réactions aux hooks ; M.debugMode ajoute des logs détaillés."
+  ],
+  "fields": {
+    "active": {"type": "boolean", "desc": "Interrupteur général : si false, les hooks de triggers sont ignorés."},
+    "debugMode": {"type": "boolean", "desc": "Active les logs de debug (changements d'état, fins de délais)."}
+  },
+  "functions": {
+    "reset": {
+      "desc": "Réinitialise : avec useOrigState, supprime tous les triggers en restaurant l'état d'origine des objets ; efface la mémoire des états d'origine.",
+      "params": {"useOrigState": {"type": "boolean|nil", "desc": "true pour restaurer les objets."}},
+      "internal": false
+    },
+    "loadTriggers": {
+      "desc": "Lit un fichier de triggers (par défaut `triggers.json` dans le dossier du niveau courant, via getMissionFilename) et appelle setupTriggers.",
+      "params": {"filePath": {"type": "string|nil", "desc": "Chemin du fichier JSON."}},
+      "internal": false
+    },
+    "setupTriggers": {
+      "desc": "Remet tout à zéro (reset(true)) puis crée un trigger par entrée de la table de données.",
+      "params": {"data": {"type": "table", "desc": "Table nom -> données de trigger (voir notes)."}},
+      "internal": false
+    },
+    "addTrigger": {
+      "desc": "Crée un trigger (état initial inactif, activé) avec ses objets liés, ses alias et ses commandes ; calcule pour chaque groupe d'objets le nombre maximal d'enfants (maxIdx).",
+      "params": {"key": {"type": "string", "desc": "Nom du trigger ou de la zone."}, "data": {"type": "table|nil", "desc": "Données (voir notes)."}},
+      "internal": false
+    },
+    "removeTrigger": {
+      "desc": "Supprime un trigger et ses alias ; restaure l'état d'origine des objets liés si useOrigState.",
+      "params": {"key": {"type": "string", "desc": "Nom du trigger."}, "useOrigState": {"type": "boolean|nil", "desc": "Restaurer les objets."}},
+      "internal": false
+    },
+    "getTriggers": {
+      "desc": "Renvoie la table interne de tous les triggers (y compris les alias).",
+      "params": {},
+      "returns": [{"type": "table<string, table>", "desc": "Triggers."}],
+      "internal": false
+    },
+    "setTriggerActive": {
+      "desc": "Active/désactive manuellement un trigger (simule un évènement enter/exit valide avec vehId 0, ce qui le maintient actif). Avec instant=true, applique immédiatement l'état aux objets sans délai.",
+      "params": {"tName": {"type": "string", "desc": "Nom du trigger."}, "active": {"type": "boolean|nil", "desc": "Nouvel état ; nil = inverser."}, "instant": {"type": "boolean|nil", "desc": "Appliquer sans délai."}},
+      "internal": false
+    },
+    "onBeamNGTrigger": {
+      "desc": "Hook des BeamNGTrigger : traite l'évènement enter/exit/tick d'un trigger connu (useTrigger).",
+      "params": {"data": {"type": "table", "desc": "{triggerName, event, subjectID}"}},
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook par frame : fait avancer les délais et pas aléatoires de chaque groupe d'objets en temps simulé, applique les états, et appelle onTick (zones) toutes les 0,25 s s'il existe un trigger de type zone.",
+      "params": {"dt": {"type": "number", "desc": "Durée réelle (s)."}, "dtSim": {"type": "number", "desc": "Durée simulée (s)."}},
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook de changement de véhicule : envoie un évènement « exit » valide aux triggers pour lesquels le nouveau véhicule est un sujet valide (évite qu'un état reste bloqué).",
+      "params": {"oldId": {"type": "integer", "desc": "Ancien véhicule."}, "newId": {"type": "integer", "desc": "Nouveau véhicule."}},
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook : retire le véhicule des listes d'occupants de tous les triggers.",
+      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "internal": true
+    },
+    "onVehicleActiveChanged": {
+      "desc": "Hook : si un véhicule devient inactif, le retire des triggers.",
+      "params": {"vehId": {"type": "integer", "desc": "Id."}, "active": {"type": "boolean", "desc": "Nouvel état actif."}},
+      "internal": true
+    },
+    "onClientStartMission": {
+      "desc": "Hook de démarrage de niveau : charge triggers.json du niveau.",
+      "params": {},
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook de fin de niveau : reset(true).",
+      "params": {},
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Avant rechargement Lua : renvoie {triggers} (voir bug dans les notes).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{triggers = ...}"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Après rechargement Lua : restaure la table des triggers.",
+      "params": {"data": {"type": "table", "desc": "Table renvoyée par onSerialize."}},
+      "internal": true
+    }
+  }
+}

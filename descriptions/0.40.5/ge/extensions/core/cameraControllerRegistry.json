@@ -1,0 +1,63 @@
+{
+  "path": "lua/ge/extensions/core/cameraControllerRegistry.lua",
+  "module": "Couche de routage facultative placée devant le chemin d'entrée caméra. Des 'contrôleurs' enregistrés (par id, avec priorité) peuvent consommer certaines entrées (ex. onRelativeInput, onEditorMouseWheel) quand ils sont actifs ; ce qui n'est pas consommé continue vers la caméra active comme avant. Se charge avec require('core/cameraControllerRegistry') (ce n'est pas une extension). Utilisé par core/cameraInput.lua. Un moddeur l'utilise pour intercepter la souris/molette (ex. outil d'édition de caméra) sans casser les caméras normales.",
+  "usage": "local reg = require('core/cameraControllerRegistry')\nreg.register('monOutil', {\n  onRelativeInput = function(axis, val, player) return false end, -- true = consommé\n}, 10)\nif reg.acquire('monOutil') then --[[ capture exclusive ]] end\nreg.release('monOutil')",
+  "notes": [
+    "Un contrôleur est une table dont les clés sont des noms de méthodes (ex. onRelativeInput, onEditorMouseWheel) ; une méthode consomme l'évènement en renvoyant exactement true.",
+    "Ordre d'appel : priorité décroissante, puis id alphabétique. Si un contrôleur a 'capturé' (acquire), seul celui-ci reçoit les évènements.",
+    "acquire n'est autorisé que si aucun autre n'a capturé et si l'appelant est le contrôleur en cours de dispatch, ou le premier de l'ordre (priorité la plus haute) : on ne peut donc capturer que depuis son propre callback ou en étant en tête.",
+    "unregister libère automatiquement la capture si ce contrôleur la détenait."
+  ],
+  "fields": {},
+  "functions": {
+    "register": {
+      "desc": "Enregistre un contrôleur. Échoue (false) si l'id n'est pas une chaîne non vide, si controller n'est pas une table ou si l'id existe déjà.",
+      "params": {
+        "id": {"type": "string", "desc": "Identifiant unique"},
+        "controller": {"type": "table", "desc": "Table de callbacks nommés"},
+        "priority": {"type": "number|nil", "desc": "Priorité (plus grand = appelé en premier), 0 par défaut"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si enregistré"}]
+    },
+    "unregister": {
+      "desc": "Retire un contrôleur. Si controller est donné, il doit correspondre à celui enregistré. Libère la capture si besoin.",
+      "params": {
+        "id": {"type": "string", "desc": "Identifiant"},
+        "controller": {"type": "table|nil", "desc": "Contrôleur attendu (vérification facultative)"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si retiré"}]
+    },
+    "dispatch": {
+      "desc": "Envoie un évènement aux contrôleurs : au propriétaire de la capture seul s'il y en a un, sinon à tous dans l'ordre jusqu'à ce que l'un renvoie true.",
+      "params": {
+        "method": {"type": "string", "desc": "Nom de la méthode à appeler sur les contrôleurs"},
+        "...": {"type": "any", "desc": "Arguments passés à la méthode"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si un contrôleur a consommé l'évènement"}]
+    },
+    "acquire": {
+      "desc": "Prend la capture exclusive des entrées pour ce contrôleur (voir notes pour les conditions).",
+      "params": {"id": {"type": "string", "desc": "Identifiant d'un contrôleur enregistré"}},
+      "returns": [{"type": "boolean", "desc": "true si la capture est (ou était déjà) à ce contrôleur"}]
+    },
+    "release": {
+      "desc": "Relâche la capture si ce contrôleur la détient.",
+      "params": {"id": {"type": "string", "desc": "Identifiant"}},
+      "returns": [{"type": "boolean", "desc": "true si relâchée"}]
+    },
+    "isOwner": {
+      "desc": "Teste si ce contrôleur détient la capture.",
+      "params": {"id": {"type": "string", "desc": "Identifiant"}},
+      "returns": [{"type": "boolean", "desc": "true si propriétaire"}]
+    },
+    "isRegistered": {
+      "desc": "Teste si l'id est enregistré (et, si controller est donné, qu'il s'agit de ce contrôleur).",
+      "params": {
+        "id": {"type": "string", "desc": "Identifiant"},
+        "controller": {"type": "table|nil", "desc": "Contrôleur attendu"}
+      },
+      "returns": [{"type": "boolean", "desc": "true si enregistré"}]
+    }
+  },
+  "classes": {}
+}

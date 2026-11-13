@@ -1,0 +1,21 @@
+{
+  "path": "lua/vehicle/extensions/odometer.lua",
+  "module": "Compteur kilométrique 'relatif' pour les statistiques : intègre la distance parcourue à partir de electrics.values.wheelspeed avec un filtre de 'corde' (±5 cm) pour ignorer les oscillations avant/arrière, puis soumet la distance à gameplayStatistic (métriques 'vehicle/odometer/<modèle>.length' et 'vehicle/total_odometer.length'). Ne compte que quand l'IA est désactivée.",
+  "usage": "local d = extensions.odometer.getRelativeRecording()  -- distance cumulée en m",
+  "notes": [
+    "Algorithme : lead accumule |wheelspeed| * dt * signe(avgWheelAV) ; dès que |lead| dépasse ropeLength (0,05 m) l'excédent est ajouté à relativeOdometer et lead est borné.",
+    "submitStatistic n'envoie rien si ai.mode ~= 'disabled' ou si moins de 1 m a été accumulé depuis le dernier envoi. Si la vitesse moyenne depuis l'envoi dépasse 150 m/s (550 km/h) la distance est écartée comme incohérente. Un relativeOdometer NaN est ramené à la valeur précédente avec un log d'erreur.",
+    "Envoi automatique toutes les 30 s de temps accumulé (quand l'IA est désactivée) et à chaque reset. Le nom du modèle est extrait de v.vehicleDirectory (motif /vehicles/<modèle>).",
+    "Anomalie : submitedTime n'est remis à 0 qu'après un envoi périodique ; la vitesse moyenne testée (distance / submitedTime) est donc calculée sur du temps accumulé depuis le dernier envoi périodique, pas depuis le dernier submitStatistic.",
+    "startRecording est vide (la remise à zéro est commentée) ; onExtensionLoaded est vide."
+  ],
+  "fields": {},
+  "functions": {
+    "onReset": {"desc": "Hook de reset du véhicule : soumet la distance accumulée aux statistiques.", "params": {}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Appelé chaque frame : intègre la distance et déclenche l'envoi périodique.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "returns": [], "internal": true},
+    "startRecording": {"desc": "Prévu pour remettre l'enregistrement à zéro ; ne fait rien (code commenté).", "params": {}, "returns": [], "internal": false},
+    "getRelativeRecording": {"desc": "Renvoie la distance relative cumulée.", "params": {}, "returns": [{"type": "number", "desc": "Distance en mètres."}], "internal": false},
+    "submitStatistic": {"desc": "Envoie la distance non encore soumise à gameplayStatistic (conditions décrites dans les notes).", "params": {}, "returns": [], "internal": false},
+    "onExtensionLoaded": {"desc": "Hook de chargement ; vide.", "params": {}, "returns": [], "internal": true}
+  }
+}

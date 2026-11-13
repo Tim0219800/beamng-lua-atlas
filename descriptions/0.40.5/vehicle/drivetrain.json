@@ -1,0 +1,40 @@
+{
+  "path": "lua/vehicle/drivetrain.lua",
+  "module": "Couche de compatibilité ascendante : reproduit l'ancienne API `drivetrain` en lisant les périphériques du nouveau système `powertrain` ('mainEngine' et 'gearbox') à chaque frame. Un vieux mod ou script qui lit drivetrain.rpm, drivetrain.gear, drivetrain.torque… continue de fonctionner. Les nouveaux développements devraient utiliser powertrain directement.",
+  "usage": "local rpm = drivetrain.rpm\nlocal gear = drivetrain.gear\ndrivetrain.shiftToGear(1)",
+  "notes": [
+    "Les champs sont recalculés par updateProxy (updateGFX) à chaque frame depuis powertrain.getDevice('mainEngine') et ('gearbox'). rpm = outputAV1 du moteur * 9.5493 (rad/s vers tr/min).",
+    "updateProxy écrit aussi electrics.values.gear_M = gearIndex de la boîte (clé lue par l'UI).",
+    "Champs jamais mis à jour par updateProxy (restent à leur valeur initiale) : brake, fuelLeakRate, fuel, fuelCapacity, fuelUsage, shifterPosition, wheelCount, avgAV. M.shifterMode est forcé à 2 à chaque frame. M.esc est un tableau de fonctions nop.",
+    "M.engineAV vaut nil si le moteur 'mainEngine' n'existe pas (les autres champs ont un repli à 0) ; init ne le remet pas à zéro.",
+    "setShifterMode : seul le mode 2 donne 'arcade', tout autre mode donne 'realistic' (les modes 0, 1 et 3 ne sont pas distingués)."
+  ],
+  "fields": {
+    "torque": {"type": "number", "desc": "Couple de sortie du moteur principal (outputTorque1, N·m)."},
+    "gear": {"type": "integer", "desc": "Index de rapport de la boîte ('gearbox')."},
+    "rpm": {"type": "number", "desc": "Régime moteur en tr/min."},
+    "torqueTransmission": {"type": "number", "desc": "Couple de sortie de la boîte (N·m)."},
+    "brake": {"type": "number", "desc": "Jamais mis à jour (reste à 0)."},
+    "throttle": {"type": "number", "desc": "Copie de electrics.values.throttle."},
+    "engineDisabled": {"type": "boolean", "desc": "isDisabled du moteur principal."},
+    "fuelLeakRate": {"type": "number", "desc": "Débit de fuite de carburant (L/s) ; jamais mis à jour."},
+    "fuel": {"type": "number", "desc": "Valeur par défaut 100, jamais mise à jour."},
+    "fuelCapacity": {"type": "number", "desc": "Valeur par défaut 100, jamais mise à jour."},
+    "fuelUsage": {"type": "number", "desc": "Jamais mis à jour."},
+    "engineLoad": {"type": "number", "desc": "engineLoad du moteur principal."},
+    "shifterMode": {"type": "integer", "desc": "Toujours 2 (arcade) après updateGFX."},
+    "shifterPosition": {"type": "number", "desc": "Jamais mis à jour."},
+    "wheelCount": {"type": "integer", "desc": "Jamais mis à jour."},
+    "avgAV": {"type": "number", "desc": "Jamais mis à jour."},
+    "engineAV": {"type": "number|nil", "desc": "Vitesse angulaire du moteur (rad/s) ou nil sans moteur principal."},
+    "esc": {"type": "table", "desc": "Faux objet ESC de compatibilité : update, updateGFX, toggleESCMode, getCarData valent nop, escPulse = 0."},
+    "wheels": {"type": "table", "desc": "Table wheels.wheels, assignée dans init."}
+  },
+  "functions": {
+    "init": {"desc": "Appelé à l'init et au reset : assigne M.wheels et remet rpm, engineDisabled, gear, torqueTransmission et engineLoad à zéro.", "params": {}, "returns": [], "internal": true},
+    "reset": {"desc": "Identique à init.", "params": {}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Appelé chaque frame (updateProxy) : recopie l'état du moteur principal et de la boîte dans les champs drivetrain.", "params": {"dt": {"type": "number", "desc": "Non utilisé (la fonction ne déclare pas de paramètre)."}}, "returns": [], "internal": true},
+    "shiftToGear": {"desc": "Demande un rapport via controller.mainController.shiftToGearIndex.", "params": {"gear": {"type": "integer", "desc": "Index de rapport voulu."}}, "returns": [], "internal": false},
+    "setShifterMode": {"desc": "Fixe le mode de boîte : mode 2 donne 'arcade', tout autre valeur 'realistic' (controller.mainController.setGearboxMode).", "params": {"v": {"type": "integer", "desc": "0 manuel, 1 manuel embrayage auto, 2 arcade, 3 automatique réaliste (commentaire du code)."}}, "returns": [], "internal": false}
+  }
+}

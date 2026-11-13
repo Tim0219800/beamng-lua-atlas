@@ -1,0 +1,16 @@
+---@meta
+-- tim19Atlas stub generated from lua/common/inputFilters.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
+-- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
+
+---@type string
+FILTER_AI = nil
+---@type number
+FILTER_DIRECT = nil
+---@type number
+FILTER_KBD = nil
+---@type number
+FILTER_KBD2 = nil
+---@type table
+FILTER_NAME = nil
+---@type number
+FILTER_PAD = nil

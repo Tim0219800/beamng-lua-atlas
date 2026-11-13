@@ -1,0 +1,71 @@
+{
+  "path": "lua/vehicle/controller/gauges/customModules/electricMotorData.lua",
+  "module": "Module de données pour genericGauges : calcule la puissance affichée, la puissance et le couple, l'autonomie restante et un graphe de consommation pour les moteurs électriques.",
+  "notes": [
+    "Les moteurs sont les dispositifs de type \"electricMotor\" ; les batteries sont leurs stockages d'énergie enregistrés. Autonomie = énergie stockée * 0.0278 / consommation moyenne par 100 km.",
+    "La consommation est lissée et ne change que si le véhicule roule (> 0.5 m/s). updateGaugeData lit electrics.values.wheelspeed sans défaut.",
+    "setupGaugeData ajoute les batteries sans vider la liste précédente (un second appel les duplique)."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Ne fait rien.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Réinitialise l'état interne du module.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Ne fait rien (la mise à jour se fait par updateGaugeData).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setupGaugeData": {
+      "desc": "Appelé par genericGauges avec les propriétés demandées dans displayData.customModules : powerDisplay (electricPowerDisplay : accélérateur moyen moins régénération), currentPower (currentPower et averagePower en ch, currentTorque en N·m), remainingRange, consumptionGraph (averageConsumption, envoyé toutes les 5 s, sinon nil).",
+      "params": {
+        "properties": {
+          "type": "table<string, boolean>",
+          "desc": "Ensemble des propriétés demandées (clé = nom, valeur = true)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGaugeData": {
+      "desc": "Appelé par genericGauges avant chaque envoi : remplit moduleData avec les valeurs demandées.",
+      "params": {
+        "moduleData": {
+          "type": "table",
+          "desc": "Table de données du module, envoyée ensuite à la page HTML."
+        },
+        "dt": {
+          "type": "number",
+          "desc": "Temps écoulé depuis le dernier envoi (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

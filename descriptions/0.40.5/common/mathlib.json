@@ -1,0 +1,566 @@
+{
+  "path": "lua/common/mathlib.lua",
+  "module": "Bibliothèque mathématique chargée dans les deux VM (GE et véhicule). Elle définit les types vec3 (x, y, z, doubles) et quat (x, y, z, w), leurs métaméthodes (+, -, *, /, ==, tostring), et un grand nombre de fonctions globales (clamp, lerp, smoothstep, splines, intersections rayon/OBB/sphère/capsule/triangle, bruit bleu…). Tout est défini en variables globales à l'exécution de `require('mathlib')`, il n'y a pas de table de module à utiliser. Quand FFI est disponible, vec3 et quat sont des structs C (struct __luaVec3_t / __luaQuat_t) ; sinon ce sont des tables avec metatable.",
+  "usage": "local a = vec3(1, 2, 3)\nlocal b = vec3({1, 2, 3})\nlocal c = vec3({x = 1, y = 2, z = 3})\nprint(a == b, (a - b) == vec3(0, 0, 0))\nprint(vec3(10, 0, 0):dot(vec3(10, 0, 0)))\nlocal q = quatFromDir(vec3(0, 1, 0), vec3(0, 0, 1))\nlocal v = q * vec3(1, 0, 0) -- rotation d'un vecteur par un quat\nlocal t = clamp(lerp(0, 10, 0.3), 0, 5)",
+  "notes": [
+    "Convention quaternion : les quats de BeamNG (et de Torque3D) utilisent -w ; setRotationFromTo et getRotationTo stockent donc w = -(1 + dot). quatFromEuler, quatFromAxisAngle et quatFromDir donnent des quats directement utilisables avec l'opérateur * sur un vec3.",
+    "Les OBB (boîtes orientées) des fonctions overlaps/contains/intersects sont décrites par un centre c1 et trois vecteurs x1, y1, z1 qui sont les DEMI-axes (longueur = demi-étendue ; le code compare à squaredLength(), donc les axes ne sont pas normalisés).",
+    "Les fonctions géométriques OBB et plusieurs méthodes de LuaVec3 utilisent trois vec3 temporaires partagés au niveau du module (tmpv1..3) : elles ne sont pas réentrantes entre coroutines mais OK en usage normal.",
+    "push3 / StackVec3 : pile de 100 vec3 préalloués pour écrire des expressions vectorielles sans allocation, par ex. (push3(a) - push3(b)):length(). Chaque opération consomme les valeurs empilées ; il faut que chaque push3 soit consommé par exactement une méthode terminale (xyz, copy, dot, length, squaredLength, distance, squaredDistance). Un push3 non consommé fait dériver l'indice de pile. Ne pas utiliser entre deux appels qui empilent sans dépiler.",
+    "getTmpVec3/resetTmpVec3 : pool de vec3 temporaires stocké dans une table fournie par l'appelant (doit contenir t[0] = 0). resetTmpVec3(t) à placer au début d'updateGFX ; ne pas utiliser dans une boucle.",
+    "Epsilon de garde : normalize, resize, cosAngle, etc. ajoutent 1e-30 au dénominateur, donc un vecteur nul reste nul au lieu de donner NaN.",
+    "BUG probable : quat() sans argument renvoie (x=1, y=0, z=0, w=0), qui n'est PAS l'identité (l'identité est (0,0,0,1), comme le font quatFromDir/quatFromEuler). Utiliser quat(0,0,0,1) pour l'identité.",
+    "Faute de frappe dans le nom de la fonction exportée : constainsCylinder_Point (au lieu de containsCylinder_Point).",
+    "smoothmax(a, b, k) n'a pas de valeur par défaut pour k (contrairement à smoothmin qui prend 0.1) : k = nil provoque une erreur.",
+    "LuaQuat.__tostring et StackVec3.__tostring passent le résultat de numSer (une chaîne) à un format '%.10g' : cela marche par conversion automatique chaîne -> nombre mais '9e999' (infini) est traité comme inf.",
+    "Variables globales aussi créées : fsign (= sign), vec3toString (= LuaVec3.__tostring, compat). (La globale `i` signalée par l'extraction automatique est un faux positif : c'est la variable d'une boucle for locale.)"
+  ],
+  "fields": {},
+  "functions": {
+    "vec3": {
+      "desc": "Constructeur de vec3. Sans argument : (0,0,0). Avec une table : accepte {x=,y=,z=} ou {1,2,3}, ou un autre vec3 (copie). Avec x et y : z vaut 0 par défaut.",
+      "params": {"x": {"type": "number|table|vec3|nil", "desc": "composante x, ou table / vec3 source"}, "y": {"type": "number|nil", "desc": "composante y"}, "z": {"type": "number|nil", "desc": "composante z (0 si omis)"}},
+      "returns": [{"type": "vec3", "desc": "nouveau vecteur"}],
+      "internal": false
+    },
+    "quat": {
+      "desc": "Constructeur de quat (x, y, z, w). Accepte quatre nombres, une table {x,y,z,w} ou {1,2,3,4}, ou un quat à copier. Sans argument voir notes (valeur (1,0,0,0)). Les quats de T3d utilisent -w.",
+      "params": {"x": {"type": "number|table|quat|nil", "desc": "composante x ou source"}, "y": {"type": "number|nil", "desc": "composante y"}, "z": {"type": "number|nil", "desc": "composante z"}, "w": {"type": "number|nil", "desc": "composante w"}},
+      "returns": [{"type": "quat", "desc": "nouveau quaternion"}],
+      "internal": false
+    },
+    "quatFromDir": {
+      "desc": "Construit un quat orientant l'axe +Y local vers `dir`, avec `up` comme direction haute (Z monde par défaut). Si dir et up sont quasi colinéaires, dir est légèrement perturbé.",
+      "params": {"dir": {"type": "vec3", "desc": "direction avant (normalisée en interne)"}, "up": {"type": "vec3|nil", "desc": "direction haute, défaut (0,0,1)"}},
+      "returns": [{"type": "quat", "desc": "orientation normalisée"}],
+      "internal": false
+    },
+    "quatFromAxisAngle": {
+      "desc": "Quaternion de rotation d'angle angleRad autour de l'axe (l'axe doit être normalisé).",
+      "params": {"axle": {"type": "vec3", "desc": "axe de rotation normalisé"}, "angleRad": {"type": "number", "desc": "angle en radians"}},
+      "returns": [{"type": "quat", "desc": "quaternion"}],
+      "internal": false
+    },
+    "quatFromEuler": {
+      "desc": "Quaternion à partir d'angles d'Euler en radians (formule du code : combinaison sin/cos des demi-angles x, y, z).",
+      "params": {"x": {"type": "number", "desc": "angle autour de x (rad)"}, "y": {"type": "number", "desc": "angle autour de y (rad)"}, "z": {"type": "number", "desc": "angle autour de z (rad)"}},
+      "returns": [{"type": "quat", "desc": "quaternion"}],
+      "internal": false
+    },
+    "push3": {
+      "desc": "Empile un vec3 (ou x, y, z) sur la pile statique de 100 vec3 et renvoie l'objet StackVec3 (toujours le même). Sert à chaîner des opérations sans allocation. Voir notes du module.",
+      "params": {"x": {"type": "number|vec3", "desc": "composante x ou vec3 / StackVec3 source (lu via :xyz())"}, "y": {"type": "number|nil", "desc": "composante y"}, "z": {"type": "number|nil", "desc": "composante z"}},
+      "returns": [{"type": "StackVec3", "desc": "objet pile unique"}],
+      "internal": false
+    },
+    "getTmpVec3": {
+      "desc": "Renvoie le prochain vec3 temporaire du pool `t` (le crée si besoin) et incrémente t[0]. `t` doit être initialisé avec t[0] = 0 au niveau module.",
+      "params": {"t": {"type": "table", "desc": "pool, avec t[0] = compteur"}},
+      "returns": [{"type": "vec3", "desc": "vecteur temporaire réutilisable"}],
+      "internal": false
+    },
+    "resetTmpVec3": {
+      "desc": "Remet le compteur du pool à 0 (à appeler au début d'updateGFX ou équivalent). Renvoie l'ancienne valeur du compteur.",
+      "params": {"t": {"type": "table", "desc": "pool de getTmpVec3"}},
+      "returns": [{"type": "integer", "desc": "nombre de vec3 utilisés avant reset"}],
+      "internal": false
+    },
+    "indexedBlueNoise": {
+      "desc": "Bruit bleu déterministe : fractPart(i * 0.618...) (suite de la section dorée), bien répartie sur [0,1).",
+      "params": {"i": {"type": "number", "desc": "indice"}},
+      "returns": [{"type": "number", "desc": "valeur dans [0,1)"}],
+      "internal": false
+    },
+    "getBlueNoise1d": {
+      "desc": "Valeur suivante de la suite de bruit bleu 1D : fractPart(x + 0.618...).",
+      "params": {"x": {"type": "number", "desc": "valeur précédente"}},
+      "returns": [{"type": "number", "desc": "valeur dans [0,1)"}],
+      "internal": false
+    },
+    "randomGauss3": {
+      "desc": "Somme de trois math.random() : pseudo-gaussienne grossière (le commentaire du code dit [0..3]).",
+      "params": {},
+      "returns": [{"type": "number", "desc": "valeur dans [0,3]"}],
+      "internal": false
+    },
+    "randomState": {
+      "desc": "Générateur pseudo-aléatoire déterministe : transforme v en un nombre dans (0,1] (modulo 4294967291). Appeler en rebouclant la valeur de sortie.",
+      "params": {"v": {"type": "number", "desc": "état précédent dans [0,1]"}},
+      "returns": [{"type": "number", "desc": "nouvel état dans (0,1]"}],
+      "internal": false
+    },
+    "closestLinePointsPointVec": {
+      "desc": "Points les plus proches de deux droites infinies définies par point + vecteur directeur. Renvoie les abscisses normalisées (xnorm) sur chaque droite ; gère les cas parallèles et dégénérés.",
+      "params": {"l1p": {"type": "vec3", "desc": "point de la droite 1"}, "l1Vec": {"type": "vec3", "desc": "vecteur de la droite 1"}, "l2p": {"type": "vec3", "desc": "point de la droite 2"}, "l2Vec": {"type": "vec3", "desc": "vecteur de la droite 2"}},
+      "returns": [{"type": "number", "desc": "xnorm sur la droite 1 (point = l1p + l1Vec*xnorm)"}, {"type": "number", "desc": "xnorm sur la droite 2"}],
+      "internal": false
+    },
+    "closestLinePoints": {
+      "desc": "Comme closestLinePointsPointVec mais les droites sont données par deux points chacune.",
+      "params": {"l1p1": {"type": "vec3", "desc": "début droite 1"}, "l1p2": {"type": "vec3", "desc": "fin droite 1"}, "l2p1": {"type": "vec3", "desc": "début droite 2"}, "l2p2": {"type": "vec3", "desc": "fin droite 2"}},
+      "returns": [{"type": "number", "desc": "xnorm sur la droite 1"}, {"type": "number", "desc": "xnorm sur la droite 2"}],
+      "internal": false
+    },
+    "closestLineSegmentPoints": {
+      "desc": "Abscisses normalisées (bornées à [0,1]) des points les plus proches entre deux segments.",
+      "params": {"l1p1": {"type": "vec3", "desc": "début segment 1"}, "l1p2": {"type": "vec3", "desc": "fin segment 1"}, "l2p1": {"type": "vec3", "desc": "début segment 2"}, "l2p2": {"type": "vec3", "desc": "fin segment 2"}},
+      "returns": [{"type": "number", "desc": "xnorm dans [0,1] sur le segment 1"}, {"type": "number", "desc": "xnorm dans [0,1] sur le segment 2"}],
+      "internal": false
+    },
+    "linePointFromXnorm": {
+      "desc": "Point p0 + (p1 - p0) * xnorm (interpolation linéaire entre deux vec3, sans bornage).",
+      "params": {"p0": {"type": "vec3", "desc": "début"}, "p1": {"type": "vec3", "desc": "fin"}, "xnorm": {"type": "number", "desc": "abscisse normalisée"}},
+      "returns": [{"type": "vec3", "desc": "nouveau point"}],
+      "internal": false
+    },
+    "sign2": {
+      "desc": "Signe sans zéro : -1 ou 1 (0 donne 1 ; NaN non géré explicitement).",
+      "params": {"x": {"type": "number", "desc": "valeur"}},
+      "returns": [{"type": "number", "desc": "-1 ou 1"}],
+      "internal": false
+    },
+    "sign": {
+      "desc": "Signe : -1, 0 ou 1. Aussi exposé sous le nom global fsign.",
+      "params": {"x": {"type": "number", "desc": "valeur"}},
+      "returns": [{"type": "number", "desc": "-1, 0 ou 1"}],
+      "internal": false
+    },
+    "signApply": {
+      "desc": "Renvoie sign(s) * abs(v).",
+      "params": {"s": {"type": "number", "desc": "valeur dont on prend le signe"}, "v": {"type": "number", "desc": "valeur dont on prend la valeur absolue"}},
+      "returns": [{"type": "number", "desc": "sign(s)*abs(v)"}],
+      "internal": false
+    },
+    "guardZero": {
+      "desc": "Évite le zéro exact (calcul sans branchement) : renvoie 1/clamp(1/x, -1e300, 1e300), soit x sauf pour 0 qui devient ~1e-300 de même signe.",
+      "params": {"x": {"type": "number", "desc": "valeur"}},
+      "returns": [{"type": "number", "desc": "valeur jamais nulle"}],
+      "internal": false
+    },
+    "clamp": {
+      "desc": "Borne x dans [minValue, maxValue] : min(max(x, minValue), maxValue). Renvoie minValue si x est NaN.",
+      "params": {"x": {"type": "number", "desc": "valeur"}, "minValue": {"type": "number", "desc": "borne basse"}, "maxValue": {"type": "number", "desc": "borne haute"}},
+      "returns": [{"type": "number", "desc": "valeur bornée"}],
+      "internal": false
+    },
+    "square": {
+      "desc": "a * a.",
+      "params": {"a": {"type": "number", "desc": "valeur"}},
+      "returns": [{"type": "number", "desc": "carré"}],
+      "internal": false
+    },
+    "round": {
+      "desc": "Arrondi à l'entier le plus proche : floor(a + 0.5) (les .5 vont vers le haut, y compris pour les négatifs).",
+      "params": {"a": {"type": "number", "desc": "valeur"}},
+      "returns": [{"type": "number", "desc": "entier (en nombre Lua)"}],
+      "internal": false
+    },
+    "roundNear": {
+      "desc": "Arrondit x au multiple de m le plus proche. Pour arrondir à la N-ième décimale : roundNear(x, 1e-N).",
+      "params": {"x": {"type": "number", "desc": "valeur"}, "m": {"type": "number", "desc": "pas d'arrondi"}},
+      "returns": [{"type": "number", "desc": "valeur arrondie"}],
+      "internal": false
+    },
+    "isnan": {"desc": "Vrai si a est NaN (a ~= a).", "params": {"a": {"type": "number", "desc": "valeur"}}, "returns": [{"type": "boolean", "desc": "est NaN"}], "internal": false},
+    "isinf": {"desc": "Vrai si abs(a) == math.huge.", "params": {"a": {"type": "number", "desc": "valeur"}}, "returns": [{"type": "boolean", "desc": "est infini"}], "internal": false},
+    "isnaninf": {"desc": "Vrai si a est NaN ou infini (a*0 ~= 0).", "params": {"a": {"type": "number", "desc": "valeur"}}, "returns": [{"type": "boolean", "desc": "NaN ou infini"}], "internal": false},
+    "nanError": {
+      "desc": "Renvoie x s'il n'est pas NaN, sinon lève error('NaN found'). Utile pour tracer l'origine d'un NaN.",
+      "params": {"x": {"type": "number", "desc": "valeur"}},
+      "returns": [{"type": "number", "desc": "x"}],
+      "internal": false
+    },
+    "linearScale": {
+      "desc": "Remappe v de [minValue, maxValue] vers [minOutput, maxOutput] en BORNANT la fraction à [0,1] (la sortie reste dans l'intervalle de sortie).",
+      "params": {"v": {"type": "number", "desc": "valeur"}, "minValue": {"type": "number", "desc": "entrée basse"}, "maxValue": {"type": "number", "desc": "entrée haute"}, "minOutput": {"type": "number", "desc": "sortie pour minValue"}, "maxOutput": {"type": "number", "desc": "sortie pour maxValue"}},
+      "returns": [{"type": "number", "desc": "valeur remappée et bornée"}],
+      "internal": false
+    },
+    "rescale": {
+      "desc": "Comme linearScale mais SANS bornage (extrapole hors de l'intervalle).",
+      "params": {"v": {"type": "number", "desc": "valeur"}, "minValue": {"type": "number", "desc": "entrée basse"}, "maxValue": {"type": "number", "desc": "entrée haute"}, "minOutput": {"type": "number", "desc": "sortie pour minValue"}, "maxOutput": {"type": "number", "desc": "sortie pour maxValue"}},
+      "returns": [{"type": "number", "desc": "valeur remappée"}],
+      "internal": false
+    },
+    "lerp": {
+      "desc": "Interpolation linéaire from + (to - from) * t. Fonctionne aussi avec des vec3/quat (via les opérateurs) grâce à la formule monotone.",
+      "params": {"from": {"type": "number|vec3", "desc": "valeur à t=0"}, "to": {"type": "number|vec3", "desc": "valeur à t=1"}, "t": {"type": "number", "desc": "fraction (non bornée)"}},
+      "returns": [{"type": "number|vec3", "desc": "valeur interpolée"}],
+      "internal": false
+    },
+    "inverseLerp": {
+      "desc": "Fraction t telle que lerp(from, to, t) = value ; renvoie 0 si from et to sont (quasi) égaux.",
+      "params": {"from": {"type": "number", "desc": "début"}, "to": {"type": "number", "desc": "fin"}, "value": {"type": "number", "desc": "valeur"}},
+      "returns": [{"type": "number", "desc": "fraction (non bornée)"}],
+      "internal": false
+    },
+    "smoothstep": {"desc": "Courbe 3x²-2x³ avec x borné à [0,1].", "params": {"x": {"type": "number", "desc": "entrée"}}, "returns": [{"type": "number", "desc": "valeur dans [0,1]"}], "internal": false},
+    "smootherstep": {"desc": "Courbe de Perlin 6x⁵-15x⁴+10x³, résultat borné à [0,1].", "params": {"x": {"type": "number", "desc": "entrée"}}, "returns": [{"type": "number", "desc": "valeur dans [0,1]"}], "internal": false},
+    "smootheststep": {"desc": "Polynôme de degré 7 (35x⁴-84x⁵+70x⁶-20x⁷) avec x borné à [0,1].", "params": {"x": {"type": "number", "desc": "entrée"}}, "returns": [{"type": "number", "desc": "valeur dans [0,1]"}], "internal": false},
+    "smoothmin": {
+      "desc": "Minimum lissé de a et b sur une largeur k (défaut 0.1).",
+      "params": {"a": {"type": "number", "desc": "valeur a"}, "b": {"type": "number", "desc": "valeur b"}, "k": {"type": "number|nil", "desc": "largeur de lissage, défaut 0.1"}},
+      "returns": [{"type": "number", "desc": "minimum lissé"}],
+      "internal": false
+    },
+    "smoothmax": {
+      "desc": "Maximum lissé = smoothmin(a, b, -k). k n'a pas de défaut ici.",
+      "params": {"a": {"type": "number", "desc": "valeur a"}, "b": {"type": "number", "desc": "valeur b"}, "k": {"type": "number", "desc": "largeur de lissage (obligatoire)"}},
+      "returns": [{"type": "number", "desc": "maximum lissé"}],
+      "internal": false
+    },
+    "biasFun": {
+      "desc": "Fonction de biais (x + xk)/(1 + xk) : déforme x dans [0,1] ; k > 0 relève la courbe.",
+      "params": {"x": {"type": "number", "desc": "entrée dans [0,1]"}, "k": {"type": "number", "desc": "intensité"}},
+      "returns": [{"type": "number", "desc": "valeur déformée"}],
+      "internal": false
+    },
+    "biasGainFun": {
+      "desc": "Fonction biais/gain à deux paramètres (arXiv 2010.09714) : passe par (t, t) ; s règle la pente au point de pivot. Courbe visible sur desmos (lien dans le code).",
+      "params": {"x": {"type": "number", "desc": "entrée dans [0,1]"}, "t": {"type": "number|nil", "desc": "pivot, défaut 0.5"}, "s": {"type": "number|nil", "desc": "pente, défaut 0.25"}},
+      "returns": [{"type": "number", "desc": "valeur dans [0,1]"}],
+      "internal": false
+    },
+    "sigmoid1": {
+      "desc": "Sigmoïde rationnelle x / (a + |x|), symétrique autour de 0, tendant vers ±1.",
+      "params": {"x": {"type": "number", "desc": "entrée"}, "a": {"type": "number|nil", "desc": "raideur inverse, défaut 1"}},
+      "returns": [{"type": "number", "desc": "valeur dans (-1,1)"}],
+      "internal": false
+    },
+    "bumpFun": {
+      "desc": "Fonction 'bosse' lisse : monte de leftY à peakY autour de peakLeftX puis redescend vers rightY autour de peakRightX (deux sigmoïdes sigmoid1).",
+      "params": {"x": {"type": "number", "desc": "entrée"}, "peakLeftX": {"type": "number", "desc": "x du front montant"}, "peakRightX": {"type": "number", "desc": "x du front descendant"}, "leftSlope": {"type": "number|nil", "desc": "paramètre a du front gauche, défaut 1"}, "rightSlope": {"type": "number|nil", "desc": "paramètre a du front droit, défaut 1"}, "leftY": {"type": "number|nil", "desc": "valeur à gauche, défaut 0"}, "peakY": {"type": "number|nil", "desc": "valeur au sommet, défaut 1"}, "rightY": {"type": "number|nil", "desc": "valeur à droite, défaut 0"}, "roundness": {"type": "number|nil", "desc": "raideur des fronts, défaut 10"}},
+      "returns": [{"type": "number", "desc": "valeur"}],
+      "internal": false
+    },
+    "bumpPFun": {
+      "desc": "Bosse polynomiale à support borné centrée sur peakX, avec largeurs et facteurs de courbure distincts à gauche et à droite. Vaut baseY hors de [peakX-leftWidth, peakX+rightWidth].",
+      "params": {"x": {"type": "number", "desc": "entrée"}, "peakX": {"type": "number", "desc": "position du sommet"}, "leftWidth": {"type": "number", "desc": "demi-largeur gauche"}, "rightWidth": {"type": "number", "desc": "demi-largeur droite"}, "leftC": {"type": "number", "desc": "facteur de forme côté gauche"}, "rightC": {"type": "number", "desc": "facteur de forme côté droit"}, "baseY": {"type": "number|nil", "desc": "valeur de base, défaut 0"}, "peakY": {"type": "number|nil", "desc": "valeur au sommet, défaut 1"}},
+      "returns": [{"type": "number", "desc": "valeur"}],
+      "internal": false
+    },
+    "median3": {"desc": "Médiane de trois nombres.", "params": {"a": {"type": "number", "desc": "a"}, "b": {"type": "number", "desc": "b"}, "c": {"type": "number", "desc": "c"}}, "returns": [{"type": "number", "desc": "médiane"}], "internal": false},
+    "median4": {"desc": "Moyenne des deux valeurs centrales de quatre nombres.", "params": {"a": {"type": "number", "desc": "a"}, "b": {"type": "number", "desc": "b"}, "c": {"type": "number", "desc": "c"}, "d": {"type": "number", "desc": "d"}}, "returns": [{"type": "number", "desc": "médiane"}], "internal": false},
+    "median5": {"desc": "Médiane de cinq nombres.", "params": {"a": {"type": "number", "desc": "a"}, "b": {"type": "number", "desc": "b"}, "c": {"type": "number", "desc": "c"}, "d": {"type": "number", "desc": "d"}, "e": {"type": "number", "desc": "e"}}, "returns": [{"type": "number", "desc": "médiane"}], "internal": false},
+    "pointBB2d": {
+      "desc": "Boîte englobante 2D d'un point élargi de radius.",
+      "params": {"x": {"type": "number", "desc": "x"}, "y": {"type": "number", "desc": "y"}, "radius": {"type": "number", "desc": "rayon"}},
+      "returns": [{"type": "number", "desc": "xmin"}, {"type": "number", "desc": "ymin"}, {"type": "number", "desc": "xmax"}, {"type": "number", "desc": "ymax"}],
+      "internal": false
+    },
+    "lineBB2d": {
+      "desc": "Boîte englobante 2D d'un segment, élargie de radius (0 par défaut).",
+      "params": {"x1": {"type": "number", "desc": "x début"}, "y1": {"type": "number", "desc": "y début"}, "x2": {"type": "number", "desc": "x fin"}, "y2": {"type": "number", "desc": "y fin"}, "radius": {"type": "number|nil", "desc": "élargissement"}},
+      "returns": [{"type": "number", "desc": "xmin"}, {"type": "number", "desc": "ymin"}, {"type": "number", "desc": "xmax"}, {"type": "number", "desc": "ymax"}],
+      "internal": false
+    },
+    "cardinalSpline": {
+      "desc": "Spline cardinale entre p1 et p2 (p0 et p3 sont les voisins). Fonctionne avec des nombres ou des vec3. d1, d2, d3 sont les longueurs de paramétrisation des trois intervalles (1 par défaut = uniforme).",
+      "params": {"p0": {"type": "number|vec3", "desc": "point précédent"}, "p1": {"type": "number|vec3", "desc": "début de l'intervalle"}, "p2": {"type": "number|vec3", "desc": "fin de l'intervalle"}, "p3": {"type": "number|vec3", "desc": "point suivant"}, "t": {"type": "number", "desc": "paramètre dans [0,1] entre p1 et p2"}, "s": {"type": "number|nil", "desc": "tension, défaut 0.5"}, "d1": {"type": "number|nil", "desc": "longueur intervalle p0-p1, défaut 1"}, "d2": {"type": "number|nil", "desc": "longueur p1-p2, défaut 1"}, "d3": {"type": "number|nil", "desc": "longueur p2-p3, défaut 1"}},
+      "returns": [{"type": "number|vec3", "desc": "point interpolé"}],
+      "internal": false
+    },
+    "catmullRom": {
+      "desc": "Catmull-Rom uniforme (cardinalSpline avec d1=d2=d3=1). Chaque composante est indépendante, pas de distance nécessaire.",
+      "params": {"p0": {"type": "number|vec3", "desc": "précédent"}, "p1": {"type": "number|vec3", "desc": "début"}, "p2": {"type": "number|vec3", "desc": "fin"}, "p3": {"type": "number|vec3", "desc": "suivant"}, "t": {"type": "number", "desc": "paramètre [0,1]"}, "s": {"type": "number|nil", "desc": "tension, défaut 0.5"}},
+      "returns": [{"type": "number|vec3", "desc": "point"}],
+      "internal": false
+    },
+    "catmullRomChordal": {
+      "desc": "Catmull-Rom chordal : paramétrisation par les distances entre points (exige des vec3 : appelle :distance).",
+      "params": {"p0": {"type": "vec3", "desc": "précédent"}, "p1": {"type": "vec3", "desc": "début"}, "p2": {"type": "vec3", "desc": "fin"}, "p3": {"type": "vec3", "desc": "suivant"}, "t": {"type": "number", "desc": "paramètre [0,1]"}, "s": {"type": "number|nil", "desc": "tension, défaut 0.5"}},
+      "returns": [{"type": "vec3", "desc": "point"}],
+      "internal": false
+    },
+    "catmullRomCentripetal": {
+      "desc": "Catmull-Rom centripète (distances en racine carrée) : le plus stable, sans boucles ni auto-intersections. Exige des vec3.",
+      "params": {"p0": {"type": "vec3", "desc": "précédent"}, "p1": {"type": "vec3", "desc": "début"}, "p2": {"type": "vec3", "desc": "fin"}, "p3": {"type": "vec3", "desc": "suivant"}, "t": {"type": "number", "desc": "paramètre [0,1]"}, "s": {"type": "number|nil", "desc": "tension, défaut 0.5"}},
+      "returns": [{"type": "vec3", "desc": "point"}],
+      "internal": false
+    },
+    "monotonicSteffen": {
+      "desc": "Interpolation 2D monotone de Steffen entre (x1,y1) et (x2,y2) en utilisant les voisins (x0,y0) et (x3,y3) pour les pentes.",
+      "params": {"y0": {"type": "number", "desc": "y du point 0"}, "y1": {"type": "number", "desc": "y du point 1"}, "y2": {"type": "number", "desc": "y du point 2"}, "y3": {"type": "number", "desc": "y du point 3"}, "x0": {"type": "number", "desc": "x du point 0"}, "x1": {"type": "number", "desc": "x du point 1"}, "x2": {"type": "number", "desc": "x du point 2"}, "x3": {"type": "number", "desc": "x du point 3"}, "x": {"type": "number", "desc": "abscisse à évaluer (entre x1 et x2)"}},
+      "returns": [{"type": "number", "desc": "y interpolé"}],
+      "internal": false
+    },
+    "quadraticBezier": {
+      "desc": "Courbe de Bézier quadratique (p1, p2 point de contrôle, p3). Marche avec nombres ou vec3.",
+      "params": {"p1": {"type": "number|vec3", "desc": "début"}, "p2": {"type": "number|vec3", "desc": "point de contrôle"}, "p3": {"type": "number|vec3", "desc": "fin"}, "t": {"type": "number", "desc": "paramètre [0,1]"}},
+      "returns": [{"type": "number|vec3", "desc": "point"}],
+      "internal": false
+    },
+    "conicBezier": {
+      "desc": "Bézier conique rationnelle (poids w sur le point de contrôle) : peut représenter hyperboles, paraboles, ellipses, cercles.",
+      "params": {"p1": {"type": "number|vec3", "desc": "début"}, "p2": {"type": "number|vec3", "desc": "point de contrôle"}, "p3": {"type": "number|vec3", "desc": "fin"}, "t": {"type": "number", "desc": "paramètre [0,1]"}, "w": {"type": "number|nil", "desc": "poids, défaut 1 (parabole)"}},
+      "returns": [{"type": "number|vec3", "desc": "point"}],
+      "internal": false
+    },
+    "biQuadratic": {
+      "desc": "Spline quadratique par morceaux qui NE passe PAS par les points : lisse le signal. t dans [0,1] entre p1 et p2.",
+      "params": {"p0": {"type": "number|vec3", "desc": "précédent"}, "p1": {"type": "number|vec3", "desc": "début"}, "p2": {"type": "number|vec3", "desc": "fin"}, "p3": {"type": "number|vec3", "desc": "suivant"}, "t": {"type": "number", "desc": "paramètre [0,1]"}},
+      "returns": [{"type": "number|vec3", "desc": "point lissé"}],
+      "internal": false
+    },
+    "overlapsOBB_OBB": {
+      "desc": "Test de recouvrement entre deux boîtes orientées (SAT sur 15 axes). Chaque boîte = centre + trois demi-axes.",
+      "params": {"c1": {"type": "vec3", "desc": "centre boîte 1"}, "x1": {"type": "vec3", "desc": "demi-axe x boîte 1"}, "y1": {"type": "vec3", "desc": "demi-axe y boîte 1"}, "z1": {"type": "vec3", "desc": "demi-axe z boîte 1"}, "c2": {"type": "vec3", "desc": "centre boîte 2"}, "x2": {"type": "vec3", "desc": "demi-axe x boîte 2"}, "y2": {"type": "vec3", "desc": "demi-axe y boîte 2"}, "z2": {"type": "vec3", "desc": "demi-axe z boîte 2"}},
+      "returns": [{"type": "boolean", "desc": "vrai si les boîtes se touchent ou se recouvrent"}],
+      "internal": false
+    },
+    "containsOBB_OBB": {
+      "desc": "Vrai si la boîte 2 est entièrement contenue dans la boîte 1.",
+      "params": {"c1": {"type": "vec3", "desc": "centre boîte englobante"}, "x1": {"type": "vec3", "desc": "demi-axe x"}, "y1": {"type": "vec3", "desc": "demi-axe y"}, "z1": {"type": "vec3", "desc": "demi-axe z"}, "c2": {"type": "vec3", "desc": "centre boîte contenue"}, "x2": {"type": "vec3", "desc": "demi-axe x"}, "y2": {"type": "vec3", "desc": "demi-axe y"}, "z2": {"type": "vec3", "desc": "demi-axe z"}},
+      "returns": [{"type": "boolean", "desc": "contenue"}],
+      "internal": false
+    },
+    "OBBsquaredDistance": {
+      "desc": "Distance au carré entre un point et une boîte orientée (0 si le point est dedans).",
+      "params": {"c1": {"type": "vec3", "desc": "centre"}, "x1": {"type": "vec3", "desc": "demi-axe x"}, "y1": {"type": "vec3", "desc": "demi-axe y"}, "z1": {"type": "vec3", "desc": "demi-axe z"}, "p": {"type": "vec3", "desc": "point"}},
+      "returns": [{"type": "number", "desc": "distance au carré"}],
+      "internal": false
+    },
+    "overlapsOBB_Sphere": {
+      "desc": "Vrai si une boîte orientée et une sphère se recouvrent.",
+      "params": {"c1": {"type": "vec3", "desc": "centre boîte"}, "x1": {"type": "vec3", "desc": "demi-axe x"}, "y1": {"type": "vec3", "desc": "demi-axe y"}, "z1": {"type": "vec3", "desc": "demi-axe z"}, "c2": {"type": "vec3", "desc": "centre sphère"}, "r2": {"type": "number", "desc": "rayon sphère"}},
+      "returns": [{"type": "boolean", "desc": "recouvrement"}],
+      "internal": false
+    },
+    "overlapsOBB_Plane": {
+      "desc": "Vrai si une boîte orientée coupe un plan (point + normale).",
+      "params": {"c1": {"type": "vec3", "desc": "centre boîte"}, "x1": {"type": "vec3", "desc": "demi-axe x"}, "y1": {"type": "vec3", "desc": "demi-axe y"}, "z1": {"type": "vec3", "desc": "demi-axe z"}, "plpos": {"type": "vec3", "desc": "point du plan"}, "pln": {"type": "vec3", "desc": "normale du plan"}},
+      "returns": [{"type": "boolean", "desc": "intersection"}],
+      "internal": false
+    },
+    "containsOBB_Sphere": {
+      "desc": "Vrai si la sphère est entièrement dans la boîte orientée.",
+      "params": {"c1": {"type": "vec3", "desc": "centre boîte"}, "x1": {"type": "vec3", "desc": "demi-axe x"}, "y1": {"type": "vec3", "desc": "demi-axe y"}, "z1": {"type": "vec3", "desc": "demi-axe z"}, "c2": {"type": "vec3", "desc": "centre sphère"}, "r2": {"type": "number", "desc": "rayon sphère"}},
+      "returns": [{"type": "boolean", "desc": "contenue"}],
+      "internal": false
+    },
+    "containsSphere_OBB": {
+      "desc": "Vrai si la boîte orientée (c2, x2, y2, z2) est entièrement dans la sphère (c1, r1) : teste ses 8 coins.",
+      "params": {"c1": {"type": "vec3", "desc": "centre sphère"}, "r1": {"type": "number", "desc": "rayon sphère"}, "c2": {"type": "vec3", "desc": "centre boîte"}, "x2": {"type": "vec3", "desc": "demi-axe x"}, "y2": {"type": "vec3", "desc": "demi-axe y"}, "z2": {"type": "vec3", "desc": "demi-axe z"}},
+      "returns": [{"type": "boolean", "desc": "boîte contenue dans la sphère"}],
+      "internal": false
+    },
+    "containsOBB_point": {
+      "desc": "Vrai si le point p est dans la boîte orientée.",
+      "params": {"c1": {"type": "vec3", "desc": "centre"}, "x1": {"type": "vec3", "desc": "demi-axe x"}, "y1": {"type": "vec3", "desc": "demi-axe y"}, "z1": {"type": "vec3", "desc": "demi-axe z"}, "p": {"type": "vec3", "desc": "point"}},
+      "returns": [{"type": "boolean", "desc": "contenu"}],
+      "internal": false
+    },
+    "containsEllipsoid_Point": {
+      "desc": "Vrai si le point p est dans l'ellipsoïde de centre c1 et de demi-axes x1, y1, z1.",
+      "params": {"c1": {"type": "vec3", "desc": "centre"}, "x1": {"type": "vec3", "desc": "demi-axe x"}, "y1": {"type": "vec3", "desc": "demi-axe y"}, "z1": {"type": "vec3", "desc": "demi-axe z"}, "p": {"type": "vec3", "desc": "point"}},
+      "returns": [{"type": "boolean", "desc": "contenu"}],
+      "internal": false
+    },
+    "constainsCylinder_Point": {
+      "desc": "Vrai si p est dans le cylindre (sans bouts arrondis) d'axe cposa-cposb et de rayon cR. Le nom contient une faute de frappe dans le code du jeu.",
+      "params": {"cposa": {"type": "vec3", "desc": "centre de la base A"}, "cposb": {"type": "vec3", "desc": "centre de la base B"}, "cR": {"type": "number", "desc": "rayon"}, "p": {"type": "vec3", "desc": "point"}},
+      "returns": [{"type": "boolean", "desc": "contenu"}],
+      "internal": false
+    },
+    "altitudeOBB_Plane": {
+      "desc": "Altitude signée du point le plus haut de la boîte orientée par rapport au plan : dot(c1 - plpos, pln) + somme des |dot(axe, pln)|.",
+      "params": {"c1": {"type": "vec3", "desc": "centre"}, "x1": {"type": "vec3", "desc": "demi-axe x"}, "y1": {"type": "vec3", "desc": "demi-axe y"}, "z1": {"type": "vec3", "desc": "demi-axe z"}, "plpos": {"type": "vec3", "desc": "point du plan"}, "pln": {"type": "vec3", "desc": "normale du plan"}},
+      "returns": [{"type": "number", "desc": "altitude max de la boîte au-dessus du plan"}],
+      "internal": false
+    },
+    "intersectsRay_Plane": {
+      "desc": "Distance signée (en multiples de rdir) du point d'intersection du rayon avec le plan. Négative si le plan est derrière l'origine ; math.huge si le rayon est parallèle.",
+      "params": {"rpos": {"type": "vec3", "desc": "origine du rayon"}, "rdir": {"type": "vec3", "desc": "direction du rayon"}, "plpos": {"type": "vec3", "desc": "point du plan"}, "pln": {"type": "vec3", "desc": "normale du plan"}},
+      "returns": [{"type": "number", "desc": "paramètre t, point = rpos + rdir*t"}],
+      "internal": false
+    },
+    "intersectsRay_OBB": {
+      "desc": "Intersection rayon / boîte orientée. Renvoie (minhit, maxhit) ; minhit = math.huge s'il n'y a pas de hit. Hit si minhit < maxhit et maxhit > 0 ; rayon à l'intérieur si minhit < 0 et maxhit > 0.",
+      "params": {"rpos": {"type": "vec3", "desc": "origine"}, "rdir": {"type": "vec3", "desc": "direction"}, "c1": {"type": "vec3", "desc": "centre"}, "x1": {"type": "vec3", "desc": "demi-axe x"}, "y1": {"type": "vec3", "desc": "demi-axe y"}, "z1": {"type": "vec3", "desc": "demi-axe z"}},
+      "returns": [{"type": "number", "desc": "minhit (entrée) ou math.huge"}, {"type": "number", "desc": "maxhit (sortie)"}],
+      "internal": false
+    },
+    "intersectsRay_Sphere": {
+      "desc": "Intersection rayon / sphère. Renvoie (entrée, sortie) en distance le long de rdir (supposé normalisé), ou (math.huge, math.huge) sans hit.",
+      "params": {"rpos": {"type": "vec3", "desc": "origine"}, "rdir": {"type": "vec3", "desc": "direction normalisée"}, "cpos": {"type": "vec3", "desc": "centre"}, "cr": {"type": "number", "desc": "rayon"}},
+      "returns": [{"type": "number", "desc": "distance d'entrée"}, {"type": "number", "desc": "distance de sortie"}],
+      "internal": false
+    },
+    "intersectsRay_Ellipsoid": {
+      "desc": "Intersection rayon / ellipsoïde (centre c1, demi-axes x1, y1, z1). Renvoie (plus petite, plus grande) racine, ou (math.huge, math.huge) sans hit.",
+      "params": {"rpos": {"type": "vec3", "desc": "origine"}, "rdir": {"type": "vec3", "desc": "direction"}, "c1": {"type": "vec3", "desc": "centre"}, "x1": {"type": "vec3", "desc": "demi-axe x"}, "y1": {"type": "vec3", "desc": "demi-axe y"}, "z1": {"type": "vec3", "desc": "demi-axe z"}},
+      "returns": [{"type": "number", "desc": "t d'entrée"}, {"type": "number", "desc": "t de sortie"}],
+      "internal": false
+    },
+    "intersectsRay_Cylinder": {
+      "desc": "Intersection rayon / cylindre fini d'axe cposa-cposb, rayon cR. Renvoie (minhit, maxhit), minhit = math.huge sans hit.",
+      "params": {"rpos": {"type": "vec3", "desc": "origine"}, "rdir": {"type": "vec3", "desc": "direction"}, "cposa": {"type": "vec3", "desc": "base A"}, "cposb": {"type": "vec3", "desc": "base B"}, "cR": {"type": "number", "desc": "rayon"}},
+      "returns": [{"type": "number", "desc": "minhit"}, {"type": "number", "desc": "maxhit"}],
+      "internal": false
+    },
+    "intersectsRay_Capsule": {
+      "desc": "Intersection rayon / capsule (d'après iquilezles.org/articles/intersectors). Renvoie le premier hit (négatif si derrière l'origine), math.huge sinon.",
+      "params": {"rpos": {"type": "vec3", "desc": "origine"}, "rdir": {"type": "vec3", "desc": "direction normalisée"}, "cposa": {"type": "vec3", "desc": "extrémité A"}, "cposb": {"type": "vec3", "desc": "extrémité B"}, "cR": {"type": "number", "desc": "rayon"}},
+      "returns": [{"type": "number", "desc": "distance du premier hit ou math.huge"}],
+      "internal": false
+    },
+    "intersectsRay_Triangle": {
+      "desc": "Intersection rayon / triangle. Renvoie la distance de hit et deux coordonnées barycentriques ; sans hit renvoie math.huge, -1, -1. Note : seuls les hits dont le paramètre calculé est <= 0 sont acceptés, la distance renvoyée est son opposé.",
+      "params": {"rpos": {"type": "vec3", "desc": "origine"}, "rdir": {"type": "vec3", "desc": "direction"}, "a": {"type": "vec3", "desc": "sommet a"}, "b": {"type": "vec3", "desc": "sommet b"}, "c": {"type": "vec3", "desc": "sommet c"}},
+      "returns": [{"type": "number", "desc": "distance ou math.huge"}, {"type": "number", "desc": "barycentrique u (poids de a)"}, {"type": "number", "desc": "barycentrique v (poids de b)"}],
+      "internal": false
+    }
+  },
+  "classes": {
+    "LuaVec3": {
+      "desc": "Vecteur 3D en double précision (champs x, y, z). Créé par vec3(...). Opérateurs : +, -, - unaire, * (par un nombre), / (par un nombre), ==, tostring. Alias : toPoint3F et toFloat3 (renvoient self), len = length, lenSquared = squaredLength, normalizeSafe = normalize. Les méthodes `setXxx` modifient self sur place ; les autres renvoient un nouveau vecteur ou une valeur. normalize/resize/set* ne renvoient rien (sauf mention).",
+      "functions": {
+        "__add": {"desc": "a + b composante par composante (nouveau vec3).", "params": {"a": {"type": "vec3", "desc": "opérande"}, "b": {"type": "vec3", "desc": "opérande"}}, "returns": [{"type": "vec3", "desc": "somme"}]},
+        "__sub": {"desc": "a - b (nouveau vec3).", "params": {"a": {"type": "vec3", "desc": "opérande"}, "b": {"type": "vec3", "desc": "opérande"}}, "returns": [{"type": "vec3", "desc": "différence"}]},
+        "__unm": {"desc": "Opposé -a.", "params": {"a": {"type": "vec3", "desc": "opérande"}}, "returns": [{"type": "vec3", "desc": "opposé"}]},
+        "__mul": {"desc": "Produit par un scalaire (vec3 * nombre ou nombre * vec3). Pas de produit vec3*vec3 : utiliser componentMul, dot ou cross.", "params": {"a": {"type": "vec3|number", "desc": "opérande"}, "b": {"type": "vec3|number", "desc": "opérande"}}, "returns": [{"type": "vec3", "desc": "résultat"}]},
+        "__div": {"desc": "Division par un scalaire (multiplie par 1/b).", "params": {"a": {"type": "vec3", "desc": "vecteur"}, "b": {"type": "number", "desc": "diviseur"}}, "returns": [{"type": "vec3", "desc": "résultat"}]},
+        "__eq": {"desc": "Égalité exacte des trois composantes ; faux si b est nil.", "params": {"a": {"type": "vec3", "desc": "opérande"}, "b": {"type": "vec3|nil", "desc": "opérande"}}, "returns": [{"type": "boolean", "desc": "égaux"}]},
+        "__tostring": {"desc": "Texte 'vec3(x,y,z)' (format %.10g, infinis écrits 9e999).", "params": {}, "returns": [{"type": "string", "desc": "texte"}]},
+        "set": {"desc": "Affecte les composantes : set(x, y, z) ou set(autreVec3).", "params": {"x": {"type": "number|vec3", "desc": "x ou vec3 source"}, "y": {"type": "number|nil", "desc": "y"}, "z": {"type": "number|nil", "desc": "z"}}, "returns": []},
+        "xyz": {"desc": "Renvoie les trois composantes.", "params": {}, "returns": [{"type": "number", "desc": "x"}, {"type": "number", "desc": "y"}, {"type": "number", "desc": "z"}]},
+        "xy": {"desc": "Renvoie x et y.", "params": {}, "returns": [{"type": "number", "desc": "x"}, {"type": "number", "desc": "y"}]},
+        "copy": {"desc": "Copie du vecteur.", "params": {}, "returns": [{"type": "vec3", "desc": "copie"}]},
+        "fromString": {"desc": "Lit trois nombres dans une chaîne (séparés par virgule ou espace) et les affecte à self ; 0 si illisible.", "params": {"s": {"type": "string", "desc": "texte 'x, y, z'"}}, "returns": [{"type": "vec3", "desc": "self"}]},
+        "toTable": {"desc": "Table {x, y, z} indexée de 1 à 3.", "params": {}, "returns": [{"type": "table", "desc": "{x,y,z} en tableau"}]},
+        "setFromTable": {"desc": "Affecte depuis une table indexée {x, y, z}.", "params": {"t": {"type": "table", "desc": "tableau à 3 nombres"}}, "returns": []},
+        "toDict": {"desc": "Table {x=, y=, z=} (pratique pour JSON).", "params": {}, "returns": [{"type": "table<string, number>", "desc": "dictionnaire"}]},
+        "length": {"desc": "Norme euclidienne.", "params": {}, "returns": [{"type": "number", "desc": "longueur"}]},
+        "lengthGuarded": {"desc": "Norme + 1e-30 (jamais nulle).", "params": {}, "returns": [{"type": "number", "desc": "longueur garantie > 0"}]},
+        "squaredLength": {"desc": "Norme au carré.", "params": {}, "returns": [{"type": "number", "desc": "longueur²"}]},
+        "dot": {"desc": "Produit scalaire.", "params": {"a": {"type": "vec3", "desc": "autre vecteur"}}, "returns": [{"type": "number", "desc": "self·a"}]},
+        "cross": {"desc": "Produit vectoriel self x a (nouveau vec3).", "params": {"a": {"type": "vec3", "desc": "autre vecteur"}}, "returns": [{"type": "vec3", "desc": "self x a"}]},
+        "z0": {"desc": "Copie avec z = 0 (projection sur le plan XY).", "params": {}, "returns": [{"type": "vec3", "desc": "vecteur (x, y, 0)"}]},
+        "perpendicular": {"desc": "Un vecteur perpendiculaire (même longueur), choisi par setPerpendicular.", "params": {}, "returns": [{"type": "vec3", "desc": "perpendiculaire"}]},
+        "perpendicularN": {"desc": "Perpendiculaire normalisée.", "params": {}, "returns": [{"type": "vec3", "desc": "perpendiculaire unitaire"}]},
+        "slerp": {"desc": "Interpolation sphérique entre deux vecteurs normalisés. La sortie n'est pas normalisée.", "params": {"b": {"type": "vec3", "desc": "cible normalisée"}, "t": {"type": "number", "desc": "fraction [0,1]"}}, "returns": [{"type": "vec3", "desc": "vecteur interpolé"}]},
+        "cosAngle": {"desc": "Cosinus de l'angle entre self et a (borné à [-1,1], sûr contre vecteur nul).", "params": {"a": {"type": "vec3", "desc": "autre vecteur"}}, "returns": [{"type": "number", "desc": "cosinus"}]},
+        "normalize": {"desc": "Normalise self sur place (vecteur nul reste nul).", "params": {}, "returns": []},
+        "resize": {"desc": "Donne à self la longueur a (sur place).", "params": {"a": {"type": "number", "desc": "nouvelle longueur"}}, "returns": []},
+        "ropeRock": {"desc": "Limite la longueur de self à cutOff sur place et renvoie la longueur d'origine. Usage cité dans le code : p = p + vel*dt; if p:ropeRock(x) < x then stationnaire end.", "params": {"cutOff": {"type": "number", "desc": "longueur max"}}, "returns": [{"type": "number", "desc": "longueur avant limitation"}]},
+        "normalized": {"desc": "Copie normalisée.", "params": {}, "returns": [{"type": "vec3", "desc": "vecteur unitaire"}]},
+        "resized": {"desc": "Copie de longueur m.", "params": {"m": {"type": "number", "desc": "longueur"}}, "returns": [{"type": "vec3", "desc": "vecteur redimensionné"}]},
+        "distance": {"desc": "Distance entre deux points.", "params": {"a": {"type": "vec3", "desc": "autre point"}}, "returns": [{"type": "number", "desc": "distance"}]},
+        "squaredDistance": {"desc": "Distance au carré.", "params": {"a": {"type": "vec3", "desc": "autre point"}}, "returns": [{"type": "number", "desc": "distance²"}]},
+        "squaredDistanceToLine": {"desc": "Distance² de self (point) à la droite passant par a et b.", "params": {"a": {"type": "vec3", "desc": "point de la droite"}, "b": {"type": "vec3", "desc": "autre point de la droite"}}, "returns": [{"type": "number", "desc": "distance²"}]},
+        "distanceToLine": {"desc": "Distance de self à la droite (a, b).", "params": {"a": {"type": "vec3", "desc": "point de la droite"}, "b": {"type": "vec3", "desc": "point de la droite"}}, "returns": [{"type": "number", "desc": "distance"}]},
+        "squaredDistanceToLineSegment": {"desc": "Distance² de self au segment [a, b].", "params": {"a": {"type": "vec3", "desc": "début"}, "b": {"type": "vec3", "desc": "fin"}}, "returns": [{"type": "number", "desc": "distance²"}]},
+        "distanceToLineSegment": {"desc": "Distance de self au segment [a, b].", "params": {"a": {"type": "vec3", "desc": "début"}, "b": {"type": "vec3", "desc": "fin"}}, "returns": [{"type": "number", "desc": "distance"}]},
+        "xnormSquaredDistanceToLineSegment": {"desc": "Renvoie l'abscisse normalisée (non bornée) de la projection sur la droite (a,b) puis la distance² au segment.", "params": {"a": {"type": "vec3", "desc": "début"}, "b": {"type": "vec3", "desc": "fin"}}, "returns": [{"type": "number", "desc": "xnorm non borné"}, {"type": "number", "desc": "distance² au segment"}]},
+        "xnormDistanceToLineSegment": {"desc": "Comme la précédente mais avec la distance (racine).", "params": {"a": {"type": "vec3", "desc": "début"}, "b": {"type": "vec3", "desc": "fin"}}, "returns": [{"type": "number", "desc": "xnorm"}, {"type": "number", "desc": "distance"}]},
+        "xnormOnLinePointVec": {"desc": "Abscisse normalisée de la projection de self sur la droite {p, direction v} (point = p + v*xnorm).", "params": {"p": {"type": "vec3", "desc": "point de la droite"}, "v": {"type": "vec3", "desc": "vecteur directeur"}}, "returns": [{"type": "number", "desc": "xnorm"}]},
+        "xnormOnLine": {"desc": "Abscisse normalisée de la projection de self sur la droite (a, b) (0 en a, 1 en b).", "params": {"a": {"type": "vec3", "desc": "début"}, "b": {"type": "vec3", "desc": "fin"}}, "returns": [{"type": "number", "desc": "xnorm"}]},
+        "triangleBarycentricNorm": {"desc": "Coordonnées barycentriques de self par rapport au triangle (a,b,c) : u*a + v*b + (1-u-v)*c. Renvoie aussi la normale unitaire du triangle.", "params": {"a": {"type": "vec3", "desc": "sommet a"}, "b": {"type": "vec3", "desc": "sommet b"}, "c": {"type": "vec3", "desc": "sommet c"}}, "returns": [{"type": "number", "desc": "u"}, {"type": "number", "desc": "v"}, {"type": "vec3", "desc": "normale unitaire"}]},
+        "setTrianglePointFromUV": {"desc": "Place self au point u*a + v*b + (1-u-v)*c.", "params": {"a": {"type": "vec3", "desc": "sommet a"}, "b": {"type": "vec3", "desc": "sommet b"}, "c": {"type": "vec3", "desc": "sommet c"}, "u": {"type": "number", "desc": "poids de a"}, "v": {"type": "number", "desc": "poids de b"}}, "returns": []},
+        "invBilinear2D": {"desc": "Inverse de l'interpolation bilinéaire 2D (x, y de self) du quadrilatère a1,a2,b1,b2 : renvoie u, v tels que p = lerp(lerp(a1,a2,u), lerp(b1,b2,u), v).", "params": {"a1": {"type": "vec3", "desc": "coin a1"}, "a2": {"type": "vec3", "desc": "coin a2"}, "b1": {"type": "vec3", "desc": "coin b1"}, "b2": {"type": "vec3", "desc": "coin b2"}}, "returns": [{"type": "number", "desc": "u"}, {"type": "number", "desc": "v"}]},
+        "triangleClosestPointUV": {"desc": "Coordonnées (u, v) du point du triangle le plus proche de self : u*a + v*b + (1-u-v)*c.", "params": {"a": {"type": "vec3", "desc": "sommet a"}, "b": {"type": "vec3", "desc": "sommet b"}, "c": {"type": "vec3", "desc": "sommet c"}}, "returns": [{"type": "number", "desc": "u"}, {"type": "number", "desc": "v"}]},
+        "triangleClosestPoint": {"desc": "Point du triangle le plus proche de self, puis u, v.", "params": {"a": {"type": "vec3", "desc": "sommet a"}, "b": {"type": "vec3", "desc": "sommet b"}, "c": {"type": "vec3", "desc": "sommet c"}}, "returns": [{"type": "vec3", "desc": "point le plus proche"}, {"type": "number", "desc": "u"}, {"type": "number", "desc": "v"}]},
+        "inPolygon": {"desc": "Test point-dans-polygone en 2D (x, y de self) : accepte une table de points ayant .x/.y, ou plusieurs points en arguments. Source love2d, licence Zlib/BSD-2.", "params": {"...": {"type": "table|vec3", "desc": "une table de points ou une liste de points"}}, "returns": [{"type": "boolean", "desc": "à l'intérieur"}]},
+        "projectToOriginPlane": {"desc": "Projette self sur le plan passant par l'origine de normale pnorm (unitaire).", "params": {"pnorm": {"type": "vec3", "desc": "normale du plan"}}, "returns": [{"type": "vec3", "desc": "projection"}]},
+        "xnormPlaneWithLine": {"desc": "self est un point du plan, pnorm sa normale : abscisse normalisée où la droite (a, b) traverse le plan (bornée à ±1e300 si parallèle).", "params": {"pnorm": {"type": "vec3", "desc": "normale du plan"}, "a": {"type": "vec3", "desc": "début"}, "b": {"type": "vec3", "desc": "fin"}}, "returns": [{"type": "number", "desc": "xnorm"}]},
+        "xnormsSphereWithLine": {"desc": "self est le centre de la sphère : abscisses normalisées (basse, haute) de l'intersection avec la droite (a,b). Renvoie 1, 0 si pas d'intersection.", "params": {"radius": {"type": "number", "desc": "rayon"}, "a": {"type": "vec3", "desc": "début"}, "b": {"type": "vec3", "desc": "fin"}}, "returns": [{"type": "number", "desc": "xnorm bas"}, {"type": "number", "desc": "xnorm haut"}]},
+        "basisCoordinates": {"desc": "Coordonnées de self dans la base (c1, c2, c3) quelconque (non orthogonale).", "params": {"c1": {"type": "vec3", "desc": "vecteur de base 1"}, "c2": {"type": "vec3", "desc": "vecteur de base 2"}, "c3": {"type": "vec3", "desc": "vecteur de base 3"}}, "returns": [{"type": "vec3", "desc": "coordonnées"}]},
+        "setToBase": {"desc": "Transforme self (coordonnées locales) en x*nx + y*ny + z*nz, sur place.", "params": {"nx": {"type": "vec3", "desc": "axe x de la base"}, "ny": {"type": "vec3", "desc": "axe y"}, "nz": {"type": "vec3", "desc": "axe z"}}, "returns": []},
+        "toBase": {"desc": "Version non destructive de setToBase.", "params": {"nx": {"type": "vec3", "desc": "axe x"}, "ny": {"type": "vec3", "desc": "axe y"}, "nz": {"type": "vec3", "desc": "axe z"}}, "returns": [{"type": "vec3", "desc": "résultat"}]},
+        "componentMul": {"desc": "Produit composante par composante (nouveau vec3).", "params": {"b": {"type": "vec3", "desc": "autre vecteur"}}, "returns": [{"type": "vec3", "desc": "résultat"}]},
+        "setMin": {"desc": "self = minimum composante par composante de self et a.", "params": {"a": {"type": "vec3", "desc": "autre vecteur"}}, "returns": []},
+        "setMax": {"desc": "self = maximum composante par composante de self et a.", "params": {"a": {"type": "vec3", "desc": "autre vecteur"}}, "returns": []},
+        "setAddXYZ": {"desc": "self += (x, y, z).", "params": {"x": {"type": "number", "desc": "dx"}, "y": {"type": "number", "desc": "dy"}, "z": {"type": "number", "desc": "dz"}}, "returns": []},
+        "setAdd": {"desc": "self += a.", "params": {"a": {"type": "vec3", "desc": "vecteur à ajouter"}}, "returns": []},
+        "setAdd2": {"desc": "self = a + b.", "params": {"a": {"type": "vec3", "desc": "opérande"}, "b": {"type": "vec3", "desc": "opérande"}}, "returns": []},
+        "setAddScaled": {"desc": "self = a + b * c.", "params": {"a": {"type": "vec3", "desc": "base"}, "b": {"type": "vec3", "desc": "vecteur"}, "c": {"type": "number", "desc": "facteur"}}, "returns": []},
+        "setSub": {"desc": "self -= a.", "params": {"a": {"type": "vec3", "desc": "vecteur à retrancher"}}, "returns": []},
+        "setSub2": {"desc": "self = a - b.", "params": {"a": {"type": "vec3", "desc": "opérande"}, "b": {"type": "vec3", "desc": "opérande"}}, "returns": []},
+        "setNeg": {"desc": "self = -self.", "params": {}, "returns": []},
+        "setScaled": {"desc": "self *= b.", "params": {"b": {"type": "number", "desc": "facteur"}}, "returns": []},
+        "setScaled2": {"desc": "self = a * b.", "params": {"a": {"type": "vec3", "desc": "vecteur"}, "b": {"type": "number", "desc": "facteur"}}, "returns": []},
+        "setComponentMul": {"desc": "self = self * a composante par composante.", "params": {"a": {"type": "vec3", "desc": "autre vecteur"}}, "returns": []},
+        "setLerp": {"desc": "self = interpolation de from vers to (fraction t, non bornée).", "params": {"from": {"type": "vec3", "desc": "début"}, "to": {"type": "vec3", "desc": "fin"}, "t": {"type": "number", "desc": "fraction"}}, "returns": []},
+        "setCross": {"desc": "self = a x b.", "params": {"a": {"type": "vec3", "desc": "opérande"}, "b": {"type": "vec3", "desc": "opérande"}}, "returns": []},
+        "setRotate": {"desc": "Fait pivoter par le quat q : self = q * a (ou q * self si a est omis).", "params": {"q": {"type": "quat", "desc": "rotation"}, "a": {"type": "vec3|nil", "desc": "vecteur source, défaut self"}}, "returns": []},
+        "setEulerYXZ": {"desc": "Affecte à self les angles d'Euler (ordre YXZ) en radians extraits du quat q (x = premier angle, etc., voir code ; formule de bediyap.com).", "params": {"q": {"type": "quat", "desc": "orientation"}}, "returns": []},
+        "setProjectToOriginPlane": {"desc": "self = projection de a (ou de self) sur le plan d'origine de normale pnorm.", "params": {"pnorm": {"type": "vec3", "desc": "normale"}, "a": {"type": "vec3|nil", "desc": "source, défaut self"}}, "returns": []},
+        "setPerpendicular": {"desc": "self = un vecteur perpendiculaire à a (ou à self).", "params": {"a": {"type": "vec3|nil", "desc": "source, défaut self"}}, "returns": []},
+        "setLinePointFromXnorm": {"desc": "self = p0 + (p1 - p0) * xnorm.", "params": {"p0": {"type": "vec3", "desc": "début"}, "p1": {"type": "vec3", "desc": "fin"}, "xnorm": {"type": "number", "desc": "abscisse"}}, "returns": []},
+        "getRotationTo": {"desc": "Quat (convention -w) faisant tourner self vers toV. Les deux vecteurs doivent être normalisés.", "params": {"toV": {"type": "vec3", "desc": "direction cible"}}, "returns": [{"type": "quat", "desc": "rotation"}]},
+        "rotated": {"desc": "Copie de self tournée par le quat q (convention -w).", "params": {"q": {"type": "quat", "desc": "rotation"}}, "returns": [{"type": "vec3", "desc": "vecteur tourné"}]},
+        "getBlueNoise2d": {"desc": "Avance l'état bruit bleu 2D stocké dans (x, y) de self (valeurs dans [0,1)) et renvoie self.", "params": {}, "returns": [{"type": "vec3", "desc": "self"}]},
+        "getBlueNoise3d": {"desc": "Avance l'état bruit bleu 3D stocké dans (x, y, z) et renvoie self.", "params": {}, "returns": [{"type": "vec3", "desc": "self"}]},
+        "getRandomPointInSphere": {"desc": "Place self en un point aléatoire de la boule de rayon radius (défaut 1) autour de l'origine (math.random) et renvoie self.", "params": {"radius": {"type": "number|nil", "desc": "rayon, défaut 1"}}, "returns": [{"type": "vec3", "desc": "self"}]},
+        "getRandomPointInCircle": {"desc": "Place self en un point aléatoire du disque XY de rayon radius (z = 0) et renvoie self.", "params": {"radius": {"type": "number|nil", "desc": "rayon, défaut 1"}}, "returns": [{"type": "vec3", "desc": "self"}]},
+        "getBluePointInSphere": {"desc": "Tire un point dans la boule par bruit bleu : self sert d'état (avancé), renvoie un NOUVEAU vec3 (point centré, mis à l'échelle de radius) ou (0,0,0) si échec.", "params": {"radius": {"type": "number|nil", "desc": "rayon, défaut 1"}}, "returns": [{"type": "vec3", "desc": "point"}]},
+        "getBluePointInCircle": {"desc": "Idem en 2D (disque XY, z = 0).", "params": {"radius": {"type": "number|nil", "desc": "rayon, défaut 1"}}, "returns": [{"type": "vec3", "desc": "point"}]},
+        "getAxis": {"desc": "Compat : renvoie la composante i (1=x, 2=y, 3=z).", "params": {"i": {"type": "integer", "desc": "indice 1..3"}}, "returns": [{"type": "number", "desc": "composante"}]},
+        "setAxis": {"desc": "Compat : affecte la composante i (1=x, 2=y, 3=z).", "params": {"i": {"type": "integer", "desc": "indice 1..3"}, "v": {"type": "number", "desc": "valeur"}}, "returns": []},
+        "toFloat3": {"desc": "Compat : renvoie self (alias toPoint3F).", "params": {}, "returns": [{"type": "vec3", "desc": "self"}]}
+      }
+    },
+    "LuaQuat": {
+      "desc": "Quaternion (x, y, z, w) en double, convention -w de T3d. Créé par quat(...), quatFromDir, quatFromAxisAngle, quatFromEuler. Opérateurs : + - (unaire et binaire), * (quat*quat = composition ; quat*vec3 = rotation du vecteur ; quat*nombre), / (quat/nombre ou quat * inverse(quat)), tostring.",
+      "functions": {
+        "__add": {"desc": "Somme composante par composante.", "params": {"a": {"type": "quat", "desc": "opérande"}, "b": {"type": "quat", "desc": "opérande"}}, "returns": [{"type": "quat", "desc": "somme"}]},
+        "__sub": {"desc": "Différence composante par composante.", "params": {"a": {"type": "quat", "desc": "opérande"}, "b": {"type": "quat", "desc": "opérande"}}, "returns": [{"type": "quat", "desc": "différence"}]},
+        "__unm": {"desc": "Opposé de toutes les composantes (représente la même rotation).", "params": {"a": {"type": "quat", "desc": "opérande"}}, "returns": [{"type": "quat", "desc": "opposé"}]},
+        "__mul": {"desc": "quat*nombre ou nombre*quat : mise à l'échelle ; quat*vec3 : vecteur tourné ; quat*quat : produit de Hamilton.", "params": {"a": {"type": "quat|number", "desc": "opérande"}, "b": {"type": "quat|vec3|number", "desc": "opérande"}}, "returns": [{"type": "quat|vec3", "desc": "résultat"}]},
+        "__div": {"desc": "quat / nombre : division des composantes ; quat / quat : a * b^-1.", "params": {"a": {"type": "quat", "desc": "numérateur"}, "b": {"type": "quat|number", "desc": "dénominateur"}}, "returns": [{"type": "quat", "desc": "résultat"}]},
+        "__tostring": {"desc": "Texte 'quat(x,y,z,w)'.", "params": {}, "returns": [{"type": "string", "desc": "texte"}]},
+        "xyz": {"desc": "Renvoie x, y, z.", "params": {}, "returns": [{"type": "number", "desc": "x"}, {"type": "number", "desc": "y"}, {"type": "number", "desc": "z"}]},
+        "xyzw": {"desc": "Renvoie x, y, z, w.", "params": {}, "returns": [{"type": "number", "desc": "x"}, {"type": "number", "desc": "y"}, {"type": "number", "desc": "z"}, {"type": "number", "desc": "w"}]},
+        "toTable": {"desc": "Table indexée {x, y, z, w}.", "params": {}, "returns": [{"type": "table", "desc": "tableau de 4 nombres"}]},
+        "toDict": {"desc": "Table {x=, y=, z=, w=}.", "params": {}, "returns": [{"type": "table<string, number>", "desc": "dictionnaire"}]},
+        "copy": {"desc": "Copie du quat.", "params": {}, "returns": [{"type": "quat", "desc": "copie"}]},
+        "set": {"desc": "Affecte x, y, z, w ou copie un autre quat : set(q) ou set(x,y,z,w).", "params": {"x": {"type": "number|quat", "desc": "x ou quat source"}, "y": {"type": "number|nil", "desc": "y"}, "z": {"type": "number|nil", "desc": "z"}, "w": {"type": "number|nil", "desc": "w"}}, "returns": []},
+        "norm": {"desc": "Norme du quat.", "params": {}, "returns": [{"type": "number", "desc": "norme"}]},
+        "squaredNorm": {"desc": "Norme au carré.", "params": {}, "returns": [{"type": "number", "desc": "norme²"}]},
+        "normalize": {"desc": "Normalise sur place.", "params": {}, "returns": []},
+        "normalized": {"desc": "Copie normalisée.", "params": {}, "returns": [{"type": "quat", "desc": "quat unitaire"}]},
+        "inverse": {"desc": "Inverse sur place (-1/|q|² appliqué à x, y, z et w avec convention du code).", "params": {}, "returns": []},
+        "inversed": {"desc": "Copie inverse.", "params": {}, "returns": [{"type": "quat", "desc": "inverse"}]},
+        "dot": {"desc": "Produit scalaire à 4 composantes.", "params": {"a": {"type": "quat", "desc": "autre quat"}}, "returns": [{"type": "number", "desc": "self·a"}]},
+        "distance": {"desc": "0.5 * |self - a|² (mesure d'écart, pas un angle).", "params": {"a": {"type": "quat", "desc": "autre quat"}}, "returns": [{"type": "number", "desc": "écart"}]},
+        "nlerp": {"desc": "Interpolation linéaire normalisée vers a (prend le chemin le plus court).", "params": {"a": {"type": "quat", "desc": "cible"}, "t": {"type": "number", "desc": "fraction [0,1]"}}, "returns": [{"type": "quat", "desc": "quat interpolé"}]},
+        "slerp": {"desc": "Interpolation sphérique vers a ; retombe sur nlerp si les quats sont quasi identiques (dot > 0.9995).", "params": {"a": {"type": "quat", "desc": "cible"}, "t": {"type": "number", "desc": "fraction [0,1]"}}, "returns": [{"type": "quat", "desc": "quat interpolé"}]},
+        "conjugated": {"desc": "Conjugué (-x, -y, -z, w) : rotation inverse pour un quat unitaire.", "params": {}, "returns": [{"type": "quat", "desc": "conjugué"}]},
+        "scale": {"desc": "Multiplie toutes les composantes par a, sur place, et renvoie self.", "params": {"a": {"type": "number", "desc": "facteur"}}, "returns": [{"type": "quat", "desc": "self"}]},
+        "setFromAxisAngle": {"desc": "self = rotation d'angle angleRad autour de l'axe unitaire axle.", "params": {"axle": {"type": "vec3", "desc": "axe unitaire"}, "angleRad": {"type": "number", "desc": "angle en radians"}}, "returns": []},
+        "setRotationFromTo": {"desc": "self = rotation (convention -w) amenant fromV sur toV (vecteurs normalisés).", "params": {"fromV": {"type": "vec3", "desc": "direction de départ"}, "toV": {"type": "vec3", "desc": "direction d'arrivée"}}, "returns": []},
+        "setFromEuler": {"desc": "self depuis des angles d'Euler en radians.", "params": {"x": {"type": "number", "desc": "angle x (rad)"}, "y": {"type": "number", "desc": "angle y (rad)"}, "z": {"type": "number", "desc": "angle z (rad)"}}, "returns": []},
+        "setFromDir": {"desc": "self orienté avec l'axe Y local vers dir et le haut vers up (défaut Z) ; voir quatFromDir.", "params": {"dir": {"type": "vec3", "desc": "direction"}, "up": {"type": "vec3|nil", "desc": "haut, défaut (0,0,1)"}}, "returns": []},
+        "setMulXYZW": {"desc": "self = produit de Hamilton (a)*(b) donné par les composantes brutes.", "params": {"ax": {"type": "number", "desc": "a.x"}, "ay": {"type": "number", "desc": "a.y"}, "az": {"type": "number", "desc": "a.z"}, "aw": {"type": "number", "desc": "a.w"}, "bx": {"type": "number", "desc": "b.x"}, "by": {"type": "number", "desc": "b.y"}, "bz": {"type": "number", "desc": "b.z"}, "bw": {"type": "number", "desc": "b.w"}}, "returns": []},
+        "setMul2": {"desc": "self = a * b (sans allocation). Un des deux peut être un nombre (mise à l'échelle).", "params": {"a": {"type": "quat|number", "desc": "opérande"}, "b": {"type": "quat|number", "desc": "opérande"}}, "returns": []},
+        "setInvMul2": {"desc": "self = a^-1 * b.", "params": {"a": {"type": "quat", "desc": "quat à inverser"}, "b": {"type": "quat", "desc": "quat"}}, "returns": []},
+        "setMulInv2": {"desc": "self = a * b^-1.", "params": {"a": {"type": "quat", "desc": "quat"}, "b": {"type": "quat", "desc": "quat à inverser"}}, "returns": []},
+        "toEulerYXZ": {"desc": "Angles d'Euler (ordre YXZ, radians) sous forme de vec3, via setEulerYXZ.", "params": {}, "returns": [{"type": "vec3", "desc": "angles"}]},
+        "toTorqueQuat": {"desc": "Convertit en format Torque {x,y,z,w} où (x,y,z) est l'axe unitaire et w l'angle en degrés (acos(w)*360/pi).", "params": {}, "returns": [{"type": "table<string, number>", "desc": "{x,y,z,w=angle en degrés}"}]},
+        "toDirUp": {"desc": "Renvoie les vecteurs 'avant' (self * (0,1,0)) et 'haut' (self * (0,0,1)).", "params": {}, "returns": [{"type": "vec3", "desc": "direction avant"}, {"type": "vec3", "desc": "direction haut"}]}
+      }
+    },
+    "StackVec3": {
+      "desc": "Objet unique (renvoyé par push3) qui opère sur la pile statique de vec3. Les opérateurs modifient le sommet de pile et renvoient le même objet ; les méthodes terminales (xyz, copy, dot, length, squaredLength, distance, squaredDistance, __tostring) dépilent et renvoient un résultat. Voir notes du module.",
+      "functions": {
+        "xyz": {"desc": "Dépile et renvoie x, y, z.", "params": {}, "returns": [{"type": "number", "desc": "x"}, {"type": "number", "desc": "y"}, {"type": "number", "desc": "z"}]},
+        "copy": {"desc": "Dépile et renvoie un vec3 normal.", "params": {}, "returns": [{"type": "vec3", "desc": "copie"}]},
+        "__tostring": {"desc": "Dépile et renvoie 'push3(...)'.", "params": {}, "returns": [{"type": "string", "desc": "texte"}]},
+        "__add": {"desc": "Dépile b (lu via :xyz()) et l'ajoute au sommet.", "params": {"a": {"type": "StackVec3", "desc": "pile"}, "b": {"type": "vec3|StackVec3", "desc": "opérande"}}, "returns": [{"type": "StackVec3", "desc": "pile"}]},
+        "__sub": {"desc": "Soustrait b au sommet.", "params": {"a": {"type": "StackVec3", "desc": "pile"}, "b": {"type": "vec3|StackVec3", "desc": "opérande"}}, "returns": [{"type": "StackVec3", "desc": "pile"}]},
+        "__unm": {"desc": "Opposé du sommet.", "params": {"a": {"type": "StackVec3", "desc": "pile"}}, "returns": [{"type": "StackVec3", "desc": "pile"}]},
+        "__mul": {"desc": "Multiplie le sommet par un nombre (à gauche ou à droite).", "params": {"a": {"type": "StackVec3|number", "desc": "opérande"}, "b": {"type": "StackVec3|number", "desc": "opérande"}}, "returns": [{"type": "StackVec3", "desc": "pile"}]},
+        "__div": {"desc": "Divise le sommet par un nombre.", "params": {"a": {"type": "StackVec3", "desc": "pile"}, "b": {"type": "number", "desc": "diviseur"}}, "returns": [{"type": "StackVec3", "desc": "pile"}]},
+        "dot": {"desc": "Produit scalaire sommet · a (dépile).", "params": {"a": {"type": "vec3|StackVec3", "desc": "autre vecteur"}}, "returns": [{"type": "number", "desc": "résultat"}]},
+        "cross": {"desc": "Produit vectoriel sommet x b ; le résultat reste sur la pile.", "params": {"b": {"type": "vec3|StackVec3", "desc": "autre vecteur"}}, "returns": [{"type": "StackVec3", "desc": "pile"}]},
+        "z0": {"desc": "Met z du sommet à 0.", "params": {}, "returns": [{"type": "StackVec3", "desc": "pile"}]},
+        "length": {"desc": "Norme du sommet (dépile).", "params": {}, "returns": [{"type": "number", "desc": "longueur"}]},
+        "squaredLength": {"desc": "Norme² du sommet (dépile).", "params": {}, "returns": [{"type": "number", "desc": "longueur²"}]},
+        "normalized": {"desc": "Normalise le sommet (reste sur la pile).", "params": {}, "returns": [{"type": "StackVec3", "desc": "pile"}]},
+        "resized": {"desc": "Donne la longueur m au sommet (reste sur la pile).", "params": {"m": {"type": "number", "desc": "longueur"}}, "returns": [{"type": "StackVec3", "desc": "pile"}]},
+        "distance": {"desc": "Distance entre le sommet (dépilé) et a.", "params": {"a": {"type": "vec3|StackVec3", "desc": "autre point"}}, "returns": [{"type": "number", "desc": "distance"}]},
+        "squaredDistance": {"desc": "Distance² entre le sommet (dépilé) et a.", "params": {"a": {"type": "vec3|StackVec3", "desc": "autre point"}}, "returns": [{"type": "number", "desc": "distance²"}]}
+      }
+    }
+  }
+}

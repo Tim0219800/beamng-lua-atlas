@@ -1,0 +1,21 @@
+{
+  "path": "lua/vehicle/controller/sbrGauges.lua",
+  "module": "Contrôleur auxiliaire OBSOLÈTE (log E au chargement : à remplacer par genericGauges) qui alimente un écran HTML de tableau de bord (htmlTexture) pour un véhicule électrique : vitesse, rapport, capteurs, carte de navigation, consommation moyenne/instantanée (W, kWh/100 km) et autonomie estimée à partir de l'énergie des batteries des moteurs électriques.",
+  "notes": [
+    "Clés jbeam lues : materialName (matériau du texture HTML, obligatoire), htmlPath (chemin de la page HTML, obligatoire). Sans l'un des deux, log E et updateGFX devient nop.",
+    "Les données ne sont envoyées que si un joueur est assis et si obj:getUpdateUIflag() est vrai (cadence limitée). Appels JS : updateData, updateMap, updateConsum, appendGraphConsum (toutes les 5 s), setUnits, updateMode.",
+    "L'unité est lue dans le réglage uiUnitLength (« metric » par défaut).",
+    "Le moteur électrique doit exposer registeredEnergyStorages pour que les batteries soient comptées.",
+    "reset appelle htmlTexture.call même si gaugesScreenName est nil (matériau absent)."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "init": {"desc": "Crée la texture HTML, repère les batteries des moteurs électriques et initialise les lisseurs de consommation.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
+    "reset": {"desc": "Renvoie l'unité de longueur à la page HTML.", "internal": true},
+    "updateGFX": {"desc": "Chaque frame : calcule puissance et consommation et envoie les données à la page HTML.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true},
+    "setUIMode": {"desc": "Affiche le nom et la couleur du mode de conduite sur l'écran HTML (updateMode).", "params": {"modeName": {"type": "string", "desc": "Texte du mode."}, "modeColor": {"type": "string", "desc": "Couleur (déduit du code : valeur CSS passée telle quelle)."}}},
+    "setParameters": {"desc": "Applique des paramètres externes : si modeName et modeColor sont présents, appelle setUIMode.", "params": {"parameters": {"type": "table", "desc": "Table {modeName, modeColor}."}}}
+  }
+}

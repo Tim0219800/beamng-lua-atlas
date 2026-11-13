@@ -1,0 +1,133 @@
+{
+  "path": "lua/vehicle/controller/advancedCouplerControl.lua",
+  "module": "Contrôleur auxiliaire qui pilote un groupe de verrous locaux (portes, trappes, hayons, loquets) formés de paires de noeuds du même véhicule, via `obj:attachLocalCoupler`. Il suit l'état du groupe (attached, coupling, autoCoupling, detached, broken, desyncedAttached, desyncedDetached), joue les sons d'attache/détache, applique une force d'ouverture ou de fermeture pendant une courte durée, enregistre les groupes de casse des coupleurs auprès de `beamstate`, et publie deux electrics `<nom>_attached` et `<nom>_notAttached` (1/0). On l'instancie une fois par groupe, avec un `name` unique.",
+  "usage": "local door = controller.getControllerSafe(\"doorLatchFL\")\ndoor.toggleGroup()\nprint(door.getGroupState())",
+  "notes": [
+    "Clés jbeam du groupe : `groupType` (\"default\", \"autoCoupling\", \"manualClose\", \"manualCloseMultiPoint\" ; défaut \"default\"), `couplerNodes` (table d'en-tête avec colonnes cid1, cid2, forceCid1, forceCid2, autoCouplingStrength (40000), autoCouplingRadius (0.01), autoCouplingLockRadius (0.005), autoCouplingSpeed (0.2), couplingStartRadius, breakGroup), `soundNode_nodes` (premier noeud), `attachSoundEvent`, `detachSoundEvent`, `breakSoundEvent`, `attachSoundVolume`, `detachSoundVolume`, `breakSoundVolume`, `openForceMagnitude` (100), `openForceDuration` (0.2 s), `closeForceMagnitude` (100), `closeForceDuration` (0.3 s), `openForceConditions` (table d'en-tête : advancedCouplerControlName, requiredStates), `attachUIMessage`, `attachingUIMessage`, `detachUIMessage`, `latchTriggerElectricName`, `unlatchTriggerElectricName`.",
+    "`cid2` peut être une table de plusieurs noeuds seulement en mode manualCloseMultiPoint (sinon seul le premier est utilisé avec une erreur loguée) ; le noeud le plus proche est alors choisi.",
+    "Les noms de noeuds sont résolus par `beamstate.nodeNameMap` ; une paire dont un noeud est introuvable est ignorée avec un avertissement.",
+    "toggleGroupConditional attend des conditions {nomContrôleur, étatInterdit, messageErreur}.",
+    "Les sons ne sont autorisés que 0,1 s après le reset (évite les sons au spawn).",
+    "Anomalie : dans onCouplerAttached, le message UI d'attache est conditionné par `detachUIMessage` (et non `attachUIMessage`), donc il n'apparaît que si les deux sont définis.",
+    "onCouplerFound et onGameplayEvent sont exportés mais vides ; resetSounds et initSounds aussi.",
+    "L'état est sauvegardé sous la clé `<nom>_groupState` ; setState essaie de reproduire l'état (impulsion d'attache, détache ou rupture de tous les couples)."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "tryAttachGroupImpulse": {
+      "desc": "Tente de refermer le groupe : selon groupType, relance les attaches locales des paires détachées, déclenche le message `attachingUIMessage` et une force de fermeture de `closeForceDuration`. Sans effet si le groupe est déjà attaché.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "detachGroup": {
+      "desc": "Détache toutes les paires du groupe, déclenche la force d'ouverture si toutes les `openForceConditions` (états requis d'autres groupes) sont remplies et affiche `detachUIMessage`. Ne fait rien si le groupe est déjà détaché ou en autoCoupling.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "toggleGroup": {
+      "desc": "Ouvre ou ferme le groupe selon son état. Ignoré tant qu'une force d'ouverture ou de fermeture est en cours.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "toggleGroupConditional": {
+      "desc": "Comme toggleGroup, mais d'abord vérifie des conditions sur d'autres contrôleurs advancedCouplerControl ; si l'un est dans l'état interdit, affiche le message d'erreur et ne fait rien.",
+      "params": {"conditions": {"type": "table[]", "desc": "Liste de {nomContrôleur, étatInterdit, messageErreur?}."}},
+      "returns": [],
+      "internal": false
+    },
+    "updateGFX": {
+      "desc": "Chaque frame : gère le délai des sons, les déclencheurs electrics de verrouillage/déverrouillage, les verrous automatiques en attente, la recherche du noeud cid2 le plus proche en mode multipoint, et applique les forces d'ouverture/fermeture.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "onCouplerFound": {
+      "desc": "Hook de controller.lua quand un coupleur proche est trouvé ; vide ici.",
+      "params": {
+        "nodeId": {"type": "integer", "desc": "cid du noeud local."},
+        "obj2id": {"type": "integer", "desc": "Id de l'autre véhicule."},
+        "obj2nodeId": {"type": "integer", "desc": "cid du noeud de l'autre véhicule."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onCouplerAttached": {
+      "desc": "Hook : une paire du groupe s'est attachée. Met à jour l'état, joue le son d'attache (volume lié à la force) et annule les forces en cours quand tout le groupe est attaché.",
+      "params": {
+        "nodeId": {"type": "integer", "desc": "cid du noeud local."},
+        "obj2id": {"type": "integer", "desc": "Id de l'autre véhicule."},
+        "obj2nodeId": {"type": "integer", "desc": "cid du noeud de l'autre côté."},
+        "attachForce": {"type": "number", "desc": "Reçoit en pratique l'argument `attachSpeed` de controller.lua (déduit du code) ; sert à l'agressivité du son."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onCouplerDetached": {
+      "desc": "Hook : une paire du groupe s'est détachée. État `detached` si breakForce <= 0, sinon `broken` ; remet en file le verrou automatique et joue le son de détache.",
+      "params": {
+        "nodeId": {"type": "integer", "desc": "cid du noeud local."},
+        "obj2id": {"type": "integer", "desc": "Id de l'autre véhicule."},
+        "obj2nodeId": {"type": "integer", "desc": "cid du noeud de l'autre côté."},
+        "breakForce": {"type": "number", "desc": "Force de rupture (0 = détachement normal)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onGameplayEvent": {
+      "desc": "Hook d'évènement de gameplay, vide dans ce contrôleur.",
+      "params": {
+        "eventName": {"type": "string", "desc": "Nom de l'évènement."},
+        "...": {"type": "any", "desc": "Arguments de l'évènement."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "getGroupState": {
+      "desc": "Renvoie l'état du groupe.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "\"attached\", \"coupling\", \"autoCoupling\", \"detached\", \"broken\", \"desyncedAttached\" ou \"desyncedDetached\"."}],
+      "internal": false
+    },
+    "resetSounds": {
+      "desc": "Vide ; présent pour le cycle de vie.",
+      "params": {"jbeamData": {"type": "table", "desc": "Non utilisé."}},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet tous les verrous à l'état détaché, relance les attaches initiales (`couplingStartRadius`) et ré-enregistre les groupes de casse.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "returns": [],
+      "internal": true
+    },
+    "initSounds": {
+      "desc": "Vide ; présent pour le cycle de vie.",
+      "params": {"jbeamData": {"type": "table", "desc": "Non utilisé."}},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Construit le groupe à partir du jbeam (paires de noeuds, sons, forces, messages), enregistre les groupes de casse de coupleurs, lance les attaches initiales et synchronise l'état.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du groupe."}},
+      "returns": [],
+      "internal": true
+    },
+    "getState": {
+      "desc": "Renvoie l'état du groupe sous la clé `<nom>_groupState`.",
+      "params": {},
+      "returns": [{"type": "table<string, string>", "desc": "Table d'état."}],
+      "internal": false
+    },
+    "setState": {
+      "desc": "Tente de reproduire un état sauvegardé (attache, détache ou rupture de toutes les paires).",
+      "params": {"data": {"type": "table|nil", "desc": "Table contenant `<nom>_groupState`."}},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

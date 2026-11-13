@@ -1,0 +1,185 @@
+{
+  "path": "lua/ge/extensions/scenario/scenariohelper.lua",
+  "module": "Boîte à outils des scénarios (extension GE scenario_scenariohelper). Elle enveloppe l'envoi de commandes Lua à un véhicule par son nom dans le scenetree, le pilotage de l'IA (mode, agressivité, route, cible, évitement), la casse de groupes de poutres, et deux messages d'interface. C'est l'API utilisée par les scénarios de moddeurs. Chaque fonction IA envoie une commande textuelle ai.xxx(...) au VM du véhicule, puis, si scenario_scenarios est chargé, mémorise l'état via scenario_scenarios.updateVehicleAiState pour pouvoir le rejouer après un reset.",
+  "usage": "local h = scenario_scenariohelper\nh.setAiPath({\n  vehicleName = 'ai1',\n  waypoints = {'scenario_wp01', 'scenario_wp02', 'scenario_wp03', 'scenario_wp01'},\n  lapCount = 3,\n  aggression = 1.2,\n  routeSpeed = 25,\n  routeSpeedMode = 'limit',\n  driveInLane = 'on'\n})\nh.flashUiMessage('Go !', 3)",
+  "notes": [
+    "Les commandes sont construites par concaténation de chaînes puis exécutées dans le VM du véhicule via queueLuaCommand : les valeurs de type string sont insérées entre guillemets doubles sans échappement, un nom ou une valeur contenant un guillemet casse la commande.",
+    "breakBreakGroup et triggerDeformGroup n'ont aucun test : si vehicleName est introuvable dans le scenetree, getVehicleByName renvoie nil et l'appel plante (erreur sur nil). Seul queueLuaCommandByName journalise une erreur 'Vehicle not found' et continue.",
+    "setAiMode : si targetVehicleName est donné mais introuvable, vehicle.obj plante (pas de test nil).",
+    "Le nom de la cible de setAiMode est converti en ID numérique (vehicle.obj:getId()) et envoyé comme targetObjectID.",
+    "setAiAvoidCars mémorise l'état sous la clé 'value' ({value = value}) et non 'avoidCars' : incohérence probable avec les autres fonctions qui utilisent un nom de clé explicite (aggression, mode, target...).",
+    "setAiPath : valeurs par défaut quand une option est absente : routeSpeed 0, routeSpeedMode 'off', driveInLane 'off', speeds {}, lapCount 0, aggression 1, avoidCars 'off', aggressionMode ''. avoidCars est converti par tostring() donc un booléen est accepté.",
+    "setAiPath n'envoie pas resetLearning dans la commande ai.driveUsingPath construite ici, bien que le commentaire d'usage le documente : l'option reste seulement stockée dans arg (checkpoints / état scénario). À vérifier côté ai.lua.",
+    "setAiPath sauvegarde arg via core_checkpoints.saveAIPath (si core_checkpoints est chargé) afin de réappliquer le chemin au reset des véhicules IA.",
+    "Unités : routeSpeed en m/s. Aggression maximale 2 d'après le commentaire du code (le multiplicateur interne est 0.7 par unité).",
+    "getDistanceBetweenSceneObjects renvoie -1 (et non nil) si l'un des deux objets n'existe pas, distance en mètres sinon.",
+    "M.setAiTargetVehicle est commenté dans l'interface publique : non exporté."
+  ],
+  "fields": {},
+  "functions": {
+    "queueLuaCommand": {
+      "desc": "Envoie une chaîne de code Lua à exécuter dans le VM du véhicule donné (appelle vehicle:queueLuaCommand). Aucun test sur vehicle.",
+      "params": {
+        "vehicle": {"type": "table", "desc": "Objet véhicule (BeamObject) déjà résolu, par exemple renvoyé par getVehicleByName."},
+        "command": {"type": "string", "desc": "Code Lua à exécuter côté véhicule."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getVehicleByName": {
+      "desc": "Renvoie l'objet du scenetree portant ce nom (scenetree.findObject), typiquement un véhicule.",
+      "params": {
+        "name": {"type": "string", "desc": "Nom de l'objet dans le scenetree."}
+      },
+      "returns": [{"type": "table|nil", "desc": "L'objet, ou nil s'il n'existe pas."}],
+      "internal": false
+    },
+    "queueLuaCommandByName": {
+      "desc": "Envoie une commande Lua à un véhicule retrouvé par son nom. Si le véhicule n'existe pas, écrit une erreur dans le log (tag scenarioHelper) et ne fait rien d'autre.",
+      "params": {
+        "vehicleName": {"type": "string", "desc": "Nom du véhicule dans le scenetree."},
+        "command": {"type": "string", "desc": "Code Lua à exécuter côté véhicule."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "breakBreakGroup": {
+      "desc": "Casse un groupe de rupture (breakGroup) du véhicule en exécutant beamstate.breakBreakGroup(group) dans son VM.",
+      "params": {
+        "vehicleName": {"type": "string", "desc": "Nom du véhicule. Doit exister, sinon erreur."},
+        "group": {"type": "string", "desc": "Nom du breakGroup défini dans le jbeam."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "triggerDeformGroup": {
+      "desc": "Déclenche un groupe de déformation (beamstate.triggerDeformGroup) : bascule vers un matériau cassé, par exemple pour briser une vitre.",
+      "params": {
+        "vehicleName": {"type": "string", "desc": "Nom du véhicule. Doit exister, sinon erreur."},
+        "group": {"type": "string", "desc": "Nom du deformGroup défini dans le jbeam."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "trackVehicle": {
+      "desc": "Active le suivi cartographique du véhicule (mapmgr.enableTracking) sous un nom de suivi personnalisé.",
+      "params": {
+        "vehicleName": {"type": "string", "desc": "Nom du véhicule dans le scenetree."},
+        "trackingName": {"type": "string", "desc": "Nom de suivi à utiliser."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setAiMode": {
+      "desc": "Fixe le mode de l'IA du véhicule via ai.setState({mode=...}). Si targetVehicleName est fourni, l'ID de ce véhicule est transmis comme targetObjectID (utile pour les modes qui visent un autre véhicule, par exemple chase ou flee). Mémorise le mode dans l'état scénario.",
+      "params": {
+        "vehicleName": {"type": "string", "desc": "Nom du véhicule piloté par l'IA."},
+        "mode": {"type": "string", "desc": "Mode IA (valeurs du ai.lua du véhicule, par exemple 'manual', 'chase', 'flee', 'stop', 'disabled' : déduit du code, non vérifié ici)."},
+        "targetVehicleName": {"type": "string|nil", "desc": "Nom du véhicule cible, facultatif. Doit exister s'il est fourni."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setAiAggression": {
+      "desc": "Règle l'agressivité de l'IA (ai.setAggression) et la mémorise dans l'état scénario.",
+      "params": {
+        "vehicleName": {"type": "string", "desc": "Nom du véhicule."},
+        "aggression": {"type": "number", "desc": "Agressivité, insérée telle quelle dans la commande (le commentaire de setAiPath indique un maximum de 2)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setAiAggressionMode": {
+      "desc": "Choisit le mode d'agressivité dynamique de l'IA en mode manual (ai.setAggressionMode). Avec 'rubberBand', l'agressivité varie avec la distance à l'adversaire : plus l'IA est proche, moins elle est agressive.",
+      "params": {
+        "vehicleName": {"type": "string", "desc": "Nom du véhicule."},
+        "aggrMode": {"type": "string", "desc": "Actuellement 'rubberBand' (seule valeur citée dans le code)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setAiTarget": {
+      "desc": "Définit la cible de l'IA (ai.setTarget) et la mémorise dans l'état scénario.",
+      "params": {
+        "vehicleName": {"type": "string", "desc": "Nom du véhicule piloté par l'IA."},
+        "target": {"type": "string", "desc": "Cible transmise à ai.setTarget (nom, entre guillemets dans la commande)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setAiAvoidCars": {
+      "desc": "Active ou désactive l'évitement des autres voitures par l'IA (ai.setAvoidCars).",
+      "params": {
+        "vehicleName": {"type": "string", "desc": "Nom du véhicule."},
+        "value": {"type": "string", "desc": "'on' ou 'off'."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setAiRoute": {
+      "desc": "Active la progression automatique de l'IA le long d'une liste de waypoints (ai.driveUsingPath avec wpTargetList). Le mode IA doit être manual ou flee. Version simple de setAiPath, sans options de vitesse ou de tours.",
+      "params": {
+        "vehicleName": {"type": "string", "desc": "Nom du véhicule."},
+        "waypoints": {"type": "string[]", "desc": "Liste de noms de waypoints, sérialisée avec serialize()."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setCutOffDrivability": {
+      "desc": "Règle le seuil de drivabilité de coupure de l'IA (ai.setCutOffDrivability), qui sert à écarter les routes de trop faible drivabilité.",
+      "params": {
+        "vehicleName": {"type": "string", "desc": "Nom du véhicule."},
+        "drivability": {"type": "number", "desc": "Valeur de drivabilité, insérée telle quelle dans la commande."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setAiPath": {
+      "desc": "Fait suivre à un véhicule IA une route entre waypoints (ai.driveUsingPath) avec de nombreuses options. L'IA calcule le plus court chemin entre waypoints consécutifs. Le tableau arg est aussi sauvegardé (core_checkpoints.saveAIPath et scenario_scenarios.updateVehicleAiState) pour être réappliqué au reset.",
+      "params": {
+        "arg": {"type": "table", "desc": "Table d'options. Seuls vehicleName et waypoints sont obligatoires."},
+        "arg.vehicleName": {"type": "string", "desc": "Nom du véhicule à passer en IA."},
+        "arg.waypoints": {"type": "string[]", "desc": "Liste de noms de waypoints (obligatoire)."},
+        "arg.routeSpeed": {"type": "number|nil", "desc": "Vitesse en m/s appliquée à toute la route. Défaut 0."},
+        "arg.routeSpeedMode": {"type": "string|nil", "desc": "'limit' (vitesse plafonnée) ou 'set' (vitesse imposée). Défaut 'off'."},
+        "arg.driveInLane": {"type": "string|nil", "desc": "'on' ou 'off' : roule du bon côté sur les routes à double sens. Défaut 'off'."},
+        "arg.speeds": {"type": "table|nil", "desc": "Vitesses par waypoint, transmises comme wpSpeeds. Défaut {}."},
+        "arg.lapCount": {"type": "integer|nil", "desc": "Nombre de tours (noOfLaps). Le premier et le dernier waypoint doivent être identiques (circuit fermé). Défaut 0."},
+        "arg.aggression": {"type": "number|nil", "desc": "Multiplicateur de l'agressivité interne de l'IA : 1 donne 0.7 effectif. Maximum 2. Défaut 1."},
+        "arg.avoidCars": {"type": "string|boolean|nil", "desc": "'on' ou 'off' (passé par tostring). Défaut 'off'."},
+        "arg.aggressionMode": {"type": "string|nil", "desc": "'rubberBand' (seule option) : agressivité réduite à proximité de l'adversaire. S'applique au mode manual ; chase et flee sont déjà en rubberBand par défaut. Défaut '' (aucun)."},
+        "arg.resetLearning": {"type": "boolean|nil", "desc": "Si true, réinitialise les enveloppes d'accélération apprises (limites de traction) à l'appel, pour privilégier la régularité. Documenté dans le code mais non transmis par cette fonction (voir notes)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "flashUiMessage": {
+      "desc": "Affiche un message flash à l'écran via guihooks.trigger('ScenarioFlashMessage', {{msg, duration, 0, useBiggerText}}).",
+      "params": {
+        "msg": {"type": "string", "desc": "Texte à afficher."},
+        "duration": {"type": "number", "desc": "Durée d'affichage (secondes, déduit du code)."},
+        "useBiggerText": {"type": "boolean|nil", "desc": "true pour un texte plus gros ; toute autre valeur est traitée comme false."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "realTimeUiDisplay": {
+      "desc": "Met à jour l'affichage temps réel du scénario via guihooks.trigger('ScenarioRealtimeDisplay', {msg = msg}).",
+      "params": {
+        "msg": {"type": "any", "desc": "Contenu transmis à l'UI dans le champ msg."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getDistanceBetweenSceneObjects": {
+      "desc": "Calcule la distance entre les positions de deux objets du scenetree.",
+      "params": {
+        "sceneObjectName1": {"type": "string", "desc": "Nom du premier objet."},
+        "sceneObjectName2": {"type": "string", "desc": "Nom du second objet."}
+      },
+      "returns": [{"type": "number", "desc": "Distance en mètres, ou -1 si l'un des objets est introuvable."}],
+      "internal": false
+    }
+  },
+  "classes": {}
+}

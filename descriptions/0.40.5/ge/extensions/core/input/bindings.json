@@ -1,0 +1,167 @@
+{
+  "path": "lua/ge/extensions/core/input/bindings.lua",
+  "module": "Extension GE `core_input_bindings` : charge, fusionne, sauvegarde et envoie au moteur les associations touches/axes -> actions (bindings) de tous les périphériques branchés, pour chaque joueur. Il lit les inputmaps par défaut (JSON du jeu et des véhicules) puis les différences utilisateur (*.diff dans settings/inputmaps), applique les courbes de réponse FFB, notifie l'UI, le moteur, les véhicules (config force feedback) et les autres extensions. Il gère aussi l'activation des ActionMap de menu selon les écrans ouverts. Un moddeur s'en sert surtout pour connaître la touche d'une action, réinitialiser les contrôles ou activer/désactiver des actions de menu.",
+  "usage": "local ctrl = core_input_bindings.getControlForAction('accelerate')   -- ex. 'axis1'\nlocal others = core_input_bindings.getActionsSharingControls('toggleMenues')\ncore_input_bindings.setMenuActionsEnabled({menu_item_up = false, menu_item_down = false})",
+  "notes": [
+    "Structure de M.bindings : liste de {devname, contents = {bindings = {...}, guid, vidpid, name, devicetype, …}} triée par nom de périphérique (wheel0 avant xinput0). Chaque binding : action (nom unique, préfixé par le véhicule si spécifique), control, player, unused (booléen), plus les champs normalisés (deadzoneResting, deadzoneEnd, linearity, angle, lockType, filterType, isInverted, isForceEnabled, ffb{…}).",
+    "Valeurs par défaut des champs de binding (fillNormalizeBindingDefaults) : deadzoneResting 0, deadzoneEnd 0, linearity 1, filterType -1, angle 0, lockType 3, ffb.forceCoef 100, ffb.smoothing 150, ffb.softlockForce 0.5 (borné 0..1), ffb.responseCurve {{0,0},{1,1}}, logitechVibrotactileFreqMax borné 20..150 (défaut 50).",
+    "Fichiers : bindings par défaut = JSON dans settings/inputmaps (jeu), vehicles/<véhicule>/ et vehicles/<véhicule>/inputmaps ; réglages utilisateur = fichiers .diff écrits sous settings/inputmaps[/<véhicule>] (nom '<devicetype>.diff' pour clavier/souris, sinon '<vidpid minuscule>.diff'). Un diff contient 'bindings' (ajoutés/modifiés) et 'removed' ; version 1 autorise les doublons de contrôle.",
+    "Les changements de fichiers (inputmaps, actions) déclenchent un rechargement différé de 0,1 s (forceRefresh) traité dans updateGFX.",
+    "Joueurs : assignedPlayers associe un nom de périphérique à un indice de joueur (-1 = aucun). Avec autoAssignPlayersToDevices (true par défaut) l'association est recalculée par core_multiseat.",
+    "Menus : les ActionMap de menu sont 'MenuActionMap' plus des 'MenuIndependent_<action>ActionMap' ; elles s'activent quand une route UI non gameplay (hors play, multiseat, trackBuilder) ou un popup est ouvert.",
+    "Hooks émis : onInputBindingsChanged(assignedPlayers), onFFBConfigChanged, onMenuActionMapEnabled(enabled). Évènements UI : InputBindingsChanged, AssignedPlayersChanged, MenuActionMapEnabled, MenuActionMapStateChanged(action, enabled), RecentDevicesChanged, ControllersChanged.",
+    "Incohérences : menuActive est déprécié (loggue une erreur avec la pile d'appel puis appelle setMenuActionMapEnabled) ; les messages d'erreur de setMenuActionEnabled formatent un booléen/nil avec %q ce qui peut lever une erreur au lieu de s'afficher ; migrateScePadDiffFiles fait ipairs sur le contenu de settings/scePadGuids.json sans test de nil ; onVehicleSpawned recalcule les bindings mais n'appelle pas notifyAll ; la fenêtre ImGui de debug des ActionMap est entièrement commentée dans le fichier.",
+    "Champ exporté mais non initialisé comme attendu : isMenuActive part à false et n'est modifié que par setMenuActionMapEnabled."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{'core_input_actions', 'core_input_categories', 'core_multiseat', 'license', 'core_versionUpdate'}."},
+    "isMenuActive": {"type": "boolean", "desc": "true quand l'ActionMap de menu est active (écran de menu ou popup ouvert)."},
+    "autoAssignPlayersToDevices": {"type": "boolean", "desc": "true (défaut) : l'assignation joueur<->périphérique est calculée automatiquement par core_multiseat."},
+    "devices": {"type": "table<string, table>", "desc": "Périphériques branchés : nom (ex. 'xinput0') -> {guid, productName, vidpid, playerNumber, platformUserNumber}."},
+    "bindings": {"type": "table[]", "desc": "Bindings courants par périphérique (voir notes)."},
+    "defaultBindings": {"type": "table[]", "desc": "Bindings par défaut officiels, même structure que bindings ; sert de référence pour calculer les diffs."},
+    "assignedPlayers": {"type": "table<string, integer>", "desc": "Nom de périphérique -> indice de joueur."}
+  },
+  "functions": {
+    "getControlForAction": {
+      "desc": "Renvoie le premier contrôle (touche/axe) trouvé pour une action, tous périphériques confondus. Le résultat est mis en cache jusqu'au prochain notifyGE.",
+      "params": {"actionName": {"type": "string", "desc": "Nom unique de l'action."}},
+      "returns": [{"type": "string|nil", "desc": "Nom du contrôle (ex. 'keyboard0' contrôle, 'axis1')."}]
+    },
+    "getActionsSharingControls": {
+      "desc": "Autres actions utilisées (non 'unused') sur les mêmes contrôles que actionName, sur le même périphérique.",
+      "params": {"actionName": {"type": "string", "desc": "Nom unique de l'action."}},
+      "returns": [{"type": "string[]", "desc": "Noms d'actions triés."}]
+    },
+    "notifyUI": {
+      "desc": "Envoie à l'UI les contrôleurs, les joueurs assignés et un paquet InputBindingsChanged (catégories, actions du véhicule courant, template de binding, bindings, defaultBindings, reason).",
+      "params": {"reason": {"type": "string", "desc": "Texte indiquant la cause."}},
+      "returns": []
+    },
+    "saveBindingsToDisk": {
+      "desc": "Sauvegarde les bindings envoyés par l'UI : les sépare par véhicule/génériques, compare à la version par défaut et écrit un fichier .diff par périphérique et véhicule, puis force un rechargement.",
+      "params": {"data": {"type": "table", "desc": "Inputmap complète d'un périphérique : {bindings, devicetype, guid, name, vidpid, …}."}},
+      "returns": []
+    },
+    "resetBindings": {
+      "desc": "Supprime les bindings personnalisés (inputmaps/diff utilisateur) d'un périphérique ou de tous, génériques et du véhicule joueur, et recharge.",
+      "params": {"desiredDevName": {"type": "string|nil", "desc": "Nom de périphérique ; nil = tous les périphériques branchés."}},
+      "returns": []
+    },
+    "getAssignedPlayers": {"desc": "Renvoie M.assignedPlayers.", "params": {}, "returns": [{"type": "table<string, integer>", "desc": "Périphérique -> joueur."}]},
+    "setPlayerToDevice": {
+      "desc": "Assigne un joueur à un périphérique (assignPlayerToDevice), recalcule les bindings et notifie tout le monde.",
+      "params": {
+        "devname": {"type": "string", "desc": "Nom du périphérique."},
+        "player": {"type": "integer", "desc": "Indice du joueur."}
+      },
+      "returns": []
+    },
+    "applyPlayerAssignments": {
+      "desc": "Applique en une fois une table d'assignations (périphérique -> joueur ; absent = -1).",
+      "params": {
+        "assignments": {"type": "table<string, integer>", "desc": "Assignations."},
+        "reason": {"type": "string|nil", "desc": "Texte pour les notifications."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si assignments n'est pas une table."}]
+    },
+    "refreshAssignedPlayers": {
+      "desc": "Recalcule l'assignation automatique via core_multiseat (si autoAssign) et notifie seulement si elle a changé.",
+      "params": {
+        "logEnabled": {"type": "boolean|nil", "desc": "Active les logs de core_multiseat."},
+        "seatPlayers": {"type": "boolean|nil", "desc": "Transmis à core_multiseat.getAssignedPlayers."}
+      },
+      "returns": [{"type": "table<string, integer>", "desc": "Assignations courantes."}]
+    },
+    "getFFBConfigForAction": {
+      "desc": "Lit la configuration force feedback d'une action (steering, accelerate, brake) pour le conducteur d'un véhicule : décode le JSON renvoyé par be:getFFBConfig puis ffbParamsJson dans ffbConfig.ffbParams.",
+      "params": {
+        "veh": {"type": "userdata", "desc": "Objet véhicule."},
+        "action": {"type": "string", "desc": "Nom de l'action."}
+      },
+      "returns": [
+        {"type": "table|nil", "desc": "Config FFB, nil s'il n'y a pas de conducteur ni de contrôleur FFB ou en cas d'erreur de décodage."},
+        {"type": "integer", "desc": "FFBID."}
+      ]
+    },
+    "setMenuActionMapEnabled": {
+      "desc": "Active ou désactive l'ActionMap de menu principale (et, à la désactivation, toutes les ActionMap de menu indépendantes), met à jour isMenuActive et notifie l'UI/extensions.",
+      "params": {"enabled": {"type": "boolean", "desc": "true = menus actifs."}},
+      "returns": []
+    },
+    "getMenuActionMapEnabled": {"desc": "Renvoie isMenuActive.", "params": {}, "returns": [{"type": "boolean", "desc": "État."}]},
+    "setMenuActionEnabled": {
+      "desc": "Active ou désactive une ActionMap de menu : soit par nom d'action ('menu_item_up' -> MenuIndependent_menu_item_upActionMap), soit directement par nom d'ActionMap. Refuse (log d'erreur) les ActionMap non liées aux menus ou inconnues.",
+      "params": {
+        "enabled": {"type": "boolean", "desc": "Nouvel état."},
+        "actionName": {"type": "string|nil", "desc": "Nom d'action ; peut être nil si actionMapName est donné."},
+        "actionMapName": {"type": "string|nil", "desc": "Nom complet de l'ActionMap."}
+      },
+      "returns": [{"type": "boolean|nil", "desc": "Nouvel état effectif (am.enabled), nil en cas d'échec."}]
+    },
+    "setMenuActionsEnabled": {
+      "desc": "Applique en lot un état pour plusieurs actions de menu : {menu_item_up = true, menu_item_down = false}. Ignore les valeurs non booléennes.",
+      "params": {"actionStates": {"type": "table<string, boolean>", "desc": "Action -> état voulu."}},
+      "returns": [{"type": "table<string, boolean>|boolean", "desc": "Action -> état effectif ; false si l'argument n'est pas une table."}]
+    },
+    "getMenuActionStates": {
+      "desc": "État actuel (activé ou non) de chaque action de menu indépendante.",
+      "params": {},
+      "returns": [{"type": "table<string, boolean>", "desc": "Action -> activée."}]
+    },
+    "setMenuActionMapWatchEnabled": {
+      "desc": "Active/désactive la notification UI MenuActionMapStateChanged à chaque modification d'une ActionMap de menu.",
+      "params": {"enabled": {"type": "boolean", "desc": "true = surveiller."}},
+      "returns": [{"type": "boolean", "desc": "Nouvel état."}]
+    },
+    "getMenuActionMapWatchEnabled": {"desc": "Indique si la surveillance est active.", "params": {}, "returns": [{"type": "boolean", "desc": "État."}]},
+    "setMenuScrollActionMapEnabled": {
+      "desc": "Pousse (push) ou retire (pop) la 'MenuScrollActionMap' sur la pile des ActionMap.",
+      "params": {"enabled": {"type": "boolean", "desc": "true = pousser."}},
+      "returns": [{"type": "boolean", "desc": "État résultant ; false si l'ActionMap n'existe pas."}]
+    },
+    "getMenuScrollActionMapEnabled": {"desc": "État de la MenuScrollActionMap.", "params": {}, "returns": [{"type": "boolean", "desc": "true si poussée."}]},
+    "isModalPopupOpen": {
+      "desc": "Indique si un popup modal est ouvert (état d'UI '/popup/...' hors '/popup/activity/').",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "État."}]
+    },
+    "menuActive": {
+      "desc": "Déprécié : loggue une erreur avec la pile d'appel et appelle setMenuActionMapEnabled(enabled).",
+      "params": {"enabled": {"type": "boolean", "desc": "État voulu."}},
+      "returns": []
+    },
+    "getUsedBindingsFiles": {
+      "desc": "Recharge les bindings en enregistrant les chemins de fichiers lus (utile pour lister les inputmaps utilisés).",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Chemins lus."}]
+    },
+    "enableCustomModifier": {
+      "desc": "Active ou désactive un modificateur personnalisé de l'ActionMap pour un joueur (ActionMap.enableCustomModifier).",
+      "params": {
+        "player": {"type": "integer", "desc": "Indice du joueur."},
+        "enabled": {"type": "boolean", "desc": "Activer."},
+        "modifier": {"type": "any", "desc": "Modificateur (valeur du moteur)."}
+      },
+      "returns": []
+    },
+    "getRecentDevices": {
+      "desc": "Liste des périphériques triés par activité récente (mise en cache, getDevicesByRecentActivity).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Périphériques récents."}]
+    },
+    "onFirstUpdate": {"desc": "Hook au premier update : liste les périphériques, assigne les joueurs, calcule tous les bindings et notifie.", "params": {}, "returns": [], "internal": true},
+    "onExtensionLoaded": {"desc": "Hook au chargement : exécute les migrations (popup de disposition v37 ; conversion des diffs manette PlayStation avant 0.38).", "params": {}, "returns": [], "internal": true},
+    "onDeviceChanged": {"desc": "Hook quand un périphérique est branché/débranché : met à jour la liste (avec toasts UI), les assignations et notifie tout.", "params": {}, "returns": [], "internal": true},
+    "onSettingsChanged": {"desc": "Hook de changement de réglages : si le réglage 'multiseat' a changé, recalcule assignations et bindings.", "params": {}, "returns": [], "internal": true},
+    "onFileChanged": {"desc": "Hook de changement de fichier : si un fichier d'actions ou d'inputmap (settings/inputmaps, vehicles/.../inputmaps, *.inputmap.json) change, programme un rechargement dans 0,1 s.", "params": {"filename": {"type": "string", "desc": "Chemin modifié."}, "t": {"type": "any", "desc": "Non utilisé (déduit du code)."}}, "returns": [], "internal": true},
+    "onVehicleSwitched": {"desc": "Hook au changement de véhicule d'un joueur : recalcule assignations et bindings (les actions spécifiques changent) et notifie tout.", "params": {"oldId": {"type": "integer", "desc": "Ancien véhicule."}, "newId": {"type": "integer", "desc": "Nouveau véhicule."}, "player": {"type": "integer", "desc": "Indice du joueur."}}, "returns": [], "internal": true},
+    "onVehicleSpawned": {"desc": "Hook à la création d'un véhicule : recalcule assignations et bindings sans notification.", "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}, "veh": {"type": "userdata", "desc": "Objet véhicule."}}, "returns": [], "internal": true},
+    "onPlayerVehiclePresenceChanged": {"desc": "Hook quand un joueur entre ou quitte un véhicule : renvoie la config force feedback aux véhicules.", "params": {"player": {"type": "integer", "desc": "Indice du joueur."}}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Hook par image : exécute le rechargement différé des bindings ; désactive la 'VehicleSpecificActionMap' quand le joueur marche (unicycle en caméra monde) hors split-screen.", "params": {"dtRaw": {"type": "number", "desc": "Delta temps brut en secondes."}}, "returns": [], "internal": true},
+    "onAfterRouteChange": {"desc": "Hook de changement de route UI : mémorise le nom de la route et met à jour l'état de l'ActionMap de menu.", "params": {"context": {"type": "table", "desc": "Contexte avec toRoute.name."}}, "returns": [], "internal": true},
+    "onUIStateTriggered": {"desc": "Hook de changement d'état d'UI : détecte les popups ouverts ('/popup/...') et met à jour l'ActionMap de menu.", "params": {"stateName": {"type": "string", "desc": "État UI."}, "opened": {"type": "boolean", "desc": "Ouvert ou fermé."}, "stateStack": {"type": "string[]", "desc": "Pile des états ouverts."}}, "returns": [], "internal": true},
+    "onUIInitialised": {"desc": "Hook à l'initialisation de l'UI : remet l'état de popup modal à faux.", "params": {}, "returns": [], "internal": true},
+    "onRecentDevicesChanged": {"desc": "Hook appelé quand l'ordre d'activité des périphériques change : met en cache et envoie RecentDevicesChanged à l'UI.", "params": {"_recentDevices": {"type": "table", "desc": "Nouvelle liste."}}, "returns": [], "internal": true}
+  }
+}

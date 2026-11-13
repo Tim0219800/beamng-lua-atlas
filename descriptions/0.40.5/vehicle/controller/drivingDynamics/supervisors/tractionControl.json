@@ -1,0 +1,37 @@
+{
+  "path": "lua/vehicle/controller/drivingDynamics/supervisors/tractionControl.lua",
+  "module": "Superviseur d'antipatinage (TCS) de la nouvelle architecture drivingDynamics (type \"auxiliary\", defaultOrder 65). Il ne calcule rien lui-même : à chaque pas fixe, pour chaque groupe de roues (un groupe par moteur listé dans tractionControlledMotors) il demande le glissement à la première slipProvider qui réussit, puis appelle actAsTractionControl de chaque composant enregistré (motorTorqueControl, brakeControl, diffControl, etc.). Il pilote aussi le voyant electrics.values.tcs/tcsActive. Les fournisseurs et composants s'enregistrent eux-mêmes via registerSlipProvider/registerComponent ; le CMU (drivingDynamics) appelle registerCMU.",
+  "usage": "-- jbeam (clé lues par le contrôleur) :\n-- { \"tractionControlledMotors\": [\"mainEngine\"], \"velocityOffsetThreshold\": 10 }\nlocal tc = controller.getControllerSafe('drivingDynamics/supervisors/tractionControl')\nif tc then tc.setParameters({isEnabled = false}) end",
+  "notes": [
+    "Clés jbeam : tractionControlledMotors (liste de noms de dispositifs de powertrain ; toutes leurs roues enfants forment un groupe), velocityOffsetThreshold (défaut 10, en m/s : sous cette vitesse absolue, un décalage de vitesse est ajouté pour éviter de diviser par ~0 dans le calcul du glissement).",
+    "steeringCoef passé aux fournisseurs de glissement = linearScale(|steeringInput|, 0.3, 0.5, 1, 0.5) : réduit la sensibilité quand on braque fort.",
+    "Le voyant est lissé (temporalSmoothing 10/5) : tcsActive n'est vrai que lorsque le lissage atteint 1 ; electrics.values.tcs vaut floor(lissé)*CMU.warningLightPulse (clignotement) et reste à 1 fixe si isEnabled est faux.",
+    "Les composants sont triés par componentOrderTractionControl (ou order), les fournisseurs par providerOrder (ou order), en ordre croissant, dans initLastStage.",
+    "setConfig remplace la table controlParameters sans recréer initialControlParameters ; getConfig renvoie une copie profonde.",
+    "Nécessite que registerCMU ait été appelé avant updateGFX/updateFixedStep (CMU nil sinon)."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "defaultOrder": {"type": "number", "desc": "Ordre d'exécution par défaut (65)."},
+    "isActive": {"type": "boolean", "desc": "Vrai après init, faux après shutdown."},
+    "isActing": {"type": "boolean", "desc": "Vrai quand le TCS intervient de façon soutenue (indicateur lissé >= 1)."},
+    "tractionControlledWheels": {"type": "table", "desc": "Liste de {wheel = wd de la roue, wheelGroup = groupe}, remplie à initSecondStage."}
+  },
+  "functions": {
+    "init": {"desc": "Vide les listes de fournisseurs et composants, lit velocityOffsetThreshold et passe isActive à true.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "returns": [], "internal": true},
+    "initSecondStage": {"desc": "Construit les groupes de roues à partir de tractionControlledMotors (powertrain.getDevice / getChildWheels), initialise lissage et glissement par roue, met electrics.values.hasTCS à true et sauvegarde les paramètres initiaux.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "returns": [], "internal": true},
+    "initLastStage": {"desc": "Trie fournisseurs de glissement et composants selon leur ordre.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "returns": [], "internal": true},
+    "reset": {"desc": "Remet à zéro le glissement (slip, lastSlip, slipRange) et les lisseurs de toutes les roues.", "params": {}, "returns": [], "internal": true},
+    "updateFixedStep": {"desc": "Pas fixe : calcule le glissement par groupe via les fournisseurs puis laisse les composants agir ; mémorise si au moins un composant est intervenu.", "params": {"dt": {"type": "number", "desc": "Pas de temps (s)."}}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Met à jour les valeurs electrics du voyant TCS (remplacé par une version avec paquet de debug si setDebugMode(true)).", "params": {"dt": {"type": "number", "desc": "Pas de temps graphique (s)."}}, "returns": [], "internal": true},
+    "setDebugMode": {"desc": "Active/désactive l'envoi de paquets de debug (vitesse de roue, glissement, slipRange) au CMU.", "params": {"debugEnabled": {"type": "boolean", "desc": "Vrai pour activer."}}, "returns": []},
+    "registerCMU": {"desc": "Mémorise la référence au CMU (accès à virtualSensors, sensorHub, applyParameter, sendDebugPacket).", "params": {"cmu": {"type": "table", "desc": "Contrôleur CMU."}}, "returns": [], "internal": true},
+    "registerComponent": {"desc": "Ajoute un composant qui doit exposer actAsTractionControl(wheelGroup, dt) et setParameters.", "params": {"component": {"type": "table", "desc": "Composant de contrôle."}}, "returns": [], "internal": true},
+    "registerSlipProvider": {"desc": "Ajoute un fournisseur qui doit exposer calculateSlipTractionControl(wheelGroup, steeringCoef, velocityOffset, dt) renvoyant vrai si le glissement a été calculé, et setParameters.", "params": {"slipProvider": {"type": "table", "desc": "Fournisseur de glissement."}}, "returns": [], "internal": true},
+    "shutdown": {"desc": "Désactive le superviseur (isActive=false, updateGFX et update mis à nil).", "params": {}, "returns": []},
+    "setParameters": {"desc": "Modifie velocityOffsetThreshold et/ou isEnabled via CMU.applyParameter ; un changement de isEnabled est propagé aux fournisseurs et composants sous la clé \"tractionControl.isEnabled\".", "params": {"parameters": {"type": "table<string, any>", "desc": "Paramètres à appliquer, ex. {isEnabled = false}."}}, "returns": []},
+    "setConfig": {"desc": "Remplace toute la configuration (controlParameters) et propage isEnabled.", "params": {"configTable": {"type": "table", "desc": "Table {isEnabled, velocityOffsetThreshold}."}}, "returns": []},
+    "getConfig": {"desc": "Renvoie une copie de la configuration courante.", "params": {}, "returns": [{"type": "table", "desc": "Copie de {isEnabled, velocityOffsetThreshold}."}]},
+    "sendConfigData": {"desc": "Envoie la configuration au CMU sous forme de paquet de debug (packetType \"config\").", "params": {}, "returns": []}
+  }
+}

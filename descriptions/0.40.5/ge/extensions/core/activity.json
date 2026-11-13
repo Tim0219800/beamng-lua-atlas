@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/core/activity.lua",
+  "module": "Extension GE (core_activity) minuscule : démarre une 'activité' nommée. Aujourd'hui la seule activité connue est 'ContinueFreeroam', qui lance extensions.freeroam_continueFreeroam.start() puis signale l'écran de chargement (core_gamestate.loadingScreenActive()). Un moddeur peut l'appeler depuis l'UI ou un script.",
+  "usage": "core_activity.startActivity('ContinueFreeroam')",
+  "notes": [
+    "Un nom d'activité inconnu est seulement loggué (niveau I) : aucune erreur n'est levée.",
+    "Le commentaire du code indique que l'appel à core_gamestate.loadingScreenActive() est à retirer quand l'UI sera ajoutée."
+  ],
+  "fields": {},
+  "functions": {
+    "startActivity": {
+      "desc": "Lance l'activité portant ce nom si elle existe dans la table interne, sinon loggue 'Unknown activity'.",
+      "params": {"name": {"type": "string", "desc": "Nom d'activité, actuellement 'ContinueFreeroam'"}},
+      "returns": []
+    }
+  },
+  "classes": {}
+}

@@ -1,0 +1,30 @@
+{
+  "path": "lua/common/jbeam/optimization.lua",
+  "module": "Étapes de finalisation des données jbeam avant envoi à la physique. assignCIDs numérote chaque ligne des sections « valides » avec un cid continu (0, 1, 2...) dans un ordre déterministe (clés triées) et calcule vehicle.maxIDs. process réordonne les nœuds de poutres (id1 < id2), supprime les champs inutiles à l'exécution, remplace les références objet par des cid (hydros, roues), retire les sections désactivées (disableSection) puis supprime vehicle.validTables.",
+  "notes": [
+    "Ordre des cid des nœuds : d'abord les nœuds fixes, puis les nœuds sans collision (collision == false), puis tous les autres (nœuds non fixes à la fin), chaque groupe trié par clé.",
+    "Les sections hors nœuds sont numérotées par ordre alphabétique des clés de ligne.",
+    "optimize échange id1/id2 d'une poutre quand id1 > id2 et met à jour son cid avec la clé de table ; il n'est pas exporté.",
+    "cleanup (non exporté) supprime group et engineGroup (sauf en mode debug), les chaînes vides (sauf la clé mesh), et remet à nil les valeurs par défaut des nœuds, poutres et triangles pour alléger les données.",
+    "dereference (non exporté) remplace hydro.beam par hydro.beamCID et les listes de poutres/nœuds des roues par des cid.",
+    "Une section dont la ligne d'indice 0 contient disableSection est supprimée du véhicule."
+  ],
+  "fields": {},
+  "functions": {
+    "assignCIDs": {
+      "desc": "Attribue à chaque ligne des sections listées dans vehicle.validTables un cid continu et enregistre le nombre de lignes par section dans vehicle.maxIDs.",
+      "params": {"vehicle": {"type": "table", "desc": "Données jbeam du véhicule (avec validTables), modifiées en place."}},
+      "returns": [{"type": "boolean", "desc": "Toujours true."}],
+      "internal": true
+    },
+    "process": {
+      "desc": "Optimise et nettoie les données du véhicule : poutres id1<id2, nettoyage des valeurs par défaut, déréférencement en cid, suppression des sections désactivées et de validTables.",
+      "params": {
+        "vehicle": {"type": "table", "desc": "Données jbeam du véhicule."},
+        "debugEnabled": {"type": "boolean|nil", "desc": "Si vrai, conserve les champs group et engineGroup."}
+      },
+      "returns": [{"type": "boolean", "desc": "Toujours true."}],
+      "internal": true
+    }
+  }
+}

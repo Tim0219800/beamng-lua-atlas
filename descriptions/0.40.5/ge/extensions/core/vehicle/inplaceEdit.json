@@ -1,0 +1,41 @@
+{
+  "path": "lua/ge/extensions/core/vehicle/inplaceEdit.lua",
+  "module": "Extension GE `core_vehicle_inplaceEdit` : éditeur de pièces « en jeu » rudimentaire (« ingame vehicle editor ») : masque l'interface CEF, affiche en texte debug (debugDrawer:drawTextAdvanced) l'arbre de slots/pièces du véhicule du joueur 0 et permet de naviguer au clavier (haut/bas/gauche/droite), de choisir une pièce pour un slot et de respawn le véhicule avec la nouvelle config. Ouvert par core_vehicle_manager.toggleModifyKey. C'est un outil de développement, pas une API de gameplay.",
+  "notes": [
+    "Les touches arrivent par onInput(type, value) avec type parmi 'up', 'down', 'left', 'right', 'select' (e), 'back' (r) ; seules les valeurs égales à 1 (appui) sont traitées. La sortie se fait avec la touche g (via les actions d'entrée du mode).",
+    "Le code contient de nombreux dump{...} de debug et un commentaire « the crude UI » : l'outil est visiblement brut. L'aide affichée à l'écran est en anglais.",
+    "La fenêtre n'est active que si le véhicule du joueur 0 existe (onUpdate retourne sinon) ; une courte animation (0,1 s) précède et suit l'activation, et l'interface CEF est masquée pendant l'édition puis rétablie."
+  ],
+  "fields": {},
+  "functions": {
+    "onInput": {
+      "desc": "Hook d'entrée : reçoit les touches de navigation de l'éditeur ('up', 'down', 'left', 'right', 'select', 'back') et déplace la sélection, descend/remonte dans les pièces ou applique le choix d'une pièce pour un slot (respawn du véhicule avec la config modifiée).",
+      "params": {
+        "type": {"type": "string", "desc": "nom de l'action"},
+        "value": {"type": "number", "desc": "1 = appui ; les autres valeurs sont ignorées"}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook par frame : charge les données du véhicule au besoin, anime l'activation et, si l'éditeur est actif, dessine à l'écran les infos et la liste des slots/pièces.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "temps réel (s)"},
+        "dtSim": {"type": "number", "desc": "temps de simulation (s)"},
+        "dtRaw": {"type": "number", "desc": "temps brut (s)"}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setShowWindow": {
+      "desc": "Active ou désactive l'éditeur (change de mode : masque/affiche l'interface CEF).",
+      "params": {"val": {"type": "boolean", "desc": "true pour afficher"}},
+      "returns": []
+    },
+    "toggleShowWindow": {
+      "desc": "Inverse l'état de l'éditeur et bascule le mode d'édition (toggleEditMode) du véhicule du joueur 0.",
+      "params": {},
+      "returns": []
+    }
+  }
+}

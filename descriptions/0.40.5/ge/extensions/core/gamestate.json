@@ -1,0 +1,91 @@
+{
+  "path": "lua/ge/extensions/core/gamestate.lua",
+  "module": "Extension GE `core_gamestate` : deux rôles. (1) Stocker l'état de JEU (freeroam, campagne… avec disposition d'applis et éléments de menu) et le diffuser aux extensions et à l'UI. (2) Piloter l'écran de chargement : les modules demandent à l'afficher (requestEnterLoadingScreen) et à le fermer (requestExitLoadingScreen) ; l'écran ne se ferme que quand TOUS les demandeurs ont terminé. Un moddeur l'utilise pour afficher l'écran de chargement pendant un travail long.",
+  "usage": "core_gamestate.requestEnterLoadingScreen('monMod', function()\n  -- appelé quand l'écran de chargement est réellement affiché\n  -- ... charger des choses ...\n  core_gamestate.requestExitLoadingScreen('monMod')\nend)",
+  "notes": [
+    "L'état est une table {state, appLayout, menuItems, options}. setGameState ne remplace que les champs fournis (non nil) ; M.state est reconstruit à chaque appel.",
+    "Écran de chargement : loadingScreenRequests[tag] = true/false ; l'écran se ferme quand toutes les entrées sont false. Le callback de requestEnterLoadingScreen est exécuté tout de suite si l'écran est déjà actif (loadingActive), sinon mis en file jusqu'à loadingScreenActive() (appelée par l'UI). Filet de sécurité : si l'UI ne répond pas, onUpdate force la suite après 1 s cumulée.",
+    "En mode sans UI (argument de ligne de commande -noui) ou headless_mode, requestEnterLoadingScreen exécute le callback immédiatement sans afficher d'écran, et ne l'enregistre pas.",
+    "À la fermeture, si getMissionFilename() == '' (aucun niveau), l'UI est envoyée au menu principal et l'état de jeu est remis à zéro.",
+    "Évènements : hook extensions onGameStateUpdate(state) ; onLoadingScreenInactive(state) ; UI : GameStateUpdate, LoadingScreen {active, gotoMainMenu, gameState}, ShowEntertainingBackground, requestUIInitialised.",
+    "Incohérences : le paramètre ignoreMenuswitch de requestExitLoadingScreen n'est pas utilisé ; gameStateDecorator fait un dump() de debug à chaque appel ; onDeserialized est vide."
+  ],
+  "fields": {
+    "state": {"type": "table", "desc": "État de jeu courant {state, appLayout, menuItems, options} ; {} au départ et après un retour au menu principal."}
+  },
+  "functions": {
+    "requestGameState": {
+      "desc": "Diffuse l'état de jeu courant : hook onGameStateUpdate et évènement UI GameStateUpdate (alias de sendGameState).",
+      "params": {},
+      "returns": []
+    },
+    "setGameState": {
+      "desc": "Met à jour l'état de jeu (freeroam, campagne…) puis le diffuse. Les paramètres nil gardent l'ancienne valeur.",
+      "params": {
+        "state": {"type": "string|nil", "desc": "Nom de l'état de jeu."},
+        "appLayout": {"type": "any", "desc": "Disposition des applis UI (déduit du code)."},
+        "menuItems": {"type": "any", "desc": "Éléments de menu (déduit du code)."},
+        "options": {"type": "any", "desc": "Options supplémentaires."}
+      },
+      "returns": []
+    },
+    "getGameState": {
+      "desc": "Copie profonde de l'état de jeu.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Copie de M.state."}]
+    },
+    "gameStateDecorator": {
+      "desc": "Renvoie le nom de l'état de jeu s'il est non vide (affiche aussi l'état par dump(), debug).",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "Nom de l'état ou nil."}]
+    },
+    "requestMainMenuState": {
+      "desc": "Indique à l'UI s'il faut afficher le fond du menu principal (guihooks ShowEntertainingBackground) : vrai quand getMissionFilename() est vide. Ne change pas la route de l'UI.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si aucun niveau n'est chargé."}]
+    },
+    "requestEnterLoadingScreen": {
+      "desc": "Demande l'affichage de l'écran de chargement au nom d'un module. À la première demande, envoie LoadingScreen {active = true} et règle les paramètres audio g_GameLoading=1 et g_FadeTimeMS=1000. func est appelé quand l'écran est prêt.",
+      "params": {
+        "tagName": {"type": "string", "desc": "Identifiant du demandeur (même nom à réutiliser pour la sortie). nil : ignoré."},
+        "func": {"type": "function|nil", "desc": "Callback à exécuter quand l'écran est affiché."}
+      },
+      "returns": []
+    },
+    "requestExitLoadingScreen": {
+      "desc": "Indique que le demandeur a fini. Quand tous ont fini, l'écran de chargement est masqué (LoadingScreen {active = false, gotoMainMenu, gameState}) et la file de callbacks est vidée.",
+      "params": {
+        "tagName": {"type": "string", "desc": "Même identifiant que pour l'entrée. Un tag inconnu produit un avertissement."},
+        "ignoreMenuswitch": {"type": "boolean|nil", "desc": "Non utilisé dans le code."}
+      },
+      "returns": []
+    },
+    "loading": {
+      "desc": "Indique si au moins un module demande l'écran de chargement. À ne pas utiliser pendant le processus de chargement lui-même (le code le déconseille) ; préférer getLoadingStatus.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si un chargement est demandé."}]
+    },
+    "getLoadingStatus": {
+      "desc": "État de la demande d'un module.",
+      "params": {"tagName": {"type": "string", "desc": "Identifiant du demandeur."}},
+      "returns": [{"type": "boolean|nil", "desc": "true = demandé, false = terminé, nil = jamais demandé."}]
+    },
+    "loadingScreenActive": {
+      "desc": "Appelé par l'UI quand l'écran de chargement est réellement affiché : marque loadingActive et exécute les callbacks en attente.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "loadingScreenInactive": {
+      "desc": "Appelé par l'UI quand l'écran de chargement est fermé : remet les paramètres audio à 0, signale LoadingManager et émet le hook onLoadingScreenInactive.",
+      "params": {"state": {"type": "number|string", "desc": "État envoyé par l'UI (converti en nombre si possible)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onUIInitialised": {"desc": "Hook (alias de uiReady) appelé quand l'UI est prête : si un chargement attendait l'UI, ré-émet LoadingScreen {active = true}.", "params": {}, "returns": [], "internal": true},
+    "onUpdate": {"desc": "Hook par image : si des callbacks attendent l'écran de chargement depuis plus d'1 s (temps cumulé borné à 1/30 s par image), force loadingScreenActive.", "params": {"dtReal": {"type": "number", "desc": "Delta temps réel en secondes."}, "dtSim": {"type": "number", "desc": "Delta simulation."}, "dtRaw": {"type": "number", "desc": "Delta brut."}}, "returns": [], "internal": true},
+    "onExtensionLoaded": {"desc": "Appelé au chargement de l'extension : demande à l'UI de signaler son initialisation (guihooks requestUIInitialised).", "params": {}, "returns": [], "internal": true},
+    "onAfterRouteChange": {"desc": "Hook de changement de route UI : met à jour la musique du menu principal si les fonctions globales existent.", "params": {"context": {"type": "table", "desc": "Contexte avec toRoute.name."}}, "returns": [], "internal": true},
+    "onDeserialized": {"desc": "Hook de restauration : ne fait rien.", "params": {"data": {"type": "any", "desc": "Non utilisé."}}, "returns": [], "internal": true}
+  }
+}

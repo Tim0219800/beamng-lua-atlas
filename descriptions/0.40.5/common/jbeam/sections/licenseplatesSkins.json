@@ -1,0 +1,23 @@
+{
+  "path": "lua/common/jbeam/sections/licenseplatesSkins.lua",
+  "module": "Traite deux familles de pièces actives : plaques d'immatriculation et skins. Une pièce dont un slotType contient '_licenseplate' (ou ayant licenseplateFormat) active la plaque ; les formats utilisés sont collectés (défaut '30-15'). Une pièce de design de plaque (slotType contenant 'licenseplate_design') fournit licenseplate_path. Une pièce de skin (slotType contenant 'skin_' ou égal à 'paint_design') appelle vehicleObj:setSkin(\"<slot>.<nom du skin>\") et peut imposer des couleurs par défaut. À la fin, si une plaque est utilisée, core_vehicles.setPlateText est appelé.",
+  "notes": [
+    "Le nom du skin est part.skinName, sinon part.globalSkin, sinon chaîne vide ; le slot de skin est part.skinType (si chaîne non vide) sinon le slotType ; 'paint_design' ou un slotType non chaîne donne un préfixe vide.",
+    "Les couleurs par défaut (part.default_color, default_color_2, default_color_3) sont envoyées via core_vehicle_manager.setVehicleColorsNames.",
+    "Le texte de plaque vient de config.licenseName, sinon false (le gestionnaire génère le texte).",
+    "slotType peut être une chaîne ou une table de chaînes."
+  ],
+  "fields": {},
+  "functions": {
+    "process": {
+      "desc": "Parcourt les pièces actives pour configurer plaque d'immatriculation et skins du véhicule.",
+      "params": {
+        "objID": {"type": "integer", "desc": "Identifiant du véhicule."},
+        "vehicleObj": {"type": "userdata", "desc": "Objet véhicule moteur."},
+        "config": {"type": "table|nil", "desc": "Configuration du véhicule (licenseName)."},
+        "activePartsData": {"type": "table<string, table>|nil", "desc": "Pièces actives (nom -> données de pièce)."}
+      },
+      "internal": true
+    }
+  }
+}

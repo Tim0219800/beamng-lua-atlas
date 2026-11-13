@@ -1,0 +1,19 @@
+{
+  "path": "lua/vehicle/extensions/utRecorder.lua",
+  "module": "Envoie à chaque frame les données du véhicule au Lua du moteur de jeu (GE) pour qu'elles soient enregistrées avec le reste (outil de test). Le message est mis en file par obj:queueGameEngineLua et appelle extensions.test_utRecorder.onVehicleData(vehId, tableDonnées) côté GE.",
+  "notes": [
+    "Table envoyée (tableau indexé, sérialisé avec serialize) : [1] input.throttle, [2] input.brake, [3] input.steering, [4] norme de la vitesse obj:getVelocity() (m/s), [5] electrics.values.airspeed, [6] electrics.values.wheelspeed, [7] input.parkingbrake, [8] {x,y,z} position, [9] {x,y,z} direction avant.",
+    "Les valeurs nil (ex. airspeed absent) créent des trous dans le tableau et la sérialisation peut en être affectée.",
+    "Côté GE l'extension cible s'appelle test_utRecorder : elle doit être chargée sinon l'appel échoue.",
+    "Envoi à chaque frame sans limitation de débit."
+  ],
+  "fields": {},
+  "functions": {
+    "updateGFX": {
+      "desc": "Appelé à chaque frame graphique (extensions.hook('updateGFX')). Construit la table de données du véhicule et l'envoie à extensions.test_utRecorder.onVehicleData côté GE.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps (non utilisé)."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

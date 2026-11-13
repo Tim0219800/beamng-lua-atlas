@@ -1,0 +1,57 @@
+{
+  "path": "lua/ge/extensions/mcp/tools/scene.lua",
+  "module": "Outils MCP pour le scenetree : trouver des objets (par classe ou nom), les inspecter comme l'inspecteur de l'éditeur, modifier leurs champs, les supprimer, les sérialiser, lister les objets visibles dans le champ de la caméra et lancer un raycast.",
+  "notes": [
+    "set_object_field convertit toutes les valeurs en chaîne (setField) puis appelle postApply ; une position s'écrit '1 2 3'. delete_object est définitif pour la session.",
+    "find_objects renvoie au plus 500 objets ; view_objects aussi (triés par distance, maxDist défaut 1000 m).",
+    "view_objects : class accepte un mot-clé (vehicles défaut, static, item, player, terrain, water) ou un nom de classe exact ; un `mask` brut prime. Utilise sceneGetVisibleObjectIds (requête frustum C++).",
+    "raycast : par défaut depuis la caméra dans sa direction, longueur 1000 ; includeTerrain true par défaut, renderGeometry false ; renvoie pt, norm et les champs scalaires du résultat de castRay."
+  ],
+  "fields": {
+    "schemas": {"type": "table<string, table>", "desc": "Schémas des outils scène."}
+  },
+  "functions": {
+    "find_objects": {
+      "desc": "Trouve des objets par nom exact ou par classe (avec filtre optionnel de sous-chaîne).",
+      "params": {"args": {"type": "table", "desc": "{class?: string, pattern?: string, name?: string}"}},
+      "returns": [{"type": "string", "desc": "JSON {count, objects:[{id, name, class}]}."}, {"type": "boolean", "desc": "true si ni class ni name."}],
+      "internal": false
+    },
+    "get_object": {
+      "desc": "Inspecte un objet : id, name, class, champs statiques non vides, champs dynamiques, position.",
+      "params": {"args": {"type": "table", "desc": "{id?: integer, name?: string}"}},
+      "returns": [{"type": "string", "desc": "JSON."}, {"type": "boolean", "desc": "true si introuvable."}],
+      "internal": false
+    },
+    "set_object_field": {
+      "desc": "Écrit un ou plusieurs champs d'un objet puis appelle postApply.",
+      "params": {"args": {"type": "table", "desc": "{id?|name?, field?: string, value?: any, fields?: table<string, any>, index?: string (défaut '0')}"}},
+      "returns": [{"type": "string", "desc": "Message récapitulatif."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "delete_object": {
+      "desc": "Supprime un objet de la scène (obj:deleteObject()).",
+      "params": {"args": {"type": "table", "desc": "{id?: integer, name?: string}"}},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true si introuvable."}],
+      "internal": false
+    },
+    "serialize_object": {
+      "desc": "Sérialise l'objet en JSON/texte comme dans un fichier de niveau ou de prefab (obj:serialize).",
+      "params": {"args": {"type": "table", "desc": "{id?|name?, pretty?: boolean (défaut true)}"}},
+      "returns": [{"type": "string", "desc": "Texte sérialisé."}, {"type": "boolean", "desc": "true si introuvable."}],
+      "internal": false
+    },
+    "view_objects": {
+      "desc": "Liste les objets dans le champ de la caméra, triés par distance.",
+      "params": {"args": {"type": "table|nil", "desc": "{class?: string, mask?: integer, maxDist?: number m}"}},
+      "returns": [{"type": "string", "desc": "JSON {count, objects:[{id, name, class, dist, pos, jbeam?}]}."}, {"type": "boolean", "desc": "true si sceneGetVisibleObjectIds absent."}],
+      "internal": false
+    },
+    "raycast": {
+      "desc": "Lance un rayon et renvoie le premier impact.",
+      "params": {"args": {"type": "table|nil", "desc": "{from?: {x,y,z}, to?: {x,y,z}, dir?: {x,y,z}, length?: number m, includeTerrain?: boolean, renderGeometry?: boolean}"}},
+      "returns": [{"type": "string", "desc": "JSON {hit=false, from, to} ou {hit=true, pt, norm, …}."}, {"type": "boolean", "desc": "true si aucune origine."}],
+      "internal": false
+    }
+  }
+}

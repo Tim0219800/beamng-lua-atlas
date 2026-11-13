@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/scenario/raceMarkers/cylinderMarker.lua",
+  "module": "Marqueur de checkpoint « cylindre » : une base plate au sol (checkpoint_marker_base.dae) et un cylindre haut de 50 unités (checkpoint_marker.dae) colorés selon le mode, avec une transparence qui augmente avec la distance de la caméra. Le module renvoie un constructeur : require('scenario/raceMarkers/cylinderMarker')(id) donne un objet de la classe C.",
+  "notes": [
+    "Couleurs par mode : default rouge (1, 0.07, 0), next gris (0.3), start et lap vert (0.4, 1, 0.2), recovery jaune (1, 0.85, 0), final bleu (0.1, 0.3, 1), branch orange (1, 0.6, 0). 'hidden' masque le marqueur.",
+    "setToCheckpoint(wp) lit wp.pos, wp.radius, et facultativement wp.fadeNear et wp.fadeFar (distances d'apparition, 0 et 70 par défaut). La base est mise à l'échelle 2*radius, le cylindre à radius x radius x 50.",
+    "L'alpha vaut clamp((distance - radius/2 - fadeNear) / (fadeFar - fadeNear), 0, 1) : le marqueur est transparent de près et opaque de loin. Base alpha *0.75, cylindre *0.95.",
+    "Mode initial 'current' (non défini dans modeInfos) ; setMode doit être appelé avec un mode connu avant tout affichage coloré, sinon la couleur est {0,0,0,0}.",
+    "update(dt, dtSim) est appelé par scenario_race_marker.render ; ses paramètres ne sont pas utilisés."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Marqueur cylindre de checkpoint.",
+      "functions": {
+        "init": {"desc": "Constructeur : initialise l'état (invisible, tables de couleurs par mode copiées).", "params": {"id": {"type": "integer", "desc": "Identifiant unique."}}, "internal": true},
+        "update": {"desc": "Appel par image : recalcule la transparence d'après la distance à la caméra (core_camera.getPosition) et met à jour les couleurs d'instance.", "params": {}, "internal": true},
+        "setToCheckpoint": {"desc": "Place base et cylindre sur un checkpoint.", "params": {"wp": {"type": "table", "desc": "{pos, radius, fadeNear?, fadeFar?}."}}},
+        "setMode": {"desc": "Choisit la couleur selon le mode ('hidden' masque, sinon affiche).", "params": {"mode": {"type": "string", "desc": "default, next, start, lap, recovery, final, branch ou hidden."}}},
+        "setVisibility": {"desc": "Affiche ou cache la base et le cylindre.", "params": {"v": {"type": "boolean", "desc": "Visibilité."}}},
+        "hide": {"desc": "Appelle setVisibility(false).", "params": {}},
+        "show": {"desc": "Appelle setVisibility(true).", "params": {}},
+        "createObject": {"desc": "Crée un TSStatic caché enregistré sous objectName et ajouté à ScenarioObjectsGroup.", "params": {"shapeName": {"type": "string", "desc": "Chemin du modèle."}, "objectName": {"type": "string", "desc": "Nom d'enregistrement."}}, "returns": [{"type": "table", "desc": "L'objet créé."}]},
+        "createMarkers": {"desc": "Supprime les anciens objets puis crée la base et le cylindre.", "params": {}},
+        "clearMarkers": {"desc": "Supprime les objets créés.", "params": {}}
+      }
+    }
+  }
+}

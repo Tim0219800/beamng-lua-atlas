@@ -1,0 +1,25 @@
+{
+  "path": "lua/common/utils/dateUtils.lua",
+  "module": "Petits utilitaires de dates : conversion d'une chaîne ISO 8601 en timestamp Unix et calcul du temps écoulé depuis une date. Se charge avec require('utils/dateUtils'). Utile pour comparer des dates reçues d'une API ou d'un fichier.",
+  "usage": "local du = require('utils/dateUtils')\nlocal secondes = du.timeSince('2025-01-31T12:00:00Z')",
+  "notes": [
+    "Le motif attendu est AAAA-MM-JJTHH:MM:SSZ. Un second motif de secours accepte 'HH:MM:SS AMZ'/'PMZ'.",
+    "Si la chaîne est illisible, une erreur est loguée et l'heure courante est utilisée (le résultat est alors 'maintenant').",
+    "os.time interprète la table en heure LOCALE, alors que timeSince compare à os.date('!*t') (UTC) reconverti par os.time : le décalage de fuseau horaire peut fausser la différence (déduit du code).",
+    "Bug probable dans la branche de secours AM/PM : hour vaut 0 (nombre) ou une chaîne selon le cas, puis tonumber est appliqué ; une heure '12 PM' reste '12'."
+  ],
+  "fields": {},
+  "functions": {
+    "parseIso8601": {
+      "desc": "Convertit une date-heure ISO 8601 (se terminant par Z) en timestamp Unix via os.time. Retourne l'heure courante en cas d'échec de lecture.",
+      "params": {"datetime": {"type": "string", "desc": "Ex. '2025-01-31T12:00:00Z'"}},
+      "returns": [{"type": "integer", "desc": "Timestamp Unix en secondes"}]
+    },
+    "timeSince": {
+      "desc": "Calcule le nombre de secondes écoulées entre la date donnée et maintenant (UTC).",
+      "params": {"datetime": {"type": "string", "desc": "Date ISO 8601"}},
+      "returns": [{"type": "number", "desc": "Différence en secondes (os.difftime)"}]
+    }
+  },
+  "classes": {}
+}

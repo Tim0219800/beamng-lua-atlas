@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/core/multiseatPlayerMarkers.lua",
+  "module": "Extension GE `core_multiseatPlayerMarkers` : lit et écrit le réglage 'multiseatTags' qui contrôle l'affichage des marqueurs (étiquettes) de joueurs en multi-joueur local. Trois modes : 'always', 'smart' (défaut) et 'never'. Les anciennes valeurs booléennes sont converties (true devient 'smart', false devient 'never').",
+  "usage": "local mode = core_multiseatPlayerMarkers.getMode()  -- 'smart' par défaut\ncore_multiseatPlayerMarkers.setMode('always')",
+  "notes": ["getMode réécrit le réglage dans settings si la valeur stockée n'était pas déjà normalisée (migration des booléens)."],
+  "fields": {},
+  "functions": {
+    "normalize": {
+      "desc": "Convertit une valeur de réglage en mode valide : true devient 'smart', false devient 'never', 'always'/'smart'/'never' restent, toute autre valeur devient 'smart'.",
+      "params": {"mode": {"type": "string|boolean|nil", "desc": "Valeur à normaliser."}},
+      "returns": [{"type": "string", "desc": "'always', 'smart' ou 'never'."}],
+      "internal": false
+    },
+    "getMode": {
+      "desc": "Renvoie le mode courant du réglage multiseatTags (défaut 'smart'), en le normalisant et en corrigeant le réglage si besoin.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "'always', 'smart' ou 'never'."}],
+      "internal": false
+    },
+    "setMode": {
+      "desc": "Normalise puis enregistre le mode dans le réglage multiseatTags.",
+      "params": {"mode": {"type": "string|boolean|nil", "desc": "Mode souhaité."}},
+      "returns": [{"type": "string", "desc": "Le mode réellement enregistré."}],
+      "internal": false
+    },
+    "isEnabled": {
+      "desc": "Indique si les marqueurs sont actifs, c'est-à-dire si le mode normalisé n'est pas 'never'.",
+      "params": {"mode": {"type": "string|boolean|nil", "desc": "Mode à tester."}},
+      "returns": [{"type": "boolean", "desc": "true sauf pour 'never'."}],
+      "internal": false
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "path": "lua/vehicle/extensions/escCalibration.lua",
+  "module": "Outil interne de calibration de l'ESC : automatise un test de 'rigidité de dérive' (skew stiffness) en balayant 13 vitesses (40 à 100 km/h) et 14 angles de braquage (0,5° à 7°), avec le régulateur de vitesse et le contrôleur 'esc'. Le résultat est écrit dans skewStiffnessPivot.csv et la progression est envoyée à l'UI via le hook 'ESCSkewStiffnessChange'.",
+  "usage": "extensions.load('escCalibration')\nextensions.escCalibration.startSkewStiffnessTest()  -- nécessite un contrôleur 'esc'",
+  "notes": [
+    "États : Idling, Initialization (mesure l'angle de roue maximal en braquant à fond 2 x 2 s), Starting, Settling (attend la vitesse cible via cruiseControl.hasReachedTargetSpeed puis esc.calibrationSettled), Measuring (attend esc.calibrationMeasurementReady), Increasing Angle / Increasing Speed, Finished (écrit le CSV, coupe le cruise control, remet la vitesse physique normale).",
+    "Dépend du contrôleur 'esc' (champs wheelAngleFront, pauseESCAction, doSettle, calibrationSettled, doMeasure, calibrationMeasurementReady, stiffnessFront, stiffnessRear, fonctions startESCCalibration/stopESCCalibration) et charge l'extension cruiseControl.",
+    "Pendant le test, be:setPhysicsSpeedFactor(1) est demandé au GE (vitesse maximale de la physique) ; il est remis à 0 à la fin ou à l'arrêt.",
+    "Colonnes du CSV : Speed,Angle,Front,Rear,Ratio,gForce, Float Angle, Test. Les deux dernières colonnes (floatAngle, test) ne sont jamais renseignées dans testResults et valent donc nil. Le fichier est écrit dans le répertoire de travail du jeu (chemin relatif).",
+    "gForce = sensors.gx2 / |gravité| (gravité bornée à 0,1 minimum). La progression en % = étapes terminées / (13 x 14).",
+    "La direction est commandée par input.event('steering', -angleCible/angleMax, 1)."
+  ],
+  "fields": {},
+  "functions": {
+    "onInit": {"desc": "Hook d'initialisation : remet tous les compteurs et résultats à zéro, la vitesse physique à normale et l'état à Idling.", "params": {}, "returns": [], "internal": true},
+    "onReset": {"desc": "Même fonction que onInit.", "params": {}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Appelé chaque frame : fait avancer la machine à états du test et pilote la direction.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "returns": [], "internal": true},
+    "startSkewStiffnessTest": {"desc": "Démarre le test : récupère le contrôleur 'esc' (abandonne avec une erreur de log s'il n'existe pas), charge cruiseControl, lance la calibration ESC et passe en état Initialization.", "params": {}, "returns": [], "internal": false},
+    "stopSkewStiffnessTest": {"desc": "Arrête le test : coupe le régulateur, arrête la calibration ESC, remet la vitesse physique normale et passe en état Finished (le CSV sera alors écrit à la prochaine frame).", "params": {}, "returns": [], "internal": false}
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "path": "lua/vehicle/extensions/couplings.lua",
+  "module": "Extension de gestion des attelages de type sellette (fifth wheel). Elle réagit aux événements de beamstate (activation/désactivation de l'attelage automatique, détachement) en relayant aux contrôleurs 'couplings/fifthwheel' et répond aux questions de beamstate sur l'état d'attelage.",
+  "usage": "-- appelé par beamstate, pas par le moddeur directement\nextensions.couplings.isCouplerAttached()",
+  "notes": [
+    "isAutoCouplingActive renvoie toujours false ; isCouplerAttached renvoie true si au moins une sellette est attachée, sinon nil (pas false).",
+    "couplingAttached appelle obj:stopLatching() puis beamstate.disableAutoCoupling() : l'attelage automatique est coupé dès qu'un attelage est réalisé.",
+    "couplingDetached et onReset sont vides."
+  ],
+  "fields": {},
+  "functions": {
+    "onReset": {"desc": "Hook de reset du véhicule ; vide.", "params": {}, "returns": [], "internal": true},
+    "couplingAttached": {"desc": "Appelé par le moteur/beamstate quand un coupleur s'attache : arrête le verrouillage automatique et désactive l'attelage auto.", "params": {"nodeId": {"type": "integer", "desc": "Nœud du coupleur."}, "obj2id": {"type": "integer", "desc": "Identifiant de l'autre véhicule."}, "obj2nodeId": {"type": "integer", "desc": "Nœud du coupleur de l'autre véhicule."}}, "returns": [], "internal": true},
+    "couplingDetached": {"desc": "Appelé quand un coupleur se détache ; ne fait rien.", "params": {"nodeId": {"type": "integer", "desc": "Nœud du coupleur."}, "obj2id": {"type": "integer", "desc": "Autre véhicule."}, "obj2nodeId": {"type": "integer", "desc": "Nœud de l'autre véhicule."}}, "returns": [], "internal": true},
+    "onBeamstateActivateAutoCoupling": {"desc": "Appelé par beamstate à l'activation de l'attelage automatique : affiche l'indicateur de chaque sellette.", "params": {}, "returns": [], "internal": true},
+    "onBeamstateDisableAutoLatching": {"desc": "Appelé par beamstate à la désactivation de l'attelage automatique : masque l'indicateur de chaque sellette.", "params": {}, "returns": [], "internal": true},
+    "onBeamstateDetachCouplers": {"desc": "Appelé par beamstate pour détacher les coupleurs : détache chaque sellette.", "params": {}, "returns": [], "internal": true},
+    "isAutoCouplingActive": {"desc": "Indique si l'attelage automatique est actif pour cette extension (toujours false).", "params": {}, "returns": [{"type": "boolean", "desc": "false."}], "internal": true},
+    "isCouplerAttached": {"desc": "Indique si au moins une sellette est attachée.", "params": {}, "returns": [{"type": "boolean|nil", "desc": "true si attachée, sinon nil."}], "internal": true}
+  }
+}

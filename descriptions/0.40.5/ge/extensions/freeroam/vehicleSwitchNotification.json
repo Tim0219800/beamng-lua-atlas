@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/freeroam/vehicleSwitchNotification.lua",
+  "module": "Affiche une notification à l'écran quand le joueur change de véhicule ou de siège : nom du véhicule (marque, nom, configuration), icône selon le type, siège occupé ou mode spectateur, et nombre de véhicules sélectionnables (position courante). Efface le message quand le joueur n'a plus de véhicule ou passe en mode marche (unicycle). Passe par guihooks.trigger('Message', …) avec la catégorie « vehicleSwitch<joueur> ». Global : freeroam_vehicleSwitchNotification.",
+  "notes": [
+    "Icône : Trailer -> smallTrailer, Prop -> trafficCone, Truck -> boxTruck, Car -> car, autre type -> beamNG ; défaut car.",
+    "Les véhicules comptés comme « sélectionnables » excluent : unicycle, non playerUsable, inactifs, blacklistés (gameplay_walk.isVehicleBlacklisted) et les Type PropParked/PropTraffic. Si les actions switch_next_vehicle/switch_previous_vehicle sont bloquées, le compte est forcé à 1 / index 0.",
+    "Le message dépend de presence.seatId (siège, via gameplay_seatOccupants.getSeats pour le nom) ou de presence.permissionMode ('passenger' = spectateur, sinon pleins contrôles).",
+    "TTL du message : 5 s."
+  ],
+  "functions": {
+    "onVehicleSwitched": {
+      "desc": "Hook de changement de véhicule : si le nouveau véhicule n'existe pas ou est l'unicycle, efface la notification (clear=true) de ce joueur.",
+      "params": {"_": {"type": "integer", "desc": "Ancien id (non utilisé)."}, "newId": {"type": "integer", "desc": "Nouvel id (-1 = aucun)."}, "player": {"type": "integer|nil", "desc": "Joueur (défaut 0)."}},
+      "internal": true
+    },
+    "onPlayerVehiclePresenceChanged": {
+      "desc": "Hook appelé quand la présence d'un joueur dans un véhicule/siège change : affiche la notification correspondante.",
+      "params": {"player": {"type": "integer|nil", "desc": "Joueur (défaut 0)."}, "_": {"type": "any", "desc": "Non utilisé (ancienne présence, déduit du code)."}, "presence": {"type": "table|nil", "desc": "{vehicleId, seatId?, permissionMode?}"}},
+      "internal": true
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "path": "lua/vehicle/controller/airplaneSurfaces.lua",
+  "module": "Contrôleur auxiliaire pour les avions : combine les entrées du pilote (gouverne de direction, ailerons, profondeur) avec les trims, et gère les volets (flap) et becs (slat). Il écrit les résultats dans `electrics.values` (rudder, aileron, elevator, slat, flap) qu'utilisent ensuite les actionneurs jbeam, et affiche des messages UI quand une valeur change.",
+  "notes": [
+    "Clés jbeam lues par init : `flapStart`, `slatStart`, `rudderTrimmingStart`, `aileronTrimmingStart`, `elevatorTrimmingStart` (valeurs de départ, 0 par défaut), `trimSpeed` (0.05), `flapSpeed` (0.1), `slatSpeed` (0.1) ; vitesses exprimées en fraction par seconde.",
+    "Entrées lues dans `input` : rudder, aileron, elevator, trimChange, trimRudder, trimAileron, trimElevator, flap, slat, flapChange, slatChange. Le trim relatif (`trimChange`) agit sur l'axe choisi par toggleTrimMode (elevator, aileron, rudder, cycle dans cet ordre).",
+    "Sorties : rudder/aileron/elevator = entrée + trim (non limitées à [-1,1] dans ce fichier) ; trim, flap et slat sont bornés (trim -1..1, flap et slat 0..1 pour les entrées relatives).",
+    "Aucune fonction `reset` n'existe : controller.reset rappelle init. updateGFX suppose que init a déjà initialisé `trimming`."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\" (paramètre obligatoire de contrôleur)."}
+  },
+  "functions": {
+    "updateGFX": {
+      "desc": "Chaque frame : applique les entrées et trims aux electrics rudder, aileron, elevator, met à jour flap et slat (valeur absolue d'entrée si elle a changé, sinon ajustement relatif), et affiche un message UI quand un trim, les volets ou les becs varient de plus de 0,005.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "toggleTrimMode": {
+      "desc": "Passe à l'axe de trim suivant (elevator, aileron, rudder) et l'annonce par un message UI.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setTrimValue": {
+      "desc": "Fixe directement la valeur de trim d'un axe (sans effet si l'axe est inconnu).",
+      "params": {
+        "input": {"type": "string", "desc": "\"rudder\", \"aileron\" ou \"elevator\"."},
+        "value": {"type": "number", "desc": "Valeur de trim (normalement -1 à 1)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "init": {
+      "desc": "Initialise les electrics, les valeurs de départ de volets/becs/trims et les vitesses depuis le jbeam.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

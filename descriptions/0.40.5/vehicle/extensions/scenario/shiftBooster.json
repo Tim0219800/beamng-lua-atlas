@@ -1,0 +1,47 @@
+{
+  "path": "lua/vehicle/extensions/scenario/shiftBooster.lua",
+  "module": "Extension de scénario de démonstration : donne un coup de pouce (« boost ») au véhicule en lui appliquant un vent constant dirigé selon son axe avant via obj:setWind. Peut se déclencher à chaque changement de rapport montant (listenToShift) ou manuellement (manualBoost). Le boost dure `boostTime` secondes, décompté dans updateGFX.",
+  "usage": "scenario_shiftBooster.manualBoost(1.0, 500) -- boost 1 s, force 500\nscenario_shiftBooster.listenToShift()  -- boost 0.4 s à chaque shiftUp",
+  "notes": [
+    "listenToShift remplace drivetrain.shiftUp ; or drivetrain.lua (chargé comme globale `drivetrain` par main.lua) ne contient aucune fonction shiftUp en 0.40.5. up_for_real vaut donc nil et le remplacement plantera au premier appel : code obsolète (incohérence repérée).",
+    "La force par défaut est 300 (unité du vent de obj:setWind, déduite du code) ; le vecteur direction est multiplié par la force.",
+    "Quand boostTime tombe sous 0.01, updateGFX remet le vent à (0,0,0) à chaque frame, ce qui écrase tout autre vent posé par le véhicule.",
+    "applyBoost fait un print à chaque appel (bruyant dans les logs)."
+  ],
+  "fields": {},
+  "functions": {
+    "listenToShift": {
+      "desc": "Enveloppe drivetrain.shiftUp : après le vrai changement de rapport, règle boostTime à 0.4 s, affiche un message UI « Boooooost! » (5 s) et applique un boost de force par défaut.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "manualBoost": {
+      "desc": "Démarre un boost manuel : fixe boostTime à la durée donnée et applique immédiatement le boost.",
+      "params": {
+        "duration": {"type": "number", "desc": "Durée du boost en secondes."},
+        "strength": {"type": "number|nil", "desc": "Intensité multipliée au vecteur direction ; 300 si nil."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "updateGFX": {
+      "desc": "Appelé à chaque frame graphique par la boucle principale (extensions.hook('updateGFX')). Tant que boostTime > 0.01 : le décrémente de dt et réapplique le boost ; sinon remet le vent à zéro.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps de simulation en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDebugDraw": {
+      "desc": "Hook de dessin debug : si un boost est actif, dessine une sphère de rayon boostTime 2 m au-dessus du véhicule, de couleur variable.",
+      "params": {"focusPos": {"type": "vec3", "desc": "Position du focus caméra (non utilisée)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleScenarioData": {
+      "desc": "Hook de configuration scénario ; corps vide, aucune donnée n'est lue.",
+      "params": {"data": {"type": "table", "desc": "Données du scénario (ignorées)."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

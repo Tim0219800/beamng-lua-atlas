@@ -1,0 +1,58 @@
+# `test_ffbCalibration`
+
+*Fichier : `lua/vehicle/extensions/test/ffbCalibration.lua` · VM : Véhicule · 273 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+
+**Accès :** extension `test_ffbCalibration` : `extensions.load (VM véhicule)("test_ffbCalibration")`, puis la globale `test_ffbCalibration`
+
+Procédure automatique de calibrage du retour de force (FFB) du volant. Le véhicule est lancé par le régulateur de vitesse (cruiseControl) puis le volant est tourné progressivement ; à chaque pas de physique le module enregistre vitesse, angle de volant et force normalisée au volant (hydros.forceAtWheelNorm, brute et lissée). À la fin il calcule un conseil de correction du coefficient FFB et renvoie tout au Lua du jeu via test_ffbCalibration.onFFBCalibrationFinished(données encodées avec lpack). Modes : "steerPeak" (s'arrête quand la force a passé son pic), "steerFull" (va jusqu'en butée), "straight" (enregistre en ligne droite).
+
+## Exemple
+
+```lua
+extensions.load('test_ffbCalibration')
+test_ffbCalibration.start('steerPeak', true) -- fastmotion: physique x100
+```
+
+## Remarques
+
+- Déroulement en mode steer* : (1) cruise control monte à speedTarget (40 km/h x 2 = 22,2 m/s) ; si > 30 s de simulation, repli sur 0.9 x la vitesse atteinte (cruiseControlFailures +1). (2) Braquage graduel de 1 s vers lastSteeringInput. (3) Rampe linéaire du volant de 0 à 1 en 20 s (timeToFulllock), enregistrement dans data.values = {vitesse km/h, entrée volant 0..1, FFB, FFB lissé}. (4) Fin si pleine butée (endReason "fullLock"), si la force retombe sous 80 % du pic après 0.1 d'angle ("noIssues"), ou timeout de sécurité 120 s ("timeout"). Si la vitesse tombe sous 40 km/h, le cruise est relancé (cruiseControlRestarts +1).
+- Résultat dans data.FFB : endReason, cruiseControlFailures/Restarts, speedTarget/speedMin (km/h), FFBcoef (v.data.input.FFBcoef), maxValueTarget (= 10 x targetPeak = 2), correctionAdvice et correctionAdviceSm (= 2 / FFBMaxValue ou lissé), maxValue, maxValueSm, maxAngle.
+- start désactive hydros.enableFFB et active hydros.enableFFBflood, place la boîte en mode 'arcade', verrouille la source d'entrée du volant sur "ffbCalibration" (input.setAllowedInputSource) ; finish remet la boîte en 'realistic', freine, débraye et rend l'entrée volant. finish ne rétablit PAS hydros.enableFFB ni enableFFBflood (comportement du code).
+- fastmotion : start appelle be:setPhysicsSpeedFactor(100) côté GE ; finish remet le facteur à 0 (appel GE), valeur qui d'après le nom signifie probablement « normal » (déduit, non vérifié ici).
+- Incohérence : en mode "straight", speedTarget = 200 * 3.6 (soit 720 m/s) au lieu de 200 / 3.6 ; la conversion semble inversée. Le mode straight ne lance de toute façon la cible que via cruiseControl.setSpeed.
+- En mode straight, la fin par timeout (40 s) est notée endReason = "noIssues".
+- Variables d'état et paramètres internes : detectionPeakPercent (0.8, mis à 0 en steerFull), detectionStDiff (0.1), targetPeak (0.2).
+- start appelle finish() sans données si v.data.input.steeringWheelLock manque ; dans ce cas data reste nil et lpack.encode(nil) est renvoyé au GE. Les paramètres du module M.mode sont stockés dans M.
+
+## Fonctions
+
+| Fonction | Description | Ligne |
+|---|---|---|
+| `test_ffbCalibration.finish()` | Termine la calibration : remet la physique à vitesse normale (côté GE), rend le contrôle (entrée, cruise, boîte, frein, embrayage), calcule le conseil de correction FFB, envoie les données au GE par test_ffbCalibration.onFFBCalibrationFinished et libère `data`. | 184 |
+| `test_ffbCalibration.onExtensionLoaded()` | Hook de chargement : appelle enablePhysicsStepHook() pour recevoir onPhysicsStep. *(interne)* *(hook)* | 263 |
+| `test_ffbCalibration.onPhysicsStep(dtSim)` | Hook de pas de physique (activé par enablePhysicsStepHook dans onExtensionLoaded, appelé par main.lua à la fréquence physique). Met à jour airspeed (obj:getGroundSpeed) puis exécute la logique du mode courant. *(interne)* *(hook)* | 173 |
+| `test_ffbCalibration.start(mode, fastmotion)` | Lance une calibration FFB dans le mode donné : initialise tous les compteurs et la table de résultats, prend le contrôle du volant et de la boîte, charge cruiseControl, règle la vitesse cible et désactive le FFB normal. | 207 |
+
+### Détail des paramètres
+
+#### `test_ffbCalibration.onPhysicsStep(dtSim)`
+
+Hook de pas de physique (activé par enablePhysicsStepHook dans onExtensionLoaded, appelé par main.lua à la fréquence physique). Met à jour airspeed (obj:getGroundSpeed) puis exécute la logique du mode courant.
+
+- `dtSim` (*number*) : Pas de physique en secondes.
+
+#### `test_ffbCalibration.start(mode, fastmotion)`
+
+Lance une calibration FFB dans le mode donné : initialise tous les compteurs et la table de résultats, prend le contrôle du volant et de la boîte, charge cruiseControl, règle la vitesse cible et désactive le FFB normal.
+
+- `mode` (*string*) : "steerPeak", "steerFull" ou "straight" ; autre valeur : log d'erreur et finish().
+- `fastmotion` (*boolean|nil*) : true pour accélérer la physique (x100) pendant la calibration.
+
+## Appels vers le moteur (C++)
+
+- `obj:` `getGroundSpeed`, `queueGameEngineLua`
+
+**Charge les extensions :** `cruiseControl`
+
+---
+*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/test/ffbCalibration.lua`.*

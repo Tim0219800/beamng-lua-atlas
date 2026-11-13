@@ -1,0 +1,87 @@
+{
+  "path": "lua/ge/extensions/render/playerTags.lua",
+  "module": "Étiquettes de nom flottantes au-dessus des véhicules des joueurs (multi-sièges et écran partagé). Utilise le système de billboards Skia (objet WorldBillboardRenderer enregistré « playerNameTags » dans MissionGroup) : chaque étiquette est une texture statique issue d'un modèle `.sktemplate.json`, teintée à la couleur du joueur, tournée vers la caméra, qui suit la voiture, grossit avec la distance (jusqu'à un plafond) et disparaît au-delà de 40 m. Piloté par core_multiseat (rebuild, updatePositions, reset…). Global : render_playerTags.",
+  "usage": "extensions.render_playerTags.rebuild({\n  {player = 0, label = 'Alice', color = {1, 0.4, 0.2}, icon = 'user', perspectivePlayer = 0},\n  {player = 1, label = 'Bob',   color = {0.2, 0.6, 1}},\n}, 'multiseat')\n-- puis chaque frame :\nextensions.render_playerTags.updatePositions(dtReal)",
+  "notes": [
+    "Modèles : 'default' = art/sktemplates/multiplayer-nametag.sktemplate.json ; 'multiseat' = art/sktemplates/multiseat-player-tag.sktemplate.json. Le nom de modèle inconnu retombe sur 'default'. Seul 'multiseat' ajoute une icône de persona (SVG de ui/ui-vue/src/assets/fonts/bngIcons/svg/<icon>.svg, remplie en blanc) ; le nom d'icône doit être alphanumérique (^%w+$).",
+    "Couleurs : {r,g,b} entre 0 et 1, mélangées vers un gris anthracite (54,69,79) à 30 % (haut) et 60 % (bas du dégradé) ; tintAccent remplace la couleur des nœuds de rôle 'accent' par ce dégradé.",
+    "Chaque entrée de rebuild : {player, label, color={r,g,b}, icon?, key?, perspectivePlayer?, hideInViews?}. L'état est indexé par `key` (défaut player), ce qui permet plusieurs étiquettes par joueur (une par vue en écran partagé). perspectivePlayer = joueur qui regarde : sa propre étiquette n'apparaît que 3 s (TAG_SHOW_TIME) après un changement d'occupation du véhicule ou de véhicule ; les étiquettes des autres s'empilent verticalement (0.33 m, 0.24 m avec icône) au-dessus du véhicule.",
+    "Valeurs de réglage locales : échelle 0.36, distance max 40 m, échelle minimale atteinte à 3 m et maximale à 26,7 m, bascule vers la position du siège sous 7 m, lissage de position 10. En pause du jeu (simTimeAuthority.getPause) les étiquettes sont forcées visibles ; en mode photo (photoModeOpen) elles sont masquées.",
+    "La position de base se calcule au-dessus de la boîte englobante orientée (OOBB) du véhicule, au niveau du nœud conducteur ; sinon 1,25 m au-dessus de la position du véhicule. En sièges multiples, gameplay_seatOccupants.getSeatExitData donne la position de chaque siège.",
+    "Si l'objet C++ playerNameTags disparaît (rechargement), liveRenderer le détecte et vide l'état local ; reset() est aussi lié à onExtensionUnloaded."
+  ],
+  "functions": {
+    "destroy": {
+      "desc": "Détruit toutes les étiquettes (billboards) en cours et vide l'état local, en laissant le renderer en place.",
+      "params": {},
+      "internal": false
+    },
+    "reset": {
+      "desc": "Détruit les étiquettes, oublie la référence au renderer et efface joueurs masqués et surcharges de couleur. À appeler avant un rechargement Lua/GE qui détruit l'objet C++ ; aussi onExtensionUnloaded.",
+      "params": {},
+      "internal": false
+    },
+    "onExtensionUnloaded": {
+      "desc": "Alias de reset appelé au déchargement de l'extension.",
+      "params": {},
+      "internal": true
+    },
+    "isLive": {
+      "desc": "Indique si le renderer de billboards existe dans la scène.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si l'objet playerNameTags existe."}],
+      "internal": false
+    },
+    "hasTags": {
+      "desc": "Indique s'il existe au moins une étiquette.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si des étiquettes sont actives."}],
+      "internal": false
+    },
+    "rebuild": {
+      "desc": "Reconstruit toutes les étiquettes : mémorise la demande (pour reload et surcharges de couleur), détruit les anciennes, crée le renderer au besoin puis un billboard par entrée en conservant l'état de lissage précédent.",
+      "params": {
+        "tags": {"type": "table[]", "desc": "Liste d'entrées {player, label, color, icon?, key?, perspectivePlayer?, hideInViews?}."},
+        "templateName": {"type": "string|nil", "desc": "'default' ou 'multiseat'."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si tags n'est pas une table ou si le renderer n'a pas pu être créé."}],
+      "internal": false
+    },
+    "reload": {
+      "desc": "Vide les caches de modèles et de chemins d'icônes SVG puis reconstruit les dernières étiquettes demandées (utile pour mettre au point un .sktemplate.json).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "false s'il n'y a rien à reconstruire."}],
+      "internal": false
+    },
+    "setPlayerHidden": {
+      "desc": "Masque ou affiche l'étiquette d'un joueur.",
+      "params": {"player": {"type": "integer", "desc": "Joueur."}, "hidden": {"type": "boolean", "desc": "true pour masquer."}},
+      "internal": false
+    },
+    "clearHiddenPlayers": {
+      "desc": "Réaffiche tous les joueurs masqués.",
+      "params": {},
+      "internal": false
+    },
+    "setPlayerColorOverride": {
+      "desc": "Impose une couleur à un joueur et reconstruit les étiquettes.",
+      "params": {"player": {"type": "integer", "desc": "Joueur."}, "color": {"type": "table", "desc": "{r,g,b} entre 0 et 1."}},
+      "internal": false
+    },
+    "clearPlayerColorOverrides": {
+      "desc": "Supprime les couleurs imposées et reconstruit.",
+      "params": {},
+      "internal": false
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook de changement de véhicule : met à jour le véhicule suivi des étiquettes du joueur ; l'étiquette du joueur qui regarde est affichée 3 s.",
+      "params": {"oldId": {"type": "integer", "desc": "Ancien véhicule."}, "newId": {"type": "integer", "desc": "Nouveau véhicule."}, "player": {"type": "integer", "desc": "Joueur."}},
+      "internal": true
+    },
+    "updatePositions": {
+      "desc": "À appeler chaque frame : calcule position, échelle (lissée) et visibilité de chaque étiquette (regroupement par véhicule, empilement, distance à la caméra du joueur) et appelle WorldBillboardRenderer:update.",
+      "params": {"dt": {"type": "number", "desc": "Durée de la frame (s)."}},
+      "internal": false
+    }
+  }
+}

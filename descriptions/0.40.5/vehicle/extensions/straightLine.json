@@ -1,0 +1,47 @@
+{
+  "path": "lua/vehicle/extensions/straightLine.lua",
+  "module": "Pilote automatique de direction très simple : un PID corrige la direction pour que le véhicule roule vers un point cible (ou tout droit, 20 m devant sa position initiale). Il envoie la commande via input.event(\"steering\", valeur, 1) à chaque frame. Ne contrôle ni gaz ni frein.",
+  "usage": "extensions.load('straightLine')\nstraightLine.setTargetDirection(nil, 'road')   -- tout droit\nstraightLine.setTargetDirection(vec3(100,0,0), 'offroad')\nstraightLine.stop()",
+  "notes": [
+    "Modes : \"offroad\" utilise un PID (0.8, 0.5, 0) ; tout autre mode utilise (0.4, 0, 0), sortie bornée à [-1, 1]. Le paramètre mode est concaténé dans un print : passer nil provoque une erreur.",
+    "La cible est recalculée à chaque frame : targetPos = baseTargetPos + ((pos - 20) * offset) avec offset = (0,1,0) ; seul l'axe Y est donc ajusté (comportement tel que lu dans le code).",
+    "Aucune vérification que steeringPID existe : updateGFX n'agit que si baseTargetPos est défini, ce qui n'arrive qu'après setTargetDirection.",
+    "L'erreur d'angle est mise en forme (racine carrée du signe conservé) avant le PID."
+  ],
+  "fields": {},
+  "functions": {
+    "setTargetDirection": {
+      "desc": "Active la conduite vers une cible. Sans cible, vise le point situé 20 m devant le véhicule dans la direction actuelle (projetée à l'horizontale). Crée le PID de direction selon le mode.",
+      "params": {
+        "target": {"type": "vec3|nil", "desc": "Position cible ; nil = 20 m droit devant."},
+        "mode": {"type": "string", "desc": "\"offroad\" pour un PID plus agressif, autre valeur pour le PID standard. Ne doit pas être nil."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "stop": {
+      "desc": "Arrête l'assistance : envoie input.event('steering', 0, 0) et efface la cible.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "updateGFX": {
+      "desc": "Appelé à chaque frame graphique via extensions.hook('updateGFX'). Si une cible est définie, calcule l'erreur d'angle et envoie la direction PID par input.event('steering', ...).",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes, passé au PID."}},
+      "returns": [],
+      "internal": true
+    },
+    "onInit": {
+      "desc": "Hook appelé à l'initialisation du véhicule (extensions.hook('onInit')) : efface la cible.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onReset": {
+      "desc": "Hook appelé au reset du véhicule ; même fonction que onInit : efface la cible.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

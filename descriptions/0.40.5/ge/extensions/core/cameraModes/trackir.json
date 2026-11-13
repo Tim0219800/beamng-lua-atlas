@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/trackir.lua",
+  "module": "Filtre global (runningOrder 0.5) qui applique le suivi de tête TrackIR : décale la position (nx, ny, nz * 0.00005) et tourne la caméra (yaw, pitch, roll * 0.01 degré). S'initialise via TrackIR.init()/start() ; sans TrackIR disponible, il ne fait rien. Désactivé pendant une session OpenXR. Renvoie un constructeur.",
+  "classes": {
+    "C": {
+      "desc": "Filtre TrackIR. Champ working : vrai si TrackIR a pu démarrer.",
+      "functions": {
+        "init": {"desc": "Marque le mode global/filtre/masqué et démarre TrackIR s'il est disponible."},
+        "update": {"desc": "Lit TrackIR.getData et applique translation et rotation à data.res.", "params": {"data": {"type": "table", "desc": "camData"}}, "returns": [{"type": "boolean|nil", "desc": "true ; nil si TrackIR n'est pas actif"}], "internal": true}
+      }
+    }
+  }
+}

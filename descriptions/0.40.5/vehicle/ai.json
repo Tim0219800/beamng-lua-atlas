@@ -1,0 +1,339 @@
+{
+  "path": "lua/vehicle/ai.lua",
+  "module": "Intelligence artificielle de conduite d'un véhicule (VM véhicule, globale `ai`). Elle conduit le véhicule le long d'un graphe routier (mapmgr) ou d'un script de trajectoire, en agissant sur throttle/brake/steering via electrics. Un moddeur s'en sert pour piloter le véhicule : choisir un mode (ai.setMode), une cible (setTarget, driveUsingPath), une vitesse (setSpeed + setSpeedMode), un niveau d'agressivité. L'état public (mode, debugMode, speedMode, routeSpeed, extAggression, extAvoidCars, driveInLaneFlag, cutOffDrivability, manualTargetName, pullOver) est la table M elle-même, renvoyée par getState() et envoyée à l'UI via guihooks AIStateChange. La boucle de conduite M.updateGFX n'est active que lorsque le mode n'est pas 'disabled'.",
+  "usage": "-- depuis la console du véhicule (VM véhicule)\nai.setMode('manual')\nai.setSpeedMode('limit'); ai.setSpeed(20) -- 20 m/s max\nai.setAggression(0.5)\nai.setTarget('wp_12')\n-- ou, en une fois :\nai.driveUsingPath{wpTargetList = {'wp1', 'wp10'}, driveInLane = 'on', avoidCars = 'on', routeSpeed = 35, routeSpeedMode = 'limit', aggression = 0.3}\n-- depuis le jeu (GE) : be:getObjectByID(id):queueLuaCommand('ai.setMode(\"traffic\")')",
+  "notes": [
+    "Modes reconnus par la boucle de conduite (M.mode) : 'disabled' (IA coupée, défaut), 'manual' (suit la cible/le chemin fixé par setTarget/setPath/driveUsingPath), 'random' (erre sur le réseau routier), 'span' (parcourt toute la carte, voir spanMap), 'traffic' (circulation : speedMode 'legal', driveInLane 'on', modèle de traction 1, profil de vitesse 'Back'), 'slotTraffic' (suit la cible donnée par setSlotTrafficTarget, évitement de voitures désactivé par défaut), 'flee' (fuit le véhicule joueur), 'chase' (poursuit le joueur), 'follow' (suit le joueur), 'stop' (freine puis repasse seul en 'disabled' quand la vitesse < 0.08 m/s), 'script' (lecture/enregistrement scriptai). Toute autre valeur est acceptée par setMode mais n'a pas de branche dédiée.",
+    "setMode appelle le GE : onAiModeChange(objectId, mode) quand le mode change. En quittant 'disabled', la boîte est mise en mode 'arcade' (le mode précédent est sauvegardé puis restauré au retour en 'disabled' ou à la fin de 'stop').",
+    "Valeurs de speedMode : 'set' (vise routeSpeed), 'limit' (plafonne à routeSpeed), 'legal' (limites légales de la route), 'off'. Toute autre valeur remet speedMode à nil. routeSpeed est en m/s.",
+    "debugMode (setVehicleDebugMode) : 'off', 'target', 'route', 'speeds', 'trajectory', 'rays', 'all' (valeurs testées par aiDebugDraw ; 'all' est aussi utilisé par setScriptDebugMode).",
+    "aggression : 0.3 correspond à une conduite normale de tous les jours, 1 à la limite d'adhérence (d'après le commentaire de driveUsingPath). Valeur par défaut extAggression = 0.3.",
+    "extAvoidCars : 'on', 'off' ou autre (défaut 'auto'). En 'auto' l'évitement est 'off' en modes 'manual' et 'slotTraffic', 'on' sinon.",
+    "Incohérences dans le code : M.debugDraw est défini à `nop`, qui doit être défini globalement par le moteur (aiDebugDraw le remplace quand le debug est actif). M.updateGFX est initialisé à `nop` puis remplacé par la fonction interne updateGFX. M.targetObjectID n'est pas initialisé en tête de fichier (nil au départ) et setTargetObjectID compare M.targetObjectID à `objectId` (et non à `id`), ce qui ressemble à une erreur (le toggle prévu semble être id vs M.targetObjectID).",
+    "ai.stopFollowing et ai.scriptStop sont la même fonction (scriptStop).",
+    "Dans setScriptDebugMode, mode nil ou 'off' met M.debugMode à 'all' avant de désactiver le dessin : probablement un bug (devrait être 'off').",
+    "La plupart des setters appellent stateChanged(), qui n'envoie AIStateChange à l'UI que si un joueur est assis dans le véhicule.",
+    "UI/GE : guihooks 'AIStateChange' (état M) et 'AIStatusChange' ({status, category}, ex. 'route done'/'route') ; appels GE onAiModeChange(id, mode) et onAiRouteDone(id)."
+  ],
+  "fields": {
+    "mode": {"type": "string", "desc": "Mode principal de l'IA (voir notes). Défaut 'disabled'."},
+    "manualTargetName": {"type": "string|nil", "desc": "Nom du waypoint cible posé par setTarget (nil sinon, remis à nil par reset)."},
+    "debugMode": {"type": "string", "desc": "Mode de dessin debug ('off' par défaut)."},
+    "speedMode": {"type": "string|nil", "desc": "'set', 'limit', 'legal', 'off' ou nil."},
+    "routeSpeed": {"type": "number|nil", "desc": "Vitesse de route en m/s utilisée selon speedMode."},
+    "extAggression": {"type": "number", "desc": "Agressivité demandée de l'extérieur, défaut 0.3."},
+    "cutOffDrivability": {"type": "number", "desc": "Seuil de praticabilité (drivability) en dessous duquel les routes sont ignorées en mode 'span'. Défaut 0."},
+    "driveInLaneFlag": {"type": "string", "desc": "'on' ou 'off' : rester sur la voie légale. Défaut 'off'."},
+    "extAvoidCars": {"type": "string", "desc": "'on', 'off' ou 'auto' (défaut)."},
+    "pullOver": {"type": "boolean", "desc": "Demande de se ranger sur le côté (voir setPullOver). Défaut false."},
+    "debugDraw": {"type": "function", "desc": "Fonction de dessin debug appelée par la boucle principale ; nop par défaut, remplacée par aiDebugDraw quand le mode debug est actif."},
+    "updateGFX": {"type": "function", "desc": "Boucle de conduite appelée à chaque pas graphique ; nop tant que l'IA est désactivée, remplacée par la fonction interne ou par scriptai.updateGFX."}
+  },
+  "functions": {
+    "setMode": {
+      "desc": "Change le mode principal de l'IA et (ré)initialise la route, la carte routière (mapmgr.requestMap sauf slotTraffic) et le lissage de vitesse. Sans effet si le véhicule n'a pas de roues. Avec mode=nil, ré-applique simplement le mode courant. En 'disabled' coupe les commandes et la boucle updateGFX.",
+      "params": {"mode": {"type": "string|nil", "desc": "'disabled', 'manual', 'random', 'span', 'traffic', 'slotTraffic', 'flee', 'chase', 'follow', 'stop', 'script' ; nil pour conserver le mode courant."}},
+      "returns": [],
+      "internal": false
+    },
+    "setTarget": {
+      "desc": "Fixe un waypoint unique comme cible (mode 'manual') ; la validation du nom se fait au prochain pas de la boucle.",
+      "params": {"wp": {"type": "string", "desc": "Nom du waypoint de la carte routière."}},
+      "returns": [],
+      "internal": false
+    },
+    "setPath": {
+      "desc": "Fixe un chemin explicite (suite de noms de waypoints à suivre dans l'ordre) pour le mode 'manual'.",
+      "params": {"path": {"type": "string[]", "desc": "Noms de waypoints consécutifs formant un chemin."}},
+      "returns": [],
+      "internal": false
+    },
+    "driveUsingPath": {
+      "desc": "Interface principale pour faire suivre un parcours : met l'IA en mode 'manual' et configure chemin, vitesses, tours, conduite sur voie, agressivité et évitement. Il faut au moins path, wpTargetList ou script ; tout argument de mauvais type fait ignorer silencieusement l'appel. Avec script, la voiture est d'abord téléportée au point de départ du script.",
+      "params": {
+        "arg": {"type": "table", "desc": "Table d'options : path (string[], chemin de waypoints), wpTargetList (string[], cibles successives reliées par plus court chemin), script (table de {x,y,z,[r],[vl],[v],[dir],[up]} : r largeur, vl limite de vitesse, v vitesse imposée en ce point en m/s), wpSpeeds (table nom_waypoint -> vitesse m/s), noOfLaps (number, tours si boucle, défaut 1), routeSpeed (number m/s), routeSpeedMode ('limit' ou 'set'), driveInLane ('on', sinon inactif), aggression (0.3 à 1, défaut 0.3), avoidCars ('on'/'off', défaut 'off'), et réglages fins repris dans setParameters : driveStyle, staticFrictionCoefMult, lookAheadKv (min 0.1), understeerThrottleControl, oversteerThrottleControl, throttleTcs, abBrakeControl, underSteerBrakeControl, throttleKp, targetSpeedSmootherRate, turnForceCoef, springForceIntegratorDispLim."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setSpeed": {
+      "desc": "Fixe la vitesse de route (routeSpeed) ; toute valeur non numérique la remet à nil.",
+      "params": {"speed": {"type": "number|nil", "desc": "Vitesse en m/s."}},
+      "returns": [],
+      "internal": false
+    },
+    "setSpeedMode": {
+      "desc": "Définit comment routeSpeed est interprétée.",
+      "params": {"speedMode": {"type": "string|nil", "desc": "'set' (vise la vitesse), 'limit' (plafond), 'legal' (limites légales), 'off'. Toute autre valeur = nil."}},
+      "returns": [],
+      "internal": false
+    },
+    "setAggression": {
+      "desc": "Définit l'agressivité de conduite (M.extAggression) et l'applique immédiatement, puis notifie l'UI. nil conserve la valeur actuelle.",
+      "params": {"v": {"type": "number|nil", "desc": "Environ 0.3 (normal) à 1 (limite d'adhérence)."}},
+      "returns": [],
+      "internal": false
+    },
+    "setAggressionMode": {
+      "desc": "Active ou non le mode d'agressivité adaptatif.",
+      "params": {"aggrmode": {"type": "string|nil", "desc": "'rubberBand' pour l'élastique (utilisé automatiquement en flee/chase/follow) ; toute autre valeur le désactive et ré-applique l'agressivité externe."}},
+      "returns": [],
+      "internal": false
+    },
+    "setAvoidCars": {
+      "desc": "Active/désactive l'évitement des autres véhicules.",
+      "params": {"v": {"type": "string", "desc": "'on' ou 'off' (forcé) ; toute autre valeur (ex. 'auto') : retombe sur 'off' en modes manual/slotTraffic, 'on' sinon."}},
+      "returns": [],
+      "internal": false
+    },
+    "driveInLane": {
+      "desc": "Active ou non la conduite sur le côté légal de la route (affecte aussi la recherche de chemin).",
+      "params": {"v": {"type": "string", "desc": "'on' pour activer ; toute autre valeur désactive."}},
+      "returns": [],
+      "internal": false
+    },
+    "setParameters": {
+      "desc": "Fusionne (tableMerge) des réglages fins dans la table de paramètres de l'IA. Clés connues et défauts : turnForceCoef 2, awarenessForceCoef 0.25, edgeDist 0, trafficWaitTime 2, enableElectrics true, driveStyle 'default', staticFrictionCoefMult 0.95, lookAheadKv 0.6, minStTargetDist 4.5, applyWidthMarginOffset true, planErrorSmoothing true, springForceIntegratorDispLim 0.1, understeerThrottleControl/oversteerThrottleControl/throttleTcs 'on' (autre que 'off' = actif), abBrakeControl 'on', underSteerBrakeControl 'on', throttleKp 0.5, targetSpeedSmootherRate 10, str 1, stt 0.5.",
+      "params": {"data": {"type": "table", "desc": "Clés/valeurs à écraser dans les paramètres."}},
+      "returns": [],
+      "internal": false
+    },
+    "getParameters": {
+      "desc": "Renvoie la table des paramètres courants (référence directe, non copiée).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Paramètres de l'IA."}],
+      "internal": false
+    },
+    "dumpParameters": {
+      "desc": "Affiche (dump) les paramètres et l'agressivité interne dans la console.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setVehicleDebugMode": {
+      "desc": "Fusionne la table donnée dans l'état M (typiquement {debugMode = '...'}), prévient aiDebugDraw et active ou coupe le dessin debug selon que debugMode vaut 'off' ou non.",
+      "params": {"newMode": {"type": "table", "desc": "Ex. {debugMode = 'route'} ; valeurs : 'off', 'target', 'route', 'speeds', 'trajectory', 'rays', 'all'."}},
+      "returns": [],
+      "internal": false
+    },
+    "setState": {
+      "desc": "Applique un état complet (table de type M : mode, extAggression, extAvoidCars, driveInLaneFlag, debugMode, targetObjectID, etc.) en fusionnant dans M, ré-applique le mode et prévient le GE (onAiModeChange) si le mode change. Sans effet si le véhicule n'a pas de roues.",
+      "params": {"newState": {"type": "table", "desc": "État partiel ou complet."}},
+      "returns": [],
+      "internal": false
+    },
+    "getState": {
+      "desc": "Renvoie la table d'état publique M (référence directe).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "M."}],
+      "internal": false
+    },
+    "stateChanged": {
+      "desc": "Envoie l'état à l'UI (guihooks AIStateChange) si un joueur est assis dans ce véhicule.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onDeserialized": {
+      "desc": "Hook appelé par le système de sérialisation du véhicule après rechargement (Ctrl+R) : restaure l'état via setState.",
+      "params": {"v": {"type": "table", "desc": "État sauvegardé (même format que M)."}},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Appelée au reset du véhicule (touche I) : efface la cible manuelle, remet à zéro les états internes (trafic, crash, klaxon), lissages, et ré-applique le mode courant sans le changer. Arrête l'enregistrement de données si actif.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "toggleTrafficMode": {
+      "desc": "Bascule entre le mode 'traffic' (avec récupération après crash activée) et 'disabled'.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setSlotTrafficTarget": {
+      "desc": "Fournit une cible de position et vitesse pour le mode 'slotTraffic' (passe en ce mode si besoin). L'âge de la cible est remis à 0 à chaque appel.",
+      "params": {
+        "x": {"type": "number|nil", "desc": "Position monde X (nil = 0)."},
+        "y": {"type": "number|nil", "desc": "Position monde Y (nil = 0)."},
+        "z": {"type": "number|nil", "desc": "Position monde Z (nil = 0)."},
+        "speed": {"type": "number|nil", "desc": "Vitesse cible en m/s (min 0)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setRecoverOnCrash": {
+      "desc": "Autorise l'IA à tenter de se récupérer quand elle reste bloquée environ 5 s sans bouger malgré une cible.",
+      "params": {"val": {"type": "boolean", "desc": "true pour activer."}},
+      "returns": [],
+      "internal": false
+    },
+    "setPullOver": {
+      "desc": "Positionne M.pullOver (demande de se ranger sur le côté, lu par la logique de circulation).",
+      "params": {"val": {"type": "boolean", "desc": "true pour se ranger."}},
+      "returns": [],
+      "internal": false
+    },
+    "setTargetObjectID": {
+      "desc": "Choisit manuellement le véhicule cible (joueur) pour les modes flee/chase/follow. Passer -1 revient à la sélection automatique. Voir notes : la comparaison interne semble erronée.",
+      "params": {"id": {"type": "integer", "desc": "ID du véhicule cible, ou -1 pour aucun."}},
+      "returns": [],
+      "internal": false
+    },
+    "spanMap": {
+      "desc": "Met l'IA en mode 'span' : parcourt tout le réseau routier en passant sur chaque route.",
+      "params": {"cutOffDrivability": {"type": "number|nil", "desc": "Les routes de drivability inférieure sont ignorées (nil = 0)."}},
+      "returns": [],
+      "internal": false
+    },
+    "setCutOffDrivability": {
+      "desc": "Change seulement le seuil de praticabilité (cutOffDrivability) sans changer de mode.",
+      "params": {"drivability": {"type": "number|nil", "desc": "Seuil (nil = 0)."}},
+      "returns": [],
+      "internal": false
+    },
+    "laneChange": {
+      "desc": "Décale latéralement les nœuds du plan courant pour changer de voie, progressivement sur une distance donnée, en respectant la largeur de route.",
+      "params": {
+        "plan": {"type": "table|nil", "desc": "Plan à modifier ; nil = plan de la route courante (sans effet s'il n'y en a pas)."},
+        "dist": {"type": "number", "desc": "Distance (m) sur laquelle le déport est appliqué."},
+        "signedDisp": {"type": "number", "desc": "Déport latéral en m, signé (le signe donne le côté)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setStopPoint": {
+      "desc": "Définit le segment d'arrêt du plan : l'IA s'arrête à la distance donnée le long du plan. Sans dist, annule l'arrêt (stopSeg = math.huge).",
+      "params": {
+        "plan": {"type": "table|nil", "desc": "Plan ; nil = plan courant."},
+        "dist": {"type": "number|nil", "desc": "Distance d'arrêt en m, nil pour annuler."},
+        "args": {"type": "table|nil", "desc": "Option avoidJunction=true : repousse le point d'arrêt de 20 m en 20 m pour ne pas s'arrêter dans une intersection."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getEdgeLaneConfig": {
+      "desc": "Renvoie la configuration de voies d'une arête dans le sens fromNode -> toNode, sous forme de chaîne de '+' (voie dans le sens de parcours) et '-' (sens opposé). Si l'arête n'a pas de données de voies, elles sont déduites des rayons des nœuds (3.61 m par voie ; sens selon mapmgr.rules.rightHandDrive).",
+      "params": {
+        "fromNode": {"type": "string", "desc": "Nom du nœud de départ."},
+        "toNode": {"type": "string", "desc": "Nom du nœud d'arrivée."}
+      },
+      "returns": [{"type": "string", "desc": "Ex. '--++' ; erreur Lua si l'arête n'existe pas dans le graphe."}],
+      "internal": false
+    },
+    "roadNaturalContinuation": {
+      "desc": "Calcule, parmi les arêtes sortant de wp2, celle qui prolonge le plus naturellement l'arête wp1->wp2 (direction et flux de voies).",
+      "params": {
+        "wp1": {"type": "string", "desc": "Nœud précédent."},
+        "wp2": {"type": "string", "desc": "Nœud courant."}
+      },
+      "returns": [{"type": "any", "desc": "Nœud suivant retenu (déduit du code ; non relu en entier)."}],
+      "internal": false
+    },
+    "setSpeedProfileMode": {
+      "desc": "Choisit la méthode de génération du profil de vitesse.",
+      "params": {"mode": {"type": "string|nil", "desc": "'Back' (méthode arrière), 'ForwBack' (avant + arrière) ; autre = nil (méthode par défaut)."}},
+      "returns": [],
+      "internal": false
+    },
+    "setTractionModel": {
+      "desc": "Choisit la contrainte d'adhérence du profil de vitesse (utile seulement en profil 'Back' ou 'ForwBack').",
+      "params": {"model_index": {"type": "integer", "desc": "1 = modèle linéaire (acc_eval_1) ; toute autre valeur = modèle elliptique (acc_eval_2, défaut)."}},
+      "returns": [],
+      "internal": false
+    },
+    "setRacing": {
+      "desc": "Active/désactive l'option interne racing de l'IA.",
+      "params": {"v": {"type": "boolean", "desc": "true active ; toute autre valeur = false."}},
+      "returns": [],
+      "internal": false
+    },
+    "setEnableFastPhysicsforTraffic": {
+      "desc": "Autorise la physique simplifiée (collision propre et aérodynamique mode 2) pour les véhicules du trafic. Appliqué au prochain setMode('traffic').",
+      "params": {"v": {"type": "boolean", "desc": "true active ; autre = false."}},
+      "returns": [],
+      "internal": false
+    },
+    "isDriving": {
+      "desc": "Indique si la boucle de conduite (ou scriptai) est active.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si l'IA est en train de conduire."}],
+      "internal": false
+    },
+    "dumpCurrentRoute": {
+      "desc": "Affiche (dump) la route courante dans la console, pour debug.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "startStopDataLog": {
+      "desc": "Bascule l'enregistrement de données de conduite : au premier appel démarre, au suivant arrête et écrit un fichier CSV.",
+      "params": {"name": {"type": "string|nil", "desc": "Nom du fichier CSV."}},
+      "returns": [],
+      "internal": false
+    },
+    "saveGearboxMode": {
+      "desc": "Mémorise le mode de boîte actuel (electrics.values.gearboxMode) pour le restaurer plus tard ; sans effet s'il est déjà mémorisé. Pour debug.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "restoreSavedGearboxMode": {
+      "desc": "Restaure le mode de boîte mémorisé par saveGearboxMode via controller.mainController.setGearboxMode.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "startRecording": {
+      "desc": "Passe en mode 'script' et lance l'enregistrement d'une trajectoire via scriptai.",
+      "params": {"recordSpeed": {"type": "number|nil", "desc": "Paramètre de vitesse transmis à scriptai.startRecording (déduit du code)."}},
+      "returns": [],
+      "internal": false
+    },
+    "stopRecording": {
+      "desc": "Arrête l'enregistrement (mode repasse à 'disabled') et renvoie le script enregistré.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Script (liste de points) renvoyé par scriptai.stopRecording."}],
+      "internal": false
+    },
+    "startFollowing": {
+      "desc": "Fait suivre un script enregistré. Si le script (ou script.path) contient des points avec vitesse v, passe par driveUsingPath{script=...} ; sinon utilise scriptai en mode 'script'.",
+      "params": {"...": {"type": "any", "desc": "Premier argument : script (table, ou table avec champ path) ; arguments suivants transmis à scriptai.startFollowing."}},
+      "returns": [],
+      "internal": false
+    },
+    "stopFollowing": {
+      "desc": "Alias de scriptStop : arrête le suivi de script, mode 'disabled'.",
+      "params": {"...": {"type": "any", "desc": "Transmis à scriptai.scriptStop."}},
+      "returns": [],
+      "internal": false
+    },
+    "scriptStop": {
+      "desc": "Arrête la lecture de script : mode 'disabled' puis scriptai.scriptStop.",
+      "params": {"...": {"type": "any", "desc": "Transmis à scriptai.scriptStop."}},
+      "returns": [],
+      "internal": false
+    },
+    "scriptState": {
+      "desc": "Renvoie l'état du script en cours selon scriptai.scriptState.",
+      "params": {},
+      "returns": [{"type": "any", "desc": "État renvoyé par scriptai.scriptState."}],
+      "internal": false
+    },
+    "setScriptDebugMode": {
+      "desc": "Active le dessin debug du suivi de script (scriptai.debugMode = mode). Avec nil ou 'off', désactive le dessin (voir notes).",
+      "params": {"mode": {"type": "string|nil", "desc": "Mode debug de scriptai ; nil ou 'off' pour couper."}},
+      "returns": [],
+      "internal": false
+    }
+  },
+  "classes": {
+    "twt": {
+      "desc": "État interne du sous-système de manœuvre de demi-tour/recul (twt) : compteurs, rayons et lisseurs. Table locale non exportée par M, listée par l'extraction automatique.",
+      "functions": {
+        "reset": {"desc": "Remet à zéro l'état twt (état, rayons minimaux, bruit bleu, vitesse cible et lisseurs). Appelée en interne.", "internal": true}
+      }
+    }
+  }
+}

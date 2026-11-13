@@ -1,0 +1,168 @@
+{
+  "path": "lua/ge/extensions/core/paths.lua",
+  "module": "Extension GE `core_paths` : gestion des chemins de caméra (fichiers *.camPath.json) utilisés par la caméra 'path' et par l'éditeur de trajectoires. Elle charge, crée, sauvegarde et supprime des chemins, les joue via core_camera, et fournit l'évaluation des pistes de transformation (position, orientation, FOV) avec courbes de Bézier temporelles. Au démarrage d'un niveau, elle charge tous les camPaths du dossier `camPaths` à côté du fichier de niveau.",
+  "usage": "local p = core_paths.loadPath('/levels/gridmap_v2/camPaths/intro.camPath.json')\nif p then core_paths.playPath(p, 0) end\n-- plus tard\ncore_paths.stopCurrentPath()",
+  "notes": [
+    "Un chemin est une table { name, markers = {...}, looped, loopTime, filename, id, dirty, manualFov, transformTracks, advancedMode, replay }. Chaque marker a pos (vec3), rot (quat), time, fov, positionSmooth, bullettime, cut, movingStart, movingEnd, trackPosition, attachToVehicle, trackOffset, plus les familles Bézier <prefix>In/Out/InTime/OutTime.",
+    "À la sauvegarde, pos et rot sont convertis en tables {x,y,z[,w]}, la version écrite est \"6\", et les valeurs par défaut (positionSmooth 0.5, Bézier 1 et 1/3, bullettime 1) sont retirées pour garder des fichiers compacts. savePath ne gère pas marker.pos ou marker.rot nil.",
+    "loadPath réutilise un chemin déjà chargé avec le même `filename`. Il inverse le signe d'un quaternion si le produit scalaire avec le précédent est négatif (évite le chemin long). Il ne vérifie pas que `markers` existe dans le JSON.",
+    "Les pistes de transformation (transformTracks) sont des listes de clés { t, v, slopeIn, slopeOut, timeIn, timeOut } par canal (voir transformChannels). Les angles yaw et roll sont en degrés, interpolés par le plus court chemin lors du bouclage.",
+    "Une marque `cut` est un saut net : les clés avant et après la coupure ne sont pas interpolées entre elles.",
+    "getPath (ancien, nommé getPath_Deprecated dans le code) lit un objet SimPath de la scène, pas un fichier camPath ; sans argument il prend le premier SimPath. Il ne renvoie rien si aucun SimPath n'existe. Boucle `for i = 0, res.nodeCount` : parcourt un indice de plus que le nombre de nœuds (déduit du code).",
+    "onClientStartMission : remplace la liste des chemins ; les doublons de nom reçoivent un suffixe '(n)'. Elle plante si loadPath renvoie nil pour un fichier (path.name sur nil)."
+  ],
+  "fields": {
+    "motionPrefixes": {"type": "string[]", "desc": "Familles de Bézier temporelles : 'motion' (position), 'rotMotion' (orientation entière), puis 'yawMotion', 'pitchMotion', 'rollMotion' (un axe d'Euler chacun)."},
+    "transformChannels": {"type": "string[]", "desc": "Canaux des pistes de transformation : posX, posY, posZ, yaw, pitch, roll, fov."}
+  },
+  "functions": {
+    "invertCubicBezier": {
+      "desc": "Inverse d'une Bézier cubique monotone x(t) = cubicBezier(a, b, t) sur [0, 1], par Newton (8 itérations). Exacte aux bornes : u<=0 donne 0, u>=1 donne 1.",
+      "params": {
+        "a": {"type": "number", "desc": "Premier point de contrôle (abscisse)."},
+        "b": {"type": "number", "desc": "Second point de contrôle (abscisse)."},
+        "u": {"type": "number", "desc": "Valeur cible, bornée à [0, 1]."}
+      },
+      "returns": [{"type": "number", "desc": "Paramètre t dans [0, 1]."}],
+      "internal": false
+    },
+    "loopDuration": {
+      "desc": "Durée de la transition de bouclage d'un chemin : 0 si le chemin n'est pas `looped`, sinon loopTime (min 0), ou 2 s si loopTime est absent.",
+      "params": {"path": {"type": "table|nil", "desc": "Chemin de caméra."}},
+      "returns": [{"type": "number", "desc": "Durée en secondes."}],
+      "internal": false
+    },
+    "evalTransformTrack": {
+      "desc": "Évalue une piste de clés { t, v, ... } au temps t par interpolation Bézier entre clés, avec gestion des coupures (cuts) et du bouclage (wrap).",
+      "params": {
+        "keys": {"type": "table[]", "desc": "Clés triées par t."},
+        "t": {"type": "number", "desc": "Temps en secondes."},
+        "wrap": {"type": "table|nil", "desc": "{ duration, fromT, unwrapDeg } pour la transition de fin vers la première clé."},
+        "cuts": {"type": "number[]|nil", "desc": "Temps des coupures nettes."}
+      },
+      "returns": [{"type": "number|nil", "desc": "Valeur, ou nil si la piste est vide ou t est nil."}],
+      "internal": false
+    },
+    "cloneTransformTracks": {
+      "desc": "Copie propre des pistes de transformation, en ne gardant que les canaux de transformChannels et les champs t, v, slopeIn, slopeOut, timeIn, timeOut.",
+      "params": {"tracks": {"type": "table|nil", "desc": "Table canal -> liste de clés."}},
+      "returns": [{"type": "table|nil", "desc": "Copie, ou nil si tracks n'est pas une table."}],
+      "internal": false
+    },
+    "evalTransform": {
+      "desc": "Évalue tous les canaux (pos, yaw/pitch/roll, fov) du chemin au temps t.",
+      "params": {
+        "path": {"type": "table|nil", "desc": "Chemin avec transformTracks."},
+        "t": {"type": "number", "desc": "Temps en secondes."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Table canal -> valeur ; nil si le chemin n'a pas de pistes ou si aucun canal ne donne de valeur."}],
+      "internal": false
+    },
+    "getUniquePathName": {
+      "desc": "Renvoie un nom non utilisé par les chemins chargés : le nom tel quel, sinon avec suffixe numérique (name1, name2...).",
+      "params": {"name": {"type": "string", "desc": "Nom souhaité."}},
+      "returns": [{"type": "string", "desc": "Nom unique."}],
+      "internal": false
+    },
+    "getMarkerIds": {
+      "desc": "Renvoie les 4 indices de marqueurs (précédent, courant, suivant, suivant+1) utilisés pour interpoler le segment idx. Gère le bouclage (modulo) et les coupures (`cut`), qui dupliquent l'indice voisin.",
+      "params": {
+        "path": {"type": "table", "desc": "Chemin de caméra."},
+        "idx": {"type": "integer", "desc": "Indice (base 1) du marqueur de début de segment."}
+      },
+      "returns": [{"type": "integer", "desc": "index1, index2, index3, index4 (quatre valeurs)."}],
+      "internal": false
+    },
+    "addPath": {
+      "desc": "Ajoute un chemin à la liste et lui attribue le plus petit id libre (champ path.id modifié).",
+      "params": {"path": {"type": "table", "desc": "Chemin à ajouter."}},
+      "returns": [],
+      "internal": false
+    },
+    "createPath": {
+      "desc": "Crée un chemin vide { name, markers = {}, manualFov = true, dirty = true } et l'ajoute.",
+      "params": {"name": {"type": "string", "desc": "Nom du chemin (non rendu unique automatiquement)."}},
+      "returns": [{"type": "table", "desc": "Le chemin créé."}],
+      "internal": false
+    },
+    "deletePath": {
+      "desc": "Retire de la liste le premier chemin portant le même name que celui donné. Ne supprime aucun fichier.",
+      "params": {"path": {"type": "table", "desc": "Chemin (comparé par name)."}},
+      "returns": [],
+      "internal": false
+    },
+    "getPaths": {
+      "desc": "Renvoie la table interne des chemins chargés (pas une copie).",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Liste des chemins."}],
+      "internal": false
+    },
+    "getEndIdx": {
+      "desc": "Indice du dernier segment jouable : nombre de marqueurs si le chemin boucle, sinon nombre moins 1.",
+      "params": {"path": {"type": "table", "desc": "Chemin de caméra."}},
+      "returns": [{"type": "integer", "desc": "Dernier indice de segment."}],
+      "internal": false
+    },
+    "savePath": {
+      "desc": "Écrit le chemin dans un fichier JSON (version 6) et met à jour cameraPath.filename et dirty = false.",
+      "params": {
+        "cameraPath": {"type": "table", "desc": "Chemin à sauvegarder."},
+        "filename": {"type": "string", "desc": "Fichier de destination (ex. .camPath.json)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "loadPath": {
+      "desc": "Charge un chemin depuis un fichier camPath.json et l'ajoute à la liste ; renvoie le chemin existant si ce fichier est déjà chargé.",
+      "params": {"pathFileName": {"type": "string|nil", "desc": "Fichier à lire ; nil renvoie nil."}},
+      "returns": [{"type": "table|nil", "desc": "Le chemin, ou nil si le fichier est introuvable (erreur dans le log)."}],
+      "internal": false
+    },
+    "getPath": {
+      "desc": "Ancienne fonction (getPath_Deprecated) : lit un SimPath de la scène et renvoie ses marqueurs. Sans argument, prend le premier SimPath du niveau.",
+      "params": {"pathName": {"type": "string|nil", "desc": "Nom de l'objet SimPath."}},
+      "returns": [{"type": "table|nil", "desc": "{ markers, looped, nodeCount }, ou nil si introuvable."}],
+      "internal": false
+    },
+    "playPath": {
+      "desc": "Joue un chemin avec la caméra 'path' (core_camera.setByName(0, 'path', ...)). initData reçoit useJsonVersion, hasIntro, path, offset, et des reset/getNextPath par défaut.",
+      "params": {
+        "path": {"type": "table", "desc": "Chemin à jouer."},
+        "offset": {"type": "number|nil", "desc": "Décalage de départ (0 par défaut ; unité déduite : secondes)."},
+        "initData": {"type": "table|nil", "desc": "Options supplémentaires pour la caméra ; modifié en place."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "stopCurrentPath": {
+      "desc": "Si la caméra active est 'path', passe en caméra libre (commands.setFreeCamera).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onClientStartMission": {
+      "desc": "Hook appelé au démarrage d'un niveau : vide la liste et charge tous les fichiers *.camPath.json du dossier 'camPaths' voisin du fichier de niveau.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement de l'extension ; ne fait rien.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook de sauvegarde avant rechargement Lua : renvoie une copie profonde des chemins.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{ paths = ... }"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook de restauration après rechargement Lua : remet les chemins sauvegardés.",
+      "params": {"data": {"type": "table", "desc": "Table renvoyée par onSerialize."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

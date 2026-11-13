@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/handheld.lua",
+  "module": "Filtre de caméra « à l'épaule » : la direction de visée suit la cible via un ressort amorti et l'horizon se penche légèrement selon la force (effet caméra portée à la main). Module masqué (isFilter, hidden). Renvoie un constructeur.",
+  "notes": ["La page extraite indique init(damping, rotspring) mais le code définit init(spring, damping, rotspring).", "Valeurs par défaut : k = 20, damping = 5, rotk = 3. Avec une session OpenXR, l'axe haut reste (0,0,1)."],
+  "classes": {
+    "C": {
+      "desc": "Filtre à ressort sur la direction de visée.",
+      "functions": {
+        "init": {"desc": "Initialise les paramètres du ressort et force une réinitialisation de la direction au prochain update.", "params": {"spring": {"type": "number|nil", "desc": "raideur (20 par défaut)"}, "damping": {"type": "number|nil", "desc": "amortissement (5 par défaut)"}, "rotspring": {"type": "number|nil", "desc": "raideur de l'inclinaison de l'horizon (3 par défaut)"}}},
+        "update": {"desc": "Calcule data.res.rot depuis la direction lissée de data.res.pos vers data.res.targetPos.", "params": {"data": {"type": "table", "desc": "camData"}}, "returns": [{"type": "boolean", "desc": "toujours true"}], "internal": true}
+      }
+    }
+  }
+}

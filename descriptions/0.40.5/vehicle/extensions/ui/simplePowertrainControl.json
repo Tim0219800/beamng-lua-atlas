@@ -1,0 +1,46 @@
+{
+  "path": "lua/vehicle/extensions/ui/simplePowertrainControl.lua",
+  "module": "Pont entre le véhicule et les boutons de contrôle simplifié du groupe motopropulseur affichés dans l'UI. setButton envoie l'événement UI `ChangePowerTrainButtons` (créer, mettre à jour ou retirer un bouton) ; updateButtons demande à powertrain et aux contrôleurs de republier leurs boutons. Les modules powertrain/controller s'en servent, un moddeur peut y ajouter ses propres boutons.",
+  "usage": "ui_simplePowertrainControl.setButton('myBtn', 'Mon bouton', 'iconId', '#ff8800', 0.5, 'controller.getController(\"x\").toggle()', false, true)",
+  "notes": [
+    "Le champ `players` envoyé à l'UI est la liste triée des index de joueurs assis (playerInfo.seatedPlayers).",
+    "La couleur est normalisée : si c'est une chaîne non vide sans '#' initial, un '#' est ajouté ; sinon (nil ou autre type) elle devient nil.",
+    "onClickCallback est transmis tel quel à l'UI (champ onClick) ; il s'agit d'une valeur que l'UI renverra, vraisemblablement une chaîne de code Lua (déduit du code, non vérifié ici)."
+  ],
+  "fields": {},
+  "functions": {
+    "setButton": {
+      "desc": "Publie un bouton de contrôle simplifié vers l'UI via guihooks.trigger('ChangePowerTrainButtons', {...}).",
+      "params": {
+        "id": {"type": "string", "desc": "Identifiant du bouton."},
+        "uiName": {"type": "string", "desc": "Texte d'infobulle (champ tooltip)."},
+        "icon": {"type": "string", "desc": "Identifiant d'icône."},
+        "color": {"type": "string|nil", "desc": "Couleur hexadécimale ; '#' ajouté si absent."},
+        "ringValue": {"type": "number|any", "desc": "Valeur de l'anneau de progression du bouton (transmise telle quelle)."},
+        "onClickCallback": {"type": "string|any", "desc": "Callback transmis à l'UI (champ onClick)."},
+        "remove": {"type": "boolean|nil", "desc": "true pour retirer le bouton."},
+        "active": {"type": "boolean|nil", "desc": "État actif du bouton."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "updateButtons": {
+      "desc": "Appelle powertrain.updateSimpleControlButtons() puis controller.updateSimpleControlButtons() pour que chaque module republie ses boutons.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onInit": {
+      "desc": "Hook d'initialisation du véhicule ; corps vide.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onReset": {
+      "desc": "Hook de reset du véhicule ; corps vide.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

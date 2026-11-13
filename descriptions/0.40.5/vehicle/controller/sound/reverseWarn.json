@@ -1,0 +1,17 @@
+{
+  "path": "lua/vehicle/controller/sound/reverseWarn.lua",
+  "module": "Contrôleur auxiliaire de bip de marche arrière. Tous les 0.5 s, il teste un electric (par défaut « reverse ») : s'il est > 0, il démarre une boucle sonore de bip ; sinon il l'arrête.",
+  "notes": [
+    "Clés jbeam lues : electricsName (\"reverse\"), beepLoopName (\"event:>Vehicle>Electrics>Reverse>Beep_01\"), beepVolume (1), soundNode_nodes (premier élément = nœud, 0 sinon).",
+    "La source sonore est créée à la première activation (obj:createSFXSource2, AudioDefaultLoop3D) ; le test n'a lieu que toutes les 0.5 s donc la réaction peut avoir jusqu'à 0.5 s de retard.",
+    "reset ne coupe pas le son : isWarning est remis à false mais la boucle déjà lancée n'est pas arrêtée."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "init": {"desc": "Lit la configuration jbeam.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "reset": {"desc": "Remet l'état et le minuteur à zéro.", "internal": true},
+    "updateGFX": {"desc": "Chaque frame : démarre ou arrête le bip selon l'electric.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true}
+  }
+}

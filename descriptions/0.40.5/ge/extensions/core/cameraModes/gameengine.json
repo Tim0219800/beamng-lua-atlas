@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/gameengine.lua",
+  "module": "Filtre global final (runningOrder 1) qui envoie la pose calculée (data.res) au moteur de rendu : pour la vue principale, setCameraPosRotFovNearClipC (avec OpenXR, combine d'abord la pose prédite du casque) ; pour un contexte supplémentaire (split-screen, flux vidéo), RenderViewManagerInstance:updateViewCamera avec projection orthographique optionnelle (res.ortho). Marque la vue principale 'cameraMotionContinuous' pendant les transitions de la grande carte. Renvoie un constructeur.",
+  "notes": ["Les vues split-screen plus étroites que 16:9 reçoivent un FOV élargi (33 % de la compensation théorique). Plan lointain fixé à 2000 m pour les vues supplémentaires.", "Ne vérifie pas levelLoaded : core_cameraUpdate ne tourne que niveau chargé."],
+  "classes": {
+    "C": {
+      "desc": "Filtre de sortie vers le moteur.",
+      "functions": {
+        "init": {"desc": "isGlobal = true, runningOrder = 1, isFilter = true, hidden = true.", "internal": true},
+        "update": {"desc": "Pousse data.res vers la vue principale ou vers data.renderView.", "params": {"data": {"type": "table", "desc": "camData (data.renderView = nom de vue, 'main' pour le joueur)"}}, "internal": true}
+      }
+    }
+  }
+}

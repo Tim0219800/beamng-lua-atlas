@@ -1,0 +1,87 @@
+{
+  "path": "lua/ge/extensions/mcp/tools/spawn.lua",
+  "module": "Outils MCP de spawn : lister les configurations d'un modèle, faire apparaître ou remplacer un véhicule, et tester automatiquement toutes les configurations d'un modèle (spawn de chacune puis relevé des erreurs de log et des instabilités physiques). Utile pour valider un mod de véhicule.",
+  "notes": [
+    "test_configs est une machine à états pilotée par onUpdate : phase 'spawn' (remplace le véhicule par la config courante) puis 'wait' (après `delay` secondes, lit le log). Seules les lignes d'erreur « |E| » mentionnant le modèle, « jbeam », « skin », « slot » ou « flexbod » sont comptées ; 3 exemples max par config.",
+    "Appel de test_configs : premier appel = démarrage ; appels suivants = progression {running, model, done, total, current} ; à la fin, un appel renvoie le rapport final (qui est ensuite consommé).",
+    "Les configs sont triées par clé."
+  ],
+  "fields": {
+    "schemas": {
+      "type": "table<string, table>",
+      "desc": "Schémas de get_configs, spawn et test_configs."
+    }
+  },
+  "functions": {
+    "onUpdate": {
+      "desc": "Appelé chaque frame : avance le test de configurations (spawn, attente, analyse du log et de shared.instabilityLog, passage à la config suivante, rapport final dans shared.asyncResults.testConfigs).",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "Durée réelle (s)."
+        }
+      },
+      "internal": true
+    },
+    "get_configs": {
+      "desc": "Liste triée des clés de configuration (.pc) d'un modèle via core_vehicles.getModel.",
+      "params": {
+        "args": {
+          "type": "table|nil",
+          "desc": "{model?: string} (défaut : modèle du véhicule joueur)."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "JSON {model, configs}."
+        },
+        {
+          "type": "boolean",
+          "desc": "true en cas d'erreur."
+        }
+      ],
+      "internal": false
+    },
+    "spawn": {
+      "desc": "Fait apparaître un véhicule : remplace le véhicule courant (core_vehicles.replaceVehicle) ou, avec add=true, en ajoute un (core_vehicles.spawnNewVehicle).",
+      "params": {
+        "args": {
+          "type": "table|nil",
+          "desc": "{model?: string, config?: string (clé ou chemin .pc), add?: boolean}"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Message de confirmation."
+        },
+        {
+          "type": "boolean",
+          "desc": "true en cas d'erreur."
+        }
+      ],
+      "internal": false
+    },
+    "test_configs": {
+      "desc": "Teste chaque config d'un modèle (asynchrone, long). Voir les notes pour le protocole d'appels.",
+      "params": {
+        "args": {
+          "type": "table|nil",
+          "desc": "{model?: string, delay?: number s d'attente par config (défaut 3)}"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "JSON de progression ou rapport {model, total, results:[{config, ok, errorCount, errors, unstable}]}."
+        },
+        {
+          "type": "boolean",
+          "desc": "true en cas d'erreur."
+        }
+      ],
+      "internal": false
+    }
+  }
+}

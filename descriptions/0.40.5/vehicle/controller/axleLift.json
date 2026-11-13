@@ -1,0 +1,67 @@
+{
+  "path": "lua/vehicle/controller/axleLift.lua",
+  "module": "Contrôleur auxiliaire qui lève ou abaisse des essieux (typiquement les essieux relevables d'un camion) pour gagner de la garde au sol. Il écrit une position cible dans deux valeurs `electrics.values` (avant et arrière) que lit le jbeam. Trois modes : auto (lève sauf si vitesse trop haute, vitesse trop basse, frein à main serré ou accélération latérale trop forte), manual (toujours levé) et off (toujours abaissé).",
+  "usage": "controller.getControllerSafe(\"axleLift\").setMode(\"manual\", true)\ncontroller.getControllerSafe(\"axleLift\").setParameters({velocityThresholdDisable = 10})",
+  "notes": [
+    "Clés jbeam lues par init : `velocityThresholdDisable` (14 m/s, au-dessus l'essieu redescend), `velocityThresholdEnable` (0.1 m/s, en dessous il redescend), `accelerationThreshold` (3 m/s², sur |sensors.gy2|), `frontLoweredPosition`/`rearLoweredPosition` (0), `frontRaisedPosition`/`rearRaisedPosition` (1), `frontAxleLiftElectricsName` (\"strut_F_axleLift\"), `rearAxleLiftElectricsName` (\"strut_R_axleLift\").",
+    "Le mode d'état est sauvegardé sous la clé `<nom du contrôleur>Mode` dans getState/setState.",
+    "Après `reset`, les electrics sont remis à 0 mais le mode n'est pas réinitialisé (init n'est pas rappelé car `reset` existe).",
+    "Le menu radial n'est ajouté qu'une fois (hasBuiltPie)."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "updateGFX": {
+      "desc": "Chaque frame : choisit la position levée ou abaissée selon le mode (en auto : vitesse lissée, vitesse de roue, frein à main, accélération latérale) et l'écrit dans les deux electrics d'essieu.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "setMode": {
+      "desc": "Change le mode (\"auto\", \"manual\" ou \"off\"). Un mode inconnu est ignoré. Affiche un message UI sauf si silent.",
+      "params": {
+        "mode": {"type": "string", "desc": "\"auto\", \"manual\" ou \"off\"."},
+        "silent": {"type": "boolean|nil", "desc": "true pour ne pas afficher de message."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "toggleMode": {
+      "desc": "Passe au mode suivant dans l'ordre auto, manual, off, auto.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "reset": {
+      "desc": "Remet les deux valeurs electrics d'essieu à 0.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Lit les paramètres jbeam, met les electrics à 0, passe en mode auto et ajoute l'entrée du menu radial.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setParameters": {
+      "desc": "Modifie à chaud les seuils et le mode ; seuls les champs présents sont appliqués.",
+      "params": {"parameters": {"type": "table", "desc": "Champs facultatifs : mode, accelerationThreshold, velocityThresholdDisable, velocityThresholdEnable."}},
+      "returns": [],
+      "internal": false
+    },
+    "getState": {
+      "desc": "Renvoie le mode courant sous la clé `<nom>Mode`.",
+      "params": {},
+      "returns": [{"type": "table<string, string>", "desc": "Table d'état."}],
+      "internal": false
+    },
+    "setState": {
+      "desc": "Restaure le mode depuis une table d'état (silencieusement) si la valeur est valide.",
+      "params": {"data": {"type": "table|nil", "desc": "Table contenant la clé `<nom>Mode`."}},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

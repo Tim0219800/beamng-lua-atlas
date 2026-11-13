@@ -1,0 +1,18 @@
+{
+  "path": "lua/vehicle/controller/propAnimation/hPattern.lua",
+  "module": "Contrôleur auxiliaire d'animation d'un levier de vitesses en H (boîte manuelle). Suit le rapport engagé du device « gearbox » et déplace un levier virtuel sur deux axes (electrics hPatternAxisX / hPatternAxisY) en passant par la grille : en engagement, il se déplace d'abord en X puis en Y ; en dégagement, d'abord en Y puis en X. Joue un son d'engagement et de dégagement avec l'agressivité de passage. Les changements de rapport rapides sont mis en file (dequeue) pour être animés l'un après l'autre.",
+  "notes": [
+    "Clés jbeam lues : gearCoordinates (table d'en-tête avec colonnes gearIndex, x, y), electricsNameXAxis (\"hPatternAxisX\"), electricsNameYAxis (\"hPatternAxisY\"), supportedGearboxTypes ({\"manualGearbox\"}), relevantGearboxName (\"gearbox\"), shiftSoundNode_nodes (premier élément = nœud du son, sinon 0 + log W), shiftSoundEventHPatternGearIn (\"event:>Vehicle>Interior>Gearshift>manual_modern_01_in\"), shiftSoundEventHPatternGearOut (\"..._01_out\"), shiftSoundVolumeHPatternGearIn / GearOut (0.5), demoMode (false).",
+    "Lit controller.mainController.shiftingAggression (vitesse d'animation entre 0.3 et 1 fois la vitesse de base) et electrics.values.isShifting.",
+    "Si le device est introuvable ou d'un type non supporté, log E et updateGFX devient nop ; demoMode réactive updateGFX et parcourt les rapports automatiquement (démonstration).",
+    "Au point mort, après la fin du passage, X est recentré sur la coordonnée du rapport 0."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "init": {"desc": "Lit les coordonnées de la grille en H, vérifie le device de boîte et initialise sons et file de rapports.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
+    "reset": {"desc": "Remet le levier à (0, 0), vide la file de rapports et réinitialise lisseurs et démo.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "updateGFX": {"desc": "Chaque frame : met en file les changements de rapport, déplace le levier en X/Y, joue les sons et publie les electrics.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true}
+  }
+}

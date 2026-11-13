@@ -1,0 +1,44 @@
+{
+  "path": "lua/ge/extensions/core/vehicle/colors.lua",
+  "module": "Extension GE `core_vehicle_colors` : change en direct la couleur ou la peinture d'un des 3 emplacements de peinture du véhicule configuré (core_vehicle_configTarget), met à jour les meshes via core_vehicle_manager.liveUpdateVehicleColors, puis enregistre les peintures dans la config via core_vehicle_partmgmt.setConfigPaints (sans respawn). Utilisé par l'UI de configuration du véhicule.",
+  "usage": "-- Peinture complète sur l'emplacement 1 du véhicule du joueur\ncore_vehicle_colors.setVehiclePaint(1, createVehiclePaint({x=0.8,y=0.1,z=0.1,w=1}, {0.5,0.5,0.8,0.1}))\n-- Couleur depuis une chaîne 'r g b a metallic roughness clearcoat clearcoatRoughness' (alpha de 0 à 2)\ncore_vehicle_colors.setVehicleColor(0, '0.8 0.1 0.1 2 0.5 0.5 0.8 0.1')",
+  "notes": [
+    "setVehicleColor prend un index JS (base 0) alors que setVehiclePaint prend un index Lua (base 1).",
+    "colorStringToColorTable fait planter la fonction (erreur d'arithmétique sur nil) si la chaîne contient moins de 4 nombres.",
+    "Le 4e composant de la chaîne couleur va de 0 à 2 ; il est ramené à 0..1 par colorStringToColorTable puis remultiplié par 2 dans updateVehicleDataPaint avant createVehiclePaint."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{'core_vehicle_configTarget'}"}
+  },
+  "functions": {
+    "colorStringToColorTable": {
+      "desc": "Convertit une chaîne 'r g b a [...]' (nombres séparés par des espaces) en tableau de nombres ; le 4e élément (0..2) est ramené à 0..1 (multiplié par 0.5 et borné).",
+      "params": {"colorString": {"type": "string|nil", "desc": "ex. '0.5 0.2 0.1 1.2'"}},
+      "returns": [{"type": "number[]|nil", "desc": "tableau de nombres ; nil si colorString est nil"}]
+    },
+    "setVehicleColor": {
+      "desc": "Définit la couleur d'un emplacement de peinture depuis une chaîne (8 nombres : r g b a puis 4 valeurs métalliques), met à jour le véhicule en direct et enregistre toutes les peintures dans la config.",
+      "params": {
+        "index": {"type": "integer", "desc": "emplacement de peinture, base 0 (0 à 2)"},
+        "colorString": {"type": "string", "desc": "'r g b a metallic roughness clearcoat clearcoatRoughness'"},
+        "objID": {"type": "integer|nil", "desc": "véhicule ; nil = cible de configuration ou joueur 0"}
+      },
+      "returns": []
+    },
+    "setVehiclePaint": {
+      "desc": "Applique une table de peinture à un emplacement, met à jour le véhicule en direct et enregistre les peintures dans la config.",
+      "params": {
+        "index": {"type": "integer", "desc": "emplacement de peinture, base 1 (1 à 3)"},
+        "paint": {"type": "table", "desc": "peinture {baseColor, metallic, roughness, clearcoat, clearcoatRoughness}"},
+        "objID": {"type": "integer|nil", "desc": "véhicule ; nil = cible de configuration ou joueur 0"}
+      },
+      "returns": []
+    },
+    "onVehicleSpawned": {
+      "desc": "Hook : un véhicule apparaît. Recopie ses 3 couleurs réelles (veh.color, colorPalette0, colorPalette1 + données métalliques) dans vehicleData.config.paints, arrondies à 4 décimales, pour que la config reflète la peinture réelle.",
+      "params": {"vehId": {"type": "integer", "desc": "véhicule"}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

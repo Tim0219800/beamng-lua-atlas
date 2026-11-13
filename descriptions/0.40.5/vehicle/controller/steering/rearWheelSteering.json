@@ -1,0 +1,19 @@
+{
+  "path": "lua/vehicle/controller/steering/rearWheelSteering.lua",
+  "module": "Contrôleur auxiliaire de direction des roues arrière. En mode feedForward, il calcule une sortie de braquage arrière à partir d'une carte (vitesse des roues, braquage avant) et la publie dans electrics.values.rws (nom configurable) pour qu'un contrôle de direction jbeam l'utilise. Le mode closedLoop n'est pas implémenté.",
+  "notes": [
+    "Clés jbeam lues : mode (\"feedForward\" ou \"closedLoop\", défaut feedForward), rearSteeringOutputElectricsName (\"rws\"), feedForwardMapData (données d'interpolatedMap : x = vitesse en m/s, y = braquage avant electrics steering_input -> sortie), obligatoire en feedForward.",
+    "Lit electrics.values.steering_input et wheelspeed.",
+    "closedLoop : log W « not implemented » et updateGFX ne fait rien.",
+    "Mode invalide : log E mais M.updateGFX reçoit nil.",
+    "Sans feedForwardMapData : log E, init retourne, la carte reste nil et updateGFX (déjà affecté) échouera à l'appel de feedForwardMap:get."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "updateGFX": {"type": "function|nil", "desc": "Affecté dans init selon le mode."}
+  },
+  "functions": {
+    "init": {"desc": "Choisit la fonction de mise à jour selon le mode et charge la carte feedForward.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "reset": {"desc": "Remet l'electric de sortie à 0.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true}
+  }
+}

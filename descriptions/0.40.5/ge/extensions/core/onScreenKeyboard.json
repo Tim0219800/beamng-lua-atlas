@@ -1,0 +1,43 @@
+{
+  "path": "lua/ge/extensions/core/onScreenKeyboard.lua",
+  "module": "Extension GE `core_onScreenKeyboard` : façade vers les claviers virtuels de la plateforme (Steam Deck, console...). Elle ouvre le clavier avec un titre, un texte initial, une longueur maximale et un type d'entrée, et relaie à l'interface le résultat via guihooks 'onScreenKeyboardClosed'.",
+  "usage": "if core_onScreenKeyboard.isOnScreenKeyboardAvailable() then\n  core_onScreenKeyboard.openOnScreenKeyboard('Nom', 'Votre nom', '', 32)\nend",
+  "notes": [
+    "Deux types de claviers selon la plateforme (commentaire du code) : (1) 'fire and forget' qui envoie les touches directement au jeu (Steam Deck) ; (2) qui ne les envoie pas mais renvoie le texte complet une fois via onScreenKeyboardClosed quand l'utilisateur valide (PS5).",
+    "openOnScreenKeyboard et isOnScreenKeyboardAvailable sont des fonctions globales fournies par le moteur ; sans elles, l'ouverture est ignorée et isOnScreenKeyboardAvailable (la version Lua) lèvera une erreur car elle l'appelle sans vérifier."
+  ],
+  "fields": {},
+  "functions": {
+    "openOnScreenKeyboard": {
+      "desc": "Ouvre le clavier virtuel de la plateforme (si la fonction globale du moteur existe). Une maxLength non numérique ou <= 0 devient 1000 ; placeholder et initialText valent '' par défaut, inputType 'string'.",
+      "params": {
+        "title": {"type": "string", "desc": "Titre du clavier."},
+        "placeholder": {"type": "string|nil", "desc": "Texte d'indication."},
+        "initialText": {"type": "string|nil", "desc": "Texte initial."},
+        "maxLength": {"type": "integer|nil", "desc": "Longueur maximale (1000 par défaut)."},
+        "inputType": {"type": "string|nil", "desc": "Type d'entrée ('string' par défaut)."},
+        "textBoxLeft": {"type": "number|nil", "desc": "Position gauche de la zone de texte à l'écran, pour que le clavier ne la masque pas (déduit du code)."},
+        "textBoxTop": {"type": "number|nil", "desc": "Position haute de la zone de texte."},
+        "textBoxWidth": {"type": "number|nil", "desc": "Largeur de la zone de texte."},
+        "textBoxHeight": {"type": "number|nil", "desc": "Hauteur de la zone de texte."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "onScreenKeyboardClosed": {
+      "desc": "Hook appelé par le moteur quand le clavier virtuel se ferme : transmet à l'interface (guihooks 'onScreenKeyboardClosed', applied, text).",
+      "params": {
+        "applied": {"type": "boolean", "desc": "true si l'utilisateur a validé."},
+        "text": {"type": "string", "desc": "Texte saisi."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "isOnScreenKeyboardAvailable": {
+      "desc": "Indique si la plateforme propose un clavier virtuel (appelle la fonction globale du moteur de même nom).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si disponible."}],
+      "internal": false
+    }
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "path": "lua/vehicle/powertrain/sequentialGearbox.lua",
+  "module": "Composant powertrain `sequentialGearbox` : boîte séquentielle (type course) dont le rapport ne peut changer que d'un cran à la fois (plus un, moins un). Pas de synchroniseurs ni de craquement : le passage de vitesse prend effet à la mise à jour par image suivante (updateGFX). Comme manualGearbox, le parent doit être un embrayage. Gère le neutre (masse virtuelle), le verrouillage (setLock), l'usure/dégâts et des sons d'engrenage de type « droit » (straight-cut). Un contrôleur de boîte séquentielle appelle setGearIndex.",
+  "usage": "local gb = powertrain.getDevice(\"gearbox\")\ngb:setGearIndex(gb.gearIndex + 1) -- monte un rapport (limité à +/- 1 par appel)\nprint(gb.gearIndex, gb.gearRatio)",
+  "notes": [
+    "Clés jbeam lues : name, type, inputName, inputIndex, gearRatio, friction (N·m), dynamicFriction (N·m par rad/s), torqueLossCoef (0..1), gearRatios (liste obligatoire : valeurs >= 0 = marches avant aux indices 0, 1, 2… ; valeurs < 0 = marches arrière, même indexation que manualGearbox), gearWhineCoefs / gearWhineCoefsOutput / gearWhineCoefsInput, gearboxNode_nodes, breakTriggerBeam, et pour les sons : gearWhineOutputEvent ('event:>Vehicle>Transmission>straight_01>twine_out_race'), gearWhineInputEvent, forward/reverse Input/Output PitchCoef, gearWhine*Smoothing.",
+    "Champs principaux : gearIndex (rapport courant, 0 = neutre), targetGearIndex (rapport en attente de mise à jour, nil sinon), gearRatio, gearRatios (table indexée par gearIndex), minGearIndex, maxGearIndex, maxGearRatio, minGearRatio, gearCount, inputAV (rad/s côté embrayage), outputAV1 (rad/s, posé par l'enfant), outputTorque1 (N·m), lockCoef (0 si verrouillé), virtualMassAV, cumulativeInertia, cumulativeGearRatio, maxCumulativeGearRatio, isBroken, transmissionNodeID.",
+    "setGearIndex limite le saut : le rapport demandé est borné à [gearIndex - 1, gearIndex + 1] (et à [minGearIndex, maxGearIndex]). Depuis le neutre (gearIndex = 0) le changement est immédiat ; depuis un rapport engagé, il est différé à la prochaine updateGFX (targetGearIndex). En neutre, dès l'entrée dans un rapport, powertrain.calculateTreeInertia est appelée.",
+    "Neutre ou boîte cassée (gearRatio == 0 ou isBroken) : velocityUpdate/torqueUpdate passent aux versions « neutral » (masse virtuelle, couple de sortie nul).",
+    "Bug mineur : calculateInertia calcule invCumulativeInertia = 1 / cumulativeInertia sans protection contre une inertie nulle ; validate lit device.parent.parent sans vérifier que device.parent n'est pas nil.",
+    "setGearIndex à la construction : maxExpectedInputTorque vaut 0, ce qui met invMaxExpectedOutputTorque à l'infini jusqu'à validate ; sans effet observable car le son n'est actif qu'après."
+  ],
+  "fields": {
+    "outputPorts": {"type": "table<integer, boolean>", "desc": "{[1]=true}."},
+    "deviceCategories": {"type": "table<string, boolean>", "desc": "{gearbox=true}."},
+    "requiredExternalInertiaOutputs": {"type": "table<integer, integer>", "desc": "{1}."}
+  },
+  "functions": {
+    "new": {
+      "desc": "Construit la boîte séquentielle : table des rapports avant et arrière, coefficients de bruit d'engrenage, nœud de la transmission, puis passe au neutre.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant (gearRatios obligatoire)."}},
+      "returns": [{"type": "table", "desc": "Le device (classe `device`)."}],
+      "internal": true
+    }
+  },
+  "classes": {
+    "device": {
+      "desc": "Objet renvoyé par new(jbeamData). velocityUpdate/torqueUpdate dépendent du rapport (normal ou neutre).",
+      "functions": {
+        "updateSounds": {
+          "desc": "Met à jour volume et hauteur des boucles sonores d'engrenage (entrée et sortie) d'après vitesses et couples lissés. Appelée à chaque image.",
+          "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes."}},
+          "returns": [],
+          "internal": true
+        },
+        "velocityUpdate": {
+          "desc": "Appelée à chaque pas physique : inputAV = outputAV1 * gearRatio * lockCoef (ou masse virtuelle au neutre), écrit dans le parent.",
+          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (inutilisé)."}},
+          "returns": [],
+          "internal": true
+        },
+        "torqueUpdate": {
+          "desc": "Appelée à chaque pas physique : outputTorque1 = (couple parent - frottements) * gearRatio * lockCoef, et alimente les lisseurs de son. Au neutre, intègre la masse virtuelle et met le couple de sortie à 0.",
+          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (utilisé au neutre)."}},
+          "returns": [],
+          "internal": true
+        },
+        "updateGFX": {
+          "desc": "Mise à jour par image : applique le changement de rapport en attente (targetGearIndex), met à jour gearRatio, invMaxExpectedOutputTorque et l'inertie du groupe motopropulseur.",
+          "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes (inutilisé)."}},
+          "returns": [],
+          "internal": true
+        },
+        "setGearIndex": {
+          "desc": "Demande un rapport. Le rapport est borné à ±1 cran autour du rapport courant et à [minGearIndex, maxGearIndex]. Depuis le neutre, il est appliqué immédiatement ; sinon différé à la prochaine updateGFX.",
+          "params": {"index": {"type": "integer", "desc": "Indice de rapport voulu (0 neutre, >0 avant, <0 arrière)."}},
+          "returns": [],
+          "internal": false
+        },
+        "onBreak": {
+          "desc": "Marque la boîte comme cassée et passe en mode neutre (masse virtuelle).",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "setLock": {
+          "desc": "Verrouille (lockCoef = 0) ou déverrouille (1) la transmission et propage l'appel au parent s'il a setLock.",
+          "params": {"enabled": {"type": "boolean", "desc": "true pour verrouiller."}},
+          "returns": [],
+          "internal": false
+        },
+        "applyDeformGroupDamage": {
+          "desc": "Augmente le coefficient de frottement de dégâts (0.01 de dégât = +0.1).",
+          "params": {"damageAmount": {"type": "number", "desc": "Quantité de dégâts du groupe de déformation."}},
+          "returns": [],
+          "internal": true
+        },
+        "setPartCondition": {
+          "desc": "Applique l'usure (odomètre, coefficient de 1 à 2) et les dégâts (intégrité nombre 0..1 ou table) ; appelle onBreak si isBroken.",
+          "params": {
+            "subSystem": {"type": "any", "desc": "Non utilisé."},
+            "odometer": {"type": "number", "desc": "Distance parcourue en mètres."},
+            "integrity": {"type": "number|table", "desc": "Nombre 0..1 ou table {damageFrictionCoef, isBroken}."},
+            "visual": {"type": "any", "desc": "Non utilisé."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "getPartCondition": {
+          "desc": "Renvoie l'intégrité 0..1 (0 si cassée) et {damageFrictionCoef, isBroken}.",
+          "params": {},
+          "returns": [{"type": "number", "desc": "Intégrité 0..1."}, {"type": "table", "desc": "État sauvegardable."}],
+          "internal": true
+        },
+        "validate": {
+          "desc": "Vérifie que le parent est un embrayage (ou un faux), sinon journalise des erreurs et renvoie false. Détermine transmissionNodeID et les valeurs attendues (couple, vitesse, puissance max) pour normaliser les sons.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "false si le parent n'est pas un embrayage."}],
+          "internal": true
+        },
+        "calculateInertia": {
+          "desc": "Prend l'inertie et les rapports cumulés du premier enfant ; cumulativeInertia = inertie / gearRatio² (2 * maxGearRatio si neutre).",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "resetSounds": {
+          "desc": "Remet à zéro les lisseurs et valeurs de son d'engrenage.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "initSounds": {
+          "desc": "Crée les boucles sonores d'engrenage (entrée et sortie), les lisseurs et les coefficients de hauteur, et règle le paramètre FMOD c_gearboxMaxPower.",
+          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
+          "returns": [],
+          "internal": true
+        },
+        "reset": {
+          "desc": "Réinitialise l'état (vitesses, couple, coefficients, verrouillage) et repasse au neutre.",
+          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
+          "returns": [],
+          "internal": true
+        }
+      }
+    }
+  }
+}

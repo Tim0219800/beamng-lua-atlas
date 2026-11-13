@@ -1,0 +1,300 @@
+{
+  "path": "lua/ge/extensions/core/trailerRespawn.lua",
+  "module": "Extension GE `core_trailerRespawn` : mémorise quels véhicules tractent quelle remorque (registre `trailerReg`) à partir des évènements d'attelage, et replace la remorque derrière le véhicule tracteur quand celui-ci est remis à zéro (reset) ou réactivé. Dépend de core_vehicles (vehsCouplerOffset, vehsCouplerTags, couplerTagsOptions) et de spawn.placeTrailer. Utile pour interroger la composition d'un train routier (getVehicleTrain, getVehicleTrainHead).",
+  "notes": [
+    "trailerReg[idTracteur] = {trailerId, trailerNode, node} : un véhicule ne peut tracter qu'une seule remorque dans ce registre. Les attelages avec un véhicule de type 'Prop' sont ignorés ; les boucles d'attelage sont refusées.",
+    "Le type d'un véhicule ('Trailer', 'Prop', …) vient du champ aggregates.Type de sa config, sinon du Type du modèle (getConfigType).",
+    "setEnabled(false) remplace M.onCouplerAttached et M.onCouplerDetached par `nop` : le registre n'est alors plus mis à jour (le moteur appelle les hooks via la table M, donc le changement est pris en compte). onVehicleResetted/onVehicleActiveChanged continuent d'agir sur le registre existant. Incohérence : le paramètre de setEnabled masque la variable locale `enabled` du module, qui n'est donc jamais mise à jour par setEnabled ; getEnabled() renvoie la valeur restaurée par resetData/onDeserialized (true au départ), pas le dernier état demandé.",
+    "onVehicleResetted est marqué dans le code 'TODO: Remove this when trailer respawn is disabled' : core_vehicles contient une version commentée du même mécanisme.",
+    "En multijoueur (multiplayer_vehicleSync), le replacement au reset est désactivé et l'état actif des remorques est délégué à multiplayer_vehicleSync.requestTrailerActiveFollow."
+  ],
+  "fields": {
+    "debugEnabled": {
+      "type": "boolean",
+      "desc": "false par défaut ; l'affichage debug des noeuds d'attelage (debugUpdate) n'est pas branché (M.onPreRender est commenté)."
+    },
+    "dependencies": {
+      "type": "string[]",
+      "desc": "{'core_vehicleBridge'}"
+    }
+  },
+  "functions": {
+    "onSerialize": {
+      "desc": "Hook : sauvegarde le registre et l'état activé avant un rechargement Lua.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{trailerReg, enabled}"
+        }
+      ],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook : restaure le registre et réapplique setEnabled.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "données de onSerialize"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "resetData": {
+      "desc": "Vide le registre des remorques et réactive le système.",
+      "params": {},
+      "returns": []
+    },
+    "getTrailerData": {
+      "desc": "Renvoie le registre interne trailerReg (pas une copie).",
+      "params": {},
+      "returns": [
+        {
+          "type": "table<integer, {trailerId: integer, trailerNode: integer, node: integer}>",
+          "desc": "[idTracteur] = infos d'attelage"
+        }
+      ]
+    },
+    "getPreviousAttachedVehicleId": {
+      "desc": "Renvoie le véhicule qui tracte vehId (celui dont la remorque enregistrée est vehId).",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "identifiant de la remorque"
+        }
+      },
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "identifiant du tracteur, nil s'il n'y en a pas"
+        }
+      ]
+    },
+    "getVehicleTrainHead": {
+      "desc": "Remonte la chaîne d'attelages jusqu'au premier véhicule (tête du train).",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "véhicule de départ"
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "identifiant de la tête de train (vehId lui-même s'il n'est pas tracté)"
+        }
+      ]
+    },
+    "getVehicleTrain": {
+      "desc": "Renvoie tous les véhicules reliés à vehId, vers l'avant et vers l'arrière.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "véhicule de départ"
+        },
+        "res": {
+          "type": "table|nil",
+          "desc": "table accumulatrice (usage interne, laisser nil)"
+        },
+        "forward": {
+          "type": "boolean|nil",
+          "desc": "true : seulement vers le tracteur ; false : seulement vers les remorques ; nil : les deux"
+        }
+      },
+      "returns": [
+        {
+          "type": "table<integer, boolean>",
+          "desc": "ensemble [vehId] = true"
+        }
+      ]
+    },
+    "getConfigType": {
+      "desc": "Renvoie le type d'un véhicule ('Car', 'Trailer', 'Prop'…), d'après sa config (aggregates.Type) ou, à défaut, le Type de son modèle.",
+      "params": {
+        "objId": {
+          "type": "integer",
+          "desc": "identifiant du véhicule"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "type"
+        }
+      ]
+    },
+    "getAttachedNonTrailer": {
+      "desc": "Remonte les attelages pour trouver le véhicule qui n'est pas une remorque et qui tracte la chaîne contenant vehId.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "véhicule de départ"
+        }
+      },
+      "returns": [
+        {
+          "type": "integer|false",
+          "desc": "identifiant du premier véhicule non-remorque, false si la chaîne ne contient que des remorques"
+        }
+      ]
+    },
+    "isVehicleCoupledToTrailer": {
+      "desc": "Indique si trailerId fait partie de la chaîne tractée par vehId.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "tracteur"
+        },
+        "trailerId": {
+          "type": "integer",
+          "desc": "remorque recherchée"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true si relié (directement ou en chaîne)"
+        }
+      ]
+    },
+    "placeTrailer": {
+      "desc": "Replace la remorque enregistrée de vehId derrière lui (spawn.placeTrailer, d'après les décalages de coupleurs).",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "tracteur"
+        }
+      },
+      "returns": []
+    },
+    "coupleTrailer": {
+      "desc": "Si le tag du coupleur est de type 'autoCouple' (core_vehicles.couplerTagsOptions), lance beamstate.activateAutoCoupling(tag) sur le tracteur.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "tracteur"
+        }
+      },
+      "returns": []
+    },
+    "setEnabled": {
+      "desc": "Active ou désactive l'enregistrement des attelages (remplace onCouplerAttached/onCouplerDetached par la fonction vide nop si false).",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "état voulu"
+        }
+      },
+      "returns": []
+    },
+    "getEnabled": {
+      "desc": "Renvoie la variable `enabled` du module (voir notes : n'est pas mise à jour par setEnabled).",
+      "params": {},
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true tant que resetData/onDeserialized ne l'ont pas changé"
+        }
+      ]
+    },
+    "onCouplerAttached": {
+      "desc": "Hook : un attelage se ferme. Enregistre le sens tracteur/remorque dans trailerReg (le non-remorque tracte), ignore les Props et les boucles, puis émet onTrailerAttached(objId1, objId2).",
+      "params": {
+        "objId1": {
+          "type": "integer",
+          "desc": "premier véhicule"
+        },
+        "objId2": {
+          "type": "integer",
+          "desc": "second véhicule"
+        },
+        "nodeId": {
+          "type": "integer",
+          "desc": "noeud du premier"
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "noeud du second"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onCouplerDetached": {
+      "desc": "Hook : un attelage s'ouvre. Ne retire l'enregistrement que si breakForce est 0 (détachement volontaire), avec un délai d'une frame (job) pour ne pas empêcher le reset de la remorque.",
+      "params": {
+        "objId1": {
+          "type": "integer",
+          "desc": "premier véhicule"
+        },
+        "objId2": {
+          "type": "integer",
+          "desc": "second véhicule"
+        },
+        "nodeId": {
+          "type": "integer",
+          "desc": "noeud du premier"
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "noeud du second"
+        },
+        "breakForce": {
+          "type": "number|nil",
+          "desc": "force de rupture ; ignoré si nil ou > 0"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleActiveChanged": {
+      "desc": "Hook : un véhicule est activé/désactivé. Aligne l'état actif de sa remorque et, à l'activation, la replace derrière lui.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "véhicule"
+        },
+        "active": {
+          "type": "boolean",
+          "desc": "nouvel état"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSpawned": {
+      "desc": "Hook : un véhicule apparaît ; efface ses anciens enregistrements d'attelage.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "véhicule"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleResetted": {
+      "desc": "Hook : un véhicule est remis à zéro ; replace sa remorque derrière lui (désactivé en multijoueur).",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "véhicule"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook : un véhicule est détruit ; efface ses enregistrements d'attelage.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "véhicule"
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

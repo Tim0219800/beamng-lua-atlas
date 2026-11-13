@@ -1,0 +1,149 @@
+{
+  "path": "lua/vehicle/powertrain/manualGearbox.lua",
+  "module": "Composant powertrain `manualGearbox` : boîte de vitesses manuelle à rapports fixes. Le rapport actif est choisi par setGearIndex (indices entiers : 0 neutre, positifs = marches avant, négatifs = marche arrière). Il simule des synchroniseurs (usure, craquement de vitesse avec couple de « grinding »), le neutre (masse virtuelle), le frottement, le verrouillage (setLock) et les sons de bruit d'engrenage/craquement. Son parent doit être un embrayage (catégorie `clutch`). Un moddeur ou un contrôleur (ex. controller de boîte manuelle) appelle setGearIndex ; le jeu lit gearIndex, gearRatio, outputAV1.",
+  "usage": "local gb = powertrain.getDevice(\"gearbox\")\ngb:setGearIndex(2)            -- 2e, sans simulation de synchro\ngb:setGearIndex(3, 0.15)      -- 3e avec 0.15 s de temps de synchro disponible\nprint(gb.gearIndex, gb.gearRatio, gb.isGrindingShift)",
+  "notes": [
+    "Clés jbeam lues : name, type, inputName, inputIndex, gearRatio, friction (N·m), dynamicFriction (N·m par rad/s), torqueLossCoef (0..1), neutralFriction (= friction), neutralDynamicFriction (= dynamicFriction), gearRatios (liste, obligatoire : valeurs >= 0 = marches avant en commençant à l'indice 0 (neutre, valeur normalement 0), valeurs < 0 = marches arrière), gearDamageThreshold (3000, non utilisé), gearWhineCoefs / gearWhineCoefsOutput / gearWhineCoefsInput, synchronizerSettings (table en-tête avec gearIndex, maxClutchRPMDifference (défaut 50), requiredClutchInput (0.8), maxSynchroRPMDifference (infini), maxSynchroRate (5000), synchroWearCoef (0.000005)), gearboxNode_nodes (premier nœud = transmissionNodeID), breakTriggerBeam, et pour les sons : gearGrindSoundFile, gearGrindEvent, gearWhineOutputEvent, gearWhineInputEvent, forwardInputPitchCoef, forwardOutputPitchCoef, reverseInputPitchCoef (0.7), reverseOutputPitchCoef (0.7), gearWhine*PitchCoefSmoothing (50), gearWhine*VolumeCoefSmoothing (10), gearWhineFixedCoefOutput (0.7), gearWhineFixedCoefInput (0.4).",
+    "Indexation des rapports : la liste jbeam gearRatios sépare les valeurs >= 0 (marche avant, indices 0, 1, 2…) et < 0 (marche arrière). Pour n marches arrière, la première valeur négative de la liste prend l'indice -n, la dernière l'indice -1. gearRatios[0] est le neutre (rapport 0 attendu).",
+    "Champs principaux : gearIndex, gearRatio (rapport courant, signé, 0 = neutre), gearRatios (table indexée par gearIndex), minGearIndex, maxGearIndex, maxGearRatio, minGearRatio, gearCount, inputAV (rad/s, côté embrayage), outputAV1 (rad/s, côté arbre de sortie, posé par l'enfant), outputTorque1 (N·m), inputTorque, lockCoef (0 si verrouillé par setLock), isBroken, isGrindingShift, grindingShiftTargetIndex, grindingTorque, synchroWear (table par rapport, 0..1), virtualMassAV, cumulativeInertia, cumulativeGearRatio, maxCumulativeGearRatio, transmissionNodeID.",
+    "Neutre ou boîte cassée (gearRatio == 0 ou isBroken) : velocityUpdate/torqueUpdate passent aux versions « neutral » où l'entrée accélère une masse virtuelle (virtualMassAV) et outputTorque1 ne contient que la réaction du craquement.",
+    "setGearIndex(index) sans availableSyncTime : le passage est toujours réussi (compatibilité). Avec availableSyncTime : le passage échoue (craquement) si la différence de vitesse dépasse la capacité du synchro, si l'embrayage n'est pas assez enfoncé (requiredClutchInput) ou si le temps de synchro disponible est trop court. Un craquement active setGearGrinding et applique un couple (max 50 N·m) jusqu'à ce que l'écart de vitesse tombe sous 20 rad/s.",
+    "L'usure du synchro d'une vitesse atteint 1 : le rapport est mis à 0 (la vitesse devient inutilisable jusqu'au reset).",
+    "Bug mineur : reset appelle device:setGearIndex(0) qui exige un parent valide ; reset met isShiftGrinding = false mais le champ réellement utilisé est isGrindingShift.",
+    "Bug mineur : calculateInertia calcule invCumulativeInertia = 1 / cumulativeInertia sans protection contre une inertie nulle (division par zéro donne inf si aucun enfant)."
+  ],
+  "fields": {
+    "outputPorts": {"type": "table<integer, boolean>", "desc": "{[1]=true} : un seul port de sortie."},
+    "deviceCategories": {"type": "table<string, boolean>", "desc": "{gearbox=true}."},
+    "requiredExternalInertiaOutputs": {"type": "table<integer, integer>", "desc": "{1}."}
+  },
+  "functions": {
+    "new": {
+      "desc": "Construit la boîte : lit gearRatios et construit les tables d'indices avant/arrière, les coefficients de bruit de dents (gearWhine), les réglages de synchronisateurs et le nœud de la transmission, puis passe au neutre via setGearIndex(0).",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant (gearRatios obligatoire)."}},
+      "returns": [{"type": "table", "desc": "Le device (classe `device`)."}],
+      "internal": true
+    }
+  },
+  "classes": {
+    "device": {
+      "desc": "Objet renvoyé par new(jbeamData).",
+      "functions": {
+        "updateSounds": {
+          "desc": "Met à jour le volume et la hauteur des boucles sonores de bruit d'engrenage (entrée et sortie) d'après les vitesses/couples lissés et le rapport courant. Appelée à chaque image par le powertrain.",
+          "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes."}},
+          "returns": [],
+          "internal": true
+        },
+        "velocityUpdate": {
+          "desc": "Appelée à chaque pas physique : inputAV = outputAV1 * gearRatio * lockCoef (ou masse virtuelle au neutre) et écrit dans le parent.",
+          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (inutilisé)."}},
+          "returns": [],
+          "internal": true
+        },
+        "torqueUpdate": {
+          "desc": "Appelée à chaque pas physique : outputTorque1 = (couple parent - frottements) * gearRatio * lockCoef, et alimente les lisseurs de son. Au neutre, appelle updateGrinding, intègre la masse virtuelle et renvoie la réaction du craquement.",
+          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (utilisé au neutre)."}},
+          "returns": [],
+          "internal": true
+        },
+        "updateGrinding": {
+          "desc": "Pendant un passage qui craque : calcule le couple de craquement et son signe, use le synchro de la vitesse visée, enclenche la vitesse quand l'écart de vitesse tombe sous 20 rad/s, joue le son de craquement et affiche des messages « Synchronizer damage ».",
+          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+          "returns": [],
+          "internal": true
+        },
+        "setGearGrinding": {
+          "desc": "Active ou arrête l'état de craquement : mémorise le rapport visé et le couple max, démarre ou arrête la boucle sonore de craquement.",
+          "params": {
+            "active": {"type": "boolean", "desc": "true pour démarrer le craquement, false pour l'arrêter et tout remettre à zéro."},
+            "targetGearIndex": {"type": "integer|nil", "desc": "Indice du rapport visé (si active)."},
+            "maxGrindingTorque": {"type": "number|nil", "desc": "Couple de craquement maximal en N·m (si active)."}
+          },
+          "returns": [],
+          "internal": false
+        },
+        "updateGFX": {
+          "desc": "Mise à jour par image : actuellement vide (le code de débogage et de saut de vitesse est en commentaire).",
+          "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes."}},
+          "returns": [],
+          "internal": true
+        },
+        "setGearIndex": {
+          "desc": "Passe un rapport. L'indice est borné à [minGearIndex, maxGearIndex]. Sans availableSyncTime, le passage réussit toujours ; avec, simule les synchros et peut déclencher un craquement (passage refusé : le rapport reste l'ancien). Recalcule l'inertie du groupe motopropulseur si le rapport est non nul. 0 = neutre.",
+          "params": {
+            "index": {"type": "integer", "desc": "Indice du rapport voulu (0 neutre, >0 avant, <0 arrière)."},
+            "availableSyncTime": {"type": "number|nil", "desc": "Durée en secondes pendant laquelle le synchro a pu travailler ; nil = ne pas simuler les synchros."}
+          },
+          "returns": [],
+          "internal": false
+        },
+        "onBreak": {
+          "desc": "Marque la boîte comme cassée et passe en mode neutre (virtualMassAV). Appelée quand la poutre breakTriggerBeam casse ou via setPartCondition.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "setLock": {
+          "desc": "Verrouille ou déverrouille la transmission : lockCoef = 0 (verrouillé, aucun couple ni vitesse transmis) ou 1. Propage l'appel au parent (embrayage) s'il a setLock.",
+          "params": {"enabled": {"type": "boolean", "desc": "true pour verrouiller."}},
+          "returns": [],
+          "internal": false
+        },
+        "applyDeformGroupDamage": {
+          "desc": "Augmente le coefficient de frottement de dégâts (0.01 de dégât = +0.1).",
+          "params": {"damageAmount": {"type": "number", "desc": "Quantité de dégâts du groupe de déformation."}},
+          "returns": [],
+          "internal": true
+        },
+        "setPartCondition": {
+          "desc": "Applique usure (odomètre), dégâts (intégrité nombre 0..1 ou table) et usure des synchros. Appelle onBreak si la table indique isBroken.",
+          "params": {
+            "subSystem": {"type": "any", "desc": "Non utilisé."},
+            "odometer": {"type": "number", "desc": "Distance parcourue en mètres."},
+            "integrity": {"type": "number|table", "desc": "Nombre 0..1 ou table {damageFrictionCoef, synchroWear, isBroken}."},
+            "visual": {"type": "any", "desc": "Non utilisé."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "getPartCondition": {
+          "desc": "Renvoie l'intégrité 0..1 (0 si cassée) et la table {damageFrictionCoef, synchroWear, isBroken}.",
+          "params": {},
+          "returns": [{"type": "number", "desc": "Intégrité 0..1."}, {"type": "table", "desc": "État sauvegardable."}],
+          "internal": true
+        },
+        "validate": {
+          "desc": "Vérifie que le parent est un embrayage (ou un faux), journalise une erreur et renvoie false sinon. Détermine transmissionNodeID et les valeurs attendues (couple et vitesse maxima du moteur, puissance) utilisées pour normaliser les sons.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "false si le parent n'est pas un embrayage."}],
+          "internal": true
+        },
+        "calculateInertia": {
+          "desc": "Prend l'inertie et les rapports cumulés du premier enfant ; cumulativeInertia = inertie aval / gearRatio² (avec 2 * maxGearRatio si neutre).",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "resetSounds": {
+          "desc": "Remet à zéro les lisseurs et valeurs de son (bruit d'engrenage).",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "initSounds": {
+          "desc": "Crée les objets son (craquement, bruit d'engrenage entrée et sortie), les lisseurs et les coefficients de hauteur/volume depuis le jbeam, et règle le paramètre FMOD c_gearboxMaxPower.",
+          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
+          "returns": [],
+          "internal": true
+        },
+        "reset": {
+          "desc": "Réinitialise l'état (vitesses, couple, usure, rapports d'origine, synchros, dégâts) puis repasse au neutre.",
+          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
+          "returns": [],
+          "internal": true
+        }
+      }
+    }
+  }
+}

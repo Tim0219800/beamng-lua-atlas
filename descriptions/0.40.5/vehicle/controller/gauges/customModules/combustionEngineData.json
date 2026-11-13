@@ -1,0 +1,72 @@
+{
+  "path": "lua/vehicle/controller/gauges/customModules/combustionEngineData.lua",
+  "module": "Module de données pour genericGauges : calcule consommation de carburant (l/100 km), affichage de consommation, puissance et couple des moteurs à combustion et autonomie restante. Les calculs ne sont faits que pour les propriétés demandées.",
+  "notes": [
+    "La consommation instantanée vient de la variation de electrics.values.fuelVolume divisée par dt*wheelspeed, bornée à 0..50 l/100 km ; la moyenne est lissée sur ~10 minutes et initialisée à 10 l/100 km.",
+    "Puissance = somme de outputTorque1 * outputAV1 des dispositifs \"combustionEngine\", convertie en ch (W * 0.001 * 1.35962). Le véhicule est considéré en mouvement au-dessus de 0.5 m/s (wheelspeed).",
+    "setupGaugeData ajoute les réservoirs de chaque moteur dans fuelTanks sans vider la liste : un second appel les duplique.",
+    "updateGaugeData lit electrics.values.wheelspeed sans valeur par défaut : erreur Lua si nil."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Initialise la consommation moyenne lissée à 10 l/100 km.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Réinitialise l'état interne du module.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Ne fait rien (la mise à jour se fait par updateGaugeData).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setupGaugeData": {
+      "desc": "Appelé par genericGauges avec les propriétés demandées dans displayData.customModules : fuelConsumption (averageFuelConsumption, currentFuelConsumption), fuelDisplay (fuelDisplay, -1..3), currentPower (currentPower et averagePower en ch, currentTorque en N·m), remainingRange (remainingRange ; active aussi fuelConsumption).",
+      "params": {
+        "properties": {
+          "type": "table<string, boolean>",
+          "desc": "Ensemble des propriétés demandées (clé = nom, valeur = true)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGaugeData": {
+      "desc": "Appelé par genericGauges avant chaque envoi : remplit moduleData avec les valeurs demandées.",
+      "params": {
+        "moduleData": {
+          "type": "table",
+          "desc": "Table de données du module, envoyée ensuite à la page HTML."
+        },
+        "dt": {
+          "type": "number",
+          "desc": "Temps écoulé depuis le dernier envoi (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

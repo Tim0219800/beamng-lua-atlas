@@ -1,0 +1,198 @@
+{
+  "path": "lua/vehicle/controller.lua",
+  "module": "Gestionnaire des contrôleurs jbeam du véhicule (VM véhicule, globale `controller`). Au chargement, il lit la section `controller` du jbeam (`v.data.controller`), charge chaque fichier `lua/vehicle/controller/<fileName>.lua` avec `rerequire`, appelle son `init(jbeamData)` puis les étapes `initSecondStage`, `initSounds`, `initLastStage`. Il trie les contrôleurs (par rang du périphérique powertrain `relevantDevice`, puis `manualOrder`, puis `defaultOrder`, puis nom) et construit des listes de fonctions mises en cache pour appeler tous les `update`, `updateGFX`, `updateFixedStep`, etc. sans test à chaque frame. Un moddeur l'utilise surtout pour retrouver un contrôleur (`controller.getController(\"nom\")`) ou en charger un à chaud (`loadControllerExternal`).",
+  "usage": "-- accès direct (erreur si absent)\nlocal esc = controller.getController(\"esc\")\n-- accès tolérant : renvoie un objet 'nil' qui accepte tout appel\ncontroller.getControllerSafe(\"jato\").fire(true)\n-- tous les contrôleurs d'un type\nfor _, c in ipairs(controller.getControllersByType(\"hydraulics/electricHydraulics\")) do print(c.name) end",
+  "notes": [
+    "Cycle de vie d'un contrôleur : (1) init(jbeamData) à la création ; (2) initSecondStage(jbeamData), initSounds(jbeamData), initLastStage(jbeamData) après que powertrain, électriques, etc. sont prêts ; (3) chaque pas physique `update(dt)` puis `updateWheelsIntermediate(dt)`, un `updateFixedStep(dt)` à 100 Hz fixe (accumulateur 1/100 s), chaque frame graphique `updateGFX(dt)`. Les hooks facultatifs sont beamBroken, beamDeformed, nodeCollision, onCouplerFound, onCouplerAttached, onCouplerDetached, onGameplayEvent, debugDraw, settingsChanged, serialize/deserialize, getState/setState.",
+    "Au reset : si le contrôleur n'a pas de `reset`, `controller.reset` rappelle son `init` ; `resetSecondStage` appelle `reset(jbeamData)` s'il existe, sinon `initSecondStage` ; `resetLastStage` appelle `resetLastStage()` sinon `initLastStage`. `resetSounds` n'appelle que `resetSounds()` s'il existe.",
+    "Attention : le nom du hook de rupture dans les contrôleurs est `beamBroken` (c'est ce que cherche cacheControllerFunctions), alors que la fonction du gestionnaire s'appelle `controller.beamBroke`.",
+    "Contrôleur sans `type` standard : `M.type = \"main\"` désigne le contrôleur principal (un seul ; un second remplace le premier avec un avertissement). S'il n'y en a pas, le contrôleur `dummy` est ajouté. Un contrôleur sans section jbeam reçoit aussi `dummy`.",
+    "Les contrôleurs `shiftLogic-*` (automaticGearbox, cvtGearbox, dctGearbox, manualGearbox, sequentialGearbox) sont ignorés (liste noire) ; le nom d'un contrôleur par défaut est son fileName, il faut donner `name` unique pour en instancier plusieurs du même type.",
+    "Contrôleurs déplacés : registerRelocatedController garde la compatibilité des anciens noms (vehicleController, AVAS, airbrakes, reverseWarn, adaptiveBrakeLights, brakedDifferentialSteering, compressionBrake, postCrashBrake, transbrake) vers leurs nouveaux sous-dossiers.",
+    "Les champs update, updateGFX, updateWheelsIntermediate, beamBroke, beamDeformed, nodeCollision, onCouplerFound/Attached/Detached, onGameplayEvent et debugDraw valent `nop` (fonction vide) tant qu'aucun contrôleur n'a la fonction correspondante ; ce ne sont donc pas des nil. Les champs mainController et nilController sont nil à la déclaration puis remplis par init().",
+    "Anomalie : les logs de getControllerSafe pour le cas relocalisé annoncent `controller.getControllersByType` au lieu de `controller.getControllerSafe` (message de log seulement).",
+    "onCouplerFound du gestionnaire transmet 4 arguments (dont nodeDist) alors que controllerTemplate et les versions debug n'en déclarent que 3.",
+    "Si une version debug codée en dur (updateDebug, etc.) est décommentée en haut du fichier, elle remplace les boucles ; elle doit être générée avec controller.printDebugMethodCalls() pour le véhicule exact."
+  ],
+  "fields": {
+    "mainController": {"type": "table|nil", "desc": "Contrôleur dont `type == \"main\"` (un seul), ou le contrôleur `dummy` si aucun. nil avant init()."},
+    "isFrozen": {"type": "boolean", "desc": "true si setFreeze(1) a été appelé."},
+    "nilController": {"type": "table|nil", "desc": "Objet 'nul' créé par init() : toute indexation ou appel renvoie lui-même, l'écriture est ignorée. Renvoyé par getControllerSafe quand le contrôleur est introuvable."},
+    "update": {"type": "function", "desc": "Appelle update(dt) de chaque contrôleur puis, avec l'accumulateur 100 Hz, updateFixedStep. Vaut nop s'il n'y a rien à appeler. Appelée par la boucle physique."},
+    "updateWheelsIntermediate": {"type": "function", "desc": "Appelle updateWheelsIntermediate(dt) de chaque contrôleur concerné (étape physique intermédiaire des roues)."},
+    "updateGFX": {"type": "function", "desc": "Appelle updateGFX(dt) de chaque contrôleur, une fois par frame graphique."},
+    "beamBroke": {"type": "function", "desc": "Diffuse beamBroken(id, energy) aux contrôleurs qui l'ont."},
+    "beamDeformed": {"type": "function", "desc": "Diffuse beamDeformed(id, ratio) aux contrôleurs qui l'ont."},
+    "nodeCollision": {"type": "function", "desc": "Diffuse nodeCollision(p) aux contrôleurs qui l'ont (p : paramètre venant du moteur)."},
+    "onCouplerFound": {"type": "function", "desc": "Diffuse onCouplerFound(nodeId, obj2id, obj2nodeId, nodeDist)."},
+    "onCouplerAttached": {"type": "function", "desc": "Diffuse onCouplerAttached(nodeId, obj2id, obj2nodeId, attachSpeed, attachEnergy)."},
+    "onCouplerDetached": {"type": "function", "desc": "Diffuse onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)."},
+    "onGameplayEvent": {"type": "function", "desc": "Diffuse onGameplayEvent(eventName, ...) aux contrôleurs qui l'ont."},
+    "debugDraw": {"type": "function", "desc": "Diffuse debugDraw(focusPos) aux contrôleurs qui l'ont."}
+  },
+  "functions": {
+    "registerRelocatedController": {
+      "desc": "Déclare qu'un ancien chemin/nom de contrôleur est maintenant à un nouveau chemin, pour que les anciens jbeam continuent de fonctionner.",
+      "params": {
+        "originalPath": {"type": "string", "desc": "Ancien nom (ex. \"transbrake\") ou chemin (\"controller/transbrake\")."},
+        "newPath": {"type": "string", "desc": "Nouveau chemin relatif au dossier controller/ (ex. \"braking/transbrake\") ; pour loadControllerExternal c'est le chemin complet sans extension."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "settingsChanged": {
+      "desc": "Appelle `settingsChanged()` sur chaque contrôleur qui la définit. Appelée quand les réglages du jeu changent.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "getAllControllers": {
+      "desc": "Renvoie la table réelle (non copiée) de tous les contrôleurs chargés, indexée par nom.",
+      "params": {},
+      "returns": [{"type": "table<string, table>", "desc": "nom -> module du contrôleur."}],
+      "internal": false
+    },
+    "getController": {
+      "desc": "Renvoie le contrôleur de ce nom, ou nil s'il n'existe pas (à tester avant d'indexer, sinon erreur).",
+      "params": {"name": {"type": "string", "desc": "Nom du contrôleur (par défaut le fileName, sinon la clé `name` du jbeam)."}},
+      "returns": [{"type": "table|nil", "desc": "Le module du contrôleur."}],
+      "internal": false
+    },
+    "getControllerSafe": {
+      "desc": "Comme getController mais ne renvoie jamais nil : gère les contrôleurs déplacés et, si rien n'est trouvé, renvoie `nilController` qui accepte tout index ou appel sans erreur. Pratique pour les appels du type `controller.getControllerSafe(\"x\").fonction()`.",
+      "params": {"name": {"type": "string", "desc": "Nom du contrôleur."}},
+      "returns": [{"type": "table", "desc": "Le contrôleur, ou nilController."}],
+      "internal": false
+    },
+    "getControllersByType": {
+      "desc": "Liste les contrôleurs dont le type (fileName) vaut typeName, en tenant compte des contrôleurs déplacés sans nom personnalisé.",
+      "params": {"typeName": {"type": "string", "desc": "Chemin de fichier, ex. \"braking/transbrake\"."}},
+      "returns": [{"type": "table[]", "desc": "Liste (ordre non garanti) des contrôleurs."}],
+      "internal": false
+    },
+    "getControllersFromPath": {
+      "desc": "Liste les contrôleurs dont le typeName commence par le préfixe donné (recherche par dossier).",
+      "params": {"path": {"type": "string", "desc": "Préfixe, ex. \"braking/\"."}},
+      "returns": [{"type": "table[]", "desc": "Liste des contrôleurs correspondants."}],
+      "internal": false
+    },
+    "setFreeze": {
+      "desc": "Met `isFrozen` à `mode == 1` et transmet l'appel au contrôleur principal.",
+      "params": {"mode": {"type": "integer", "desc": "1 = gelé, autre = non gelé."}},
+      "returns": [],
+      "internal": false
+    },
+    "updateSimpleControlButtons": {
+      "desc": "Appelle `updateSimpleControlButtons()` sur chaque contrôleur qui la possède (rafraîchit les boutons de contrôle simplifiés de l'UI).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "loadControllerExternal": {
+      "desc": "Charge un contrôleur à chaud, en dehors du jbeam. Refuse un nom déjà pris et les contrôleurs de type `main`. Appelle ensuite init, initSecondStage, initSounds, initLastStage, retrie les contrôleurs et reconstruit les caches d'appel. Les erreurs sont loguées sans planter.",
+      "params": {
+        "fileName": {"type": "string", "desc": "Chemin du fichier relatif à controller/ (sans .lua)."},
+        "controllerName": {"type": "string|nil", "desc": "Nom d'instance ; par défaut fileName."},
+        "controllerData": {"type": "table|nil", "desc": "Données passées à init comme jbeamData ; {} par défaut."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Le contrôleur chargé, nil en cas d'échec."}],
+      "internal": false
+    },
+    "unloadControllerExternal": {
+      "desc": "Retire un contrôleur chargé du gestionnaire (sans appeler de fonction de nettoyage) et reconstruit les caches d'appel.",
+      "params": {"controllerName": {"type": "string", "desc": "Nom d'instance."}},
+      "returns": [],
+      "internal": false
+    },
+    "init": {
+      "desc": "Charge tous les contrôleurs du jbeam (ou dummy), crée le nilController, enregistre les contrôleurs déplacés, ignore la liste noire, fusionne les données `v.data[nom]` avec la déclaration, appelle `init(data)`, désigne le contrôleur principal et trie les contrôleurs. Les erreurs d'un contrôleur sont loguées sans bloquer les autres.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "cacheAllControllerFunctions": {
+      "desc": "Reconstruit les listes de fonctions appelées par update, updateGFX, updateFixedStep, updateWheelsIntermediate et les hooks, d'après les fonctions présentes sur chaque contrôleur trié. À rappeler si un contrôleur ajoute ou retire dynamiquement une de ces fonctions (ex. M.update = ...).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "initSecondStage": {
+      "desc": "Appelle `initSecondStage(jbeamData)` de chaque contrôleur puis reconstruit les caches. Appelée après l'init de tous les systèmes du véhicule.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "initLastStage": {
+      "desc": "Appelle `initLastStage(jbeamData)` de chaque contrôleur puis reconstruit les caches.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "initSounds": {
+      "desc": "Appelle `initSounds(jbeamData)` de chaque contrôleur puis reconstruit les caches.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet l'accumulateur du pas fixe à 0 et rappelle `init(jbeamData)` des contrôleurs qui n'ont pas de fonction `reset` (ceux qui en ont un sont traités dans resetSecondStage).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "resetSecondStage": {
+      "desc": "Pour chaque contrôleur : `reset(jbeamData)` s'il existe, sinon `initSecondStage(jbeamData)` ; puis reconstruit les caches.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "resetLastStage": {
+      "desc": "Pour chaque contrôleur : `resetLastStage()` s'il existe, sinon `initLastStage(jbeamData)` ; puis reconstruit les caches.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "resetSounds": {
+      "desc": "Appelle `resetSounds()` des contrôleurs qui la définissent puis reconstruit les caches.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "printDebugMethodCalls": {
+      "desc": "Outil de développement : imprime du code Lua listant les appels directs (par index de sortedControllers) à coller en haut de controller.lua pour remplacer les boucles.",
+      "params": {"callType": {"type": "string|nil", "desc": "\"update\", \"updateGFX\", \"updateWheelsIntermediate\", \"beamBroke\", \"beamDeformed\", \"nodeCollision\", \"onCouplerFound\", \"onCouplerAttached\", \"onCouplerDetached\", \"onGameplayEvent\", \"debugDraw\", \"settingsChanged\" ; nil = tous."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDeserialize": {
+      "desc": "Hook appelé au rechargement d'un état sauvegardé : passe à chaque contrôleur nommé dans `data` sa part via `deserialize(controllerData)`.",
+      "params": {"data": {"type": "table<string, any>|nil", "desc": "nom du contrôleur -> données retournées auparavant par son serialize()."}},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook appelé à la sauvegarde d'état : collecte `serialize()` de chaque contrôleur qui la définit.",
+      "params": {},
+      "returns": [{"type": "table<string, any>", "desc": "nom du contrôleur -> données sérialisées."}],
+      "internal": true
+    },
+    "setState": {
+      "desc": "Passe `data` à la fonction `setState(data)` de chaque contrôleur qui la définit.",
+      "params": {"data": {"type": "table|nil", "desc": "État à appliquer ; nil ne fait rien."}},
+      "returns": [],
+      "internal": false
+    },
+    "getState": {
+      "desc": "Fusionne récursivement les résultats de `getState()` de chaque contrôleur qui la définit.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "État fusionné, nil s'il est vide."}],
+      "internal": false
+    },
+    "isPhysicsStepUsed": {
+      "desc": "Indique si au moins un contrôleur a besoin de la boucle physique (update, updateFixedStep ou updateWheelsIntermediate).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si un de ces hooks existe."}],
+      "internal": true
+    }
+  }
+}

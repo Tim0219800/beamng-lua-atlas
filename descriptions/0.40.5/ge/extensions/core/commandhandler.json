@@ -1,0 +1,29 @@
+{
+  "path": "lua/ge/extensions/core/commandhandler.lua",
+  "module": "Exécute les commandes asynchrones envoyées au jeu par le schéma de protocole « beamng:v1/<commande>/<données> » (lien navigateur, argument de ligne de commande -command, canal pipe). Les commandes reçues avant que l'interface soit prête sont mises en file puis rejouées à onUiReady. Au premier update, lit les arguments de démarrage (-command beamng:...).",
+  "usage": "-- équivalent d'un lien beamng:v1/core_input_actions/triggerDownUp/toggleCamera\ncore_commandhandler.onSchemeCommand('v1/core_input_actions/triggerDownUp/toggleCamera', false)",
+  "notes": [
+    "Le texte est décodé (%XX) puis découpé sur '/' en au plus 3 morceaux : version, commande, données (les '/' des données sont conservés).",
+    "Commandes v1 gérées : showMod, subscriptionMod, downloadMod (core_repository), updateZipMod (core_modmanager), openMap (core_loadMapCmd), loadSnapshot (core_snapshot), tech_utils/<fonction> (appelle extensions.tech_utils[fonction]()), core_input_actions/<fonction>/<args...> (appelle extensions.core_input_actions[fonction](args)), openWorkbench et runRepro (avec garde core_reproGuard.isCommandAllowed, exécution via executeShell, absente des builds shipping).",
+    "Commandes sans test de version : startToolchainServer (charge networking_editorToolchain), startWorkbenchServer, startDebugServer, stopDebugServer, attachDebugger, detachDebugger.",
+    "Quand isStartingArg est vrai (instance lancée uniquement pour traiter la commande), openWorkbench et runRepro quittent le jeu (shutdown(0)) après usage ou en cas d'échec.",
+    "tech_utils et core_input_actions permettent d'appeler une fonction d'extension par son nom depuis un lien : à garder en tête côté sécurité.",
+    "Point à noter : M.onExtensionLoaded vaut `nop` (champ marqué « non défini » par l'extraction, vraisemblablement une fonction globale vide du moteur ; déduit du code)."
+  ],
+  "fields": {
+    "onExtensionLoaded": {"type": "function", "desc": "Fonction vide (nop) : l'extension ne fait rien au chargement."}
+  },
+  "functions": {
+    "onSchemeCommand": {
+      "desc": "Traite une commande de schéma « version/commande/données » (sans le préfixe « beamng: »). Met en file si l'UI n'est pas prête. Les commandes inconnues ou mal formées sont journalisées en erreur.",
+      "params": {
+        "scheme": {"type": "string", "desc": "ex. « v1/openMap/{...json...} », encodé en pourcentage"},
+        "isStartingArg": {"type": "boolean", "desc": "vrai si la commande vient des arguments de démarrage du jeu"}
+      }
+    },
+    "onUiReady": {"desc": "Hook : l'interface est prête ; exécute les commandes mises en file.", "internal": true},
+    "onFirstUpdate": {"desc": "Hook : au premier update, cherche « -command beamng:... » dans Engine.getStartingArgs() et l'exécute (ignoré si l'extension a été rechargée).", "internal": true},
+    "onSerialize": {"desc": "Hook : renvoie {ignoreStartupCmd = true} pour que le rechargement du GE ne rejoue pas la commande de démarrage.", "returns": [{"type": "table", "desc": "données à sérialiser"}], "internal": true},
+    "onDeserialized": {"desc": "Hook : restaure ignoreStartupCmd.", "params": {"d": {"type": "table", "desc": "table renvoyée par onSerialize"}}, "internal": true}
+  }
+}

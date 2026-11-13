@@ -1,0 +1,45 @@
+{
+  "path": "lua/vehicle/controller/etkGauges.lua",
+  "module": "Ancien contrôleur d'instruments HTML (type \"auxiliary\"), déprécié : init journalise une erreur demandant de passer à genericGauges. Il crée une texture HTML (htmlTexture.create) et envoie 30 fois par seconde : rapport engagé, consommation moyenne, affichage de consommation, température extérieure, heure (HH:MM), vitesse de roue. À ne pas utiliser pour de nouveaux véhicules.",
+  "notes": [
+    "Clés jbeam : materialName (obligatoire), htmlPath (obligatoire), unitType (\"metric\" par défaut), textureWidth (512), textureHeight (256). Sans materialName ou htmlPath, updateGFX est remplacé par nop.",
+    "La page HTML doit définir setUnits et updateData ; les données ne sont envoyées qu'après l'appel de uiReady et seulement si un joueur est assis et que l'UI est à mettre à jour.",
+    "Consommation en l/100 km déduite de la variation de electrics.values.fuelVolume ; averageFuelConsumption est bornée à 30, fuelDisplay à -1..3. Température en °C (obj:getEnvTemperature() - 273.15), vitesse en m/s."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Journalise l'avertissement de dépréciation, remet à zéro les lisseurs et crée la texture HTML.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Envoie périodiquement les données au tableau de bord HTML via htmlTexture.call(\"updateData\").",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "uiReady": {
+      "desc": "À appeler quand la page HTML est chargée : envoie setUnits avec unitType et autorise les mises à jour.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "path": "lua/ge/extensions/core/recoveryCamera.lua",
+  "module": "Caméra libre temporaire pendant le « recovery » (retour en arrière/réapparition) d'un véhicule. beginRecoveryCamera bascule le joueur assis dans ce véhicule en caméra libre, setRecoveryCameraPosRot la déplace, endRecoveryCamera restaure la caméra de jeu. Si le joueur était déjà en caméra libre, rien n'est modifié. Appelé en pratique depuis le code de recovery du véhicule.",
+  "usage": "core_recoveryCamera.beginRecoveryCamera(vid)\ncore_recoveryCamera.setRecoveryCameraPosRot(vid, x, y, z, qx, qy, qz, qw)\ncore_recoveryCamera.endRecoveryCamera(vid)",
+  "notes": [
+    "Le joueur est retrouvé parmi core_multiseat.getPlayers() (ou {0}) via be:getPlayerVehicleID ; si personne n'est assis dans le véhicule, rien ne se passe.",
+    "En mode multiseat, la caméra de recovery n'est active que si core_camera.getContextIdForPlayer(player) existe."
+  ],
+  "fields": {},
+  "functions": {
+    "beginRecoveryCamera": {
+      "desc": "Démarre la caméra de recovery pour le joueur assis dans le véhicule : mémorise s'il était déjà en caméra libre, sinon appelle commands.setFreeCamera(player).",
+      "params": {"vehicleId": {"type": "integer", "desc": "Id du véhicule en recovery."}},
+      "returns": [],
+      "internal": false
+    },
+    "setRecoveryCameraPosRot": {
+      "desc": "Place la caméra du joueur (core_camera.setPosRot). Sans effet si aucun recovery actif pour ce véhicule ou si le joueur était déjà en caméra libre.",
+      "params": {
+        "vehicleId": {"type": "integer", "desc": "Id du véhicule."},
+        "px": {"type": "number", "desc": "Position x (m)."},
+        "py": {"type": "number", "desc": "Position y (m)."},
+        "pz": {"type": "number", "desc": "Position z (m)."},
+        "qx": {"type": "number", "desc": "Quaternion x."},
+        "qy": {"type": "number", "desc": "Quaternion y."},
+        "qz": {"type": "number", "desc": "Quaternion z."},
+        "qw": {"type": "number", "desc": "Quaternion w."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "endRecoveryCamera": {
+      "desc": "Termine le recovery : oublie l'état et remet la caméra de jeu (commands.setGameCamera) si la caméra libre avait été activée par beginRecoveryCamera.",
+      "params": {"vehicleId": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [],
+      "internal": false
+    },
+    "onDespawnObject": {
+      "desc": "Hook appelé quand un objet est supprimé : oublie un recovery en cours pour ce véhicule.",
+      "params": {"vehicleId": {"type": "integer", "desc": "Id de l'objet supprimé."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "path": "lua/ge/extensions/scenario/raceMarkers/ringMarker.lua",
+  "module": "Marqueur de checkpoint « anneau » : un anneau 3D (checkpoint_ring.dae, ou checkpoint_ring_finish.dae pour les modes lap et final) orienté selon la normale du checkpoint et coloré selon le mode, avec un fondu de 0.3 s entre deux modes. Le module renvoie un constructeur : require('scenario/raceMarkers/ringMarker')(id) donne un objet de la classe C.",
+  "notes": [
+    "Couleurs par mode : default rouge (1, 0.07, 0), next noir, start et lap vert (0.4, 1, 0.2), final bleu (0.1, 0.3, 1), branch orange (1, 0.6, 0), hidden noir (fondu sortant puis masqué).",
+    "setToCheckpoint(wp) lit wp.pos, wp.radius, wp.normal (direction de l'anneau), wp.up (vec3, défaut 0,0,1) et wp.mode (choisit le modèle).",
+    "Dans setToCheckpoint l'échelle est radius+1.5, mais update la ramène à radius : l'écart ne dure qu'à la première image.",
+    "La page extraite affiche update(dtSim) ; la signature réelle est update(dt, dtSim)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Marqueur anneau de checkpoint.",
+      "functions": {
+        "init": {"desc": "Constructeur : initialise l'état et copie la table des modes.", "params": {"id": {"type": "integer", "desc": "Identifiant unique."}}, "internal": true},
+        "update": {"desc": "Appel par image : avance le fondu de couleur, masque l'anneau une fois en mode 'hidden', met à jour échelle et couleur.", "params": {"dt": {"type": "number", "desc": "Durée réelle (s)."}, "dtSim": {"type": "number", "desc": "Durée simulée (s)."}}, "internal": true},
+        "setToCheckpoint": {"desc": "Place l'anneau (position, modèle selon wp.mode, rotation) sur un checkpoint.", "params": {"wp": {"type": "table", "desc": "{pos, radius, normal?, up?, mode?}."}}},
+        "setMode": {"desc": "Passe à un mode : affiche (sauf 'hidden'), démarre le fondu de couleur depuis l'ancien mode et change le modèle.", "params": {"mode": {"type": "string", "desc": "default, next, start, lap, final, branch ou hidden."}}},
+        "setVisibility": {"desc": "Affiche ou cache l'anneau.", "params": {"v": {"type": "boolean", "desc": "Visibilité."}}},
+        "hide": {"desc": "Appelle setVisibility(false).", "params": {}},
+        "show": {"desc": "Appelle setVisibility(true).", "params": {}},
+        "createObject": {"desc": "Crée un TSStatic caché enregistré sous objectName et ajouté à ScenarioObjectsGroup.", "params": {"shapeName": {"type": "string", "desc": "Chemin du modèle."}, "objectName": {"type": "string", "desc": "Nom d'enregistrement."}}, "returns": [{"type": "table", "desc": "L'objet créé."}]},
+        "createMarkers": {"desc": "Supprime les anciens objets puis crée l'anneau.", "params": {}},
+        "clearMarkers": {"desc": "Supprime l'objet créé.", "params": {}}
+      }
+    }
+  }
+}

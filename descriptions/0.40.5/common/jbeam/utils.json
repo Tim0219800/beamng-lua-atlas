@@ -1,0 +1,86 @@
+{
+  "path": "lua/common/jbeam/utils.lua",
+  "module": "Fonctions utilitaires partagées du chargeur jbeam : ajout de nœuds et de poutres au véhicule en construction (compteurs maxIDs, copie des options), ajout de rotators, et calcul des transformations nodeRotate / nodeOffset / nodeMove appliquées aux positions de nœuds et de flexbodies (avec cache), plus deux helpers d'encodage string.buffer. Utilisé par les gestionnaires de roues, par le chargeur et par l'éditeur ; un mod qui génère des véhicules par code peut s'en servir pour ajouter des nœuds/poutres.",
+  "usage": "local jbeamUtils = require('jbeam/utils')\nlocal n = jbeamUtils.addNodeWithOptions(vehicle, vec3(0, 0, 1), 0, {nodeWeight = 5})\nlocal b = jbeamUtils.addBeamWithOptions(vehicle, n1, n2, 0, {beamSpring = 1e6})",
+  "notes": [
+    "Les identifiants de nœuds et poutres sont des cid à base 0 ; vehicle.maxIDs[nom] compte les éléments déjà créés (increaseMax renvoie la valeur AVANT incrémentation, donc le prochain cid libre).",
+    "addNode/addBeamWithOptions copient (deepcopy) la table d'options reçue : les options d'une roue ou du véhicule (vehicle.options) deviennent les champs de chaque nœud / poutre créé.",
+    "addBeamWithOptions : id1/id2 sont utilisés pour chercher vehicle.nodes[id] (clé = cid, et dans le chargeur aussi le nom du nœud) ; si id1/id2 sont nil ils sont lus dans options.id1/options.id2. Les champs id1, id2 de la poutre créée sont les cid des nœuds trouvés. Si un nœud est invalide, la fonction journalise un avertissement et renvoie nil (sans créer de poutre) : les appelants (gestionnaires de roues) ne vérifient pas ce retour.",
+    "Avec id3 (3e nœud), la poutre devient une poutre en L (BEAM_LBEAM = 4) quel que soit beamType et b.id3 est renseigné.",
+    "Constantes C codées en dur : NORMALTYPE = 0, BEAM_LBEAM = 4 (ne pas changer).",
+    "Transformations jbeam : les clés 'nodeRotateN', 'nodeOffsetN' et 'nodeMoveN' (N = 0 à 99, 1 ou 2 chiffres) d'un bloc jbeamData sont des tables {x, y, z} (nodeRotate : angles en degrés autour de x/y/z, avec pivot optionnel px, py, pz). Elles s'appliquent dans l'ordre de N croissant, et pour chaque N : rotation, puis offset, puis move. nodeOffset est ignoré si jbeamData.ignoreNodeOffset est vrai ; son x est multiplié par le signe de posX (symétrie gauche/droite).",
+    "Les fonctions de transformation partagent un cache au niveau du module (une seule transformation à la fois) et des vecteurs/quats temporaires : pas réentrantes.",
+    "Les angles d'Euler de rotation sont ceux de MatrixF (ZXY intrinsèque), en radians avec signe inversé pour les angles jbeam (rad(-angle))."
+  ],
+  "fields": {
+    "ignoreSections": {"type": "table<string, boolean>", "desc": "Sections jbeam ignorées par certains traitements : {maxIDs = true, options = true}."}
+  },
+  "functions": {
+    "increaseMax": {
+      "desc": "Réserve le prochain identifiant : renvoie vehicle.maxIDs[name] (0 si nil) puis incrémente le compteur.",
+      "params": {"vehicle": {"type": "table", "desc": "véhicule en construction (doit avoir maxIDs)"}, "name": {"type": "string", "desc": "nom du compteur ('nodes', 'beams', 'wheels'…)"}},
+      "returns": [{"type": "integer", "desc": "identifiant réservé (cid)"}],
+      "internal": false
+    },
+    "addNodeWithOptions": {
+      "desc": "Ajoute un nœud au véhicule (table.insert dans vehicle.nodes) avec les champs de `options` copiés, plus cid, pos et ntype.",
+      "params": {"vehicle": {"type": "table", "desc": "véhicule en construction"}, "pos": {"type": "vec3", "desc": "position du nœud"}, "ntype": {"type": "integer", "desc": "type de nœud (0 = NORMALTYPE, valeurs du moteur C)"}, "options": {"type": "table|nil", "desc": "options à copier dans le nœud (nodeWeight, collision, group…)"}},
+      "returns": [{"type": "integer", "desc": "cid du nœud créé"}],
+      "internal": false
+    },
+    "addNode": {
+      "desc": "addNodeWithOptions avec les options globales du véhicule (vehicle.options).",
+      "params": {"vehicle": {"type": "table", "desc": "véhicule en construction"}, "pos": {"type": "vec3", "desc": "position"}, "ntype": {"type": "integer", "desc": "type de nœud"}},
+      "returns": [{"type": "integer", "desc": "cid du nœud créé"}],
+      "internal": false
+    },
+    "addBeamWithOptions": {
+      "desc": "Ajoute une poutre entre deux nœuds existants avec les options copiées, plus cid, id1, id2 (cid des nœuds) et beamType. Avec id3, crée une poutre en L (BEAM_LBEAM). Renvoie nil avec un avertissement si un nœud est introuvable.",
+      "params": {"vehicle": {"type": "table", "desc": "véhicule en construction"}, "id1": {"type": "integer|string|nil", "desc": "premier nœud (clé dans vehicle.nodes ; nil = options.id1)"}, "id2": {"type": "integer|string|nil", "desc": "second nœud (nil = options.id2)"}, "beamType": {"type": "integer", "desc": "type de poutre (0 normale, 1 anisotrope, 3 pressurisée, 7 soutien… valeurs du moteur C)"}, "options": {"type": "table|nil", "desc": "options de la poutre (beamSpring, beamDamp, beamStrength…)"}, "id3": {"type": "integer|string|nil", "desc": "troisième nœud pour une poutre en L"}},
+      "returns": [{"type": "table|nil", "desc": "poutre créée (avec cid), nil si échec"}],
+      "internal": false
+    },
+    "addBeam": {
+      "desc": "addBeamWithOptions de type NORMALTYPE (0) avec les options du véhicule.",
+      "params": {"vehicle": {"type": "table", "desc": "véhicule en construction"}, "id1": {"type": "integer|string", "desc": "premier nœud"}, "id2": {"type": "integer|string", "desc": "second nœud"}},
+      "returns": [{"type": "table|nil", "desc": "poutre créée"}],
+      "internal": false
+    },
+    "addRotator": {
+      "desc": "Prépare un rotator (roue sans pneu) : frictionCoef vaut 1 par défaut ; collecte les nœuds des groupes _group_nodes et _rotatorGroup_nodes dans wheel.nodes (références vers vehicle.nodes).",
+      "params": {"vehicle": {"type": "table", "desc": "véhicule en construction"}, "wheelKey": {"type": "integer", "desc": "indice du rotator (non utilisé)"}, "wheel": {"type": "table", "desc": "définition du rotator (modifiée)"}},
+      "returns": [],
+      "internal": true
+    },
+    "getPosAfterNodeRotateOffsetMove": {
+      "desc": "Position (x, y, z) après application des transformations nodeRotate / nodeOffset / nodeMove contenues dans jbeamData. Sans transformation, renvoie x, y, z inchangés.",
+      "params": {"jbeamData": {"type": "table", "desc": "bloc jbeam contenant les clés nodeRotateN / nodeOffsetN / nodeMoveN"}, "x": {"type": "number", "desc": "x d'origine"}, "y": {"type": "number", "desc": "y d'origine"}, "z": {"type": "number", "desc": "z d'origine"}},
+      "returns": [{"type": "number", "desc": "x transformé"}, {"type": "number", "desc": "y transformé"}, {"type": "number", "desc": "z transformé"}],
+      "internal": false
+    },
+    "getFlexbodyPosRotAfterNodeRotateOffsetMove": {
+      "desc": "Position et rotation (degrés, rx/ry/rz) d'un flexbody après application des transformations nodeRotate/nodeOffset/nodeMove. Sans transformation (opCount == 0) ne renvoie rien (nil). Sans rotation, renvoie seulement x, y, z décalés.",
+      "params": {"jbeamData": {"type": "table", "desc": "bloc jbeam avec les opérations"}, "x": {"type": "number", "desc": "x"}, "y": {"type": "number", "desc": "y"}, "z": {"type": "number", "desc": "z"}, "rx": {"type": "number", "desc": "rotation x (degrés)"}, "ry": {"type": "number", "desc": "rotation y (degrés)"}, "rz": {"type": "number", "desc": "rotation z (degrés)"}},
+      "returns": [{"type": "number|nil", "desc": "x"}, {"type": "number|nil", "desc": "y"}, {"type": "number|nil", "desc": "z"}, {"type": "number|nil", "desc": "rx (degrés), seulement s'il y a une rotation"}, {"type": "number|nil", "desc": "ry"}, {"type": "number|nil", "desc": "rz"}],
+      "internal": false
+    },
+    "getPosRotBeforeNodeRotateOffsetMove": {
+      "desc": "Opération inverse : retrouve la position et la rotation d'origine (avant nodeRotate/nodeOffset/nodeMove) à partir de valeurs transformées. Teste les signes de x (1, 0, puis -1) car nodeOffset dépend du signe de posX.",
+      "params": {"jbeamData": {"type": "table", "desc": "bloc jbeam avec les opérations"}, "x": {"type": "number", "desc": "x transformé"}, "y": {"type": "number", "desc": "y transformé"}, "z": {"type": "number", "desc": "z transformé"}, "rx": {"type": "number", "desc": "rotation x (degrés)"}, "ry": {"type": "number", "desc": "rotation y (degrés)"}, "rz": {"type": "number", "desc": "rotation z (degrés)"}},
+      "returns": [{"type": "number", "desc": "x d'origine"}, {"type": "number", "desc": "y d'origine"}, {"type": "number", "desc": "z d'origine"}, {"type": "number", "desc": "rx d'origine"}, {"type": "number", "desc": "ry d'origine"}, {"type": "number", "desc": "rz d'origine"}],
+      "internal": false
+    },
+    "stringBufferEncode": {
+      "desc": "Encode data avec string.buffer (buf:encode) dans un nouveau buffer et le renvoie (format binaire LuaJIT).",
+      "params": {"data": {"type": "any", "desc": "valeur encodable"}},
+      "returns": [{"type": "string.buffer", "desc": "buffer contenant les données encodées"}],
+      "internal": false
+    },
+    "stringBufferDecode": {
+      "desc": "Décode la valeur en tête d'un string.buffer SANS la consommer (buf:peekdecode()).",
+      "params": {"buf": {"type": "string.buffer", "desc": "buffer produit par stringBufferEncode"}},
+      "returns": [{"type": "any", "desc": "valeur décodée"}],
+      "internal": false
+    }
+  }
+}

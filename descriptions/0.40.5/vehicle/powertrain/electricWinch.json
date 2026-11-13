@@ -1,0 +1,76 @@
+{
+  "path": "lua/vehicle/powertrain/electricWinch.lua",
+  "module": "Composant powertrain `electricWinch` : treuil électrique très sommaire, de catégorie `winch` et `torqueConsumer`, sans port de sortie. Son code est un prototype : à chaque pas physique il tire sur la poutre étiquetée `ropeTest` avec une force fixe de 500000 N multipliée par le niveau d'allumage, sans paramètre jbeam de réglage. Un moddeur ne s'en sert pas en pratique ; voir hydraulicWinch (vide) et linearActuator pour des actionneurs réels.",
+  "notes": [
+    "Aucune clé jbeam propre au treuil n'est lue, hormis name, type, inputName, inputIndex, gearRatio (1), friction et dynamicFriction.",
+    "Le comportement est codé en dur : torqueUpdate appelle obj:actuateBeam(beamstate.tagBeamMap.ropeTest[1], force, 10, 0, 0, 10, 0, 100, 0, 0) avec force = -electrics.values.ignitionLevel * 500000. Si aucune poutre n'est taguée 'ropeTest', beamstate.tagBeamMap.ropeTest est nil et une erreur Lua se produit.",
+    "outputTorque1 est toujours 0. inputAV = outputAV1 * gearRatio ; la valeur est écrite dans le champ de vitesse du parent (device.parent[parentOutputAVName]).",
+    "Incohérences : calculateInertia lit device.maxGearRatio qui n'est jamais défini (maxCumulativeGearRatio devient nil) et la division par gearRatio² avec une inertie de sortie 0 donne 0 ; new ne définit ni onBreak ni validate, alors que setPartCondition appelle device:onBreak() si isBroken. M.requiredExternalInertiaOutputs n'est pas défini dans ce module."
+  ],
+  "fields": {
+    "outputPorts": {"type": "table", "desc": "Table vide : aucun port de sortie."},
+    "deviceCategories": {"type": "table<string, boolean>", "desc": "{winch=true, torqueConsumer=true}."}
+  },
+  "functions": {
+    "new": {
+      "desc": "Construit le device treuil avec les champs standard (gearRatio, friction, coefficients d'usure/dégâts, inertie) et les fonctions de mise à jour. Il n'appelle pas selectUpdates : velocityUpdate et torqueUpdate sont posées directement.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
+      "returns": [{"type": "table", "desc": "Le device (classe `device`)."}],
+      "internal": true
+    }
+  },
+  "classes": {
+    "device": {
+      "desc": "Objet renvoyé par new(jbeamData).",
+      "functions": {
+        "velocityUpdate": {
+          "desc": "Appelée à chaque pas physique : inputAV = outputAV1 * gearRatio, écrit dans le parent.",
+          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (inutilisé)."}},
+          "returns": [],
+          "internal": true
+        },
+        "torqueUpdate": {
+          "desc": "Appelée à chaque pas physique : met outputTorque1 à 0 et actionne la première poutre étiquetée 'ropeTest' avec une force de -ignitionLevel * 500000 N, vitesse limite 10 et course 0 à 100.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "applyDeformGroupDamage": {
+          "desc": "Augmente le coefficient de frottement de dégâts (0.01 de dégât = +0.1).",
+          "params": {"damageAmount": {"type": "number", "desc": "Quantité de dégâts du groupe de déformation."}},
+          "returns": [],
+          "internal": true
+        },
+        "setPartCondition": {
+          "desc": "Applique usure et dégâts selon l'odomètre et l'intégrité ; appelle onBreak si l'état indique isBroken, mais ce device ne définit pas onBreak.",
+          "params": {
+            "subSystem": {"type": "any", "desc": "Non utilisé."},
+            "odometer": {"type": "number", "desc": "Distance parcourue en mètres."},
+            "integrity": {"type": "number|table", "desc": "Nombre 0..1 ou table {damageFrictionCoef, isBroken}."},
+            "visual": {"type": "any", "desc": "Non utilisé."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "getPartCondition": {
+          "desc": "Renvoie l'intégrité 0..1 (0 si cassé) et la table {damageFrictionCoef, isBroken}.",
+          "params": {},
+          "returns": [{"type": "number", "desc": "Intégrité 0..1."}, {"type": "table", "desc": "État sauvegardable."}],
+          "internal": true
+        },
+        "calculateInertia": {
+          "desc": "Pose cumulativeInertia = 0 (inertie de sortie nulle) et les rapports cumulés (maxCumulativeGearRatio reste nil, voir notes).",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "reset": {
+          "desc": "Remet à zéro vitesses, couple, inertie cumulée, coefficients d'usure/dégâts et isBroken ; relit friction.",
+          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
+          "returns": [],
+          "internal": true
+        }
+      }
+    }
+  }
+}

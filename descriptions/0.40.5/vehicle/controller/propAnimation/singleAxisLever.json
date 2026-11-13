@@ -1,0 +1,18 @@
+{
+  "path": "lua/vehicle/controller/propAnimation/singleAxisLever.lua",
+  "module": "Contrôleur auxiliaire d'animation d'un levier de vitesses à un seul axe (levier de boîte automatique). Convertit electrics.values.gearModeIndex en position de levier lissée (électrique de sortie) grâce à une table de coordonnées par index de mode, et joue un son de levier au début de chaque déplacement.",
+  "notes": [
+    "Clés jbeam lues : gearCoordinates (table d'en-tête avec colonnes gearIndex, value), electricsNamePosition (\"gearModeIndex\" par défaut : attention, le défaut écrase l'electric lu en entrée), shiftSoundNode_nodes (premier élément = nœud du son ; sinon nœud 0 et log W), shiftSoundEventSingleAxisLever (\"event:>Vehicle>Interior>Gearshift>automatic_01_in\"), shiftSoundVolumeSingleAxisLever (0.5).",
+    "Lit electrics.values.gearModeIndex (alimenté par vehicleController à partir de getGearPosition du module de boîte).",
+    "Un index absent de la table utilise la coordonnée du plus grand ou du plus petit index existant.",
+    "Piège : avec electricsNamePosition par défaut identique à l'entrée, le contrôleur réécrit gearModeIndex avec la position du levier, ce qui perturbe sa propre lecture au frame suivant. Définir un autre nom en jbeam."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "init": {"desc": "Lit la table de coordonnées, le nœud/évènement du son et le nom de l'electric de sortie.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
+    "reset": {"desc": "Remet la position du levier à 0 et le lisseur à zéro.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "updateGFX": {"desc": "Chaque frame : lisse la position vers la coordonnée du mode courant, joue le son au début du mouvement et publie la position.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true}
+  }
+}

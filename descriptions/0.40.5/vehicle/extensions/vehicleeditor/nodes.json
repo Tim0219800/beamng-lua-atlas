@@ -1,0 +1,23 @@
+{
+  "path": "lua/vehicle/extensions/vehicleeditor/nodes.lua",
+  "module": "Petit utilitaire de l'éditeur de véhicule : calcule la masse cumulée de nœuds du véhicule à partir de la masse physique réellement simulée (obj:getNodeMass).",
+  "usage": "local total, min, max = vehicleeditor_nodes.calculateNodesWeight()",
+  "notes": [
+    "obj:getNodeMass est appelé jusqu'à 3 fois par nœud (pas mis en cache).",
+    "Masses en kg (déduit : unité des masses de nœuds jbeam).",
+    "Si la table est vide : renvoie 0, -math.huge, math.huge."
+  ],
+  "fields": {},
+  "functions": {
+    "calculateNodesWeight": {
+      "desc": "Somme les masses des nœuds de la table et renvoie aussi la plus petite et la plus grande masse de nœud.",
+      "params": {"nodesTbl": {"type": "table|nil", "desc": "Table de nœuds (chacun avec un champ cid) ; v.data.nodes si nil."}},
+      "returns": [
+        {"type": "number", "desc": "Masse totale."},
+        {"type": "number", "desc": "Masse minimale d'un nœud."},
+        {"type": "number", "desc": "Masse maximale d'un nœud."}
+      ],
+      "internal": false
+    }
+  }
+}

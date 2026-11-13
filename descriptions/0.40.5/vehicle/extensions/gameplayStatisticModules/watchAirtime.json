@@ -1,0 +1,14 @@
+{
+  "path": "lua/vehicle/extensions/gameplayStatisticModules/watchAirtime.lua",
+  "module": "Module de gameplayStatistic qui mesure le temps où le véhicule est entièrement en l'air : vitesse sol > 6 m/s, aucune roue en contact (contactMaterialID1 et 2 = -1) et axe haut du véhicule à moins de 45° de la verticale (z > 0,707). Au retour au sol, si la durée dépasse 0,1 s, ajoute la métrique 'vehicle/airtime.time' (agrégée).",
+  "notes": [
+    "Se décharge (onExtensionLoaded renvoie false) si le contrôleur principal n'est pas 'vehicleController/vehicleController' ou si le véhicule n'a pas de roues.",
+    "Ignoré si le nombre de roues a changé depuis le chargement (roue perdue).",
+    "Le temps est mesuré avec obj:getSimTime(). Le code contient un commentaire 'todo redo this' sur le test d'inclinaison."
+  ],
+  "fields": {},
+  "functions": {
+    "onExtensionLoaded": {"desc": "Appelé au chargement : mémorise le nombre de roues ; renvoie false pour se décharger si le véhicule ne convient pas.", "params": {}, "returns": [{"type": "boolean|nil", "desc": "false pour demander le déchargement."}], "internal": true},
+    "workload": {"desc": "Fonction de surveillance exécutée à tour de rôle par gameplayStatistic : met à jour l'état 'en l'air' et envoie la métrique à l'atterrissage.", "params": {}, "returns": [], "internal": true}
+  }
+}

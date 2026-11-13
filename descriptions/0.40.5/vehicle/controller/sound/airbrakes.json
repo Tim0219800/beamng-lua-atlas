@@ -1,0 +1,16 @@
+{
+  "path": "lua/vehicle/controller/sound/airbrakes.lua",
+  "module": "Contrôleur auxiliaire de son de purge de freins pneumatiques simple (sans simulation d'air, contrairement à pneumatics/airbrakes). Surveille electrics.values[electricsBrakeName] ; si le frein se relâche de plus de 0.2 par seconde sur une fenêtre de 0.25 s, joue un « pschitt » dont l'intensité dépend de la vitesse de relâchement, puis attend un délai de recharge.",
+  "notes": [
+    "Clés jbeam lues : soundNode_nodes (premier élément = nœud du son, 0 sinon), soundEvent (\"event:>Vehicle>Pneumatics>Air_Brakes\"), soundCoolDown (0.5 s), electricsBrakeName (\"brake\").",
+    "L'intensité passée au son est -dBrake x 0.25 (non plafonnée, contrairement à pneumatics/airbrakes qui plafonne à 0.99)."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "init": {"desc": "Lit la configuration jbeam et remet l'état à zéro.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "reset": {"desc": "Remet l'état d'échantillonnage à zéro.", "internal": true},
+    "updateGFX": {"desc": "Chaque frame : détecte un relâchement rapide du frein et joue le son.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true}
+  }
+}

@@ -1,0 +1,152 @@
+{
+  "path": "lua/vehicle/hydros.lua",
+  "module": "Gère les hydros jbeam (poutres/barres de torsion pilotées par une entrée : direction, bennes, grues, etc.) et le retour de force (FFB) du volant. À l'init il lit v.data.hydros (poutres) et v.data.torsionHydros, normalise leurs limites et centre, et sépare les hydros de direction (inputSource 'steering_input') des autres. À chaque pas de physique (update) il déplace chaque hydro vers sa commande (cmd, lue dans electrics.values via inputFlex) avec des taux inRate/outRate ; pour le volant physique, la position du volant pilote la direction et la force mesurée sur les poutres de direction est renvoyée au matériel (FFBcalc : lissage, compression, amortissement, butée logicielle « softlock »). Fournit aussi un volant virtuel pour les tests (enableVirtualWheel).",
+  "usage": "-- lire la force de volant normalisée (-1..1)\nlocal f = hydros.forceAtWheelNorm\n-- couper le FFB matériel temporairement\nhydros.enableFFB = false\nhydros.setFFBConfig({forceCoef = 80, smoothing = 40})",
+  "notes": [
+    "UNITÉS/ÉCHELLES : FFmax = 10 (force maximale interne du pilote FFB). forceAtDriver est dans [-10, 10] ; forceAtDriverNorm et forceAtWheelNorm = valeur / 10 ; curForceLimit croît de 0 à wheelFFBForceLimit en quelques secondes après spawn/reset/pause (anti-pic), curForceLimitNorm = curForceLimit / 10. Les descriptions de champs générées automatiquement dans la page d'extraction sont décalées d'un cran ; les définitions ci-dessous sont celles du code.",
+    "Chaque hydro (table dans M.hydros) reçoit à l'init : bcid (cid de la poutre ou de la barre), fIsBroken/fgetDisplacement/fsetRelDisplacement (fonctions obj adaptées poutre ou barre de torsion), center, multOut/multIn/cOut/cIn (conversion entrée -> état), cmd (commande), state (position -1..1 environ), _inrate/_outrate (par pas de physique), smoothrate. Clés jbeam utilisées : beamCID/cid, inputSource (ex. 'throttle', 'steering' -> normalisé en 'steering_input'), inputFactor, inputCenter, inputInLimit, inputOutLimit, inLimit, outLimit, inRate, outRate, autoCenterRate, analogue, forceLimit, steeringWheelLock, steeringAutocenterEnabled, lowspeedCoefFFB.",
+    "Le mécanisme inputFlex permet à un hydro avec forceLimit de « céder » : si la contrainte de la poutre dépasse forceLimit, l'entrée source est décalée pour limiter l'effort (hystérésis).",
+    "Le hook d'extension onFFBConfigChanged(config) est appelé par le moteur quand les périphériques FFB changent (périphériques steering / accelerate / brake). Il choisit FFBID, la fréquence d'envoi (30 Hz mini, jusqu'à 400 Hz par heuristique sur ffbSendms, ou la fréquence utilisateur plafonnée), la courbe de réponse corrigée (responseCurve), le mode vibration manette, et appelle input_haptics.",
+    "Les mises à jour FFB sont limitées en temps réel (horloge murale os.clockhp) à FFBperiod (1/200 s par défaut), pas en temps simulé ; enableFFBflood supprime cette limite (debug).",
+    "Bug repéré : sendHydroStateToGUI envoie `M.state` qui n'est défini nulle part dans ce fichier (nil). Le champ torqueCurrent n'est défini qu'après onFFBConfigChanged (valeur ffbParams.torqueCurrent ou 100).",
+    "M.update et M.updateGFX sont remplacés par nop si le véhicule n'a aucun hydro (init/reset). isPhysicsStepUsed() renvoie vrai seulement quand update n'est pas nop (utilisé par main.lua).",
+    "Un champ optionnel M.testHook(dtSim, simWheelPos, hydroPos) peut être défini par des outils de test (ex. ffbCalibration) pour intercepter le calcul FFB."
+  ],
+  "fields": {
+    "hydros": {"type": "table[]", "desc": "Liste de tous les hydros (poutres puis barres de torsion) avec leurs champs calculés."},
+    "enableFFB": {"type": "boolean", "desc": "true par défaut ; mis à false les requêtes réelles vers le matériel FFB sont ignorées (les calculs continuent)."},
+    "enableVibration": {"type": "boolean", "desc": "false par défaut ; true en mode vibration (manette), le FFB volant est alors désactivé (FFBHydrosExist = false)."},
+    "enableFFBflood": {"type": "boolean", "desc": "false par défaut ; true = ignore les contrôles de temps et envoie à ~2 kHz (debug uniquement : sature les pilotes)."},
+    "enableThrottleForceFeedback": {"type": "boolean", "desc": "Active le retour de force de l'accélérateur en mode vibration de manette (défaut true)."},
+    "enableBrakeForceFeedback": {"type": "boolean", "desc": "Active le retour de force du frein en mode vibration de manette (défaut true)."},
+    "deviceLightingMode": {"type": "string", "desc": "Configuration d'éclairage du périphérique ('off' par défaut ; 'default' active l'envoi des LED de régime)."},
+    "wheelFFBForceCoef": {"type": "number", "desc": "Coefficient de force FFB à vitesse normale (défaut 100)."},
+    "wheelFFBForceCoefLowSpeed": {"type": "number", "desc": "Coefficient de force aux vitesses de parking (initialement = wheelFFBForceCoef ; = forceCoef/10 si lowspeedCoef)."},
+    "wheelFFBForceCoefCurrent": {"type": "number", "desc": "Coefficient courant, interpolé entre bas régime et normal selon la vitesse (ffbSpeedFast), 0 quand l'IA conduit."},
+    "wheelPowerSteeringCoef": {"type": "number", "desc": "Coefficient de direction assistée (défaut 1) appliqué au déplacement de volant dans la force FFB."},
+    "wheelFFBForceLimit": {"type": "number", "desc": "Limite de force FFB stable (échelle 0..FFmax = 10)."},
+    "wheelFFBForceCompressionCoef": {"type": "number", "desc": "Part de la limite à partir de laquelle la force est comprimée (0..1, défaut 0.9)."},
+    "GforceCoef": {"type": "number", "desc": "Coefficient d'effet des forces G latérales (sensors.gx) sur la force du volant (défaut 0)."},
+    "forceAtWheelNorm": {"type": "number", "desc": "Force mesurée au volant, normalisée (force / FFmax)."},
+    "forceAtDriverNorm": {"type": "number", "desc": "Force envoyée au pilote matériel, normalisée."},
+    "forceAtDriver": {"type": "number", "desc": "Force envoyée au pilote matériel dans [-FFmax, FFmax]."},
+    "curForceLimit": {"type": "number", "desc": "Limite de force courante (préventeur de pics) : repart de 0 après spawn/reload/pause et grimpe jusqu'à wheelFFBForceLimit."},
+    "curForceLimitNorm": {"type": "number", "desc": "curForceLimit / FFmax."},
+    "ffbSpeedFast": {"type": "number", "desc": "Vitesse (m/s) au-delà de laquelle la force FFB atteint son coefficient normal (5 / 3.6)."},
+    "torqueCurrent": {"type": "number", "desc": "Couple courant du volant déclaré par la config FFB (défini par onFFBConfigChanged, 100 par défaut)."}
+  },
+  "functions": {
+    "init": {
+      "desc": "Prépare les hydros à partir de v.data.hydros et v.data.torsionHydros : calcul des multiplicateurs/centres, répartition direction / autres, inputFlex, coefficient FFB du véhicule (v.data.input.FFBcoef x 1.2), initialisation des haptiques, puis reset(). Appelée par main.lua (initSystems).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet les états des hydros au centre, réinitialise lisseurs FFB et volant virtuel, coupe les interfaces FFB ; réactive update/updateGFX s'il y a des hydros (sinon nop).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "update": {
+      "desc": "Pas de physique (main.lua:onPhysicsStep, après controller.update). Avance chaque hydro vers sa commande ; pour les hydros de direction avec FFB actif, suit la position du volant réel et lance le calcul FFB (FFBcalc).",
+      "params": {"dtSim": {"type": "number", "desc": "Pas de physique en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Frame graphique (après extensions et electrics, avant powertrain). Met à jour le volant virtuel, l'inputFlex, les commandes (cmd) et taux de lissage, le modèle de mouvement du volant pour le FFB, la limite de force, le coefficient de force selon la vitesse, et electrics.values.steering (angle en degrés).",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "debugDraw": {
+      "desc": "Appelée par main.lua:onDebugDraw. Réinitialise le lisseur FFB quand le temps réel d'image est aberrant (moins de 10 fps ou à l'arrêt) pour éviter des pics.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "destroy": {
+      "desc": "Appelée à la suppression du véhicule (main.lua:onDespawnObject) : coupe toutes les interfaces FFB (force 0).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "isPhysicsStepUsed": {
+      "desc": "Indique si hydros a besoin du pas de physique (update actif).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si M.update ~= nop."}],
+      "internal": true
+    },
+    "onFFBConfigChanged": {
+      "desc": "Hook appelé quand la configuration des périphériques FFB change : coupe les interfaces, relit steering/accelerate/brake, choisit FFBID, force, lissage, softlock, courbe de réponse, fréquence d'envoi et configure input_haptics.",
+      "params": {"newFFBConfig": {"type": "table|nil", "desc": "Config {steering = {FFBID, ffbParams, ffbSendms}, accelerate = {FFBID}, brake = {FFBID}} ; nil pour désactiver."}},
+      "returns": [],
+      "internal": true
+    },
+    "getFFBConfig": {
+      "desc": "Renvoie la configuration FFB courante.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{forceCoef, softlockForce, smoothing, gforceCoef, wheelFFBDampLimit}."}],
+      "internal": false
+    },
+    "setFFBConfig": {
+      "desc": "Met à jour des paramètres FFB à chaud (seuls les champs fournis sont modifiés) puis coupe les interfaces FFB.",
+      "params": {"ffbParams": {"type": "table", "desc": "Champs possibles : forceCoef, softlockForce (0..1), smoothing, gforceCoef, enableThrottleForceFeedback, enableBrakeForceFeedback, deviceLightingMode, wheelFFBDampLimit."}},
+      "returns": [],
+      "internal": false
+    },
+    "resetFFBSmoother": {
+      "desc": "Remet à 0 le lisseur de force FFB et la limite de force (anti-pic).",
+      "params": {},
+      "returns": []
+    },
+    "enableVirtualWheel": {
+      "desc": "Active ou désactive un volant virtuel (simulation logicielle d'un volant FFB) : active FFB avec FFBID 0, remplace la fonction d'envoi de force et celle de lecture d'angle.",
+      "params": {
+        "isEnabled": {"type": "boolean|nil", "desc": "true (par défaut si nil) pour activer."},
+        "wheelAngleFun": {"type": "function|nil", "desc": "Fonction renvoyant l'angle de volant -1..1 (volant virtuel par défaut)."},
+        "sendForceFun": {"type": "function|nil", "desc": "Fonction d'envoi de force (o, FFBID, torque, dampCoef, inertia, friction) ; virtualSendForceFeedback par défaut."}
+      },
+      "returns": []
+    },
+    "setExternalForce": {
+      "desc": "Ajoute une force externe au calcul du FFB au volant (avant le coefficient de force).",
+      "params": {"force": {"type": "number", "desc": "Force externe (même échelle que le déplacement de volant)."}},
+      "returns": []
+    },
+    "sendHydroStateToGUI": {
+      "desc": "Envoie guihooks.trigger('HydrosUpdate', M.state) ; M.state n'est jamais défini dans ce fichier (voir notes).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "sendRPMLeds": {
+      "desc": "Envoie au périphérique FFB les LED de régime (obj:sendRPMLeds) si FFBID est valide et deviceLightingMode vaut 'default'.",
+      "params": {
+        "currentRPM": {"type": "number", "desc": "Régime moteur courant."},
+        "rpmFirstLedTurnsOn": {"type": "number", "desc": "Régime d'allumage de la première LED."},
+        "rpmRedLine": {"type": "number", "desc": "Régime de la zone rouge."}
+      },
+      "returns": []
+    },
+    "getForceFeedbackFunction": {
+      "desc": "Renvoie la fonction d'envoi de force courante (obj.sendForceFeedback, ou celle du volant virtuel).",
+      "params": {},
+      "returns": [{"type": "function", "desc": "Fonction sendForceFeedback(obj, FFBID, force, ...)."}],
+      "internal": false
+    },
+    "getFFBID": {
+      "desc": "Renvoie l'identifiant du périphérique FFB de direction (-1 si aucun).",
+      "params": {},
+      "returns": [{"type": "integer", "desc": "FFBID (>= 0 valide)."}],
+      "internal": false
+    },
+    "getAngleFunction": {
+      "desc": "Renvoie la fonction qui donne l'angle de volant actuel : celle du volant virtuel si activé, sinon une fonction lisant electrics.values.steering_input.",
+      "params": {},
+      "returns": [{"type": "function", "desc": "Fonction sans argument renvoyant l'angle."}],
+      "internal": false
+    }
+  }
+}

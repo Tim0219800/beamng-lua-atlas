@@ -1,0 +1,36 @@
+{
+  "path": "lua/vehicle/controller/controllerTemplate.lua",
+  "module": "Modèle de départ pour écrire un contrôleur de véhicule. Un contrôleur est un module Lua placé dans lua/vehicle/controller/, déclaré dans le jbeam (section `controller` avec `fileName`, et éventuellement `name`) et chargé par `controller.lua`. Cycle de vie : `init(jbeamData)` à la création (jbeamData = déclaration fusionnée avec les données jbeam portant le nom du contrôleur), puis `initSecondStage`, `initSounds`, `initLastStage` (facultatifs) une fois les autres systèmes prêts ; au reset, `reset(jbeamData)` (ou, s'il est absent, `init` rappelé) ainsi que `resetLastStage` et `resetSounds`. En fonctionnement : `update(dt)` à chaque pas physique, `updateWheelsIntermediate(dt)`, `updateFixedStep(dt)` à pas fixe de 100 Hz, `updateGFX(dt)` à chaque frame graphique. Seules les fonctions réellement exportées dans M sont appelées. Autres hooks facultatifs : debugDraw, beamBroken, beamDeformed, nodeCollision, onCouplerFound/Attached/Detached, onGameplayEvent, settingsChanged, serialize/deserialize.",
+  "usage": "local M = {}\nM.type = \"auxiliary\"\nlocal function init(jbeamData)\n  -- lire jbeamData.maCle\nend\nlocal function updateGFX(dt)\nend\nM.init = init\nM.reset = init\nM.updateGFX = updateGFX\nreturn M",
+  "notes": [
+    "`M.type` : \"auxiliary\" pour un contrôleur ordinaire ; \"main\" désigne le contrôleur principal (un seul par véhicule, jamais chargeable à chaud).",
+    "controller.lua ajoute lui-même `name`, `typeName`, `hasCustomName`, `manualOrder` (clé jbeam `manualOrder`) et `order` au module après init. Un contrôleur peut définir `M.relevantDevice` (nom d'un périphérique du powertrain) ou `M.defaultOrder` pour influencer l'ordre d'appel.",
+    "Le hook de casse de poutre doit s'appeler `beamBroken` (et non beamBroke) pour être détecté.",
+    "Dans le modèle, onCouplerFound et onCouplerAttached sont commentés avec moins d'arguments que ceux réellement transmis par controller.lua (nodeDist pour Found ; attachSpeed, attachEnergy pour Attached).",
+    "Si un contrôleur ajoute ou retire dynamiquement `M.update` & co, il doit appeler `controller.cacheAllControllerFunctions()`.",
+    "Les fonctions commentées du modèle ne sont pas exportées ; seuls init, reset et updateGFX sont actifs."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\" dans le modèle (contrôleur annexe). \"main\" pour le contrôleur principal du véhicule."}
+  },
+  "functions": {
+    "init": {
+      "desc": "Appelée par controller.lua à la création du contrôleur (et au reset si `reset` n'existe pas). Corps vide dans le modèle ; c'est ici qu'on lit les clés jbeam.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur (fileName, name, clés personnalisées…)."}},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Appelée au reset du véhicule (étape resetSecondStage de controller.lua). Corps vide dans le modèle.",
+      "params": {"jbeamData": {"type": "table", "desc": "Mêmes données jbeam que pour init."}},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Appelée à chaque frame graphique. Corps vide dans le modèle. Les variantes `update` (pas physique), `updateWheelsIntermediate` et `updateFixedStep` (100 Hz) sont fournies en commentaire.",
+      "params": {"dt": {"type": "number", "desc": "Durée du pas en secondes."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "path": "lua/vehicle/props.lua",
+  "module": "Pilote les props animés du véhicule (section jbeam \"props\" : aiguilles, volant, pièces articulées, lumières de props). À chaque frame, chaque prop lit la valeur electrics.values[prop.func], la convertit (multiplier, min, max, offset) et l'envoie au moteur via obj:propUpdate. Gère aussi le masquage des props quand un groupe de casse (breakGroup) ou de déformation (deformGroup) est cassé.",
+  "usage": "-- masquer à la main les props d'un groupe de casse\nprops.hidePropsInBreakGroup('door_FL')",
+  "notes": [
+    "M.updateGFX vaut nop (fonction vide) tant qu'aucun prop n'existe ; reset() la remplace par la vraie fonction updateGFX seulement si v.data.props contient au moins un prop. Si les props disparaissent après un reset, updateGFX reste sur l'ancienne fonction (pas remise à nop).",
+    "Les props sont indexés à partir de 0 (props[0]…props[propEnd]).",
+    "Valeur envoyée au moteur : clamp(val * multiplier, min, max) + offset ; les booléens sont convertis en 0/1. Le prop est caché si prop.hidden est vrai.",
+    "Clés jbeam de lumière de prop (lightScaling) : brightnessMinInput (déf. 0), brightnessMaxInput (1), flareScaleMinInput (0.6), flareScaleMaxInput (1), lightColorOffsetRed (0), lightColorOffsetGreen (60), lightColorOffsetBlue (80). Elles ne sont utilisées que si le prop définit aussi lightBrightness, flareScale et lightColor.",
+    "breakGroup et deformGroup peuvent être une chaîne ou une liste de chaînes ; les chaînes vides sont ignorées.",
+    "Un groupe n'est traité qu'une fois : après hidePropsInBreakGroup / disablePropsInDeformGroup, l'entrée de la table est supprimée jusqu'au prochain reset."
+  ],
+  "fields": {
+    "updateGFX": {"type": "function", "desc": "nop par défaut ; remplacée par la mise à jour des props lors de reset()/init() si le véhicule a des props. ⚠ nop est défini ailleurs (global du jeu)."}
+  },
+  "functions": {
+    "init": {
+      "desc": "Identique à reset() (M.init = reset). Lit v.data.props, construit les tables breakGroup/deformGroup, normalise la config lightScaling.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Réinitialise l'état de chaque prop (disabled=false, hidden=false, lastVal=math.huge), reconstruit les index de groupes et active updateGFX s'il y a des props.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "disablePropsInDeformGroup": {
+      "desc": "Désactive et cache tous les props rattachés au groupe de déformation donné, puis les remet à 0 côté moteur. Appelée par la gestion de dégâts (beamstate) quand un groupe se déforme.",
+      "params": {"deformGroup": {"type": "string", "desc": "Nom du groupe de déformation."}},
+      "returns": [],
+      "internal": false
+    },
+    "hidePropsInBreakGroup": {
+      "desc": "Désactive et cache tous les props rattachés au groupe de casse donné, puis les remet à 0 côté moteur. Appelée quand un groupe de poutres casse.",
+      "params": {"breakGroup": {"type": "string", "desc": "Nom du groupe de casse."}},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

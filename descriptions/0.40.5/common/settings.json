@@ -1,0 +1,74 @@
+{
+  "path": "lua/common/settings.lua",
+  "module": "Accès en lecture aux réglages du jeu depuis Lua (les deux VM). Au chargement il lit /settings/defaults.json (définitions : chaque réglage est un tableau dont l'élément [2] est la valeur par défaut), le fichier deprecated.json (réglages renommés/obsolètes), applique des préréglages (unités selon la langue de l'OS, fichier de plateforme, valeurs internes hors build shipping), puis getValues() fusionne défauts + réglages cloud + réglages locaux. C'est ce qu'un mod interroge avec settings.getValue('clé', valeurParDéfaut).",
+  "usage": "local units = settings.getValue('uiUnitLength', 'metric')\nlocal all = settings.getValues()",
+  "notes": [
+    "Les valeurs sont mises en cache (valuesCache) ; il faut appeler invalidateCache() (alias refresh, settingsChanged) après un changement de réglage pour relire les fichiers. Ce module est en lecture seule : il n'écrit aucun fichier.",
+    "Ordre de priorité des valeurs : défauts (modifiés par preset d'unités, plateforme, valeurs internes) < /settings/cloud/settings.json < /settings/settings.json (local). Les noms obsolètes/renommés sont convertis par upgradeSetting (deprecated.json), avec journalisation côté GE seulement.",
+    "Si une table C++ CppSettings existe et que le type de la valeur Lua diffère du type C++, la valeur est ignorée avec une erreur dans le log.",
+    "Les réglages 'persona' (personaScopedSettings : defaultGearboxBehavior, autoClutch, autoThrottle, spawnVehicleIgnitionLevel, playerCharacterFace) peuvent avoir une valeur par persona stockée dans /settings/persona-settings.tmp.json ; getValue/getPersonaValue y consultent persona (id ou table avec champ id).",
+    "Préréglage d'unités selon getOSLanguage : région US ou langue 'en' sans région -> imperial ; GB/UK -> british ; sinon metric ; appliqué aux défauts uiUnits*, uiUnitLength, etc.",
+    "Particularité : si l'UI est en menu simple (Engine.UI.isSimpleMenu), le défaut de uiContentScale vaut 1.05.",
+    "Les chemins M.path* ne sont pas des fonctions mais des champs de configuration (p. ex. M.pathLocal = '/settings/settings.json') ; M.defaults, M.deprecated, M.defaultValues sont des tables de travail."
+  ],
+  "fields": {
+    "path": {"type": "string", "desc": "'/settings/'"},
+    "pathDefaults": {"type": "string", "desc": "'/settings/defaults.json'"},
+    "pathDeprecated": {"type": "string", "desc": "'/settings/deprecated.json'"},
+    "pathInternal": {"type": "string", "desc": "'/settings/not-shipping.internal.json' (valeurs internes, lues hors build shipping)"},
+    "pathLocal": {"type": "string", "desc": "'/settings/settings.json' (réglages de l'utilisateur)"},
+    "pathCloud": {"type": "string", "desc": "'/settings/cloud/settings.json'"},
+    "pathVariables": {"type": "string", "desc": "'/settings/game-settings.json'"},
+    "pathPersona": {"type": "string", "desc": "'/settings/persona-settings.tmp.json'"},
+    "deprecatedPathTorquescript": {"type": "string", "desc": "'/settings/game-settings.cs' (ancien format TorqueScript)"},
+    "defaults": {"type": "table<string, table>", "desc": "définitions des réglages lues dans defaults.json ; chaque entrée est un tableau dont [2] est la valeur par défaut"},
+    "deprecated": {"type": "table<string, table>", "desc": "réglages obsolètes (champs replacement ou obsolete)"},
+    "personaScopedSettings": {"type": "table<string, boolean>", "desc": "réglages pouvant avoir une valeur par persona"},
+    "defaultValues": {"type": "table<string, any>", "desc": "valeurs par défaut précalculées (clé -> defaults[clé][2])"},
+    "internalValues": {"type": "table<string, any>|nil", "desc": "valeurs lues dans not-shipping.internal.json (existe seulement hors shipping et si le fichier existe)"}
+  },
+  "functions": {
+    "getValue": {
+      "desc": "Renvoie la valeur du réglage `key` (fusion défauts/cloud/local), ou defaultValue si elle est nil ; puis applique la valeur de persona le cas échéant (si key est dans personaScopedSettings et qu'un persona est fourni).",
+      "params": {"key": {"type": "string", "desc": "nom du réglage"}, "defaultValue": {"type": "any", "desc": "valeur de repli si le réglage n'existe pas"}, "persona": {"type": "table|string|number|nil", "desc": "persona (ou son id) pour les réglages par persona"}},
+      "returns": [{"type": "any", "desc": "valeur du réglage"}],
+      "internal": false
+    },
+    "getValues": {
+      "desc": "Renvoie la table complète des réglages fusionnés (mise en cache). Ne pas modifier la table renvoyée (c'est le cache).",
+      "params": {},
+      "returns": [{"type": "table<string, any>", "desc": "tous les réglages"}],
+      "internal": false
+    },
+    "getPersonaValue": {
+      "desc": "Valeur d'un réglage par persona. Si key n'est pas un réglage 'persona' ou s'il n'y a pas de persona, renvoie fallbackValue ; sinon la valeur stockée pour ce persona, ou à défaut la première fallbackValue mémorisée pour ce persona et cette clé.",
+      "params": {"key": {"type": "string", "desc": "nom du réglage"}, "fallbackValue": {"type": "any", "desc": "valeur par défaut"}, "persona": {"type": "table|string|number|nil", "desc": "persona ou id"}},
+      "returns": [{"type": "any", "desc": "valeur"}],
+      "internal": false
+    },
+    "invalidatePersonaCache": {
+      "desc": "Oublie le cache des valeurs par persona (relu au prochain accès).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "invalidateCache": {
+      "desc": "Oublie le cache des réglages et des réglages persona : le prochain getValue/getValues relira les fichiers. Mêmes fonctions : refresh et settingsChanged (compatibilité).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "refresh": {
+      "desc": "Alias d'invalidateCache (rétrocompatibilité).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "settingsChanged": {
+      "desc": "Alias d'invalidateCache, à appeler (par le moteur ou l'UI) quand des réglages viennent de changer.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

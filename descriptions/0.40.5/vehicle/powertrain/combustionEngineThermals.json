@@ -1,0 +1,148 @@
+{
+  "path": "lua/vehicle/powertrain/combustionEngineThermals.lua",
+  "module": "Sous-module thermique et d'usure d'un moteur à combustion. Ce n'est PAS un composant powertrain indépendant : il n'exporte pas `new` et n'est pas listé dans le jbeam. Il est chargé par powertrain/combustionEngine.lua avec rerequire (donc une instance par moteur ; le nom du fichier peut être remplacé par la clé jbeam `thermalsLuaFileName`) et rangé dans `device.thermals`. Il simule les températures du bloc, des parois de cylindre, de l'huile, du liquide de refroidissement et de l'échappement, le radiateur et ses ventilateurs, les fuites de liquide et d'huile, le manque d'huile, les dégâts (joint de culasse, segments, bielles, fusion), l'arbre d'échappement (nœuds et poutres isExhaust), les retours de flamme (afterfire), la fumée, la vapeur, les sons de refroidissement.",
+  "usage": "local engine = powertrain.getDevice(\"mainEngine\")\nlocal t = engine.thermals\nprint(t.coolantTemperature, t.oilTemperature, t.engineBlockTemperature, t.headGasketBlown) -- °C, booléen",
+  "notes": [
+    "Température en °C partout (l'environnement vient de obj:getEnvTemperature() converti de K en °C). Les énergies sont en J par pas de temps, les masses en kg, les débits de fuite en kg/s.",
+    "L'ensemble est désactivé sauf si le jbeam du moteur contient thermalsEnabled = true. Sans cela, init sort tôt, les fonctions de mise à jour restent nop et seules les températures initiales sont posées (reset les met à 80 °C ou à la température ambiante). Une erreur (matériau inconnu, pas de groupe de nœuds engineBlock, arbre d'échappement impossible à construire) désactive aussi les thermiques avec un message dans le log.",
+    "Clés jbeam du moteur lues (initThermals) : thermalsEnabled, headGasketBlownOverride, pistonRingsDamagedOverride, connectingRodBearingsDamagedOverride, particulates, idleParticulates, coolantVolume (kg, minimum 1.5), oilVolume (L, défaut 5, converti x0.87), oilMinimumSafeVolume, oilMaximumSafeVolume, oilpanNodes_nodes ({bas, haut}), oilpanMaximumSafeG (1.2), engineBlockMaterial ('iron' ou 'aluminium'/'aluminum'), engineBlockAirCoolingEfficiency (50), engineBlockAirflowCoef (1), blockFanMaxAirSpeed (0), radiatorFanType ('electric' ou 'mechanical'), electricRadiatorFanOverrideIgnitionLevel (-1), radiatorArea, radiatorEffectiveness, radiatorFanMaxAirSpeed, mechanicalFanRPMCoef (0.5), radiatorFanTemperature (110), thermostatTemperature (90), airRegulatorClosedCoef (0.1), oilThermostatTemperature (110), oilRadiatorArea, oilRadiatorEffectiveness, isAirCooledOnly, cylinderWallTemperatureDamageThreshold (160), engineBlockTemperatureDamageThreshold (140), headGasketDamageThreshold / pistonRingDamageThreshold / connectingRodDamageThreshold (2000000), radiatorDeformThreshold (0.015), radiatorDamageDeformGroup ('radiator_damage'), hasOilStarvingDamage (true), groupes de nœuds engineBlock._engineGroup_nodes et radiator._engineGroup_nodes (requis si radiateur).",
+    "Clés jbeam sons/effets lues dans initSounds/initThermals : radiatorHissLoopEvent, radiatorFanLoopEvent, radiatorFanVolume (0.5), engineTick* et exhaustTick* (PeriodGain, MinRate, MaxRate, MinTemperature, Pitch, SizeBias, Volume, StartDelay, EventName) pour les craquements de refroidissement, instant/sustained/shiftAfterFireSound, ...AfterFireVolumeCoef, afterFireAudibleThreshold*, afterFireVisualThreshold*.",
+    "Champs publics du module : engineBlockTemperature, cylinderWallTemperature, coolantTemperature, oilTemperature, exhaustTemperature (°C), radiatorFanSpin (degrés, 0..360), additionalCoolantEnergyPerStep (J ajoutés au liquide au pas suivant, remis à 0 ensuite, utilisable par d'autres composants ex. turbo/intercooler), exhaustEndNodes (liste des sorties d'échappement {start, finish, ...}), engineBlockOverheatDamage, oilOverheatDamage, cylinderWallOverheatDamage (accumulateurs de dégâts en J, plafonnés par les seuils), headGasketBlown, pistonRingsDamaged, connectingRodBearingsDamaged, engineBlockMelted, cylinderWallsMelted (booléens), debugData.engineThermalData (table envoyée au flux GUI 'engineThermalData').",
+    "Conséquences des dégâts : joint de culasse et segments = scaleOutputTorque(0.8) et fuites ; fusion du bloc ou des parois = scaleFriction(10000) (moteur quasi bloqué) ; huile > 150 °C = friction augmentée ; manque d'huile = scaleFrictionInitial croissant ; bielles = son de cognement. Le moteur parent doit donc fournir scaleOutputTorque, scaleFriction, scaleFrictionInitial, exhaustEndNodesChanged, engineWorkPerUpdate, pumpingLossPerUpdate, frictionLossPerUpdate, engineLoad, invBurnEfficiencyTable, etc.",
+    "Refroidissement par eau (par défaut) : le liquide est borné à 130 °C ; au-dessus de 120 °C une fuite de 0.01 kg/s (surpression) commence. Refroidissement par air (isAirCooledOnly) : updateAirCoolingGFX met M.coolantTemperature = nil à chaque pas ; ne pas lire coolantTemperature sur un moteur refroidi par air (engineThermalData.coolantTemperature reprend alors l'huile).",
+    "Flux GUI 'engineThermalData' envoyé seulement si streams.willSend('engineThermalData'). Événement UI 'ExhaustTreeDataChanged' envoyé par requestExhaustTreeData.",
+    "Incohérences : setPartConditionExhaust ne fait rien et getPartConditionExhaust renvoie toujours 1. updateGFX appelle updateHeatTicksGFX même si les thermiques sont désactivés (la fonction se retrouve alors à utiliser des listes de nœuds vides mais la condition de température la protège)."
+  ],
+  "fields": {
+    "engineBlockTemperature": {"type": "number", "desc": "Température du bloc moteur en °C."},
+    "cylinderWallTemperature": {"type": "number", "desc": "Température des parois de cylindre en °C."},
+    "coolantTemperature": {"type": "number|nil", "desc": "Température du liquide de refroidissement en °C. nil sur un moteur refroidi par air actif."},
+    "oilTemperature": {"type": "number", "desc": "Température d'huile en °C (sert aussi au cadran de température sur les moteurs refroidis par air)."},
+    "exhaustTemperature": {"type": "number", "desc": "Température de l'échappement en °C."},
+    "radiatorFanSpin": {"type": "number", "desc": "Angle de rotation du ventilateur de radiateur en degrés (0..360), pour l'animation."},
+    "debugData": {"type": "table", "desc": "{engineThermalData = table} : mêmes valeurs que le flux GUI 'engineThermalData' (températures, énergies échangées, masses, débits de fuite, dégâts)."},
+    "exhaustEndNodes": {"type": "table", "desc": "Liste des sorties d'échappement actuelles (éléments {start, finish, afterFireAudioCoef, afterFireVisualCoef, afterFireVolumeCoef, afterFireMufflingCoef…}). Mise à jour quand une poutre d'échappement casse ou au reset."},
+    "additionalCoolantEnergyPerStep": {"type": "number", "desc": "Énergie supplémentaire (J) ajoutée au liquide de refroidissement au prochain pas physique, remise à 0 ensuite."},
+    "engineBlockOverheatDamage": {"type": "number", "desc": "Dégâts cumulés de surchauffe du bloc ; atteindre le seuil headGasketDamageThreshold fait claquer le joint de culasse."},
+    "oilOverheatDamage": {"type": "number", "desc": "Dégâts cumulés de surchauffe d'huile ; au seuil connectingRodDamageThreshold les coussinets de bielle sont endommagés."},
+    "cylinderWallOverheatDamage": {"type": "number", "desc": "Dégâts cumulés de surchauffe des parois ; au seuil pistonRingDamageThreshold les segments sont endommagés."},
+    "headGasketBlown": {"type": "boolean", "desc": "Joint de culasse claqué."},
+    "pistonRingsDamaged": {"type": "boolean", "desc": "Segments endommagés."},
+    "connectingRodBearingsDamaged": {"type": "boolean", "desc": "Coussinets de bielle endommagés (bruit de cognement)."},
+    "engineBlockMelted": {"type": "boolean", "desc": "Bloc fondu (moteur bloqué)."},
+    "cylinderWallsMelted": {"type": "boolean", "desc": "Parois de cylindre fondues (moteur bloqué)."}
+  },
+  "functions": {
+    "init": {
+      "desc": "Initialise le module pour un moteur : mémorise le moteur parent puis lit la configuration thermique du jbeam (initThermals). Appelée par combustionEngine.new avec device.thermals.init(device, jbeamData).",
+      "params": {
+        "engine": {"type": "table", "desc": "Device moteur parent (combustionEngine), utilisé pour le régime, la charge, les travaux, etc."},
+        "engineJbeamData": {"type": "table", "desc": "Données jbeam du moteur (clés thermiques listées dans notes)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "initSounds": {
+      "desc": "Crée les sources sonores (sifflement du radiateur, ventilateur) et lit les paramètres des craquements de refroidissement du bloc et de l'échappement. Appelée par combustionEngine.initSounds.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du moteur."}},
+      "returns": [],
+      "internal": true
+    },
+    "resetSounds": {
+      "desc": "Arrête les sons du radiateur ; relance le ventilateur mécanique. Appelée par combustionEngine.resetSounds.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet les températures à la température préchauffée (thermostat - 10 °C) ou ambiante selon le réglage startThermalsPreHeated, efface les dégâts, les fuites, les masses de fluides, les minuteurs, répare l'arbre d'échappement et réinitialise les entrées damageTracker. Ne fait que poser les températures si les thermiques sont désactivés.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du moteur (lit les overrides headGasketBlownOverride, pistonRingsDamagedOverride, connectingRodBearingsDamagedOverride)."}},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Mise à jour par image : refroidissement (eau ou air) et intégration des températures, dégâts, fumée et retours de flamme de l'échappement, mécanique d'huile et manque d'huile, craquements de refroidissement. Appelée par combustionEngine.updateGFX.",
+      "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "beamBroke": {
+      "desc": "Appelée quand une poutre casse. Si c'est une poutre d'échappement (isExhaust), coupe la branche de l'arbre d'échappement, recalcule les sorties, prévient le moteur (exhaustEndNodesChanged), met à jour l'interface et affiche un message 'exhaustDamaged'.",
+      "params": {"id": {"type": "integer", "desc": "cid de la poutre cassée."}},
+      "returns": [],
+      "internal": true
+    },
+    "requestExhaustTreeData": {
+      "desc": "Construit un graphe de l'échappement (racines, nœuds, arêtes, poutres cassées) et l'envoie à l'interface via guihooks.trigger('ExhaustTreeDataChanged', data).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "applyDeformGroupDamageRadiator": {
+      "desc": "Ajoute des dégâts au radiateur (radiatorDamage), qui produisent une fuite de liquide au-delà du seuil radiatorDeformThreshold. Appelée par le moteur pour le groupe de déformation 'radiator'.",
+      "params": {"damageAmount": {"type": "number", "desc": "Quantité de dégâts du groupe de déformation."}},
+      "returns": [],
+      "internal": true
+    },
+    "applyDeformGroupDamageOilpan": {
+      "desc": "Augmente la fuite d'huile du carter (damageAmount * 10 kg/s, plafonnée à 1) et signale 'oilpanLeak' dans le damageTracker. Appelée pour le groupe 'oilPan'.",
+      "params": {"damageAmount": {"type": "number", "desc": "Quantité de dégâts du groupe de déformation."}},
+      "returns": [],
+      "internal": true
+    },
+    "applyDeformGroupDamageOilRadiator": {
+      "desc": "Augmente la fuite d'huile du radiateur d'huile (damageAmount * 0.1 kg/s, plafonnée à 0.1) et signale 'oilRadiatorLeak'. Appelée pour le groupe 'oilRadiator'.",
+      "params": {"damageAmount": {"type": "number", "desc": "Quantité de dégâts du groupe de déformation."}},
+      "returns": [],
+      "internal": true
+    },
+    "setPartConditionRadiator": {
+      "desc": "Restaure l'état du radiateur (dégâts, masse de liquide) depuis une intégrité nombre 0..1 ou une table {radiatorDamage, coolantMass}.",
+      "params": {
+        "odometer": {"type": "number", "desc": "Distance parcourue en mètres (non utilisée)."},
+        "integrity": {"type": "number|table", "desc": "Nombre 0..1 ou table {radiatorDamage, coolantMass}."},
+        "visual": {"type": "any", "desc": "Non utilisé."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setPartConditionExhaust": {
+      "desc": "Ne fait rien : l'état de l'échappement n'est pas restauré (corps vide en dehors de la création d'une table locale).",
+      "params": {
+        "odometer": {"type": "number", "desc": "Non utilisé."},
+        "integrity": {"type": "number|table", "desc": "Non utilisé."},
+        "visual": {"type": "any", "desc": "Non utilisé."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setPartConditionThermals": {
+      "desc": "Restaure les dégâts du moteur : à partir d'un nombre 0..1 (joint < 0.3, segments < 0.2, bielles < 0.1) ou d'une table {headGasketBlown, pistonRingsDamaged, connectingRodBearingsDamaged, engineBlockMelted, cylinderWallsMelted}. Applique les conséquences (couple réduit, friction, fuites).",
+      "params": {
+        "odometer": {"type": "number", "desc": "Distance parcourue en mètres (non utilisée)."},
+        "integrity": {"type": "number|table", "desc": "Nombre 0..1 ou table d'état."},
+        "visual": {"type": "any", "desc": "Non utilisé."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "getPartConditionRadiator": {
+      "desc": "Renvoie l'intégrité du radiateur 0..1 (minimum entre l'état du radiateur et la masse de liquide restante) et la table {radiatorDamage, coolantMass}.",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Intégrité 0..1."}, {"type": "table", "desc": "{radiatorDamage, coolantMass}."}],
+      "internal": true
+    },
+    "getPartConditionExhaust": {
+      "desc": "Renvoie toujours une intégrité de 1 et une table vide (pas de modélisation de l'état de l'échappement).",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Toujours 1."}, {"type": "table", "desc": "Table vide."}],
+      "internal": true
+    },
+    "getPartConditionThermals": {
+      "desc": "Renvoie l'intégrité 0..1 (minimum : joint 0.3, segments 0.2, bielles 0.1, fusion 0) et la table {headGasketBlown, pistonRingsDamaged, connectingRodBearingsDamaged, engineBlockMelted, cylinderWallsMelted}.",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Intégrité 0..1."}, {"type": "table", "desc": "Table d'état des dégâts."}],
+      "internal": true
+    }
+  }
+}

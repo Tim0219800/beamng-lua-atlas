@@ -1,0 +1,20 @@
+{
+  "path": "lua/common/jbeam/sections/paints.lua",
+  "module": "Applique les peintures du véhicule : vehicleConfig.paints (ou, à défaut, vehicleConfig.colors converti par convertVehicleColorsToPaints) donne jusqu'à trois peintures. Pour chacune, validateVehiclePaint la vérifie puis baseColor devient la couleur de l'objet (paints[1] -> color, paints[2] -> colorPalette0, paints[3] -> colorPalette1). Toute la liste est ensuite envoyée au moteur via setMetallicPaintData pour les paramètres métalliques/clearcoat.",
+  "notes": [
+    "baseColor est un tableau {r, v, b, a}.",
+    "convertVehicleColorsToPaints et validateVehiclePaint sont des fonctions globales définies ailleurs."
+  ],
+  "fields": {},
+  "functions": {
+    "process": {
+      "desc": "Applique les peintures du config à l'objet véhicule et transmet les données de peinture métallique.",
+      "params": {
+        "vehicleObj": {"type": "userdata", "desc": "Objet véhicule moteur."},
+        "vehicleConfig": {"type": "table", "desc": "Configuration (paints ou colors)."},
+        "vehicle": {"type": "table", "desc": "Données jbeam (non utilisé)."}
+      },
+      "internal": true
+    }
+  }
+}

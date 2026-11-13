@@ -1,0 +1,29 @@
+name: Documentation error
+description: A description, type, signature or stub is wrong or missing
+labels: ["documentation"]
+body:
+  - type: input
+    id: module
+    attributes:
+      label: Module
+      description: Module name or game file, e.g. core_vehicles or lua/vehicle/wheels.lua
+    validations:
+      required: true
+  - type: input
+    id: function
+    attributes:
+      label: Function, field or class
+  - type: input
+    id: version
+    attributes:
+      label: Game version
+      placeholder: 0.40.5
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong, and what the game code actually does
+      description: Quote the source line (lua/...:line) if you can.
+    validations:
+      required: true

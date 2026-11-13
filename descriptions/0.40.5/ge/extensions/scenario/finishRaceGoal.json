@@ -1,0 +1,38 @@
+{
+  "path": "lua/ge/extensions/scenario/finishRaceGoal.lua",
+  "module": "Objectif de scénario « finishRace » (goals.vehicles avec id = 'finishRace') : le véhicule doit terminer la course. Il écoute le dernier waypoint atteint, puis, à l'état 'onRaceResult', termine le scénario en réussite ou en échec.",
+  "usage": "-- JSON du scénario :\n-- {\"id\":\"finishRace\", \"value\":{\"mustWin\":true, \"passed\":\"Victoire !\", \"failed\":\"Perdu\"}}",
+  "notes": [
+    "Options de instance.value : mustWin (boolean : le véhicule doit être le premier à franchir le dernier waypoint), passed et failed (messages finaux).",
+    "Sur 'onRaceWaypointReached', quand stateData.next est nil (dernier waypoint), le résultat est 'passed' pour le véhicule stateData.vehicleId et 'failed' pour les autres. Avec mustWin, seul le premier arrivé est évalué (le résultat n'est plus écrasé).",
+    "Sur 'onRaceResult', chaque instance sans résultat ou en échec appelle failedGoal (message par défaut anglais 'You failed to finish the race.'), sinon passedGoal ; chacun appelle scenario_scenarios.finish."
+  ],
+  "fields": {
+    "instances": {"type": "table", "desc": "Liste des goals 'finishRace', remplie par init()."}
+  },
+  "functions": {
+    "init": {
+      "desc": "Réinitialise instances et ajoute chaque goal id='finishRace' en remettant status.result à nil.",
+      "params": {"scenario": {"type": "table", "desc": "Scénario courant."}},
+      "returns": [],
+      "internal": true
+    },
+    "processState": {
+      "desc": "Appelé à chaque état du scénario. Traite 'onRaceWaypointReached' (stateData.next, stateData.vehicleId) et 'onRaceResult'.",
+      "params": {
+        "scenario": {"type": "table", "desc": "Scénario courant."},
+        "state": {"type": "string", "desc": "Nom de l'état."},
+        "stateData": {"type": "table", "desc": "Pour 'onRaceWaypointReached' : next (prochain waypoint, nil si dernier) et vehicleId."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateFinalStatus": {
+      "desc": "Envoie le résultat de chaque instance à statistics_statistics.setGoalProgress en fin de scénario.",
+      "params": {"scenario": {"type": "table", "desc": "Scénario courant."}},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {}
+}

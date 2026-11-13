@@ -1,0 +1,102 @@
+{
+  "path": "lua/vehicle/powertrain/electricServo.lua",
+  "module": "Composant powertrain `electricServo` : servomoteur électrique qui fait tourner une roue « rotor » (clé jbeam `connectedRotator`, une roue déclarée comme rotator) vers un angle cible, avec un régulateur proportionnel (angularSpring) et un couple limité (stallTorque). Catégorie `engine` mais sans port de sortie : il n'a pas de parent powertrain et applique directement `propulsionTorque` à la roue. L'angle cible se règle par setTargetAngle ou par une valeur electrics (`electricsTargetAngleName`). Un moddeur l'utilise pour des bras, bennes ou articulations motorisés.",
+  "usage": "local servo = powertrain.getDevice(\"armServo\")\nservo:setMinMaxAngles(-math.pi/2, math.pi/2)\nservo:setTargetAngle(math.rad(45)) -- radians",
+  "notes": [
+    "Clés jbeam lues : name, type, inputName, inputIndex, gearRatio (1), friction (N·m), dynamicFriction (N·m par rad/s), angularSpring (1, gain en 1/rad : le « papillon » vaut min(|erreur| * angularSpring, 1)), rotationMode ('absolute' par défaut ou 'shortest'), electricsTargetAngleName (si absent, le servo se pilote uniquement par l'API), stallTorque (N·m, 1000), maxRPM (OBLIGATOIRE), connectedRotator, canDisconnect, isDisconnected, breakTriggerBeam.",
+    "Tous les angles sont en radians. En mode 'absolute', currentAngle est le cumul de rotation de la roue depuis le reset (pas de repli). En mode 'shortest', l'angle cible est ramené dans ]-2π, 2π[ avec le signe conservé, borné par minAngle/maxAngle si définis, et currentAngle est replié pour prendre le chemin le plus court.",
+    "Champs principaux : targetAngle, currentAngle (rad), torqueDirection (+1 ou -1), outputTorque1 (N·m, couple appliqué à la roue avant wheelDirection), outputAV1 (toujours 0), maxTorque (= stallTorque), maxRPM, maxAV (rad/s), wheel, wheelObj, wheelDirection, connectedRotator, mode ('connected' ou 'disconnected'), isBroken, rotationMode, minAngle, maxAngle.",
+    "Le couple diminue avec la vitesse de la roue (effet « back-EMF ») quand il va dans le sens du mouvement : coefficient 1 - min(|wheelAV| / maxAV, 1) ; il n'est pas atténué s'il freine la roue.",
+    "updateGFX n'existe que si electricsTargetAngleName est défini : il lit electrics.values[nom] (0 par défaut) et appelle setTargetAngle.",
+    "Bug : new suppose maxRPM défini (device.maxRPM * rpmToAV) : une erreur Lua survient si la clé jbeam maxRPM est absente. M.outputPorts = {} (aucun port). M.requiredExternalInertiaOutputs n'est pas défini dans ce module. reset ne remet pas virtualMassAV, isBroken ni le mode ; si la roue n'est pas trouvée (connectedRotator invalide) device.wheel est nil et torqueUpdate plante.",
+    "setTargetAngle accepte n'importe quel nombre : en mode 'shortest', l'angle ≥ 2π est replié (un angle de 2π devient 0)."
+  ],
+  "fields": {
+    "outputPorts": {"type": "table", "desc": "Table vide : aucun port de sortie (le servo agit directement sur la roue)."},
+    "deviceCategories": {"type": "table<string, boolean>", "desc": "{engine=true}."}
+  },
+  "functions": {
+    "new": {
+      "desc": "Construit le servo, le relie à la roue rotor connectedRotator (déclarée via wheels.setWheelRotatorType(wheelID, 'rotator')), calcule maxTorque et maxAV, détermine les modes disponibles.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant (maxRPM obligatoire)."}},
+      "returns": [{"type": "table", "desc": "Le device (classe `device`)."}],
+      "internal": true
+    }
+  },
+  "classes": {
+    "device": {
+      "desc": "Objet renvoyé par new(jbeamData). velocityUpdate vaut nop (ou une fonction vide si déconnecté) ; torqueUpdate est servoUpdateTorque ou la version déconnectée.",
+      "functions": {
+        "velocityUpdate": {
+          "desc": "Appelée à chaque pas physique ; ne fait rien (nop ou fonction vide en mode déconnecté ou cassé).",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "torqueUpdate": {
+          "desc": "Appelée à chaque pas physique : intègre l'angle courant avec la vitesse de la roue, calcule l'erreur d'angle, un couple proportionnel borné par stallTorque et atténué par la vitesse, soustrait le frottement, et écrit wheel.propulsionTorque. Déconnecté ou cassé : couple 0.",
+          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+          "returns": [],
+          "internal": true
+        },
+        "setTargetAngle": {
+          "desc": "Fixe l'angle cible en radians. Mode 'absolute' : valeur telle quelle. Mode 'shortest' : repliée sur ]-2π, 2π[, bornée à [minAngle, maxAngle] si définis, et currentAngle est ajusté pour choisir le chemin le plus court.",
+          "params": {"angle": {"type": "number", "desc": "Angle cible en radians."}},
+          "returns": [],
+          "internal": false
+        },
+        "setTargetAngleRelative": {
+          "desc": "Ajoute angle à l'angle cible actuel (via setTargetAngle).",
+          "params": {"angle": {"type": "number", "desc": "Variation d'angle en radians."}},
+          "returns": [],
+          "internal": false
+        },
+        "setMinMaxAngles": {
+          "desc": "Définit les bornes d'angle utilisées par le mode 'shortest' (sans effet en mode 'absolute').",
+          "params": {
+            "minAngle": {"type": "number|nil", "desc": "Angle minimal en radians."},
+            "maxAngle": {"type": "number|nil", "desc": "Angle maximal en radians."}
+          },
+          "returns": [],
+          "internal": false
+        },
+        "updateGFX": {
+          "desc": "Défini seulement si electricsTargetAngleName est renseigné. Lit l'angle cible dans electrics.values et appelle setTargetAngle. Appelée à chaque image.",
+          "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes (inutilisé)."}},
+          "returns": [],
+          "internal": true
+        },
+        "validate": {
+          "desc": "Appelée après construction du powertrain ; renvoie toujours true.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "true."}],
+          "internal": true
+        },
+        "setMode": {
+          "desc": "Change le mode ('connected' ou 'disconnected') sans vérifier availableModes, puis réselectionne les fonctions de mise à jour. 'disconnected' : couple nul.",
+          "params": {"mode": {"type": "string", "desc": "'connected' ou 'disconnected'."}},
+          "returns": [],
+          "internal": false
+        },
+        "onBreak": {
+          "desc": "Marque le servo comme cassé, met le couple de sortie et le couple de la roue à 0 et passe aux fonctions déconnectées.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "calculateInertia": {
+          "desc": "Calcule l'inertie de la roue rotor autour de son axe (somme masse * distance² des nœuds de la roue) puis cumulativeInertia = inertie / gearRatio². Appelée à l'initialisation du powertrain.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "reset": {
+          "desc": "Remet à zéro le couple, la vitesse de sortie et les angles cible et courant.",
+          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam (inutilisées)."}},
+          "returns": [],
+          "internal": true
+        }
+      }
+    }
+  }
+}

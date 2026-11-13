@@ -1,0 +1,42 @@
+{
+  "path": "lua/ge/extensions/freeroam/organizations.lua",
+  "module": "Registre des organisations (factions du mode carrière avec réputation), chargé depuis les fichiers `gameplay/organizations/*.organizations.json` et enrichi avec les données de réputation du carrière. Fournit aussi les données prêtes pour l'UI. Global : freeroam_organizations.",
+  "notes": [
+    "Dépend des modules carrière (career_modules_reputation, career_career, career_modules_delivery_generator) : getOrganizations appelle addAdditionalInfoToOrg qui utilise career_modules_reputation sans test de nil, donc hors carrière ces globales doivent exister.",
+    "Chaque organisation reçoit : id (clé du fichier), visible, attributeKey (= id .. 'Reputation') et les champs de réputation.",
+    "getOrganizationIdOrderAndIcon renvoie toujours 7000 et 'peopleOutline' (ordre réservé 7000-8000).",
+    "getUIDataForOrg: deepcopy puis max/min/label de réputation, offersDeliveries, hasUnlocks, associatedFacilities, et pour chaque niveau de réputation label et level (= indice - 2). Il déréférence organization.reputation sans test : une org inconnue renvoie nil (log d'erreur dans getOrganization)."
+  ],
+  "functions": {
+    "getOrganizations": {
+      "desc": "Charge (une fois, mise en cache) toutes les organisations.",
+      "params": {},
+      "returns": [{"type": "table<string, table>", "desc": "Organisations indexées par id."}],
+      "internal": false
+    },
+    "getOrganization": {
+      "desc": "Renvoie une organisation par id (en rafraîchissant sa réputation) ou nil avec un log d'erreur.",
+      "params": {"id": {"type": "string", "desc": "Id de l'organisation."}},
+      "returns": [{"type": "table|nil", "desc": "Organisation."}],
+      "internal": false
+    },
+    "getOrganizationIdOrderAndIcon": {
+      "desc": "Ordre d'affichage et icône : constants (7000, 'peopleOutline').",
+      "params": {"id": {"type": "string", "desc": "Non utilisé."}},
+      "returns": [{"type": "integer", "desc": "7000"}, {"type": "string", "desc": "'peopleOutline'"}],
+      "internal": false
+    },
+    "getUIData": {
+      "desc": "Liste des organisations au format UI (getUIDataForOrg), triées par nom traduit.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Données UI."}],
+      "internal": false
+    },
+    "getUIDataForOrg": {
+      "desc": "Copie enrichie d'une organisation pour l'UI.",
+      "params": {"orgId": {"type": "string", "desc": "Id de l'organisation."}},
+      "returns": [{"type": "table|nil", "desc": "Données UI."}],
+      "internal": false
+    }
+  }
+}

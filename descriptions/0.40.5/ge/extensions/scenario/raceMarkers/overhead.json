@@ -1,0 +1,29 @@
+{
+  "path": "lua/ge/extensions/scenario/raceMarkers/overhead.lua",
+  "module": "Marqueur de checkpoint « flèche en hauteur » : une flèche (s_mm_arrow_ribbon_down.dae) tournée vers la caméra, qui oscille verticalement au-dessus du point, colorée selon le mode et dont la transparence augmente de près (fondu entre fadeNear et fadeFar). Le module renvoie un constructeur : require('scenario/raceMarkers/overhead')(id) donne un objet de la classe C.",
+  "notes": [
+    "Couleurs par mode : default orange (1, 0.333, 0), next noir, start et lap vert, final bleu, branch (1, 0.6, 0.07), hidden noir.",
+    "setToCheckpoint(wp) lit wp.pos, wp.radius, wp.fadeNear et wp.fadeFar (défauts 5 et 25 m).",
+    "Dans update, le facteur de mélange de couleur t est fixé à 1 : le changement de mode est immédiat, sans fondu.",
+    "Le commentaire de setToCheckpoint cite des modes (finish, etc.) : les noms réels sont ceux de modeInfos (final, lap...)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Marqueur flèche au-dessus du checkpoint.",
+      "functions": {
+        "init": {"desc": "Constructeur : initialise l'état.", "params": {"id": {"type": "integer", "desc": "Identifiant unique."}}, "internal": true},
+        "update": {"desc": "Appel par image : oriente la flèche vers la caméra, l'anime (0.4 + 0.4*sin) et ajuste couleur et alpha selon la distance.", "params": {"dt": {"type": "number", "desc": "Durée réelle (s)."}, "dtSim": {"type": "number", "desc": "Durée simulée (s)."}}, "internal": true},
+        "setToCheckpoint": {"desc": "Place le marqueur sur un checkpoint.", "params": {"wp": {"type": "table", "desc": "{pos, radius, fadeNear?, fadeFar?}."}}},
+        "setMode": {"desc": "'hidden' masque, autre mode affiche ; mémorise l'ancien et le nouveau mode.", "params": {"mode": {"type": "string", "desc": "default, next, start, lap, final, branch ou hidden."}}},
+        "setVisibility": {"desc": "Affiche ou cache la flèche.", "params": {"v": {"type": "boolean", "desc": "Visibilité."}}},
+        "hide": {"desc": "Appelle setVisibility(false).", "params": {}},
+        "show": {"desc": "Appelle setVisibility(true).", "params": {}},
+        "createObject": {"desc": "Crée un TSStatic caché enregistré sous objectName et ajouté à ScenarioObjectsGroup.", "params": {"shapeName": {"type": "string", "desc": "Chemin du modèle."}, "objectName": {"type": "string", "desc": "Nom d'enregistrement."}}, "returns": [{"type": "table", "desc": "L'objet créé."}]},
+        "createMarkers": {"desc": "Supprime les anciens objets puis crée la flèche.", "params": {}},
+        "clearMarkers": {"desc": "Supprime l'objet créé.", "params": {}}
+      }
+    }
+  }
+}

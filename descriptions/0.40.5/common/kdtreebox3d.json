@@ -1,0 +1,35 @@
+{
+  "path": "lua/common/kdtreebox3d.lua",
+  "module": "Arbre k-d pour boîtes 3D (xmin, ymin, zmin, xmax, ymax, zmax), soit 6 dimensions. Permet de retrouver rapidement tous les éléments dont la boîte intersecte une boîte de requête. Même API que kdtreebox2d en 3D : new -> preLoad -> build -> query/queryNotNested ; export/import pour réutiliser un arbre.",
+  "usage": "local kdTreeB3d = require('kdtreebox3d')\nlocal kdT = kdTreeB3d.new(itemCount)\nkdT:preLoad(id, xmin, ymin, zmin, xmax, ymax, zmax)\nkdT:build()\nfor id in kdT:queryNotNested(xmin, ymin, zmin, xmax, ymax, zmax) do ... end",
+  "notes": [
+    "Chaque élément occupe 7 valeurs dans self.items (xmin, ymin, zmin, xmax, ymax, zmax, id) ; avant build() itemCount compte des valeurs, après build() c'est le nombre d'éléments.",
+    "Mêmes règles que kdtreebox2d : queryNotNested réutilise l'état de l'arbre (pas d'imbrication), query alloue un état par requête (imbrication possible), bornes de requête ramenées à ±1.7e308.",
+    "Contrairement à kdtreebox2d, il n'y a pas de méthode clear() dans cette version.",
+    "Dans le code, l'exemple d'usage en tête de fichier décrit les mêmes appels que la version 2D ; c'est la version à 7 valeurs par élément qui est implémentée."
+  ],
+  "fields": {},
+  "functions": {
+    "new": {
+      "desc": "Crée un arbre k-d de boîtes 3D vide.",
+      "params": {"itemCount": {"type": "integer|nil", "desc": "nombre d'éléments prévus (préallocation, facultatif)"}},
+      "returns": [{"type": "kdTree", "desc": "arbre vide"}],
+      "internal": false
+    }
+  },
+  "classes": {
+    "kdTree": {
+      "desc": "Objet renvoyé par new().",
+      "functions": {
+        "preLoad": {"desc": "Ajoute un élément (avant build).", "params": {"id": {"type": "any", "desc": "identifiant renvoyé par les requêtes"}, "xmin": {"type": "number", "desc": "xmin"}, "ymin": {"type": "number", "desc": "ymin"}, "zmin": {"type": "number", "desc": "zmin"}, "xmax": {"type": "number", "desc": "xmax"}, "ymax": {"type": "number", "desc": "ymax"}, "zmax": {"type": "number", "desc": "zmax"}}, "returns": []},
+        "build": {"desc": "Construit l'arbre (médiane récursive en alternant les axes) à partir des éléments chargés.", "params": {}, "returns": []},
+        "_build": {"desc": "Interne : construction récursive d'un noeud.", "params": {"axis": {"type": "integer", "desc": "axe courant"}, "left": {"type": "integer", "desc": "indice de début dans items"}, "right": {"type": "integer", "desc": "indice de fin"}, "treeIdx": {"type": "integer", "desc": "indice du noeud"}}, "returns": [], "internal": true},
+        "query": {"desc": "Itérateur sur les ids des éléments dont la boîte intersecte la boîte de requête ; imbrication possible.", "params": {"query_xmin": {"type": "number", "desc": "xmin"}, "query_ymin": {"type": "number", "desc": "ymin"}, "query_zmin": {"type": "number", "desc": "zmin"}, "query_xmax": {"type": "number", "desc": "xmax"}, "query_ymax": {"type": "number", "desc": "ymax"}, "query_zmax": {"type": "number", "desc": "zmax"}}, "returns": [{"type": "function", "desc": "itérateur renvoyant les ids"}, {"type": "table", "desc": "état d'itération"}]},
+        "queryNotNested": {"desc": "Comme query sans allocation ; interdit d'imbriquer.", "params": {"query_xmin": {"type": "number", "desc": "xmin"}, "query_ymin": {"type": "number", "desc": "ymin"}, "query_zmin": {"type": "number", "desc": "zmin"}, "query_xmax": {"type": "number", "desc": "xmax"}, "query_ymax": {"type": "number", "desc": "ymax"}, "query_zmax": {"type": "number", "desc": "zmax"}}, "returns": [{"type": "function", "desc": "itérateur renvoyant les ids"}, {"type": "table", "desc": "état d'itération (l'arbre)"}]},
+        "export": {"desc": "Renvoie les données de l'arbre (références) pour sérialisation/réutilisation.", "params": {}, "returns": [{"type": "table", "desc": "données exportées"}]},
+        "import": {"desc": "Charge des données produites par export().", "params": {"kdTreeData": {"type": "table", "desc": "table d'export"}}, "returns": []},
+        "analytics": {"desc": "Affiche (print) des statistiques de l'arbre.", "params": {}, "returns": []}
+      }
+    }
+  }
+}

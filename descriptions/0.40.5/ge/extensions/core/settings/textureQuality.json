@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/core/settings/textureQuality.lua",
+  "module": "Préréglages de qualité des textures, consommés par graphicsQualityGroup. Chaque niveau fixe $pref::Video::textureReductionLevel et $pref::Reflect::refractTexScale. Le hook onApply recharge les textures.",
+  "notes": ["Niveaux : Lowest, Low, Normal seulement.", "Le code précise que reloadTextures() peut être une opération lente."],
+  "fields": {
+    "qualityLevels": {
+      "type": "table<string, table<string, number>>",
+      "desc": "textureReductionLevel / refractTexScale : Lowest 2 / 0.5, Low 1 / 0.75, Normal 0 / 1."
+    }
+  },
+  "functions": {
+    "onApply": {
+      "desc": "Appelé par graphicsQualityGroup quand une valeur a changé. Appelle reloadTextures().",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

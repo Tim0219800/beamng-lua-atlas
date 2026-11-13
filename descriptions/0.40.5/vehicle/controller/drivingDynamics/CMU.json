@@ -1,0 +1,187 @@
+{
+  "path": "lua/vehicle/controller/drivingDynamics/CMU.lua",
+  "module": "CMU (centre de gestion de la dynamique de conduite, Driving Dynamics Suite) : contrôleur chef d'orchestre des sous-contrôleurs du dossier `drivingDynamics/` (capteurs `sensors/`, superviseurs `supervisors/`, actionneurs `actuators/`). Il les retrouve et les enregistre (`registerCMU`), expose des accesseurs (getSensor, getSupervisor, getActuator...), détecte retournement et crash, gère l'état global du système (normal, degraded, offline), le voyant d'avertissement clignotant, des callbacks de calibration, et un canal de debug UDP (par défaut 127.0.0.1:54812) pour un outil externe. Ordre d'appel : `defaultOrder = 50`.",
+  "usage": "local cmu = controller.getControllerSafe(\"drivingDynamics/CMU\")\nlocal hub = cmu.getSensor(\"sensorHub\")\nfor _, a in ipairs(cmu.getActuators()) do print(a.name) end",
+  "notes": [
+    "Clés jbeam lues par init : `debugSettings.peerIP` (\"127.0.0.1\"), `debugSettings.peerPort` (54812), `indicateUI`.",
+    "Bug : `indicateUI = jbeamData.indicateUI == nil and true or false` donne true seulement si la clé est absente ; si le jbeam met explicitement `indicateUI` à true, la valeur devient false.",
+    "`enableDebugHeartbeat` vaut toujours true (`true or not shippingBuild`) : le heartbeat UDP « BNGDSE » est envoyé à 1 Hz et les commandes reçues sont lues, si la socket UDP s'est connectée.",
+    "Commandes UDP reconnues (format `type->nomContrôleur[->json]`) : RequestConfig, EnableDebugMode, SetConfig, SetProperty. EnableDebugMode ne vérifie pas que le destinataire existe (erreur si nom inconnu).",
+    "Electrics écrits : `dseCrashStopped`, `dseRollOverStopped`, `dseRollingOver` (1 ou nil), `dseWarningPulse` (voyant ; 1 fixe si le système n'est pas normal), `isYCBrakeActive` et `isTCBrakeActive` (0 à l'init). Lit `postCrashBrakeTriggered`.",
+    "Le voyant clignote à 0,15 s quand le superviseur `yawControl` ou `tractionControl` agit (`isActing`).",
+    "initLastStage : si un sous-contrôleur n'a pas `isActive`, tous les systèmes sont arrêtés (`shutdown`) et l'état passe à offline.",
+    "`systemDegradationDetected` marque le dommage `drivingDynamics/systemStateDegraded` dans damageTracker.",
+    "Aucun superviseur ni capteur n'est défini dans ce lot ; seuls les actionneurs et sensorHub du lot sont documentés.",
+    "Les champs updateCalibrationCallback, updateFixedStepCalibrationCallback et updateGFXCalibrationCallback valent `nop` (fonction vide) tant qu'aucune callback n'est enregistrée ; sensorHub, vehicleData et virtualSensors sont nil jusqu'à initSecondStage."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "defaultOrder": {"type": "number", "desc": "50."},
+    "sensorHub": {"type": "table|nil", "desc": "Sous-contrôleur `drivingDynamics/sensors/sensorHub` (rempli par initSecondStage)."},
+    "vehicleData": {"type": "table|nil", "desc": "Sous-contrôleur `sensors/vehicleData` (rempli par initSecondStage)."},
+    "virtualSensors": {"type": "table|nil", "desc": "Sous-contrôleur `sensors/virtualSensors` (rempli par initSecondStage)."},
+    "warningLightPulse": {"type": "integer", "desc": "0 ou 1, bascule toutes les 0,15 s pour le clignotement du voyant."},
+    "systemStates": {"type": "table<string, string>", "desc": "Constantes : normal, degraded, offline."},
+    "systemState": {"type": "string", "desc": "État global du système : \"normal\", \"degraded\" ou \"offline\"."},
+    "updateCalibrationCallback": {"type": "function", "desc": "nop ou fonction qui exécute les callbacks de calibration de type update."},
+    "updateFixedStepCalibrationCallback": {"type": "function", "desc": "nop ou fonction qui exécute les callbacks de type updateFixedStep."},
+    "updateGFXCalibrationCallback": {"type": "function", "desc": "nop ou fonction qui exécute les callbacks de type updateGFX."}
+  },
+  "functions": {
+    "applyParameter": {
+      "desc": "Modifie un paramètre d'une table de configuration identifié par un chemin pointé (ex. \"uiDisplayData.simplePowertrainApp.activeColor\"). La valeur \"default\" restaure la valeur initiale. Ne crée jamais de nouveau paramètre.",
+      "params": {
+        "currentParameters": {"type": "table", "desc": "Configuration courante (modifiée)."},
+        "initialParameters": {"type": "table", "desc": "Configuration initiale (pour \"default\")."},
+        "changedParameters": {"type": "table", "desc": "Table des changements, indexée par chemin pointé."},
+        "name": {"type": "string", "desc": "Chemin pointé du paramètre."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si un paramètre a été modifié."}],
+      "internal": false
+    },
+    "disableSystemsForCalibration": {
+      "desc": "Désactive tous les superviseurs (`setParameters({isEnabled = false})`) pour permettre une calibration.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "getActuator": {
+      "desc": "Retrouve un actionneur par son nom de fichier dans `drivingDynamics/actuators/`.",
+      "params": {"actuatorName": {"type": "string", "desc": "Nom du type d'actionneur."}},
+      "returns": [{"type": "table|nil", "desc": "Le sous-contrôleur."}],
+      "internal": false
+    },
+    "getActuators": {
+      "desc": "Liste tous les actionneurs chargés.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Sous-contrôleurs du dossier actuators."}],
+      "internal": false
+    },
+    "getConfig": {
+      "desc": "Renvoie une copie de la configuration du CMU.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Copie profonde des paramètres de contrôle."}],
+      "internal": false
+    },
+    "getSensor": {
+      "desc": "Retrouve un capteur par son nom de fichier dans `drivingDynamics/sensors/`.",
+      "params": {"sensorName": {"type": "string", "desc": "Nom du type de capteur (ex. \"sensorHub\")."}},
+      "returns": [{"type": "table|nil", "desc": "Le sous-contrôleur."}],
+      "internal": false
+    },
+    "getSensors": {
+      "desc": "Liste tous les capteurs chargés.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Sous-contrôleurs du dossier sensors."}],
+      "internal": false
+    },
+    "getSupervisor": {
+      "desc": "Retrouve un superviseur par son nom de fichier dans `drivingDynamics/supervisors/` (ex. yawControl, tractionControl).",
+      "params": {"supervisorName": {"type": "string", "desc": "Nom du type de superviseur."}},
+      "returns": [{"type": "table|nil", "desc": "Le sous-contrôleur."}],
+      "internal": false
+    },
+    "getSupervisors": {
+      "desc": "Liste tous les superviseurs chargés.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Sous-contrôleurs du dossier supervisors."}],
+      "internal": false
+    },
+    "init": {
+      "desc": "Ouvre la socket UDP de debug, prépare les paramètres de contrôle (affichage UI) et efface les electrics de crash.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du CMU."}},
+      "returns": [],
+      "internal": true
+    },
+    "initLastStage": {
+      "desc": "Vérifie que tous les sous-contrôleurs sont actifs (sinon les arrête), remet l'état à normal et envoie un paquet de debug d'init.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "initSecondStage": {
+      "desc": "Recense les sous-contrôleurs du dossier drivingDynamics/, les enregistre auprès du CMU (`registerCMU`), retrouve les capteurs de base et désactive le mode debug.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "logDebugMessage": {
+      "desc": "Ajoute un message de debug (paquet `systemDebugMessage`) à la file envoyée par UDP.",
+      "params": {
+        "source": {"type": "string", "desc": "Origine du message."},
+        "message": {"type": "string", "desc": "Texte."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "registerCalibrationCallback": {
+      "desc": "Enregistre une fonction appelée à chaque pas (update, updateFixedStep ou updateGFX) pendant une calibration.",
+      "params": {
+        "callback": {"type": "function", "desc": "Fonction appelée avec dt."},
+        "callbackType": {"type": "string", "desc": "\"update\", \"updateFixedStep\" ou \"updateGFX\"."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "reset": {
+      "desc": "Efface les paquets de debug, les electrics de crash et les lisseurs, et remet l'état à normal.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "returns": [],
+      "internal": true
+    },
+    "sendDebugPacket": {
+      "desc": "Ajoute un paquet à la file de debug (en y inscrivant `vehicleID`).",
+      "params": {"packet": {"type": "table", "desc": "Paquet de debug (sourceType, packetType, ...)."}},
+      "returns": [],
+      "internal": false
+    },
+    "setConfig": {
+      "desc": "Remplace toute la configuration du CMU.",
+      "params": {"configTable": {"type": "table", "desc": "Nouvelle configuration."}},
+      "returns": [],
+      "internal": false
+    },
+    "setDebugMode": {
+      "desc": "Active ou désactive le mode debug du CMU (choix de la variante de updateGFX) et le propage à tous les sous-contrôleurs ayant `setDebugMode`, puis reconstruit les caches.",
+      "params": {"debugEnabled": {"type": "boolean", "desc": "true pour envoyer les données de debug à 30 Hz."}},
+      "returns": [],
+      "internal": false
+    },
+    "setParameters": {
+      "desc": "Modifie les paramètres d'affichage du CMU (uiDisplayData.simplePowertrainApp.activeColor, offColor, doUpdate) et `notifySystemStateDegraded` ; met à jour le bouton « DSE » du contrôleur driveModes si présent.",
+      "params": {"parameters": {"type": "table", "desc": "Table indexée par chemins pointés."}},
+      "returns": [],
+      "internal": false
+    },
+    "systemDegradationDetected": {
+      "desc": "Passe le système en état degraded, loggue la raison dans le debug et marque le dommage `systemStateDegraded`.",
+      "params": {"reason": {"type": "string", "desc": "Raison de la dégradation."}},
+      "returns": [],
+      "internal": false
+    },
+    "systemDegradationResolved": {
+      "desc": "Repasse le système en état normal et efface le dommage `systemStateDegraded`.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "update": {
+      "desc": "Pas physique : exécute les callbacks de calibration de type update.",
+      "params": {"dt": {"type": "number", "desc": "Pas physique en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "updateFixedStep": {
+      "desc": "Pas fixe (100 Hz) : exécute les callbacks de calibration de type updateFixedStep.",
+      "params": {"dt": {"type": "number", "desc": "Pas en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Chaque frame : détecte retournement et crash, anime le voyant d'avertissement, exécute les callbacks de calibration GFX et (selon le mode debug) échange les paquets UDP. Remplacée par une variante debug via setDebugMode.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

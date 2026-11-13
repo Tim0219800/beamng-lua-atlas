@@ -1,0 +1,17 @@
+{
+  "path": "lua/common/inputFilters.lua",
+  "module": "Définit des constantes globales identifiant le type de filtre d'entrée (clavier, manette, direct, clavier drift, IA) et la table FILTER_NAME qui donne un nom lisible. Utile quand on lit ou envoie des événements d'entrée (input.event) avec un filtre.",
+  "notes": [
+    "Un filtre valant -1 peut être envoyé par le C++ : il est deviné et traduit côté moteur en un filtre >= 0 avant d'arriver en Lua (commentaire du code).",
+    "FILTER_AI est la chaîne \"FILTER_AI\" (pas un nombre) et n'a pas d'entrée dans FILTER_NAME."
+  ],
+  "fields": {
+    "FILTER_KBD": {"type": "integer", "desc": "Global, vaut 0 : clavier."},
+    "FILTER_PAD": {"type": "integer", "desc": "Global, vaut 1 : manette."},
+    "FILTER_DIRECT": {"type": "integer", "desc": "Global, vaut 2 : entrée directe (sans lissage)."},
+    "FILTER_KBD2": {"type": "integer", "desc": "Global, vaut 3 : clavier en mode drift (nom \"KeyboardDrift\")."},
+    "FILTER_AI": {"type": "string", "desc": "Global, vaut \"FILTER_AI\" : filtre utilisé par l'IA."},
+    "FILTER_NAME": {"type": "table<integer, string>", "desc": "Global : nom lisible de chaque filtre numérique (Keyboard, Gamepad, Direct, KeyboardDrift)."}
+  },
+  "functions": {}
+}

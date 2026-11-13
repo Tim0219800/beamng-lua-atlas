@@ -1,0 +1,169 @@
+{
+  "path": "lua/ge/extensions/core/sounds.lua",
+  "module": "Pont entre le jeu et le moteur audio FMOD côté GE. Chaque rendu (onPreRender), il pousse des paramètres globaux (vitesse et rotation de caméra, heure du jour, vent, vitesse du véhicule joueur, caméra intérieure, sous l'eau, hauteur au sol et à la mer, flou audio). Il fournit aussi des fonctions pour initialiser et piloter les sons moteur/échappement d'un véhicule, et gère le flou audio quand un menu de mission est ouvert.",
+  "usage": "core_sounds.setAudioBlur(1) -- flou audio actif\ncore_sounds.setAudioBlur(0)",
+  "notes": [
+    "onPreRender alterne à chaque appel (frameFlag) entre deux lots de paramètres : une image sur deux pour g_Tod, g_WindSpeedMS, g_CamRotationAngle, g_VehicleSpeedPlayerMS ; l'autre pour g_CamOnboard, c_CabinFilterReverbStrength, g_CamFree, g_CamUnderwater, g_UnderwaterDepth, g_CamHeightToGround, g_CamHeightToSea. g_GameAudioBlur, g_CamSpeedMS et g_CamRotationSpeedMS sont mis à jour à chaque image.",
+    "Heure du jour : tod.time vaut 0 à midi, 0.25 à 18h, 0.5 à minuit, 0.75 à 6h ; le code la convertit en heures (0 à 24) pour g_Tod.",
+    "g_CamOnboard = AudioInsideModifier (réglage) puissance 4, multiplié par le résultat de core_camera.isCameraInside.",
+    "Le rayon castRayStatic vers le bas pour g_CamHeightToGround est limité à 200 m.",
+    "Le flou audio automatique ne s'active que si une interaction avec un marqueur de mission est en cours (missionMarkerInteraction, posé par onActivityAcceptGatherData).",
+    "Le commentaire « debugEnabled » dit qu'il faut changer la ligne pour activer les logs de flou audio ; la variable est locale et vaut false."
+  ],
+  "fields": {
+    "cabinFilterStrength": {"type": "number", "desc": "Force du filtre/réverbération d'habitacle (0 à 1, borné à l'envoi) pour la caméra intérieure du véhicule joueur. Défaut 1. Écrit par setCabinFilterStrength."},
+    "dependencies": {"type": "string[]", "desc": "core_camera, core_settings_settings, core_input_bindings."}
+  },
+  "functions": {
+    "onPreRender": {
+      "desc": "Hook de rendu. Met à jour les paramètres globaux FMOD (Engine.Audio.getGlobalParams) si disponibles. Voir notes pour la liste des paramètres.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Durée réelle de l'image (s)."},
+        "dtSim": {"type": "number", "desc": "Durée simulée (s) ; si 0, les vitesses de caméra ne sont pas mises à jour."},
+        "dtRaw": {"type": "number", "desc": "Durée brute (non utilisée)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "initEngineSound": {
+      "desc": "Initialise le son moteur d'un véhicule : vehicle:engineSoundInit puis fixe wet_level = 0 et dry_level = 1. Ne fait rien si le véhicule n'existe pas.",
+      "params": {
+        "vehicleId": {"type": "integer", "desc": "Id de l'objet véhicule."},
+        "engineId": {"type": "integer", "desc": "Identifiant du moteur (déduit du code)."},
+        "jsonPath": {"type": "string", "desc": "Chemin du fichier de description du son."},
+        "nodeIdArray": {"type": "integer|integer[]", "desc": "Noeud(s) d'émission ; un nombre seul est mis en tableau."},
+        "noloadVol": {"type": "number|nil", "desc": "Volume sans charge, 1 par défaut."},
+        "loadVol": {"type": "number|nil", "desc": "Volume en charge, 1 par défaut."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "initExhaustSound": {
+      "desc": "Comme initEngineSound mais pour l'échappement, avec des paires de noeuds. Appelle aussi vehicle:engineSoundInit (même appel moteur).",
+      "params": {
+        "vehicleId": {"type": "integer", "desc": "Id du véhicule."},
+        "engineId": {"type": "integer", "desc": "Identifiant du moteur."},
+        "jsonPath": {"type": "string", "desc": "Chemin du fichier de son."},
+        "nodeIdPairArray": {"type": "table|integer", "desc": "Tableau de paires de noeuds ; un nombre seul devient {{n, n}}."},
+        "noloadVol": {"type": "number|nil", "desc": "Volume sans charge, 1 par défaut."},
+        "loadVol": {"type": "number|nil", "desc": "Volume en charge, 1 par défaut."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "updateEngineSound": {
+      "desc": "Met à jour le son moteur (vehicle:engineSoundUpdate).",
+      "params": {
+        "vehicleId": {"type": "integer", "desc": "Id du véhicule."},
+        "engineId": {"type": "integer", "desc": "Identifiant du moteur."},
+        "rpm": {"type": "number", "desc": "Régime moteur."},
+        "onLoad": {"type": "number", "desc": "Charge moteur (déduit du code)."},
+        "engineVolume": {"type": "number", "desc": "Volume moteur."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setEngineSoundParameter": {
+      "desc": "Fixe un paramètre du son moteur (vehicle:engineSoundParameter).",
+      "params": {
+        "vehicleId": {"type": "integer", "desc": "Id du véhicule."},
+        "engineId": {"type": "integer", "desc": "Identifiant du moteur."},
+        "paramName": {"type": "string", "desc": "Nom du paramètre."},
+        "paramValue": {"type": "number", "desc": "Valeur."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setEngineSoundParameterList": {
+      "desc": "Fixe plusieurs paramètres du son moteur d'un coup.",
+      "params": {
+        "vehicleId": {"type": "integer", "desc": "Id du véhicule."},
+        "engineId": {"type": "integer", "desc": "Identifiant du moteur."},
+        "parameters": {"type": "table<string, number>", "desc": "Nom -> valeur (déduit du code)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setExhaustSoundNodes": {
+      "desc": "Change les noeuds d'émission du son d'échappement (vehicle:engineSoundNodes).",
+      "params": {
+        "vehicleId": {"type": "integer", "desc": "Id du véhicule."},
+        "engineId": {"type": "integer", "desc": "Identifiant du moteur."},
+        "nodeIdPairArray": {"type": "table", "desc": "Tableau de paires de noeuds."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "onSettingsChanged": {
+      "desc": "Hook appelé quand les réglages changent : relit AudioInsideModifier.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onUiChangedState": {
+      "desc": "Hook appelé quand l'état de l'UI change. Si un marqueur de mission est actif, gère gameAudioBlurValue : 1 tant qu'on interagit avec l'UI mission, remis à 0 pour les transitions vers play (depuis scenario.start, menu, fadeScreen, blank) ou vers scenario.end.",
+      "params": {
+        "toState": {"type": "string", "desc": "Nouvel état UI."},
+        "fromState": {"type": "string", "desc": "Ancien état UI."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onMissionInfoChangedState": {
+      "desc": "Hook appelé quand la fenêtre d'info mission change d'état : passe à 'opened' active l'interaction ; 'opened' vers 'closed' la désactive et remet le flou à 0. Sans effet si aucun marqueur de mission actif.",
+      "params": {
+        "fromState": {"type": "string", "desc": "Ancien état."},
+        "toState": {"type": "string", "desc": "Nouvel état."},
+        "content": {"type": "any", "desc": "Non utilisé."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onActivityAcceptGatherData": {
+      "desc": "Hook appelé quand une activité collecte ses données d'acceptation. Mémorise si l'un des éléments est de type \"mission\".",
+      "params": {
+        "elemData": {"type": "table[]", "desc": "Liste d'éléments avec un champ type."},
+        "activityData": {"type": "any", "desc": "Non utilisé (log seulement)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onMissionAvailabilityChanged": {
+      "desc": "Hook : si data.missionCount vaut 0, désactive l'interaction mission.",
+      "params": {"data": {"type": "table|nil", "desc": "Table avec missionCount."}},
+      "returns": [],
+      "internal": true
+    },
+    "setCabinFilterStrength": {
+      "desc": "Fixe cabinFilterStrength, mais seulement si objId est le véhicule joueur 0. Appelé typiquement depuis la VM véhicule.",
+      "params": {
+        "objId": {"type": "integer", "desc": "Id du véhicule émetteur."},
+        "value": {"type": "number", "desc": "Force 0 à 1."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook : quand le véhicule du joueur 0 change, exécute sounds.updateCabinFilter() dans la VM du nouveau véhicule.",
+      "params": {
+        "oldId": {"type": "integer", "desc": "Ancien id."},
+        "newId": {"type": "integer", "desc": "Nouvel id."},
+        "player": {"type": "integer", "desc": "Index du joueur ; ignoré si différent de 0."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook appelé après rechargement des extensions Lua : relance sounds.updateCabinFilter() sur tous les véhicules pour restaurer cabinFilterStrength.",
+      "params": {"data": {"type": "any", "desc": "Non utilisé."}},
+      "returns": [],
+      "internal": true
+    },
+    "setAudioBlur": {
+      "desc": "Fixe manuellement la valeur du flou audio global (paramètre g_GameAudioBlur).",
+      "params": {"value": {"type": "number", "desc": "0 = pas de flou, 1 = flou maximal (déduit du code)."}},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

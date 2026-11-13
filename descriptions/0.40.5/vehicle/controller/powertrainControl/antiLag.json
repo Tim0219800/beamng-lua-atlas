@@ -1,0 +1,24 @@
+{
+  "path": "lua/vehicle/controller/powertrainControl/antiLag.lua",
+  "module": "Contrôleur auxiliaire d'anti-lag (ALS) pour moteur turbocompressé. Machine à états off / idle / armed / manualOverride / timeout : en idle il s'arme après quelques secondes de plein gaz à haut régime ; armé, quand le véhicule roule, que les gaz sont levés (ou le frein appuyé) et que le moteur tourne assez, il pilote par PID le coefficient d'anti-lag du moteur (engine:setAntilagCoef) pour maintenir le turbo à turboTargetRPM. Un temps maximal continu évite la surchauffe. Publie electrics.values.alsActive (booléen) et alsState (chaîne).",
+  "usage": "local als = controller.getController(\"antiLag\")\nals.setAntilagState(\"manualOverride\") -- anti-lag forcé (coef = 1)\nals.setAntilagState(\"off\")",
+  "notes": [
+    "Clés jbeam lues : controlledEngine (\"mainEngine\"), turboTargetRPM (90000), minActiveEngineRPM (2000), minActiveWheelSpeed (1 m/s), maxActiveThrottleInput (0.2), minActiveBrakeInput (0.2), timeoutTime (30 s), timeoutResetTime (2 s), autoArmMinRPM (5000), autoArmMinThrottle (0.5), autoArmTime (1 s), autoDisarmMaxRPM (3000), autoDisarmMaxThrottle (0.3), autoDisarmTime (3 s).",
+    "États valides pour setAntilagState : \"off\", \"idle\", \"armed\", \"manualOverride\", \"timeout\" (aucune validation : toute valeur est acceptée telle quelle).",
+    "Sans moteur ou si le moteur n'a pas de turbocompresseur (engine.turbocharger), log E et updateGFX devient nop.",
+    "Le timeout s'accumule quand l'anti-lag est actif et décroît 3 fois plus vite sinon.",
+    "reset remet toujours l'état à idle même si le mode précédent était off, et ne réinitialise pas les timers d'armement/désarmement.",
+    "getState/setState exposent un mode distant : \"off\", \"automatic\" (idle/armed/timeout) ou \"manualOverride\" (clé <nom du contrôleur>_mode)."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "init": {"desc": "Récupère le moteur et son turbocompresseur, lit les seuils jbeam et crée le PID de régime turbo.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
+    "reset": {"desc": "Remet timeout, PID et état (idle) à zéro et les electrics alsActive/alsState.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "updateGFX": {"desc": "Chaque frame : fait avancer la machine à états et applique le coefficient d'anti-lag au moteur.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true},
+    "setAntilagState": {"desc": "Force l'état interne de la machine à états (off, idle, armed, manualOverride, timeout).", "params": {"newState": {"type": "string", "desc": "Nom de l'état."}}},
+    "getState": {"desc": "État sauvegardable : mode distant (off / automatic / manualOverride).", "returns": [{"type": "table", "desc": "Table d'état."}]},
+    "setState": {"desc": "Restaure le mode depuis la table (modes inconnus ignorés).", "params": {"data": {"type": "table|nil", "desc": "Table produite par getState."}}}
+  }
+}

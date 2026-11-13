@@ -1,0 +1,69 @@
+{
+  "path": "lua/common/csvlib.lua",
+  "module": "Bibliothèque d'écriture et de lecture de fichiers CSV/TSV. newCSV/newTSV créent un enregistreur (csvWriter) où l'on ajoute des lignes avec add, puis on écrit le fichier avec write (nom horodaté) ou on récupère le texte avec dump. readFileCSV et decode relisent un CSV (RFC 4180) en tableau de lignes. Utile pour enregistrer des télémétries ou courbes depuis un mod.",
+  "usage": "local csv = require('csvlib').newCSV('t', 'rpm', 'torque')\ncsv:add(0.0, 800, 120)\ncsv:add(0.1, 900, 130)\nlocal name = csv:write('mylog')  -- mylog_2026-...csv\nlocal rows = require('csvlib').readFileCSV(name)",
+  "notes": [
+    "Le fichier fait require 'utils' ; write utilise writeFile (global) et readFileCSV utilise readFile (global).",
+    "Les nombres sont écrits au format %.10g ; les booléens valent 1/0 ; nil donne une cellule vide ; les chaînes sont mises entre guillemets si nécessaire (séparateur, guillemet, CR, LF, ou début par espace/caractère de contrôle).",
+    "Le nom de fichier par défaut vient des premières lettres des en-têtes (headernym), sinon 'csv' ou 'tsv'.",
+    "write ajoute _AAAA-MM-JJTHH_MM_SS.ext sauf si le 4e caractère depuis la fin du nom est un point (nom déjà avec extension de 3 lettres).",
+    "decode convertit en nombre les champs non entre guillemets qui commencent par un chiffre, + ou - quand tonumber réussit ; ignore les espaces/tabulations autour des valeurs ; supprime les cellules vides finales et les lignes vides finales.",
+    "Les cellules entre guillemets restent des chaînes, même si elles ressemblent à un nombre.",
+    "Le champ headernym n'est défini que si des en-têtes sont passés à newCSV/newTSV, et la première lettre seulement est retenue (underscore pour un en-tête vide) ; add(...) avec les en-têtes écrit la première ligne."
+  ],
+  "fields": {},
+  "functions": {
+    "newCSV": {
+      "desc": "Crée un enregistreur CSV (séparateur virgule). Les arguments éventuels forment la ligne d'en-tête.",
+      "params": {"...": {"type": "any", "desc": "Noms de colonnes (facultatifs)."}},
+      "returns": [{"type": "table", "desc": "Objet csvWriter."}],
+      "internal": false
+    },
+    "newTSV": {
+      "desc": "Crée un enregistreur TSV (séparateur tabulation). Les arguments éventuels forment la ligne d'en-tête.",
+      "params": {"...": {"type": "any", "desc": "Noms de colonnes (facultatifs)."}},
+      "returns": [{"type": "table", "desc": "Objet csvWriter."}],
+      "internal": false
+    },
+    "readFileCSV": {
+      "desc": "Lit un fichier via readFile puis le décode avec decode.",
+      "params": {
+        "filename": {"type": "string", "desc": "Chemin du fichier."},
+        "sep": {"type": "string|nil", "desc": "Séparateur (1er caractère utilisé, défaut ',')."}
+      },
+      "returns": [{"type": "table[]|nil", "desc": "Tableau de lignes, chaque ligne étant un tableau de valeurs ; nil si le fichier est illisible."}],
+      "internal": false
+    },
+    "decode": {
+      "desc": "Décode un texte CSV (RFC 4180) en tableau de lignes de cellules.",
+      "params": {
+        "s": {"type": "string|nil", "desc": "Contenu CSV."},
+        "sep": {"type": "string|nil", "desc": "Séparateur (défaut ',')."}
+      },
+      "returns": [{"type": "table[]|nil", "desc": "Lignes de cellules (nombres ou chaînes) ; nil si s est nil."}],
+      "internal": false
+    }
+  },
+  "classes": {
+    "csvWriter": {
+      "desc": "Objet renvoyé par newCSV/newTSV. Accumule le texte dans un string.buffer.",
+      "functions": {
+        "add": {
+          "desc": "Ajoute une ligne de cellules (nombres, booléens, chaînes ou nil).",
+          "params": {"...": {"type": "number|string|boolean|nil", "desc": "Valeurs de la ligne."}},
+          "returns": [{"type": "table", "desc": "L'enregistreur lui-même (chaînable)."}]
+        },
+        "dump": {
+          "desc": "Renvoie tout le contenu accumulé sous forme de texte.",
+          "params": {},
+          "returns": [{"type": "string", "desc": "Texte CSV/TSV."}]
+        },
+        "write": {
+          "desc": "Écrit le contenu dans un fichier (voir notes pour le nommage).",
+          "params": {"filename": {"type": "string|nil", "desc": "Nom ou chemin ; par défaut dérivé des en-têtes."}},
+          "returns": [{"type": "string", "desc": "Nom de fichier réellement utilisé."}]
+        }
+      }
+    }
+  }
+}

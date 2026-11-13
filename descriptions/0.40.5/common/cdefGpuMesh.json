@@ -1,0 +1,9 @@
+{
+  "path": "lua/common/cdefGpuMesh.lua",
+  "module": "Déclaration FFI du type gpuPrimitive_t (startIndex, indexCount, materialId : trois uint32_t) décrivant une primitive de maillage GPU. Les autres structures (gpuFlexMesh_t, gpuPropMesh_t, gpuMesh_t) sont en commentaire, conservées seulement pour référence.",
+  "notes": [
+    "Aucune fonction Lua : uniquement un ffi.cdef exécuté si ffi existe."
+  ],
+  "fields": {},
+  "functions": {}
+}

@@ -1,0 +1,94 @@
+{
+  "path": "lua/vehicle/controller/couplings/containerLockFollow.lua",
+  "module": "Côté « suiveur » du système de verrouillage de conteneurs (twist-locks) : placé sur le véhicule qui reçoit (par exemple le conteneur), il répond au contrôleur `containerLockLead` d'un autre véhicule. Il fournit la position de ses sites de verrouillage, reçoit une force d'alignement du leader, active ou désactive ses coupleurs selon un electrics, et durcit ou assouplit les poutres de verrouillage quand tous les sites sont verrouillés. Les échanges entre véhicules passent par `obj:queueObjectLuaCommand` vers `controller.getControllersByType('couplings/containerLockFollow')`.",
+  "notes": [
+    "Clés jbeam : `lockSites` (table d'en-tête) avec `name`, `feelerCouplerNodeName`, `lockCouplerNodeName`, `aligningForceNodeName`, `couplerLockBeamsTag`, `couplerLockBeamsUnlockedSpring`, `couplerLockBeamsLockedSpring`, `couplerLockBeamsUnlockedDamp`, `couplerLockBeamsLockedDamp`, `needsVisualLockProp` (true par défaut), `isEnabledElectricsName` et `isEnabledElectricsValue` (1 par défaut).",
+    "Les sites sont indexés par l'id (cid) du noeud tâteur (feeler), qui sert aussi d'identifiant `lockSiteId` côté leader.",
+    "Quand un site est désactivé (electrics différent de la valeur attendue), les tags de ses noeuds tâteur et verrou reçoivent le suffixe `_disabled`, ce qui empêche l'accouplement.",
+    "Electrics écrit : `<nom>_<site>_lock_is_locked` (1 si verrouillé).",
+    "Anomalie : debugDraw est défini dans le fichier mais n'est pas exporté dans M, donc jamais appelé. `beamBroken` est exporté mais vide. Le tableau `lockNodeFeelerLookup` est de niveau module et n'est pas vidé dans init.",
+    "Dans onCouplerDetached, la recherche du site « tâteur » utilise directement l'id du noeud, et celle du site « verrou » passe par lockNodeFeelerLookup."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "requestFollowLastLockCouplerPosition": {
+      "desc": "Appelée à distance par le leader : renvoie la position monde du noeud verrou du site dont le noeud verrou a l'id donné, via lastLockCouplerPositionCallback du leader.",
+      "params": {
+        "objId": {"type": "integer", "desc": "Id du véhicule leader à rappeler."},
+        "controllerName": {"type": "string", "desc": "Nom du contrôleur leader."},
+        "lockCouplerNodeId": {"type": "integer", "desc": "cid du noeud verrou de ce véhicule."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "requestFollowLockCouplerPosition": {
+      "desc": "Appelée à distance par le leader : renvoie la position monde du noeud verrou d'un site (et `needsVisualLockProp`) via lockSitePositionCallback du leader.",
+      "params": {
+        "objId": {"type": "integer", "desc": "Id du véhicule leader à rappeler."},
+        "controllerName": {"type": "string", "desc": "Nom du contrôleur leader."},
+        "lockSiteId": {"type": "integer", "desc": "Id du site (cid du noeud tâteur)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "applyAligningForce": {
+      "desc": "Appelée à distance par le leader : mémorise la force d'alignement à appliquer au noeud d'alignement du site (ignorée si le noeud verrou est déjà couplé).",
+      "params": {
+        "lockSiteId": {"type": "integer", "desc": "Id du site."},
+        "forceVector": {"type": "vec3|nil", "desc": "Vecteur de force (N), nil pour l'annuler."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Chaque frame : applique la force d'alignement, active ou désactive chaque site selon son electrics, publie l'état verrouillé et ajuste la raideur des poutres de verrou (verrouillées seulement si tous les sites le sont).",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "beamBroken": {
+      "desc": "Hook de rupture de poutre, vide.",
+      "params": {
+        "id": {"type": "integer", "desc": "cid de la poutre."},
+        "energy": {"type": "number", "desc": "Énergie de rupture."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onCouplerAttached": {
+      "desc": "Hook : si le noeud est un noeud verrou, passe le site à l'état locked, efface la force d'alignement et durcit les poutres de verrou.",
+      "params": {
+        "nodeId": {"type": "integer", "desc": "cid du noeud local."},
+        "obj2id": {"type": "integer", "desc": "Id de l'autre véhicule."},
+        "obj2nodeId": {"type": "integer", "desc": "cid du noeud de l'autre véhicule."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onCouplerDetached": {
+      "desc": "Hook : efface la force d'alignement du site et, pour un noeud verrou, repasse le site à unlocked.",
+      "params": {
+        "nodeId": {"type": "integer", "desc": "cid du noeud local."},
+        "obj2id": {"type": "integer", "desc": "Id de l'autre véhicule."},
+        "obj2nodeId": {"type": "integer", "desc": "cid du noeud de l'autre véhicule."},
+        "breakForce": {"type": "number", "desc": "Force de rupture (non utilisée)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Efface les forces d'alignement, force la réévaluation de l'activation et remet les electrics de verrouillage à 0.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Construit les sites de verrouillage depuis le jbeam (noeuds, tags, poutres de verrou, electrics) et assouplit les poutres de verrou.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

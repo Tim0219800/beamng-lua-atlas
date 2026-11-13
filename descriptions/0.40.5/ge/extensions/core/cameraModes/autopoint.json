@@ -1,0 +1,47 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/autopoint.lua",
+  "module": "Filtre de caméra (isFilter = true, hidden = true) : fait viser la caméra vers un point décalé du véhicule, exprimé en coordonnées locales du véhicule (localOffset), avec un lissage par ressort. Ce n'est PAS une caméra sélectionnable : camera.lua charge le fichier comme tout mode mais initCam ignore les filtres. Il est instancié par d'autres modes (ex. cameraModes/external.lua : self.autopoint = autopoint(), puis autopoint:update(data) à chaque frame). Le module renvoie un constructeur : require('core/cameraModes/autopoint')(options) qui crée l'objet C avec les options données comme valeurs initiales.",
+  "usage": "local autopoint = require('core/cameraModes/autopoint')\nlocal ap = autopoint()\nap:setRefNodes(ref, left, back)\nap.localOffset = vec3(0, 0, 1)  -- viser 1 m au-dessus du point de référence\nap:setSpring(5, 1)\n-- chaque frame : ap:update(data)",
+  "notes": [
+    "L'index automatique donne des signatures abrégées (setRefNodes(leftNodeID, backNodeID), setSpring(accel), update()) : les vraies signatures sont setRefNodes(centerNodeID, leftNodeID, backNodeID), setSpring(rate, accel) et update(data).",
+    "update modifie data.res.targetPos (ajoute le décalage lissé converti dans la base du véhicule) puis fixe data.res.rot pour regarder de data.res.pos vers targetPos. Il suppose data.res.pos et data.res.targetPos déjà remplis par la caméra appelante, et utilise data.veh:getNodePosition (positions locales au véhicule).",
+    "La base locale est construite à partir des noeuds de référence : x = (gauche - ref), y = (arrière - ref), z = x cross y (le décalage y est donc positif vers l'arrière du véhicule, selon la convention du code)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Objet filtre renvoyé par le constructeur. Champs : isFilter, hidden, localOffset (vec3), refNodes {ref,left,back}, smX/smY/smZ (lisseurs).",
+      "functions": {
+        "init": {
+          "desc": "Initialise le filtre : isFilter et hidden à true, localOffset à (0,0,0) et ressort par défaut (rate 5, accel 1). Appelé par le constructeur.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "setSpring": {
+          "desc": "Crée ou recrée les trois lisseurs temporels sigmoïdes (X, Y, Z) en conservant leur valeur courante.",
+          "params": {
+            "rate": {"type": "number", "desc": "Vitesse maximale de variation (unités par seconde)"},
+            "accel": {"type": "number", "desc": "Accélération du lissage"}
+          },
+          "returns": []
+        },
+        "setRefNodes": {
+          "desc": "Mémorise les noeuds de référence du véhicule utilisés pour construire la base locale.",
+          "params": {
+            "centerNodeID": {"type": "integer", "desc": "Noeud central (ref)"},
+            "leftNodeID": {"type": "integer", "desc": "Noeud à gauche (left)"},
+            "backNodeID": {"type": "integer", "desc": "Noeud à l'arrière (back)"}
+          },
+          "returns": []
+        },
+        "update": {
+          "desc": "Applique le décalage lissé à data.res.targetPos et oriente data.res.rot vers lui. Appelé par la caméra qui possède ce filtre.",
+          "params": {"data": {"type": "table", "desc": "Données de frame : veh, dt, res {pos, targetPos, rot, fov}"}},
+          "returns": [{"type": "boolean", "desc": "Toujours true"}]
+        }
+      }
+    }
+  }
+}

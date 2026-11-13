@@ -1,0 +1,31 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/scriptedFree.lua",
+  "module": "Caméra libre pilotée par script (globale, masquée) : la pose (position, lacet, tangage vers le bas, roulis en degrés) est possédée à chaque image par le script, avec option de regard à la souris ou de déplacement manuel. Permet des vols animés (setTarget avec durée, courbe et callback), un lissage continu (setSmooth), le verrouillage de la position (locked), l'interdiction de tourner (driveRot) ou de bouger. Renvoie un constructeur.",
+  "usage": "core_camera.setByName(0, 'scriptedFree', false, {pos = vec3(0,0,50), yawDeg = 90, locked = true})\nlocal cam = core_camera.getGlobalCameras().scriptedFree\ncam:setTarget({pos = vec3(100,0,30), lookAt = vec3(0,0,0), time = 3, ease = 'easeInOut', onDone = function() print('fini') end})",
+  "notes": ["Convention : pitchDeg positif = regarde vers le bas (comme setFreeCameraYawPitchRollDeg). Tangage manuel limité à ±85 degrés.", "locked = true : le script possède la position (pas de touches de déplacement) ; allowLookWhenLocked = true laisse tourner la tête ; driveRot = false : setPose/setTarget ignorent la rotation (l'utilisateur vise pendant qu'un chemin pilote la position).", "dt est plafonné à 0.05 s dans update. Vitesse manuelle par défaut 30 m/s (x5 avec fastSpeedModifier) ; sensibilité de regard 2.2 ; FOV 65.", "setTarget verrouille la caméra pendant l'animation sauf si lockDuring = false."],
+  "classes": {
+    "C": {
+      "desc": "Mode caméra libre scriptée. Champs : pos (vec3), yawDeg, pitchDeg, rollDeg, fov, locked, driveRot, allowLookWhenLocked, allowLook, allowMove, manualSpeed, lookSens, smoothPos, smoothRot, anim.",
+      "functions": {
+        "init": {"desc": "Valeurs par défaut (voir module).", "internal": true},
+        "setCustomData": {"desc": "Applique en une fois des réglages (appelé par setByName / setGlobalCameraByName) : pos, yawDeg, pitchDeg, rollDeg, locked, driveRot, allowLookWhenLocked, manualSpeed, lookSens, fov, allowLook, allowMove, smoothPos, smoothRot ; les clés absentes sont inchangées.", "params": {"data": {"type": "table|nil", "desc": "options"}}},
+        "setPosition": {"desc": "Place la caméra (et son but de lissage) sans animation ; ignore nil.", "params": {"position": {"type": "vec3|nil", "desc": "position monde"}}},
+        "setRotation": {"desc": "Oriente la caméra depuis un quaternion.", "params": {"rotation": {"type": "quat|nil", "desc": "orientation monde"}}},
+        "setYawPitchRollDeg": {"desc": "Fixe les angles (les arguments nil sont inchangés).", "params": {"yawDeg": {"type": "number|nil", "desc": "lacet en degrés"}, "pitchDownDeg": {"type": "number|nil", "desc": "tangage en degrés, positif vers le bas"}, "rollDeg": {"type": "number|nil", "desc": "roulis en degrés"}}},
+        "setPose": {"desc": "Fixe la pose cible (instantanée, ou lissée si smoothPos/smoothRot > 0) et annule une animation en cours. La rotation est ignorée si driveRot est faux.", "params": {"pos": {"type": "vec3|nil", "desc": "position monde"}, "yawDeg": {"type": "number|nil", "desc": "lacet"}, "pitchDeg": {"type": "number|nil", "desc": "tangage vers le bas"}, "rollDeg": {"type": "number|nil", "desc": "roulis"}}},
+        "setSmooth": {"desc": "Temps de lissage continu (secondes pour atteindre ~63 %) ; 0 = setPose instantané.", "params": {"posSec": {"type": "number|nil", "desc": "pour la position"}, "rotSec": {"type": "number|nil", "desc": "pour la rotation"}}},
+        "setLocked": {"desc": "Verrouille la position (le script la possède, pas de WASD).", "params": {"locked": {"type": "boolean", "desc": "verrouiller"}}},
+        "setDriveRot": {"desc": "Autorise setPose/setTarget à piloter la rotation.", "params": {"enabled": {"type": "boolean", "desc": "activer"}}},
+        "setAllowLookWhenLocked": {"desc": "Autorise le regard à la souris pendant le verrouillage.", "params": {"enabled": {"type": "boolean", "desc": "activer"}}},
+        "setManualSpeed": {"desc": "Vitesse de déplacement manuelle.", "params": {"mps": {"type": "number", "desc": "mètres par seconde"}}},
+        "setFOV": {"desc": "Fixe le FOV.", "params": {"fovDeg": {"type": "number", "desc": "degrés"}}},
+        "getPose": {"desc": "Pose courante.", "returns": [{"type": "vec3", "desc": "position"}, {"type": "number", "desc": "lacet degrés"}, {"type": "number", "desc": "tangage degrés (vers le bas positif)"}, {"type": "number", "desc": "roulis degrés"}]},
+        "getQuat": {"desc": "Orientation courante en quaternion.", "returns": [{"type": "quat", "desc": "rotation"}]},
+        "isAnimating": {"desc": "Indique si un setTarget est en cours.", "returns": [{"type": "boolean", "desc": "true si animation"}]},
+        "cancelTarget": {"desc": "Annule l'animation en cours (la caméra reste à sa position actuelle, sans rappel onDone)."},
+        "setTarget": {"desc": "Vol vers une pose pendant une durée. Sans durée (<= 0), applique la pose immédiatement puis appelle onDone.", "params": {"opts": {"type": "table", "desc": "pos (vec3), orientation par lookAt (vec3) ou dir (vec3) ou rot (quat) ou yawDeg/pitchDeg/rollDeg, time ou duration (s), ease (linear, smoothstep, easeInOut, easeIn, easeOut ; smoothstep par défaut), fov, onDone (fonction), lockDuring (défaut true), forceRot (applique la rotation même si driveRot est faux)"}}},
+        "update": {"desc": "Applique l'animation, le regard, le déplacement manuel ou le lissage et écrit data.res.pos / rot / fov.", "params": {"data": {"type": "table", "desc": "camData"}}, "returns": [{"type": "boolean", "desc": "true"}], "internal": true}
+      }
+    }
+  }
+}

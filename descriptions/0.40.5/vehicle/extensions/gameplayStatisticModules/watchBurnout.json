@@ -1,0 +1,15 @@
+{
+  "path": "lua/vehicle/extensions/gameplayStatisticModules/watchBurnout.lua",
+  "module": "Module de gameplayStatistic qui détecte les burnouts : une roue motrice intacte patine (vitesse de roue > 2 et > 1,5 x vitesse sol, glissement pondéré par la charge > 4) tout en touchant le sol. À la fin, si la durée dépasse 0,1 s, ajoute la métrique 'vehicle/burnout.time' (agrégée).",
+  "notes": [
+    "Se décharge si le contrôleur principal n'est pas 'vehicleController/vehicleController', s'il n'y a aucune roue ou aucune roue motrice (wd.isPropulsed).",
+    "Ignoré si le nombre de roues a changé depuis le chargement.",
+    "Condition par roue : not isBroken, wheelSpeed > 2, wheelSpeed > groundSpeed * 1.5, lastSlip * min(downForce * 0.1, 1) > 4, contact au sol.",
+    "Le workload n'est pas enregistré ici (l'appel addSchedule est commenté) ; c'est gameplayStatistic qui l'ajoute au planificateur."
+  ],
+  "fields": {},
+  "functions": {
+    "onExtensionLoaded": {"desc": "Appelé au chargement : liste les roues motrices ; renvoie false pour se décharger si le véhicule ne convient pas.", "params": {}, "returns": [{"type": "boolean|nil", "desc": "false pour demander le déchargement."}], "internal": true},
+    "workload": {"desc": "Fonction de surveillance exécutée à tour de rôle par gameplayStatistic : détecte début/fin de burnout et envoie la métrique.", "params": {}, "returns": [], "internal": true}
+  }
+}

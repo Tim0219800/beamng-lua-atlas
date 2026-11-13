@@ -1,0 +1,232 @@
+{
+  "path": "lua/vehicle/controller/pneumatics/actuators.lua",
+  "module": "Contrôleur auxiliaire (type \"auxiliary\", defaultOrder 50) de vérins pneumatiques avec physique de gaz simplifiée : un réservoir d'air (energyStorage) alimente, via des vannes, des « tampons virtuels » (cross-flow groups) puis les poutres pressurées d'un groupe. Les débits dépendent des différences de pression et des sections de passage, l'énergie de l'air est conservée (PV = e) et la consommation d'air vide le réservoir. Une vanne par groupe (valveState -1..1) ouvre l'admission (> 0) ou l'échappement ; elle peut être lue depuis une valeur electrics. Il joue aussi des sons selon le débit.",
+  "usage": "local a = controller.getControllerSafe('pneumatics/actuators')\na.setBeamGroupValveState('liftAxle', 1)    -- admission\nlocal p = a.getAveragePressure('liftAxle') -- en Pa absolus",
+  "notes": [
+    "Unités : pressions en pascals (absolues), débits en m³/s, rayons en m. Une valeur electrics <nomContrôleur>_<groupe>_pressure_avg reçoit la pression moyenne relative (moyenne - pression ambiante).",
+    "Clés jbeam du contrôleur (défaut) : airTankName (\"mainAirTank\"), pressuredBeams (nom de table v.data avec beamName, groupName, crossFlowTag (défaut = groupName), supplyHoseRadius, supplyValveRadius, maxSupplyPressure, maxSupplyPressurePSI, valveStateElectricsName, disableAirConsumption, debug), crossFlowGroups (nom de table avec crossFlowTag, virtualBufferCapacity, debug), supplyHoseRadius (0.0075 m), supplyValveRadius (0.2 * supplyHoseRadius), maxSupplyPressure (infini), maxSupplyPressurePSI (converti en pression absolue + 101325 Pa), virtualBufferCapacity (0.005 m³), pressureDumpFlowRate (0.01 m³/s), crossFlowBetweenBeams (booléen), debug (booléen), groupSounds (nom de table avec groupName, node, volume/volumeIncrease/volumeDecrease, soundIncrease, soundDecrease, startFlowRateThreshold…, stopFlowRateThreshold…, flowRateVolumeFactor…).",
+    "Champs de poutre lus : name, pressure (pression par défaut), maxPressure, beamSpring, beamDamp, surface (section en m²), lengthOffset.",
+    "Si le réservoir est introuvable, une erreur est journalisée et updateFixedStep devient nop ; mais updateGFX reste actif et lit des données non initialisées (déduit du code : à éviter).",
+    "valveState > 0 : le tampon est alimenté par le réservoir (limité par maxSupplyPressure) ; valveState <= 0 : le tampon se vide vers l'atmosphère. Si valveState = 0 (et pas de crossFlowBetweenBeams) aucun échange avec les poutres.",
+    "Un cross-flow group implicite est créé (avec un avertissement) si un crossFlowTag n'est pas déclaré dans crossFlowGroups.",
+    "Le calcul est exécuté à chaque pas physique (updateFixedStep) et peut être coûteux."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "defaultOrder": {
+      "type": "number",
+      "desc": "50."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Construit groupes de poutres, tampons virtuels et paramètres de débit à partir du jbeam et retrouve le réservoir d'air.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "initSounds": {
+      "desc": "Crée les sources sonores d'augmentation/diminution de débit pour chaque groupe. Appelé par le gestionnaire de contrôleurs.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet pressions, énergies stockées, vannes et tampons virtuels à leur état initial.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "resetSounds": {
+      "desc": "Coupe le volume des sons et réinitialise leur état.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateFixedStep": {
+      "desc": "Chaque pas physique : calcule les débits réservoir -> tampons -> poutres, met à jour pressions et énergie du réservoir, applique les pressions aux poutres.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Chaque image : gère les sons selon le débit, remet à zéro les énergies par tick, écrit la pression moyenne relative dans electrics et trace les graphes de debug.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setBeamGroupValveState": {
+      "desc": "Fixe l'état de la vanne d'un groupe.",
+      "params": {
+        "groupName": {
+          "type": "string",
+          "desc": "Nom du groupe."
+        },
+        "valveState": {
+          "type": "number",
+          "desc": "-1..1 ; > 0 admission, <= 0 échappement ; la valeur absolue règle l'ouverture."
+        }
+      },
+      "returns": []
+    },
+    "setBeamGroupsValveState": {
+      "desc": "Même chose pour plusieurs groupes.",
+      "params": {
+        "groupNames": {
+          "type": "string[]",
+          "desc": "Noms de groupes."
+        },
+        "valveState": {
+          "type": "number",
+          "desc": "-1..1."
+        }
+      },
+      "returns": []
+    },
+    "toggleBeamGroupValveState": {
+      "desc": "Bascule la vanne entre 1 (admission) et -1 (échappement) : si l'état courant est < 0 elle passe à 1, sinon à -1.",
+      "params": {
+        "groupName": {
+          "type": "string",
+          "desc": "Nom du groupe."
+        }
+      },
+      "returns": []
+    },
+    "toggleBeamGroupsValveState": {
+      "desc": "Même chose pour plusieurs groupes.",
+      "params": {
+        "groupNames": {
+          "type": "string[]",
+          "desc": "Noms de groupes."
+        }
+      },
+      "returns": []
+    },
+    "setBeamGroupMaximumSupplyPressure": {
+      "desc": "Fixe la pression d'alimentation maximale d'un groupe.",
+      "params": {
+        "groupName": {
+          "type": "string",
+          "desc": "Nom du groupe."
+        },
+        "maxSupplyPressure": {
+          "type": "number",
+          "desc": "Pression absolue maximale (Pa)."
+        }
+      },
+      "returns": []
+    },
+    "setBeamGroupsMaximumSupplyPressure": {
+      "desc": "Même chose pour plusieurs groupes.",
+      "params": {
+        "groupNames": {
+          "type": "string[]",
+          "desc": "Noms de groupes."
+        },
+        "maxSupplyPressure": {
+          "type": "number",
+          "desc": "Pression absolue maximale (Pa)."
+        }
+      },
+      "returns": []
+    },
+    "setBeamGroupCrossFlowTag": {
+      "desc": "Change le tampon virtuel (cross-flow group) auquel un groupe est relié ; réinitialise le tampon si le groupe est le premier à l'utiliser.",
+      "params": {
+        "groupName": {
+          "type": "string",
+          "desc": "Nom du groupe."
+        },
+        "crossFlowTag": {
+          "type": "string",
+          "desc": "Nom du tampon virtuel."
+        }
+      },
+      "returns": []
+    },
+    "getValveState": {
+      "desc": "Renvoie l'état de la vanne d'un groupe (0 si introuvable).",
+      "params": {
+        "groupName": {
+          "type": "string",
+          "desc": "Nom du groupe."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "État de vanne -1..1."
+        }
+      ]
+    },
+    "getAverageFlowRate": {
+      "desc": "Renvoie le débit moyen vers les poutres d'un groupe (m³/s ; 0 si introuvable).",
+      "params": {
+        "groupName": {
+          "type": "string",
+          "desc": "Nom du groupe."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Débit moyen."
+        }
+      ]
+    },
+    "getAveragePressure": {
+      "desc": "Renvoie la pression moyenne des poutres d'un groupe (Pa absolus ; 0 si introuvable).",
+      "params": {
+        "groupName": {
+          "type": "string",
+          "desc": "Nom du groupe."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Pression moyenne."
+        }
+      ]
+    },
+    "getBeamGroupsAverageFlowRate": {
+      "desc": "Renvoie la moyenne des débits moyens de plusieurs groupes.",
+      "params": {
+        "groupNames": {
+          "type": "string[]",
+          "desc": "Noms de groupes."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Débit moyen (0 si liste vide)."
+        }
+      ]
+    }
+  }
+}

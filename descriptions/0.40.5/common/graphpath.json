@@ -1,0 +1,352 @@
+{
+  "path": "lua/common/graphpath.lua",
+  "module": "Graphe de routes pondéré et algorithmes de recherche de chemin utilisés par l'IA et le navigateur. newGraphpath() crée un graphe (nœuds nommés, arêtes bidirectionnelles avec longueur, drivabilité, voies, sens unique, positions et rayons) ; les méthodes calculent plus court chemin (Dijkstra avec tas minimal), chemins par arêtes avec pénalité de virage, chemin point-à-point, chemins aléatoires/fuite/poursuite, composantes fortement connexes et graphe minorant. Un moddeur l'utilise pour requêter le réseau routier (map.getGraphpath()) ou construire son propre graphe.",
+  "usage": "local gp = newGraphpath()\ngp:edge('a', 'b', 7)\ngp:edge('b', 'c', 3)\nprint(table.concat(gp:getPath('a', 'c'), '->'))  -- a->b->c",
+  "notes": [
+    "Le module est retourné par require('graphpath') avec deux fonctions : newGraphpath et newMinheap. Il n'y a pas de global newGraphpath sauf si un autre fichier le définit (l'exemple en en-tête l'utilise comme global).",
+    "Deux familles d'arêtes : edge(sp, ep, dist) crée des arêtes simples (len seulement) ; uniEdge/bidiEdge créent des données riches partagées par les deux sens dans graph[a][b] et graph[b][a] (mêmes tables). Seul bidiEdge attribue eId (identifiant d'arête, deux identifiants consécutifs par arête, un par sens).",
+    "Les algorithmes avancés (getPointNodePath, getFilteredPath, getEdgePath, getPathT...) supposent des arêtes riches : drivability, inNode, oneWay, gated, lanes, plus positions et rayons des nœuds. Ils échoueront (nil arithmétique) sur un graphe créé avec edge() seul.",
+    "Les chemins sont des tableaux de noms de nœuds ordonnés de la source vers le but ; les fonctions de recherche renvoient {} si un nœud est inconnu ou inaccessible (sauf mention contraire).",
+    "dirMult : multiplicateur de coût pour parcourir une arête sens unique à contresens (valeur typique 1e3-1e4 ; nil ou 1 = pas de pénalité).",
+    "cutOffDrivability / penaltyAboveCutoff / penaltyBelowCutoff : les routes dont la drivabilité est <= cutOffDrivability ont leur coût multiplié par penaltyBelowCutoff (défaut 10000), les autres par penaltyAboveCutoff (défaut 1).",
+    "Les champs d'arête : len (longueur m), drivability (0..1), speedLimit, lanes (chaîne de '+' et '-' par voie, '+' dans le sens inNode vers outNode), oneWay, gated, inNode/outNode, inPos/outPos, inRadius/outRadius, eId.",
+    "Le tas minimal (minheap) est partagé au niveau du module (variable locale 'que') par la plupart des recherches : ces recherches ne sont pas réentrantes, sauf getPointToPointPathJob qui crée son propre tas.",
+    "Bug mineur : newGraphpath ignore son paramètre edgeCount.",
+    "Bug probable : dans getFleePath et getRandomPathG, visited est initialisé avec {startNode = 0.2}, c'est-à-dire avec la clé littérale 'startNode' et non la valeur de la variable startNode ; le nœud de départ n'est donc pas pénalisé.",
+    "Aucun appel vers le moteur C++ : module Lua pur. Utilise des globales d'autres fichiers : vec3, square, clamp, sign2, tableSize, tableKeys, profilerPushEvent/PopEvent."
+  ],
+  "fields": {},
+  "functions": {
+    "newGraphpath": {
+      "desc": "Crée un graphe vide. Les paramètres ne servent qu'à pré-allouer les tables.",
+      "params": {
+        "nodeCount": {"type": "integer|nil", "desc": "Nombre de nœuds prévu (pré-allocation)."},
+        "edgeCount": {"type": "integer|nil", "desc": "Ignoré par le code."}
+      },
+      "returns": [{"type": "table", "desc": "Objet Graphpath (champs graph, positions, radius, edgeListCount)."}],
+      "internal": false
+    },
+    "newMinheap": {
+      "desc": "Crée un tas minimal (file de priorité) avec les clés dans la table elle-même et les valeurs dans vals.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Objet minheap."}],
+      "internal": false
+    }
+  },
+  "classes": {
+    "minheap": {
+      "desc": "File de priorité à clé numérique minimale en tête. Champs : length, vals ; les clés sont stockées aux indices 1..length de la table.",
+      "functions": {
+        "insert": {"desc": "Insère la valeur v avec la clé k.", "params": {"k": {"type": "number", "desc": "Clé (priorité, plus petit = sort en premier)."}, "v": {"type": "any", "desc": "Valeur associée."}}},
+        "pop": {"desc": "Retire et renvoie l'élément de clé minimale.", "params": {}, "returns": [{"type": "number|nil", "desc": "Clé (nil si vide)."}, {"type": "any", "desc": "Valeur associée."}]},
+        "peekKey": {"desc": "Clé minimale sans retirer (nil si vide).", "params": {}, "returns": [{"type": "number|nil", "desc": "Clé minimale."}]},
+        "peekVal": {"desc": "Valeur de clé minimale sans retirer.", "params": {}, "returns": [{"type": "any", "desc": "Valeur."}]},
+        "empty": {"desc": "Indique si le tas est vide.", "params": {}, "returns": [{"type": "boolean", "desc": "true si vide."}]},
+        "clear": {"desc": "Vide le tas (conserve la table).", "params": {}}
+      }
+    },
+    "Graphpath": {
+      "desc": "Graphe non orienté de nœuds identifiés par des clés (chaînes), avec tables graph[n1][n2] = données d'arête, positions[n] (vec3), radius[n] (largeur/demi-largeur de route).",
+      "functions": {
+        "export": {
+          "desc": "Exporte le graphe sous forme compacte (une entrée par arête, sans doublon) pour sauvegarde ou envoi à une autre VM.",
+          "params": {"edgeCount": {"type": "integer|nil", "desc": "Nombre d'arêtes attendu (pré-allocation)."}},
+          "returns": [{"type": "table", "desc": "{edgeData, positions, radius, edgeDataCount, nodeCount}."}]
+        },
+        "import": {
+          "desc": "Reconstruit le graphe depuis le format produit par export (utilise inNode/outNode/eId des arêtes) et l'index des arêtes.",
+          "params": {"graphData": {"type": "table", "desc": "Données d'export."}}
+        },
+        "clear": {"desc": "Remplace la table graph par une table vide (positions et rayons conservés).", "params": {}},
+        "edge": {
+          "desc": "Ajoute une arête simple de sp vers ep (len = dist) et crée ep si absent. Une seule direction est stockée (graph[sp][ep]).",
+          "params": {
+            "sp": {"type": "any", "desc": "Nœud de départ."},
+            "ep": {"type": "any", "desc": "Nœud d'arrivée."},
+            "dist": {"type": "number|nil", "desc": "Longueur/coût (défaut 1)."}
+          }
+        },
+        "uniEdge": {
+          "desc": "Ajoute une arête riche partagée par les deux sens, sans identifiant d'arête (pas de eId).",
+          "params": {
+            "inNode": {"type": "any", "desc": "Nœud d'entrée de l'arête."},
+            "outNode": {"type": "any", "desc": "Nœud de sortie."},
+            "dist": {"type": "number|nil", "desc": "Longueur (défaut 1)."},
+            "drivability": {"type": "number|nil", "desc": "Drivabilité de la route (1 = idéale)."},
+            "speedLimit": {"type": "number|nil", "desc": "Vitesse limite."},
+            "lanes": {"type": "string|nil", "desc": "Chaîne des voies ('+' sens inNode->outNode, '-' inverse)."},
+            "oneWay": {"type": "boolean|nil", "desc": "Sens unique (inNode vers outNode)."},
+            "gated": {"type": "number|boolean|nil", "desc": "Indicateur de barrière (valeur utilisée comme nombre dans les calculs de getPathT)."},
+            "inPos": {"type": "vec3|nil", "desc": "Position spécifique de l'extrémité inNode."},
+            "inRad": {"type": "number|nil", "desc": "Rayon à inNode."},
+            "outPos": {"type": "vec3|nil", "desc": "Position spécifique à outNode."},
+            "outRad": {"type": "number|nil", "desc": "Rayon à outNode."}
+          }
+        },
+        "bidiEdge": {
+          "desc": "Comme uniEdge mais attribue aussi un identifiant d'arête eId (deux identifiants consécutifs par arête, un par sens) ; nécessaire pour getEdgePath et l'index d'arêtes.",
+          "params": {
+            "inNode": {"type": "any", "desc": "Nœud d'entrée."},
+            "outNode": {"type": "any", "desc": "Nœud de sortie."},
+            "dist": {"type": "number|nil", "desc": "Longueur (défaut 1)."},
+            "drivability": {"type": "number|nil", "desc": "Drivabilité."},
+            "speedLimit": {"type": "number|nil", "desc": "Vitesse limite."},
+            "lanes": {"type": "string|nil", "desc": "Chaîne des voies."},
+            "oneWay": {"type": "boolean|nil", "desc": "Sens unique."},
+            "gated": {"type": "number|boolean|nil", "desc": "Barrière."},
+            "inPos": {"type": "vec3|nil", "desc": "Position à inNode."},
+            "inRad": {"type": "number|nil", "desc": "Rayon à inNode."},
+            "outPos": {"type": "vec3|nil", "desc": "Position à outNode."},
+            "outRad": {"type": "number|nil", "desc": "Rayon à outNode."}
+          }
+        },
+        "generateEdgeIndex": {"desc": "Construit la table edgeList (eId vers nœud) à partir des arêtes créées par bidiEdge.", "params": {}},
+        "getEdgeIdFromNodes": {
+          "desc": "Identifiant d'arête orientée de fromNode vers toNode (eId pour le sens inNode->outNode, eId+1 pour l'inverse).",
+          "params": {"fromNode": {"type": "any", "desc": "Nœud de départ."}, "toNode": {"type": "any", "desc": "Nœud d'arrivée."}},
+          "returns": [{"type": "integer", "desc": "Identifiant d'arête."}]
+        },
+        "getNodesFromEdgeId": {
+          "desc": "Inverse de getEdgeIdFromNodes : renvoie les deux nœuds de l'arête orientée (départ, arrivée).",
+          "params": {"eId": {"type": "integer", "desc": "Identifiant d'arête."}},
+          "returns": [{"type": "any", "desc": "Nœud de départ."}, {"type": "any", "desc": "Nœud d'arrivée."}]
+        },
+        "getEdgePositions": {
+          "desc": "Positions des extrémités d'une arête : position spécifique à l'arête (inPos/outPos) si elle existe, sinon position du nœud.",
+          "params": {"n1id": {"type": "any", "desc": "Premier nœud."}, "n2id": {"type": "any", "desc": "Second nœud."}},
+          "returns": [{"type": "vec3", "desc": "Position côté n1id."}, {"type": "vec3", "desc": "Position côté n2id."}]
+        },
+        "getEdgeRadii": {
+          "desc": "Rayons aux extrémités d'une arête (rayon propre à l'arête sinon celui du nœud).",
+          "params": {"n1id": {"type": "any", "desc": "Premier nœud."}, "n2id": {"type": "any", "desc": "Second nœud."}},
+          "returns": [{"type": "number", "desc": "Rayon côté n1id."}, {"type": "number", "desc": "Rayon côté n2id."}]
+        },
+        "setPointPosition": {"desc": "Définit la position d'un nœud.", "params": {"p": {"type": "any", "desc": "Nœud."}, "pos": {"type": "vec3", "desc": "Position."}}},
+        "setPointPositionRadius": {"desc": "Définit position et rayon d'un nœud.", "params": {"p": {"type": "any", "desc": "Nœud."}, "pos": {"type": "vec3", "desc": "Position."}, "radius": {"type": "number", "desc": "Rayon."}}},
+        "setNodeRadius": {"desc": "Définit le rayon d'un nœud.", "params": {"node": {"type": "any", "desc": "Nœud."}, "radius": {"type": "number", "desc": "Rayon."}}},
+        "scc": {
+          "desc": "Composantes fortement connexes (Tarjan) en ne suivant que les arêtes de drivabilité exactement 1. Si v est donné, ne calcule que depuis v.",
+          "params": {"v": {"type": "any|nil", "desc": "Nœud de départ facultatif."}},
+          "returns": [{"type": "table[]", "desc": "Liste de composantes ; chaque composante est un dictionnaire nœud=true avec le nombre de nœuds dans la clé [0]."}]
+        },
+        "graphMinor": {
+          "desc": "Contracte les nœuds de degré 2 : le résultat ne contient que les impasses et carrefours. minor[a][b] est le tableau ordonné des nœuds d'origine reliant a et b (extrémités incluses), symétrique en minor[b][a].",
+          "params": {},
+          "returns": [{"type": "table", "desc": "Graphe minorant."}]
+        },
+        "getPath": {
+          "desc": "Plus court chemin (Dijkstra) entre deux nœuds en minimisant la somme des len ; les arêtes sens unique parcourues à contresens sont multipliées par dirMult.",
+          "params": {
+            "start": {"type": "any", "desc": "Nœud de départ."},
+            "goal": {"type": "any", "desc": "Nœud d'arrivée."},
+            "dirMult": {"type": "number|nil", "desc": "Pénalité de contresens (défaut 1)."}
+          },
+          "returns": [{"type": "table", "desc": "Liste de nœuds ; {} si départ ou but inconnu."}]
+        },
+        "edgeLanesInDirection": {
+          "desc": "Nombre de voies de l'arête allant de fromNode vers toNode (compte les '+' ou '-' de la chaîne lanes selon le sens).",
+          "params": {"fromNode": {"type": "any", "desc": "Nœud de départ."}, "toNode": {"type": "any", "desc": "Nœud d'arrivée."}},
+          "returns": [{"type": "integer", "desc": "Nombre de voies dans ce sens."}]
+        },
+        "getEdgePath": {
+          "desc": "Plus court chemin sur des arêtes (états = arêtes orientées) avec pénalités de virage (gauche/droite plus forte aux carrefours, demi-tour très pénalisé selon la largeur de route). Part de l'arête bNode vers fNode ; le résultat est une liste de nœuds.",
+          "params": {
+            "bNode": {"type": "any", "desc": "Nœud derrière."},
+            "fNode": {"type": "any", "desc": "Nœud devant (direction de départ)."},
+            "goal": {"type": "any", "desc": "Nœud but."},
+            "dirMult": {"type": "number|nil", "desc": "Pénalité de contresens (au moins 1)."}
+          },
+          "returns": [{"type": "table|nil", "desc": "Liste de nœuds ; nil si les nœuds ne forment pas une arête valide ou si le but est inconnu."}]
+        },
+        "getPointNodePath": {
+          "desc": "Plus court chemin entre un point (vec3) et un nœud, dans un sens ou l'autre (si start est un cdata/vec3, le chemin est calculé depuis le nœud target et inversé). Pénalise la distance entre le point et la route et peut finir sur le milieu d'une arête (premier élément du tableau = nœud de l'arête qui contient la projection du point).",
+          "params": {
+            "start": {"type": "any", "desc": "Nœud ou vec3."},
+            "target": {"type": "any", "desc": "Vec3 ou nœud (l'autre côté)."},
+            "cutOffDrivability": {"type": "number|nil", "desc": "Seuil de drivabilité (défaut 0)."},
+            "dirMult": {"type": "number|nil", "desc": "Pénalité de contresens."},
+            "penaltyAboveCutoff": {"type": "number|nil", "desc": "Multiplicateur au-dessus du seuil (défaut 1)."},
+            "penaltyBelowCutoff": {"type": "number|nil", "desc": "Multiplicateur sous le seuil (défaut 10000)."},
+            "wZ": {"type": "number|nil", "desc": "Poids de l'écart vertical dans la distance (défaut 4)."}
+          },
+          "returns": [{"type": "table", "desc": "Chemin de nœuds ({} si départ inconnu)."}]
+        },
+        "_getPointToPointPathImpl": {
+          "desc": "Implémentation de la recherche point à point : plusieurs nœuds/arêtes d'accès possibles à la source (fournis par l'itérateur iter) et sortie vers targetPos par projection sur les arêtes ; yieldFn optionnel appelé à chaque itération.",
+          "params": {
+            "sourcePos": {"type": "vec3", "desc": "Position source."},
+            "iter": {"type": "function", "desc": "Itérateur renvoyant (nœud ou {n1,n2}, coût, xnorm) du plus proche au plus éloigné."},
+            "targetPos": {"type": "vec3", "desc": "Position cible."},
+            "cutOffDrivability": {"type": "number|nil", "desc": "Seuil de drivabilité (défaut 0)."},
+            "dirMult": {"type": "number|nil", "desc": "Pénalité de contresens."},
+            "penaltyAboveCutoff": {"type": "number|nil", "desc": "Défaut 1."},
+            "penaltyBelowCutoff": {"type": "number|nil", "desc": "Défaut 10000."},
+            "wZ": {"type": "number|nil", "desc": "Poids vertical (défaut 1)."},
+            "yieldFn": {"type": "function|nil", "desc": "Appelée à chaque itération."}
+          },
+          "returns": [{"type": "table", "desc": "Chemin (nœuds) ; {} si impossible ou si le chemin direct est meilleur."}],
+          "internal": true
+        },
+        "getPointToPointPath": {
+          "desc": "Chemin entre deux positions via le réseau routier (version synchrone de _getPointToPointPathImpl).",
+          "params": {
+            "sourcePos": {"type": "vec3", "desc": "Position source."},
+            "iter": {"type": "function", "desc": "Itérateur de nœuds/arêtes proches de la source."},
+            "targetPos": {"type": "vec3", "desc": "Position cible."},
+            "cutOffDrivability": {"type": "number|nil", "desc": "Seuil de drivabilité."},
+            "dirMult": {"type": "number|nil", "desc": "Pénalité de contresens."},
+            "penaltyAboveCutoff": {"type": "number|nil", "desc": "Multiplicateur au-dessus du seuil."},
+            "penaltyBelowCutoff": {"type": "number|nil", "desc": "Multiplicateur sous le seuil."},
+            "wZ": {"type": "number|nil", "desc": "Poids vertical."}
+          },
+          "returns": [{"type": "table", "desc": "Chemin de nœuds."}]
+        },
+        "getPointToPointPathJob": {
+          "desc": "Comme getPointToPointPath mais cède la main (job.yield) toutes les 350 itérations (ou global_yieldInterval) pour ne pas bloquer le jeu ; à appeler depuis un job du jobsystem.",
+          "params": {
+            "job": {"type": "table|nil", "desc": "Job de core_jobsystem (avec .yield)."},
+            "sourcePos": {"type": "vec3", "desc": "Position source."},
+            "iter": {"type": "function", "desc": "Itérateur de nœuds/arêtes proches de la source."},
+            "targetPos": {"type": "vec3", "desc": "Position cible."},
+            "cutOffDrivability": {"type": "number|nil", "desc": "Seuil de drivabilité."},
+            "dirMult": {"type": "number|nil", "desc": "Pénalité de contresens."},
+            "penaltyAboveCutoff": {"type": "number|nil", "desc": "Multiplicateur au-dessus du seuil."},
+            "penaltyBelowCutoff": {"type": "number|nil", "desc": "Multiplicateur sous le seuil."},
+            "wZ": {"type": "number|nil", "desc": "Poids vertical."}
+          },
+          "returns": [{"type": "table", "desc": "Chemin de nœuds."}]
+        },
+        "numOfEdgeLanes": {
+          "desc": "Nombre total de voies d'une arête et nombre de voies dans le sens inNode->outNode donné ; si lanes est absent, les déduit des rayons (3,45 m par voie).",
+          "params": {"inNode": {"type": "any", "desc": "Nœud de départ."}, "outNode": {"type": "any", "desc": "Nœud d'arrivée."}},
+          "returns": [{"type": "integer", "desc": "Voies au total."}, {"type": "integer", "desc": "Voies dans le sens inNode->outNode."}]
+        },
+        "getPathT": {
+          "desc": "Choisit un chemin aléatoire pondéré pour un trafic IA à partir de start, en privilégiant routes drivables, continuité de direction et capacité (flux de voies) ; s'arrête à pathLenLim mètres de mePos, jusqu'à 10 candidats tirés au hasard.",
+          "params": {
+            "start": {"type": "any", "desc": "Nœud de départ."},
+            "mePos": {"type": "vec3", "desc": "Position de référence pour la distance."},
+            "pathLenLim": {"type": "number", "desc": "Distance minimale du chemin (m)."},
+            "illegalDirPenalty": {"type": "number|nil", "desc": "Non utilisé dans le code."},
+            "initDir": {"type": "vec3", "desc": "Direction initiale (x, y utilisés)."}
+          },
+          "returns": [{"type": "table", "desc": "Chemin de nœuds ({} si start inconnu)."}]
+        },
+        "getFlows": {
+          "desc": "Flux (capacité) avant et arrière d'une arête orientée, déduits du rayon du nœud de sortie réparti sur les voies.",
+          "params": {"inNode": {"type": "any", "desc": "Nœud d'entrée."}, "outNode": {"type": "any", "desc": "Nœud de sortie."}},
+          "returns": [{"type": "number", "desc": "Flux dans le sens inNode->outNode."}, {"type": "number", "desc": "Flux dans le sens inverse."}]
+        },
+        "getPathTWithState": {
+          "desc": "Variante de getPathT qui réutilise le chemin précédent comme état pour continuer de façon cohérente (le dernier nœud du chemin précédent doit être start).",
+          "params": {
+            "start": {"type": "any", "desc": "Nœud de départ."},
+            "mePos": {"type": "vec3|nil", "desc": "Position de référence (défaut position de start)."},
+            "pathLenLim": {"type": "number|nil", "desc": "Longueur minimale du chemin (défaut 150)."},
+            "state": {"type": "vec3|table|nil", "desc": "Direction initiale (vec3) ou chemin précédent (liste de nœuds)."}
+          },
+          "returns": [{"type": "table", "desc": "Chemin de nœuds ({} si impossible)."}]
+        },
+        "getFilteredPath": {
+          "desc": "Plus court chemin entre deux nœuds avec pénalités de drivabilité (seuil) et de contresens.",
+          "params": {
+            "start": {"type": "any", "desc": "Nœud de départ."},
+            "goal": {"type": "any", "desc": "Nœud d'arrivée."},
+            "cutOffDrivability": {"type": "number|nil", "desc": "Seuil (défaut 0)."},
+            "dirMult": {"type": "number|nil", "desc": "Pénalité de contresens."},
+            "penaltyAboveCutoff": {"type": "number|nil", "desc": "Défaut 1."},
+            "penaltyBelowCutoff": {"type": "number|nil", "desc": "Défaut 10000."}
+          },
+          "returns": [{"type": "table", "desc": "Chemin de nœuds."}]
+        },
+        "spanMap": {
+          "desc": "Plus court chemin où le coût de chaque arête est multiplié par edgeDict['a\\0b'] (défaut 1e20 si absente), avec forte pénalité (x300) pour repartir vers nodeBehind depuis la source ; sert à couvrir un ensemble d'arêtes.",
+          "params": {
+            "source": {"type": "any", "desc": "Nœud de départ."},
+            "nodeBehind": {"type": "any", "desc": "Nœud derrière la source."},
+            "target": {"type": "any", "desc": "Nœud but."},
+            "edgeDict": {"type": "table<string, number>", "desc": "Coefficient par arête, clé node..'\\0'..child."},
+            "dirMult": {"type": "number|nil", "desc": "Pénalité de contresens."}
+          },
+          "returns": [{"type": "table", "desc": "Chemin de nœuds."}]
+        },
+        "getPathAwayFrom": {
+          "desc": "Chemin vers goal qui évite stayAwayPos : le coût des arêtes est pondéré par (distance à mePos / distance à stayAwayPos).",
+          "params": {
+            "start": {"type": "any", "desc": "Nœud de départ."},
+            "goal": {"type": "any", "desc": "Nœud but."},
+            "mePos": {"type": "vec3", "desc": "Position de l'agent."},
+            "stayAwayPos": {"type": "vec3", "desc": "Position à éviter."},
+            "dirMult": {"type": "number|nil", "desc": "Pénalité de contresens."}
+          },
+          "returns": [{"type": "table", "desc": "Chemin de nœuds."}]
+        },
+        "getMaxNodeAround": {
+          "desc": "Parcourt le graphe dans un rayon radius autour de start et renvoie le nœud le plus éloigné, ou le plus avancé selon la direction dir.",
+          "params": {
+            "start": {"type": "any", "desc": "Nœud de départ."},
+            "radius": {"type": "number", "desc": "Rayon de recherche (m)."},
+            "dir": {"type": "vec3|nil", "desc": "Si fourni, score = projection sur dir au lieu de la distance carrée."}
+          },
+          "returns": [{"type": "any|nil", "desc": "Nœud trouvé, nil si start inconnu."}]
+        },
+        "getBranchNodesAround": {
+          "desc": "Parcours en profondeur dans un rayon autour de start ; renvoie les carrefours (nœuds avec au moins 2 nouveaux voisins) et leurs liens.",
+          "params": {
+            "start": {"type": "any", "desc": "Nœud de départ."},
+            "maxRadius": {"type": "number|nil", "desc": "Rayon max en m (défaut 1000)."}
+          },
+          "returns": [{"type": "table[]|nil", "desc": "Liste de {node, links, sqDist} ; nil si start inconnu."}]
+        },
+        "getChasePath": {
+          "desc": "Chemin pour poursuivre une cible : choisit le nœud devant selon la position/vitesse de la cible et calcule un chemin vers le nœud de la cible.",
+          "params": {
+            "nodeBehind": {"type": "any", "desc": "Nœud derrière le poursuivant."},
+            "nodeAhead": {"type": "any", "desc": "Nœud devant le poursuivant."},
+            "targetNodeBehind": {"type": "any", "desc": "Nœud derrière la cible."},
+            "targetNodeAhead": {"type": "any", "desc": "Nœud devant la cible."},
+            "mePos": {"type": "vec3", "desc": "Position du poursuivant."},
+            "meVel": {"type": "vec3", "desc": "Vitesse du poursuivant."},
+            "targetPos": {"type": "vec3", "desc": "Position de la cible."},
+            "targetVel": {"type": "vec3", "desc": "Vitesse de la cible."},
+            "dirMult": {"type": "number|nil", "desc": "Pénalité de contresens."}
+          },
+          "returns": [{"type": "table", "desc": "Chemin de nœuds."}]
+        },
+        "getFleePath": {
+          "desc": "Construit gloutonnement un chemin de fuite loin de chasePos, avec une randomisation de direction, jusqu'à dépasser pathLenLimit.",
+          "params": {
+            "startNode": {"type": "any", "desc": "Nœud de départ."},
+            "initialDir": {"type": "vec3", "desc": "Direction initiale."},
+            "chasePos": {"type": "vec3", "desc": "Position du poursuivant."},
+            "pathLenLimit": {"type": "number|nil", "desc": "Longueur à atteindre en m (défaut 100)."},
+            "rndDirCoef": {"type": "number|nil", "desc": "Amplitude de la randomisation de direction (défaut 0)."},
+            "rndDistCoef": {"type": "number|nil", "desc": "Croissance de la randomisation avec la distance (défaut 0.05, max 1)."}
+          },
+          "returns": [{"type": "table|nil", "desc": "Chemin de nœuds ; nil si startNode inconnu."}]
+        },
+        "getRandomPathG": {
+          "desc": "Construit gloutonnement un chemin aléatoire qui privilégie la continuité de direction, jusqu'à dépasser pathLenLimit.",
+          "params": {
+            "startNode": {"type": "any", "desc": "Nœud de départ."},
+            "initialDir": {"type": "vec3", "desc": "Direction initiale."},
+            "pathLenLimit": {"type": "number|nil", "desc": "Longueur à atteindre en m (défaut 100)."},
+            "rndDirCoef": {"type": "number|nil", "desc": "Randomisation de direction (défaut 0)."},
+            "rndDistCoef": {"type": "number|nil", "desc": "Croissance de la randomisation (défaut 0.05)."},
+            "oneway": {"type": "boolean|nil", "desc": "Si false, ne pénalise pas les sens uniques pris à contresens (défaut true : pénalisés)."}
+          },
+          "returns": [{"type": "table|nil", "desc": "Chemin de nœuds ; nil si startNode inconnu."}]
+        },
+        "getRandomPath": {
+          "desc": "Chemin aléatoire (jusqu'à 5 candidats à plus de 300 m, tirage pondéré) avec un biais vers la colinéarité des arêtes ; empêche de faire demi-tour vers nodeBehind.",
+          "params": {
+            "nodeAhead": {"type": "any", "desc": "Nœud devant."},
+            "nodeBehind": {"type": "any", "desc": "Nœud derrière."},
+            "dirMult": {"type": "number|nil", "desc": "Pénalité de contresens."}
+          },
+          "returns": [{"type": "table", "desc": "Chemin de nœuds ({} si un nœud est inconnu)."}]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "path": "lua/ge/extensions/core/vehicleTriggers.lua",
+  "module": "Gère l'interaction du joueur avec les triggers de véhicule (poignées de porte, capot, etc. définis dans le JBeam) : lancer de rayon depuis le curseur ou le réticule, survol, affichage du réticule et des libellés d'action dans l'interface, puis exécution des liens d'action (inputActions du véhicule ou actions communes) quand le joueur appuie sur triggerAction0/1/2. Gère aussi le mode écran partagé (un rayon par joueur) et active ou désactive le système de rendu des triggers côté C++ (VehicleTrigger). Un moddeur s'en sert surtout pour déclencher un trigger par script (triggerEvent), tester si l'interaction est possible (isEnabled) ou écouter les hooks onVehicleTriggerActionLabel et onVehicleTriggersExecuteLink.",
+  "usage": "-- simuler l'appui sur le trigger 'door_FL' du véhicule vehId\nlocal vd = core_vehicle_manager.getVehicleData(vehId)\ncore_vehicleTriggers.triggerEvent('action0', 1, 'door_FL', vehId, vd.vdata, 0) -- appui\ncore_vehicleTriggers.triggerEvent('action0', 0, 'door_FL', vehId, vd.vdata, 0) -- relâchement",
+  "notes": [
+    "Flux de l'interaction : le mode de visée est « cursor » (rayon depuis la position du curseur) ou « crosshair » (rayon depuis le centre de l'écran) ; le mode réticule n'est permis que si la caméra active et les réglages le permettent, sinon retour au mode curseur.",
+    "isEnabled() recalcule M.state.allowInteraction : faux si une popup modale est ouverte, si une capture photomode est en cours, si l'interface CEF est masquée, si le jeu est en pause hors route /play (ou dans la config véhicule), si la souris est verrouillée, ou si le curseur est invisible en mode curseur. En écran partagé, ces conditions de curseur sont ignorées.",
+    "Le champ M.state (table) est exporté et lisible par d'autres extensions (utilisé par core_vehicleTriggersDebug) : currentlyUsedTriggers (trigger tenu, par index de joueur), aimMode, allowInteraction, debugEnabled, hoveredHitPosWorld, etc.",
+    "Distance du rayon : 3 m pour un unicycle (marcheur) ou une caméra d'occupant/conducteur, 50 m sinon.",
+    "onUpdate fixe renderFilterObjectId à 0 (le code précédent est écrasé volontairement : « temporary change ») : les triggers de tous les véhicules, remorques attachées incluses, sont interactifs.",
+    "Un lien de trigger peut inverser la valeur via isInverted (valeur multipliée par -1) ; versions : lien v2 (namespace 'vehicle' ou 'common') ou ancien format targetEvent.",
+    "Pour un lien v2 'common' sans commonLua, l'action passe par ActionMap.triggerBindingByNameDigital (valeur > 0.9 = appui), côté C++.",
+    "Le calcul des libellés (placement) est limité à 20 Hz (newFPSLimiter(20)) mais le lancer de rayon se fait à chaque image.",
+    "getTriggerRaycastDistance : les branches « caméra libre » et « normale » renvoient la même valeur (50) ; la branche libre est redondante.",
+    "onActionEvent renvoie false si l'interaction est désactivée, true s'il n'y a pas de trigger touché, et nil dans les autres cas (valeur de retour peu fiable).",
+    "triggerEventWithoutVdata ne vérifie pas que getVehicleData renvoie une valeur non nulle : erreur Lua possible si le véhicule n'existe pas."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant celle-ci : core_vehicle_triggerLabelPlacement et core_input_actionFilter."},
+    "state": {"type": "table", "desc": "État interne public : cefVisible, cursorVisible, mouseLocked, isUnicycle, currentlyUsedTriggers (table indexée par joueur contenant {v = id véhicule, t = id trigger}), debugEnabled, aimMode ('crosshair' ou 'cursor'), allowInteraction, crosshairTimedOut, hoveredHitPosWorld/hoveredHitPosScreen01, etc."}
+  },
+  "functions": {
+    "disableDebugUI": {
+      "desc": "Désactive le mode debug des triggers : décharge l'extension core_vehicleTriggersDebug (sans effet si déjà désactivé).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "enableDebugUI": {
+      "desc": "Active le mode debug : met state.debugEnabled à true et charge l'extension core_vehicleTriggersDebug (fenêtre « Vehicle event debug »). Active aussi des logs supplémentaires lors de l'exécution des liens.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "getCursorPercent01": {
+      "desc": "Position du curseur dans la zone cliente de la fenêtre, en fraction de 0 à 1.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "{x, y} entre 0 et 1, ou nil si la position n'est pas disponible."}],
+      "internal": false
+    },
+    "getTriggerRaycastDistance": {
+      "desc": "Distance maximale du lancer de rayon pour un joueur : 3 m pour un marcheur (unicycle) ou une caméra d'occupant, 50 m sinon.",
+      "params": {"player": {"type": "integer|nil", "desc": "Index du joueur (0 par défaut)."}},
+      "returns": [{"type": "number", "desc": "Distance en mètres."}],
+      "internal": false
+    },
+    "isEnabled": {
+      "desc": "Indique si l'interaction avec les triggers est autorisée à cet instant (voir notes) et met à jour state.allowInteraction.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si l'interaction est autorisée."}],
+      "internal": false
+    },
+    "onActionEvent": {
+      "desc": "Appelé par les actions d'entrée triggerAction0, 1 et 2. Au relâchement (valeur 0) relâche le trigger tenu ; sinon fait un lancer de rayon pour le joueur, et exécute les liens du trigger touché via triggerEvent. Mémorise le trigger tenu tant que la touche reste appuyée.",
+      "params": {
+        "actionNumber": {"type": "integer", "desc": "Numéro d'action (0, 1 ou 2) ; devient la chaîne 'action0', etc."},
+        "inputValue": {"type": "number", "desc": "Valeur de l'entrée (0 = relâché, non nul = appuyé)."},
+        "player": {"type": "integer|nil", "desc": "Index du joueur (0 par défaut)."}
+      },
+      "returns": [{"type": "boolean|nil", "desc": "false si l'interaction est désactivée, true si aucun trigger n'est touché, sinon nil."}],
+      "internal": true
+    },
+    "onCefVisibilityChanged": {
+      "desc": "Hook appelé quand l'interface CEF est affichée ou masquée. Mémorise l'état ; si elle est masquée, retire les action maps VehicleInteraction et cache le réticule.",
+      "params": {"cefVisible": {"type": "boolean", "desc": "true si l'interface est visible."}},
+      "returns": [],
+      "internal": true
+    },
+    "onCursorVisibilityChanged": {
+      "desc": "Hook appelé quand la visibilité du curseur change ; le curseur est considéré visible en permanence si VehicleTrigger.debug est actif.",
+      "params": {"visible": {"type": "boolean", "desc": "true si le curseur est visible."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook appelé après un rechargement des extensions : efface les masques de joueur de l'action map et restaure l'état debug.",
+      "params": {"data": {"type": "table|nil", "desc": "Données renvoyées par onSerialize ({debugEnabled})."}},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook appelé au déchargement : retire les action maps d'interaction, efface les masques et coupe VehicleTrigger.renderingEnabled et VehicleTrigger.enabled.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onInputBindingsChanged": {
+      "desc": "Hook appelé quand les assignations d'entrées changent : force le recalcul du joueur qui contrôle la souris.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onMouseLocked": {
+      "desc": "Hook appelé quand la souris est verrouillée ou libérée (ex. caméra libre) ; une souris verrouillée désactive l'interaction.",
+      "params": {"locked": {"type": "boolean", "desc": "true si la souris est verrouillée."}},
+      "returns": [],
+      "internal": true
+    },
+    "onRecentDevicesChanged": {
+      "desc": "Hook appelé avec les périphériques classés par activité récente ; le dernier périphérique non clavier du joueur de la souris (souris ou manette) décide s'il vise au curseur ou au réticule.",
+      "params": {"recentDevices": {"type": "string[]", "desc": "Noms de périphériques, le plus récent en premier."}},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook appelé avant un rechargement des extensions : retire les action maps et le réticule, renvoie {debugEnabled}.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{debugEnabled = boolean}"}],
+      "internal": true
+    },
+    "onSplitScreenLayoutChanged": {
+      "desc": "Hook appelé quand la disposition de l'écran partagé change : vide les caches de centres et de rectangles de vue.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque image. Rafraîchit le contexte, calcule si l'interaction est permise, active ou coupe VehicleTrigger (enabled, renderingEnabled, proximityRenderingEnabled), cherche le trigger survolé, met à jour libellés, légende des touches, délai du réticule et flux UI. En écran partagé, délègue à une version par joueur.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Temps réel écoulé (s)."},
+        "dtSim": {"type": "number", "desc": "Temps de simulation écoulé (s)."},
+        "dtRaw": {"type": "number", "desc": "Temps brut écoulé (s)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "triggerEvent": {
+      "desc": "Exécute tous les liens associés à l'action d'un trigger dans vdata.triggerEventLinksDict[triggerId][actionStr]. Chaque lien déclenche le hook onVehicleTriggersExecuteLink puis une commande d'entrée véhicule ou une action commune. Ne fait rien si le trigger ou l'action n'a pas de lien.",
+      "params": {
+        "actionStr": {"type": "string", "desc": "Nom de l'action : 'action0', 'action1' ou 'action2'."},
+        "actionValue": {"type": "number", "desc": "Valeur envoyée (1 = appui, 0 = relâchement)."},
+        "triggerId": {"type": "string|integer", "desc": "Identifiant du trigger dans le JBeam (déduit du code : clé de triggerEventLinksDict)."},
+        "vehicleId": {"type": "integer", "desc": "Identifiant de l'objet véhicule."},
+        "vdata": {"type": "table", "desc": "Données du véhicule (core_vehicle_manager.getVehicleData(id).vdata) contenant triggerEventLinksDict et inputActions."},
+        "player": {"type": "integer|nil", "desc": "Index du joueur à l'origine de l'action."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "triggerEventWithoutVdata": {
+      "desc": "Variante de triggerEvent qui retrouve elle-même vdata à partir de vehicleId. Appelée par le C++ (typiquement manettes de réalité virtuelle).",
+      "params": {
+        "actionNum": {"type": "integer", "desc": "Numéro d'action (0, 1 ou 2)."},
+        "actionValue": {"type": "number", "desc": "Valeur envoyée."},
+        "triggerId": {"type": "string|integer", "desc": "Identifiant du trigger."},
+        "vehicleId": {"type": "integer", "desc": "Identifiant du véhicule."},
+        "player": {"type": "integer|nil", "desc": "Index du joueur."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "worldPosToScreenPercent01": {
+      "desc": "Projette une position monde sur l'écran avec la caméra active, en fraction 0 à 1 (origine en haut à gauche).",
+      "params": {
+        "worldPos": {"type": "vec3", "desc": "Position monde."},
+        "out": {"type": "table|nil", "desc": "Table réutilisée pour le résultat (créée si absente)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "{x, y} ; nil si le point est derrière la caméra ou si le contexte caméra est indisponible."}],
+      "internal": false
+    }
+  },
+  "classes": {}
+}

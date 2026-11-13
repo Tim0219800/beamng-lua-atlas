@@ -1,0 +1,23 @@
+{
+  "path": "lua/vehicle/controller/sound/linearMovement.lua",
+  "module": "Contrôleur auxiliaire de sons pour un mouvement linéaire (vérin, siège, plateau, béquille…). Il mesure la longueur d'une poutre « capteur de position » (trouvée par tag), en déduit une vitesse lissée et joue : une boucle de mouvement (volume/pitch selon la vitesse, paramètre CT = direction), des sons de segment à chaque cran de segmentLength (montée/descente) et des sons de fin de course (position min/max).",
+  "notes": [
+    "Clés jbeam lues dans init : hasSegments (false), hasEndstops (false), positionSensorBeamTag (obligatoire : poutre dont la longueur donne la position), segmentLength, minPosition (0), maxPosition (0), positionCalibration (0), velocitySmoothing (5), absVelocitySmoothing (5), absVelocitySmoothingIn / absVelocitySmoothingOut (= absVelocitySmoothing), debugMode (false).",
+    "Clés lues dans initSounds : movementSoundVolume (1), movementSoundEvent (boucle, facultatif), segmentIncSoundEvent / segmentDecSoundEvent (défaut segmentSoundEvent), minPositionSoundEvent, maxPositionSoundEvent, movementSoundNode_nodes (premier élément, sinon 0), movementSoundPitchMinVelocity (0), movementSoundPitchMaxVelocity (2), movementSoundMinPitch (0), movementSoundMaxPitch (1), movementSoundVolumeCoefMinVelocity (0.05), movementSoundVolumeCoefMaxVelocity (0.1), movementSoundPlayingThresholdVelocity (0.05), movementSoundPlayingThresholdVolume (0.05).",
+    "Les trois valeurs movementSoundVolumeCoefMinVelocity, movementSoundPlayingThresholdVelocity et movementSoundPlayingThresholdVolume doivent être > 0, sinon log E et updateGFX devient nop.",
+    "Les vitesses et positions sont en m et m/s (longueur de poutre).",
+    "Si la poutre capteur est introuvable, init s'arrête avec un log E et updateGFX reste nop.",
+    "Incohérence : l'ordre d'appel suppose initSounds après init (positionSensorBeamCid est utilisé par initEndstops dans initSounds, et reset lit la longueur de la poutre sans test nil si init a échoué).",
+    "Les valeurs de debug (debugMode) impriment une ligne par frame."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "updateGFX": {"type": "function", "desc": "nop au chargement, puis updateGFX interne après init réussi."}
+  },
+  "functions": {
+    "init": {"desc": "Retrouve la poutre capteur par tag, lit la configuration de segments/butées et crée les lisseurs de vitesse.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
+    "initSounds": {"desc": "Crée la boucle de mouvement et lit les évènements et réglages sonores ; valide les seuils. Appelé par le moteur à l'initialisation des sons.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "reset": {"desc": "Remet la dernière longueur, le segment et les lisseurs à l'état initial.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "resetSounds": {"desc": "Arrête la boucle et réarme les sons de butée selon la position actuelle.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true}
+  }
+}

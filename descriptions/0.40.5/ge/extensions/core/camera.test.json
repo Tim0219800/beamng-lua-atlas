@@ -1,0 +1,43 @@
+{
+  "path": "lua/ge/extensions/core/camera.test.lua",
+  "module": "Tests unitaires du système de caméras, pour le framework de tests du jeu. À lancer depuis la console Lua GE : extensions.testFramework_TestManager:runTestFiles('camera'). Chaque fonction testXxx reçoit un contexte ctx (assert, assertEqual). Elle vérifie notamment l'anneau de groupes de caméras, l'appartenance des caméras libres au groupe 'world', la caméra Drone Chase, la caméra conducteur 'occupant' et la présence de l'API de configuration des caméras libres. Utile comme exemple d'usage de core_camera.",
+  "usage": "extensions.testFramework_TestManager:runTestFiles('camera')",
+  "notes": [
+    "Charge core_camera à la demande (extensions.load) si elle n'est pas chargée.",
+    "Les tests documentent des comportements : nextCameraGroup({'world'}, nil) -> 'world', ('world') -> nil, (false) -> nil ; free, smoothFree et steadycam sont dans le groupe 'world' ; le mode droneChase est lié au véhicule, visible dans les options et désactivé par défaut ; une caméra 'driver' ancienne devient un mode 'occupant' avec seatSide 'right' si rightHandCamera."
+  ],
+  "fields": {},
+  "functions": {
+    "testCameraGroupRing": {
+      "desc": "Teste core_camera.nextCameraGroup : caméras de jeu vers caméras libres vers caméras de jeu.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test (assert, assertEqual)"}},
+      "returns": [],
+      "internal": true
+    },
+    "testFreeCameraModes": {
+      "desc": "Vérifie que les caméras free, smoothFree et steadycam appartiennent au groupe 'world'.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test"}},
+      "returns": [],
+      "internal": true
+    },
+    "testDroneIsRegularCamera": {
+      "desc": "Vérifie le mode core/cameraModes/droneChase : non global, non caché, désactivé par défaut.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test"}},
+      "returns": [],
+      "internal": true
+    },
+    "testLegacyDriverIsOccupant": {
+      "desc": "Vérifie la conversion d'une ancienne caméra 'driver' en mode occupant (noeud 5, côté 'right', épaule droite à 0.6 m).",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test"}},
+      "returns": [],
+      "internal": true
+    },
+    "testFreeCameraConfigurationApi": {
+      "desc": "Vérifie que core_camera expose getFreeCameraConfigurationReadOnly, changeFreeCameraOrder, toggleFreeCameraEnabledById et setCameraByNameFromOptions.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test"}},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {}
+}

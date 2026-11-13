@@ -1,0 +1,37 @@
+{
+  "path": "lua/vehicle/controller/drivingDynamics/supervisors/yawControl.lua",
+  "module": "Superviseur de contrôle de lacet (ESC moderne, type \"auxiliary\", defaultOrder 60) de l'architecture drivingDynamics. À chaque pas fixe il demande le lacet attendu à la première yawProvider qui répond (ex. STMEstimate), le compare au lacet mesuré (sensorHub.yawAVSmooth), calcule l'écart et les angles de dérive avant/arrière, puis appelle actAsYawControl de chaque composant enregistré (brakeControl, motorTorqueControl, awdControl…). Il pilote le voyant electrics.values.esc/escActive.",
+  "usage": "local yc = controller.getControllerSafe('drivingDynamics/supervisors/yawControl')\nif yc then yc.setParameters({isEnabled = false}) end",
+  "notes": [
+    "Signature appelée sur chaque composant : actAsYawControl(measuredYaw, expectedYaw, yawDifferenceAdjusted, bodySlipAngleAdjusted, frontSlipAngle, rearSlipAngle, dt) ; doit renvoyer vrai si le composant est intervenu.",
+    "Les fournisseurs de lacet doivent exposer calculateExpectedYaw(speed, dt) (renvoie nil s'ils ne peuvent pas répondre) et setParameters. Le lacet est en rad/s, les angles de dérive en rad, la vitesse en m/s.",
+    "Si le lacet mesuré et le lacet attendu sont de signes opposés (contre-braquage), le lacet attendu est inversé. yawDifferenceRaw = (mesuré - attendu) * signe(mesuré) : positif = survirage, négatif = sous-virage.",
+    "bodySlipAngleAdjusted = angle de dérive de caisse * coefficient de confiance (linearScale 0.5..0.8 de trustWorthiness.bodySlipAngle) * coefficient basse vitesse (s'annule sous 8..10 m/s). Les angles avant/arrière sont calculés seulement si la vitesse utilisée dépasse 1 m/s, sinon 0.",
+    "Le voyant est lissé ; electrics.values.esc reste à 1 fixe si isEnabled est faux. Contrairement à tractionControl, shutdown met aussi updateFixedStep à nil.",
+    "init remplace controlParameters par {isEnabled = true}. Il n'y a aucune clé jbeam lue dans ce fichier (le superviseur n'utilise pas jbeamData).",
+    "Les composants sont triés par componentOrderYawControl (ou order), les fournisseurs par providerOrder (ou order)."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "defaultOrder": {"type": "number", "desc": "Ordre d'exécution par défaut (60)."},
+    "isActive": {"type": "boolean", "desc": "Vrai après init, faux après shutdown."},
+    "isActing": {"type": "boolean", "desc": "Vrai quand le contrôle de lacet intervient de façon soutenue (indicateur lissé >= 1)."}
+  },
+  "functions": {
+    "init": {"desc": "Réinitialise paramètres, fournisseurs et composants et met isActive à true.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam (inutilisées)."}}, "returns": [], "internal": true},
+    "initSecondStage": {"desc": "Met electrics.values.hasESC à true et sauvegarde les paramètres initiaux.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam (inutilisées)."}}, "returns": [], "internal": true},
+    "initLastStage": {"desc": "Trie fournisseurs et composants selon leur ordre.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam (inutilisées)."}}, "returns": [], "internal": true},
+    "reset": {"desc": "Ne fait rien.", "params": {}, "returns": [], "internal": true},
+    "updateFixedStep": {"desc": "Pas fixe : calcule lacet attendu, écart, angles de dérive, puis appelle les composants.", "params": {"dt": {"type": "number", "desc": "Pas de temps (s)."}}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Met à jour electrics.values.esc et escActive depuis l'état lissé (remplacé par une version avec paquet de debug si setDebugMode(true)).", "params": {"dt": {"type": "number", "desc": "Pas de temps graphique (s)."}}, "returns": [], "internal": true},
+    "setDebugMode": {"desc": "Active/désactive l'envoi de paquets de debug (écarts de lacet, angles de dérive, vitesse utilisée) au CMU.", "params": {"debugEnabled": {"type": "boolean", "desc": "Vrai pour activer."}}, "returns": []},
+    "registerCMU": {"desc": "Mémorise la référence au CMU (virtualSensors, vehicleData, sensorHub, sendDebugPacket, applyParameter, warningLightPulse).", "params": {"cmu": {"type": "table", "desc": "Contrôleur CMU."}}, "returns": [], "internal": true},
+    "registerYawProvider": {"desc": "Ajoute un fournisseur de lacet attendu.", "params": {"yawProvider": {"type": "table", "desc": "Fournisseur exposant calculateExpectedYaw."}}, "returns": [], "internal": true},
+    "registerComponent": {"desc": "Ajoute un composant exposant actAsYawControl.", "params": {"component": {"type": "table", "desc": "Composant de contrôle."}}, "returns": [], "internal": true},
+    "shutdown": {"desc": "Désactive le superviseur (isActive=false, updateGFX, update et updateFixedStep à nil).", "params": {}, "returns": []},
+    "setParameters": {"desc": "Modifie isEnabled via CMU.applyParameter ; propagé aux fournisseurs (clé \"isEnabled\") et aux composants (clé \"yawControl.isEnabled\").", "params": {"parameters": {"type": "table<string, any>", "desc": "Ex. {isEnabled = false}."}}, "returns": []},
+    "setConfig": {"desc": "Remplace la configuration et propage isEnabled.", "params": {"configTable": {"type": "table", "desc": "Table {isEnabled}."}}, "returns": []},
+    "getConfig": {"desc": "Renvoie une copie de la configuration.", "params": {}, "returns": [{"type": "table", "desc": "Copie de {isEnabled}."}]},
+    "sendConfigData": {"desc": "Envoie la configuration au CMU (paquet de debug \"config\").", "params": {}, "returns": []}
+  }
+}

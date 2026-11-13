@@ -1,0 +1,85 @@
+{
+  "path": "lua/vehicle/controller/hydraulics/hydraulicsCombustionEngineControl.lua",
+  "module": "Contrôleur auxiliaire qui relève le ralenti d'un moteur thermique et connecte la pompe hydraulique quand une fonction hydraulique est commandée (mode \"electricsRaiseAndConnect\"). Il surveille des valeurs electrics, impose idleAVOverwrite/maxIdleThrottleOverwrite au moteur, connecte la pompe (setConnected) une fois le régime assez haut et écrit une valeur electrics d'état. Un relèvement de ralenti manuel est aussi possible.",
+  "notes": [
+    "Clés jbeam (défaut) : mode (seule valeur gérée : \"electricsRaiseAndConnect\" ; sinon le contrôleur ne fait rien), controlledEngine (\"mainEngine\"), relevantPump (\"pump1\"), relevantElectrics (liste de noms), actOnPositiveElectric (vrai), actOnNegativeElectric (vrai), raisedIdleRPM (1800 tr/min, converti en rad/s), raisedIdleElectricsName (\"raisedIdle\").",
+    "Le relèvement automatique est annulé si electrics.values.wheelspeed > 2 m/s. La pompe n'est connectée que si une électrique est active et que le régime moteur dépasse 70 % du ralenti relevé.",
+    "M.updateGFX = nop à l'export ; il est remplacé par la version active à l'init si le mode est valide."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Lit la configuration, retrouve le moteur et la pompe et active la boucle de contrôle.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Désactive le relèvement manuel.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Applique le relèvement de ralenti et la connexion de pompe (défini dynamiquement à l'init).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setIdleRaise": {
+      "desc": "Active/désactive le relèvement manuel du ralenti.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "Vrai pour relever."
+        }
+      },
+      "returns": []
+    },
+    "toggleIdleRaise": {
+      "desc": "Inverse le relèvement manuel du ralenti.",
+      "params": {},
+      "returns": []
+    },
+    "getState": {
+      "desc": "Renvoie l'état (relèvement manuel).",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Table d'état."
+        }
+      ]
+    },
+    "setState": {
+      "desc": "Restaure l'état renvoyé par getState.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Table d'état."
+        }
+      },
+      "returns": []
+    }
+  }
+}

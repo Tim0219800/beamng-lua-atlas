@@ -1,0 +1,38 @@
+{
+  "path": "lua/common/particles.lua",
+  "module": "Charge au démarrage lua/common/particles.json (matériaux physiques et règles de particules entre deux matériaux) et prépare des tables de recherche : une liste de matériaux et une table indexée par paire de matériaux avec, pour chaque règle, une fonction de comparaison compilée (sur perpendicularVel et slipVel). Sert à choisir les particules d'impact/glissement selon les deux matériaux en contact.",
+  "usage": "local particles = require('particles')\nlocal mats, pairsMap = particles.getMaterialsParticlesTable()\nlocal id1 = particles.getMaterialIDByName(mats, 'ASPHALT')\nlocal mat = particles.getMaterialByID(mats, id1)",
+  "notes": [
+    "Le chargement se fait à l'exécution du module (preloadParticlesTable() est appelé au niveau du fichier) via readDictJSONTable('lua/common/particles.json').",
+    "Clé de la table de paires : materialID1 * 10000 + materialID2, avec toujours materialID1 >= materialID2 (échangés si besoin). Chaque entrée est une liste de règles ayant compareFunc(arg) où arg = {perpendicularVel=, slipVel=} ; dans les chaînes JSON, la lettre X est remplacée par arg.<champ>.",
+    "Un matériau inconnu passé à getOrAddMaterialIDByName est ajouté dynamiquement ({colorB/G/R = 255, dynamic = true, name}) ; getMaterialIDByName renvoie à la place min(3, #mats) (valeur de repli, id 3 si assez de matériaux).",
+    "BUG probable : si perpendicularVel et slipVel sont tous deux vides dans une règle, compareFuncStr vaut '' (table.concat d'une liste vide) et non nil ; la condition 'toujours vraie' (\"true\") n'est donc jamais appliquée et la fonction compilée ('return ') renvoie nil. De plus, dans le message d'erreur de parsing, `compareFuncStr` est une variable non définie (devrait être v.compareFuncStr)."
+  ],
+  "fields": {},
+  "functions": {
+    "getMaterialByID": {
+      "desc": "Renvoie le matériau d'indice i dans mats, ou nil si i est nil.",
+      "params": {"mats": {"type": "table", "desc": "liste de matériaux (premier retour de getMaterialsParticlesTable)"}, "i": {"type": "integer|nil", "desc": "identifiant de matériau"}},
+      "returns": [{"type": "table|nil", "desc": "matériau {name, colorR, colorG, colorB, …}"}],
+      "internal": false
+    },
+    "getOrAddMaterialIDByName": {
+      "desc": "Cherche l'identifiant du matériau de nom s ; s'il n'existe pas, crée une définition temporaire (blanche, dynamic = true) ajoutée à mats et renvoie son nouvel identifiant.",
+      "params": {"mats": {"type": "table", "desc": "liste de matériaux (modifiée)"}, "s": {"type": "string", "desc": "nom du matériau"}},
+      "returns": [{"type": "integer", "desc": "identifiant de matériau"}],
+      "internal": false
+    },
+    "getMaterialIDByName": {
+      "desc": "Cherche l'identifiant du matériau nommé s ; renvoie min(3, #mats) s'il est inconnu (pas d'ajout).",
+      "params": {"mats": {"type": "table", "desc": "liste de matériaux"}, "s": {"type": "string", "desc": "nom du matériau"}},
+      "returns": [{"type": "integer", "desc": "identifiant de matériau"}],
+      "internal": false
+    },
+    "getMaterialsParticlesTable": {
+      "desc": "Renvoie la liste des matériaux et la table des règles de particules par paire de matériaux (clé id1*10000+id2).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "matériaux"}, {"type": "table<integer, table[]>", "desc": "règles par paire de matériaux"}],
+      "internal": false
+    }
+  }
+}

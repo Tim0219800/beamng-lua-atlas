@@ -1,0 +1,247 @@
+{
+  "path": "lua/vehicle/main.lua",
+  "module": "Point d'entrée de la VM Lua d'un véhicule : c'est le premier script exécuté. Il configure LuaJIT et package.path, charge les utilitaires communs, crée les globales de base (extensions, settings, playerInfo, lastDt, physicsDt), puis définit des fonctions GLOBALES que le moteur C++ appelle directement (init, onPhysicsStep, onGraphicsStep, onDebugDraw, onVehicleReset, callbacks de poutres/coupleurs, etc.). Chaque callback relaie l'évènement aux modules internes (wheels, powertrain, controller, beamstate…) puis, en général, aux extensions via extensions.hook. Un moddeur n'appelle presque jamais ces fonctions : il écrit des extensions qui reçoivent les hooks (updateGFX, onPhysicsStep, onReset…) ou lit les globales.",
+  "usage": "-- une extension véhicule reçoit les hooks émis par main.lua\nlocal M = {}\nM.onReset = function(retainDebug) end\nM.updateGFX = function(dtSim) end\nM.onPlayersChanged = function(anyPlayerSeated) end\nreturn M",
+  "notes": [
+    "ORDRE de la boucle graphique onGraphicsStep(dtSim) : sensors.updateGFX -> mapmgr.sendTracking -> wheels.updateGFX -> ai.updateGFX -> input.updateGFX -> electrics.updateGFX -> controller.updateGFX -> electrics.updateGFXSecondStep -> extensions.hook('updateGFX') -> hydros.updateGFX -> powertrain.updateGFX -> energyStorage.updateGFX -> drivetrain.updateGFX -> beamstate.updateGFX -> protocols.updateGFX -> sounds.updateGFX -> thrusters.updateGFX -> (guihooks.sendStreams si des flux sont actifs) -> damageTracker.updateGFX (seulement si le premier joueur est assis) -> props.updateGFX -> material.updateGFX -> fire.updateGFX -> recovery.updateGFX -> powertrain.updateGFXLastStage. Les commentaires du code imposent : sensors avant input et ai, input le plus tôt possible, extensions après electrics et avant drivetrain/hydros.",
+    "ORDRE de la boucle physique onPhysicsStep(dtPhys) : wheels.updateWheelVelocities -> powertrain.update -> controller.updateWheelsIntermediate -> wheels.updateWheelTorques -> controller.update -> thrusters.update -> hydros.update -> beamstate.update -> protocols.update -> extensions.hook('onPhysicsStep') (seulement si enablePhysicsStepHook() a été appelé). Le moteur C++ n'appelle onPhysicsStep que si obj:setPhysicsStepEnabled(true), calculé par updateCorePhysicsStepEnabled() (au moins un module ou le hook d'extension en a besoin).",
+    "ORDRE de l'initialisation (initSystems) : backwardsCompatibility.init, material.init, bdebug.init, electrics.init, damageTracker.init, beamstate.init, protocols.init, wheels.init, powertrain.init, energyStorage.init, input.init, controller.init, wheels.initSecondStage, controller.initSecondStage, drivetrain.init, sensors.reset, thrusters.init, hydros.init, sounds.init, props.init, input.initSecondStage, recovery.init, sensors.init, fire.init, wheels.initSounds, powertrain.initSounds, controller.initSounds, extensions.hook('onInit'), mapmgr.init, electrics.initLastStage, controller.initLastStage, powertrain.sendTorqueData, detectGlobalWrites(), updateCorePhysicsStepEnabled.",
+    "ORDRE du reset (onVehicleReset) : guihooks.reset, extensions.hook('onReset'), ai.reset, mapmgr.reset, damageTracker, beamstate, protocols, wheels, electrics, powertrain, energyStorage, controller, wheels.resetSecondStage, controller.resetSecondStage, drivetrain, props, sensors, bdebug, thrusters, input, hydros, material, fire, powertrain.resetSounds, controller.resetSounds, sounds, partCondition, electrics.resetLastStage, controller.resetLastStage, powertrain.sendTorqueData, updateCorePhysicsStepEnabled. Remarque : les extensions reçoivent onReset AVANT les modules cœur.",
+    "MODULES CHARGÉS EN GLOBALES par init() (dans cet ordre) : damageTracker, drivetrain, powertrain, energyStorage, controller, wheels, sounds, bdebug, input, props, particles, particlefilter, material, v (= require('jbeam/stage2')), electrics, beamstate, protocols, sensors, bullettime (à déprécier), thrusters, hydros, guihooks (nom à ne pas changer sinon le callback GUI casse), streams (= guistreams), gui (alias de guihooks), ai, recovery, mapmgr, fire, partCondition. Globales créées avant init : extensions, settings, backwardsCompatibility, playerInfo, lastDt, physicsDt, vehiclePath, ghostOnReset, ghostOnTp, float3 (alias de vec3), profilerPushEvent/PopEvent(1), shippingBuild, vmType='vehicle'.",
+    "Extensions chargées par init : toutes celles de <véhicule>/lua (sauf controller, powertrain, energyStorage), core_quickAccess, input_haptics (avant les modules), puis skeleton, tout le dossier lua/vehicle/extensions/auto, gameplayStatistic ; hook onVehicleLoaded émis juste après le dossier auto.",
+    "init renvoie false (le moteur décharge alors le Lua du véhicule) si les données de spawn sont invalides, si le chargement stage2 échoue ou si v.data.information.simpleObject == true. Si aucun noeud n'existe (nodesMissing), init lève error('nodesMissing') à la fin pour afficher l'échec du spawn.",
+    "playerInfo : seatedPlayers (table index joueur -> true, indexé depuis 0, nil au départ), persona, firstPlayerSeated (joueur 0 assis), anyPlayerSeated.",
+    "Bug repéré : `profilerPopEvent1 = profilerPushEvent or nop` et `profilerPushEvent1 = profilerPushEvent or nop` (le Pop1 reçoit en fait la fonction Push) ; si le profileur existe, profilerPopEvent1 empile au lieu de dépiler.",
+    "Bug mineur : init passe `retainDebug` à extensions.hook('onVehicleLoaded', retainDebug) alors que cette variable n'est définie nulle part dans main.lua (globale nil sauf si définie ailleurs).",
+    "print est redéfini : print(...) appelle log('A','print',tostring(...)) et n'affiche donc que le PREMIER argument.",
+    "onNodeCollision remplit la table partagée particlefilter.particleData (champs id1, pos, normal, nodeVel, perpendicularVel, slipVec, slipVel, slipForce, normalForce, depth, materialID1, materialID2) puis la passe à wheels, fire, controller, particlefilter, bdebug (pas aux extensions).",
+    "onDynamicBeamAdded/onDynamicBeamDeleted/onDynamicBeamBroke existent mais sont vides."
+  ],
+  "fields": {},
+  "functions": {
+    "print": {
+      "desc": "Remplace print standard : envoie le premier argument converti en chaîne au log (niveau 'A', tag 'print').",
+      "params": {"...": {"type": "any", "desc": "Seul le premier argument est utilisé (tostring(...))."}},
+      "returns": [],
+      "internal": false
+    },
+    "updateCorePhysicsStepEnabled": {
+      "desc": "Active ou désactive côté moteur l'appel de onPhysicsStep : obj:setPhysicsStepEnabled(true) si controller, powertrain, wheels, thrusters, hydros, beamstate ou protocols en ont besoin (isPhysicsStepUsed) ou si le hook d'extension est actif. Appelée en fin d'init et de reset.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "enablePhysicsStepHook": {
+      "desc": "Fait en sorte que onPhysicsStep relaie extensions.hook('onPhysicsStep', dt) et force la réévaluation du flag moteur. À appeler dans onExtensionLoaded par toute extension qui définit onPhysicsStep (le hook n'est jamais désactivé ensuite).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onPhysicsStep": {
+      "desc": "Appelé par le moteur à chaque pas de physique (haute fréquence) si le step est activé. Exécute la chaîne physique (voir notes) puis le hook d'extensions 'onPhysicsStep'.",
+      "params": {"dtPhys": {"type": "number", "desc": "Pas de physique en secondes (= physicsDt)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onGraphicsStep": {
+      "desc": "Appelé par le moteur à chaque frame graphique (une fois par rendu/frame de simulation). Mémorise lastDt, met à jour flux GUI, capteurs, roues, IA, entrées, electrics, contrôleurs, extensions (hook 'updateGFX'), hydros, powertrain, etc. dans l'ordre décrit dans les notes.",
+      "params": {"dtSim": {"type": "number", "desc": "Temps de simulation écoulé depuis la dernière frame, en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDebugDraw": {
+      "desc": "Appelé par le moteur à chaque frame de dessin debug. Met à jour la position de focus partagée, appelle bdebug.debugDraw, ai.debugDraw, beamstate.debugDraw, controller.debugDraw, hydros.debugDraw, puis extensions.hook('onDebugDraw', focusPos) et, si un joueur est assis, 'onDebugDrawActive'.",
+      "params": {
+        "x": {"type": "number", "desc": "X de la position de focus (caméra)."},
+        "y": {"type": "number", "desc": "Y du focus."},
+        "z": {"type": "number", "desc": "Z du focus."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "initSystems": {
+      "desc": "Initialise tous les sous-systèmes dans l'ordre décrit en notes, émet le hook 'onInit', active la détection d'écritures globales (detectGlobalWrites) et règle le flag de step physique. Appelée par init().",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Appelée par le moteur au spawn du véhicule. Ajuste package.path vers le dossier du véhicule, charge les modules en globales, décode initData (lpack) et construit les données du véhicule (v.loadVehicleStage2), appelle initSystems, charge les extensions de base (skeleton, dossier auto, gameplayStatistic) et émet 'onVehicleLoaded'.",
+      "params": {
+        "path": {"type": "string", "desc": "Dossier du véhicule (ajouté à package.path et utilisé pour charger ses scripts lua/)."},
+        "initData": {"type": "string", "desc": "Données de spawn sérialisées avec lpack, doivent contenir `vdata`."}
+      },
+      "returns": [{"type": "boolean|nil", "desc": "false = demande au moteur de décharger le Lua ; true en cas de succès ; nil si obj absent."}],
+      "internal": true
+    },
+    "onCallEvent": {
+      "desc": "Callback générique utilisé par le moteur pour appeler une fonction Lua par nom. Résout `funName` soit comme globale (\"maFonction\") soit comme \"module.fonction\" (un seul niveau, le module doit être une table globale) et l'appelle avec `data`. Ignore silencieusement tout ce qui n'est pas une fonction.",
+      "params": {
+        "funName": {"type": "string", "desc": "Nom de la fonction, avec au plus un point."},
+        "data": {"type": "any", "desc": "Unique argument transmis."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onBeamBroke": {
+      "desc": "Appelé par le moteur quand une poutre casse. Relaye à beamstate, wheels, powertrain, energyStorage, controller, bdebug, puis extensions.hook('onBeamBroke').",
+      "params": {
+        "id": {"type": "integer", "desc": "Identifiant de poutre (cid)."},
+        "energy": {"type": "number", "desc": "Énergie de la rupture."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onBeamDeformed": {
+      "desc": "Appelé par le moteur seulement pour les poutres ayant des déclencheurs de déformation. Relaye à beamstate et controller puis au hook 'onBeamDeformed'.",
+      "params": {
+        "id": {"type": "integer", "desc": "Identifiant de poutre (cid)."},
+        "ratio": {"type": "number", "desc": "Ratio de déformation."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onTorsionbarBroken": {
+      "desc": "Appelé par le moteur quand une barre de torsion casse ; relaye à beamstate et au hook 'onTorsionbarBroken'.",
+      "params": {
+        "id": {"type": "integer", "desc": "Identifiant de la barre de torsion."},
+        "energy": {"type": "number", "desc": "Énergie de la rupture."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onCouplerFound": {
+      "desc": "Appelé par le moteur quand un coupleur trouve un coupleur compatible à portée. Relaye à beamstate, controller, powertrain, energyStorage puis au hook 'onCouplerFound'.",
+      "params": {
+        "nodeId": {"type": "integer", "desc": "Noeud coupleur de ce véhicule."},
+        "obj2id": {"type": "integer", "desc": "Id de l'autre véhicule."},
+        "obj2nodeId": {"type": "integer", "desc": "Noeud coupleur de l'autre véhicule."},
+        "nodeDist": {"type": "number", "desc": "Distance entre les noeuds."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onCouplerAttached": {
+      "desc": "Appelé par le moteur quand un coupleur s'attache. Relaye aux mêmes modules que onCouplerFound puis au hook 'onCouplerAttached'.",
+      "params": {
+        "nodeId": {"type": "integer", "desc": "Noeud coupleur de ce véhicule."},
+        "obj2id": {"type": "integer", "desc": "Id de l'autre véhicule."},
+        "obj2nodeId": {"type": "integer", "desc": "Noeud coupleur de l'autre véhicule."},
+        "attachSpeed": {"type": "number", "desc": "Vitesse relative à l'attache."},
+        "attachEnergy": {"type": "number", "desc": "Énergie à l'attache."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onCouplerDetached": {
+      "desc": "Appelé par le moteur quand un coupleur se détache. Relaye aux mêmes modules puis au hook 'onCouplerDetached'.",
+      "params": {
+        "nodeId": {"type": "integer", "desc": "Noeud coupleur de ce véhicule."},
+        "obj2id": {"type": "integer", "desc": "Id de l'autre véhicule."},
+        "obj2nodeId": {"type": "integer", "desc": "Noeud coupleur de l'autre véhicule."},
+        "breakForce": {"type": "number", "desc": "Force de détachement."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onSlidenodeDetached": {
+      "desc": "Appelé par le moteur quand un slidenode quitte son rail ; relaye uniquement au hook d'extension 'onSlidenodeDetached'.",
+      "params": {
+        "nodeId": {"type": "integer", "desc": "Noeud slidenode."},
+        "railId": {"type": "integer", "desc": "Rail quitté."},
+        "energy": {"type": "number", "desc": "Énergie."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onDynamicBeamAdded": {
+      "desc": "Callback moteur lors de l'ajout d'une poutre dynamique ; corps vide.",
+      "params": {"dbId": {"type": "integer", "desc": "Id de poutre dynamique."}, "nodeId": {"type": "integer", "desc": "Noeud."}, "tag": {"type": "any", "desc": "Étiquette."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDynamicBeamDeleted": {
+      "desc": "Callback moteur lors de la suppression d'une poutre dynamique ; corps vide.",
+      "params": {"dbId": {"type": "integer", "desc": "Id de poutre dynamique."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDynamicBeamBroke": {
+      "desc": "Callback moteur quand une poutre dynamique casse ; corps vide.",
+      "params": {"dbId": {"type": "integer", "desc": "Id de poutre dynamique."}, "energy": {"type": "number", "desc": "Énergie."}},
+      "returns": [],
+      "internal": true
+    },
+    "onDespawnObject": {
+      "desc": "Appelé par le moteur quand le véhicule est supprimé : hydros.destroy(), protocols.destroy() et, si la globale odometer existe, odometer.submitStatistic().",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onSetClusterPosRelRot": {
+      "desc": "Appelé par le moteur quand un cluster de noeuds est téléporté/repositionné. Active le mode fantôme (obj:setGhostEnabled(true)) si ghostOnTp, puis émet le hook 'onSetClusterPosRelRot'.",
+      "params": {
+        "cNodeId": {"type": "integer", "desc": "Noeud de référence du cluster."},
+        "pos": {"type": "vec3", "desc": "Nouvelle position."},
+        "relRot": {"type": "quat", "desc": "Rotation relative."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleReset": {
+      "desc": "Appelé par le moteur au reset du véhicule (touche I, récupération…). Réactive le mode fantôme si ghostOnReset, remet à zéro tous les modules (ordre dans les notes) et émet le hook 'onReset'.",
+      "params": {"retainDebug": {"type": "boolean|nil", "desc": "Indique si l'état de debug doit être conservé ; transmis à onReset (déduit du nom, non utilisé directement ici)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onNodeCollision": {
+      "desc": "Appelé par le moteur à chaque collision de noeud filtrée. Remplit particlefilter.particleData et le passe à wheels, fire, controller, particlefilter et bdebug.",
+      "params": {
+        "id1": {"type": "integer", "desc": "Noeud en collision."},
+        "pos": {"type": "vec3", "desc": "Position du contact."},
+        "normal": {"type": "vec3", "desc": "Normale du contact."},
+        "nodeVel": {"type": "vec3", "desc": "Vitesse du noeud."},
+        "perpendicularVel": {"type": "number", "desc": "Vitesse perpendiculaire à la surface."},
+        "slipVec": {"type": "vec3", "desc": "Vecteur de glissement."},
+        "slipVel": {"type": "number", "desc": "Vitesse de glissement."},
+        "slipForce": {"type": "number", "desc": "Force de glissement."},
+        "normalForce": {"type": "number", "desc": "Force normale."},
+        "depth": {"type": "number", "desc": "Profondeur de pénétration."},
+        "materialId1": {"type": "integer", "desc": "Matériau du noeud."},
+        "materialId2": {"type": "integer", "desc": "Matériau de la surface touchée."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setControllingPlayers": {
+      "desc": "Appelée par le moteur quand la liste des joueurs assis dans ce véhicule change. Met à jour playerInfo (seatedPlayers, anyPlayerSeated, firstPlayerSeated), prévient le contrôleur principal/powertrain/damageTracker si un joueur est assis, notifie bdebug, protocols, ai, sounds, puis émet 'onPlayersChanged'.",
+      "params": {"players": {"type": "table<integer, boolean>", "desc": "Joueurs assis, indexés depuis 0 (ex. {[0]=true})."}},
+      "returns": [],
+      "internal": true
+    },
+    "setPlayerPersona": {
+      "desc": "Définit playerInfo.persona (identifiant de persona du joueur).",
+      "params": {"persona": {"type": "any", "desc": "Identifiant de persona."}},
+      "returns": [],
+      "internal": true
+    },
+    "exportPersistentData": {
+      "desc": "Appelée par le moteur avant un rechargement du Lua : sérialise les extensions (serializePackages('reload')) et les confie au moteur via obj:setPersistentData.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "importPersistentData": {
+      "desc": "Appelée par le moteur après un rechargement : désérialise les données persistantes et les redonne aux extensions (deserializePackages).",
+      "params": {"s": {"type": "string", "desc": "Données sérialisées produites par exportPersistentData."}},
+      "returns": [],
+      "internal": true
+    },
+    "onSettingsChanged": {
+      "desc": "Appelée par le moteur quand les réglages changent : settings.settingsChanged, hook 'onSettingsChanged', puis controller, input, wheels et protocols.settingsChanged.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

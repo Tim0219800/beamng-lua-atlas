@@ -1,0 +1,61 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Descriptions are valid JSON with a path
+        run: |
+          python -I - <<'EOF'
+          import json, glob, sys
+          bad = []
+          files = glob.glob("descriptions/**/*.json", recursive=True)
+          for p in files:
+              try:
+                  d = json.load(open(p, encoding="utf-8"))
+                  if not isinstance(d, dict) or not str(d.get("path", "")).startswith("lua/"):
+                      bad.append(f"{p}: missing or bad 'path'")
+              except Exception as e:
+                  bad.append(f"{p}: {e}")
+          print(f"{len(files)} description files, {len(bad)} errors")
+          for b in bad:
+              print("ERROR", b)
+          sys.exit(1 if bad else 0)
+          EOF
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Stubs parse as Lua
+        run: |
+          npm install --no-save luaparse@0.3.1
+          node - <<'EOF'
+          const lp = require('luaparse'), fs = require('fs'), path = require('path');
+          let n = 0; const bad = [];
+          function walk(d) {
+            for (const f of fs.readdirSync(d)) {
+              const p = path.join(d, f);
+              if (fs.statSync(p).isDirectory()) walk(p);
+              else if (p.endsWith('.lua')) {
+                n++;
+                try { lp.parse(fs.readFileSync(p, 'utf8'), { luaVersion: '5.2' }); }
+                catch (e) { bad.push(p + ': ' + e.message); }
+              }
+            }
+          }
+          walk('stubs');
+          console.log(n + ' stub files, ' + bad.length + ' errors');
+          bad.slice(0, 50).forEach(b => console.log('ERROR ' + b));
+          process.exit(bad.length ? 1 : 0);
+          EOF

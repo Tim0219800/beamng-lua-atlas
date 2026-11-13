@@ -1,0 +1,25 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/droneChase.lua",
+  "module": "Caméra drone de poursuite aérienne (désactivée par défaut, icône cameraFocusOnVehicle1) : flotte au-dessus et derrière le véhicule du joueur selon son cap (smoothé), le regarde et penche dans les virages. Un ressort-amortisseur sous-amorti (survitesse visible, montée plus lente) la déplace ; elle suit le relief (consciente des tunnels/ponts) et garde safeDist mètres des bâtiments. Tout tourne sur dtSim (cohérent en avance rapide/ralenti). Les entrées de déplacement décalent la position souhaitée (positionOffset), les entrées de rotation la font orbiter. Renvoie un constructeur.",
+  "notes": ["data.res.collisionCompatible = false : le filtre de collision de caméra ne s'applique pas à ce mode.", "Paramètres réglables (listParams) : dist 12 m (4 à 80), height 6 m (1-40), bank (0-2), float (0.2-3, inertie), safeDist (0-5 m), fov (10-140, 55 par défaut). Pas de véhicule joueur : la caméra garde la pose précédente.", "Garde-fous : altitude minimale 2 m au-dessus du sol et 0.8 m sous un plafond (tunnel).", "L'extraction signale une globale « i » : en réalité c'est la boucle `for i = 0, 5` de la table de sondes (variable locale) ; pas de vraie fuite."],
+  "classes": {
+    "C": {
+      "desc": "Mode drone. Champs : camDist, height, fov, bank, floating, safeDist, positionOffset, orbitYaw, orbitPitch, pos, vel, head.",
+      "functions": {
+        "init": {"desc": "Définit les valeurs par défaut et appelle reset.", "internal": true},
+        "reset": {"desc": "Remet le drone à replacer, annule vitesse, décalage et orbite."},
+        "setDistance": {"desc": "Fixe la distance de suivi bornée à [4, 80] m.", "params": {"d": {"type": "number|nil", "desc": "distance en mètres"}}},
+        "setFOV": {"desc": "Fixe le champ de vision.", "params": {"fov": {"type": "number", "desc": "degrés"}}},
+        "onCameraChanged": {"desc": "Hook : au gain de focus, le drone est replacé.", "params": {"focused": {"type": "boolean", "desc": "vrai si le mode prend le focus"}}, "internal": true},
+        "placeInit": {"desc": "Place le drone instantanément à une position et annule sa vitesse.", "params": {"position": {"type": "vec3", "desc": "position monde"}}},
+        "clampAltitude": {"desc": "Corrige l'altitude pour suivre le véhicule : sous couvert reste entre sol+2 m et plafond-0.8 m ; à ciel ouvert monte pour survoler les collines.", "params": {"x": {"type": "number", "desc": "x monde"}, "y": {"type": "number", "desc": "y monde"}, "z": {"type": "number", "desc": "altitude souhaitée"}, "car": {"type": "vec3", "desc": "centre de la boîte englobante du véhicule"}}, "returns": [{"type": "number", "desc": "altitude corrigée"}]},
+        "avoid": {"desc": "Garde la distance de sécurité par rapport aux maillages statiques : reste du côté du véhicule d'un mur éventuel, et repousse hors de tout obstacle à moins de safeDist (6 sondes horizontales).", "params": {"x": {"type": "number", "desc": "x monde"}, "y": {"type": "number", "desc": "y monde"}, "z": {"type": "number", "desc": "z monde"}, "car": {"type": "vec3", "desc": "centre du véhicule"}}, "returns": [{"type": "number", "desc": "x corrigé"}, {"type": "number", "desc": "y corrigé"}, {"type": "number", "desc": "z corrigé"}]},
+        "listParams": {"desc": "Liste des réglages exposés à l'UI de contrôle caméra / flux vidéo (dist, height, bank, float, safeDist, fov).", "returns": [{"type": "table[]", "desc": "descripteurs {key, title, kind, type, value, default, min, max, step, unit}"}]},
+        "setParam": {"desc": "Modifie un réglage listParams (valeurs bornées).", "params": {"key": {"type": "string", "desc": "dist, fov, height, bank, float ou safeDist"}, "value": {"type": "number|string", "desc": "nouvelle valeur (convertie en nombre)"}}},
+        "serialize": {"desc": "Sauvegarde l'état du mode (distance, fov, hauteur, bank, float, safeDist, positionOffset, orbite).", "returns": [{"type": "table", "desc": "état"}]},
+        "deserialize": {"desc": "Restaure l'état sauvegardé et force le replacement.", "params": {"s": {"type": "table", "desc": "table renvoyée par serialize"}}},
+        "update": {"desc": "Calcule la pose du drone et l'écrit dans data.res (pos, rot, fov, targetPos).", "params": {"data": {"type": "table", "desc": "camData"}}, "returns": [{"type": "boolean", "desc": "true"}], "internal": true}
+      }
+    }
+  }
+}

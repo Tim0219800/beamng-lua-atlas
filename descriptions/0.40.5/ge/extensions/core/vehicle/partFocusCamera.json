@@ -1,0 +1,76 @@
+{
+  "path": "lua/ge/extensions/core/vehicle/partFocusCamera.lua",
+  "module": "Extension GE `core_vehicle_partFocusCamera` : pilote le mode caméra caché 'partFocus' depuis le menu de pièces. À partir des pièces sélectionnées, calcule une boîte englobante (taille d'après les meshes, position d'après les noeuds jbeam, qui suivent le véhicule en direct), règle la distance de la caméra pour la cadrer (FOV 35°, marge 1,2) et la déplace en douceur. Les demandes attendent 0,5 s que la sélection se stabilise, sauf option immediate. Rend la caméra au joueur quand la sélection reste vide.",
+  "usage": "core_vehicle_partFocusCamera.focusOnParts(vehId, {['pickup/pickup_hood'] = true}, nil, 0, {immediate = true})\n-- plus tard\ncore_vehicle_partFocusCamera.release()",
+  "notes": [
+    "cameraOptions accepte : immediate (saute le délai d'attente), focusOffsetUp (décalage de la cible vers le haut du véhicule, m), distanceMultiplier (multiplicateur de la distance de cadrage) et preserveDistance (ne pas recalculer la distance).",
+    "Constantes internes : settleDelay 0.5 s, transitionTime 1.2 s, minExtent 0.15 m (une pièce tenue par un seul noeud ne se réduit pas à un point).",
+    "updateTarget est appelée par le mode caméra partFocus lui-même (pas par le hook onUpdate) pour lire les positions de noeuds au bon moment de la frame ; elle dessine la boîte englobante (debugDrawer:drawLine) à chaque appel, y compris hors debug.",
+    "M.onSerialize pointe sur M.clear (qui ne renvoie rien) : aucune donnée n'est sauvegardée et la caméra est libérée avant un rechargement Lua ; M.onExtensionUnloaded pointe aussi sur M.clear."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{'core_vehicle_configTarget'}"},
+    "updateInterval": {"type": "number", "desc": "Intervalle de remesure de la boîte, en secondes (0.1)."},
+    "debugDrawPivot": {"type": "boolean", "desc": "false par défaut ; true marque le centre de la boîte d'une sphère."},
+    "onSerialize": {"type": "function", "desc": "Alias de clear."},
+    "onExtensionUnloaded": {"type": "function", "desc": "Alias de clear."}
+  },
+  "functions": {
+    "focusOnParts": {
+      "desc": "Demande à la caméra de cadrer un ensemble de pièces. Les demandes identiques répétées sont ignorées (pas de redémarrage du délai). Une liste vide revient à release().",
+      "params": {
+        "inVehId": {"type": "integer", "desc": "véhicule"},
+        "partNames": {"type": "table<string, boolean>", "desc": "[chemin de pièce] = true"},
+        "selectedMeshes": {"type": "table|nil", "desc": "meshes des pièces (fournis par core_vehicle_partmgmt), utilisés pour mesurer la taille"},
+        "playerId": {"type": "integer|nil", "desc": "joueur dont la caméra est pilotée"},
+        "cameraOptions": {"type": "table|nil", "desc": "voir notes : immediate, focusOffsetUp, distanceMultiplier, preserveDistance"}
+      },
+      "returns": []
+    },
+    "release": {
+      "desc": "Rend la caméra au joueur une fois que la sélection reste vide pendant settleDelay (0,5 s), ou immédiatement.",
+      "params": {"immediate": {"type": "boolean|nil", "desc": "true : libère tout de suite (clear)"}},
+      "returns": []
+    },
+    "clear": {
+      "desc": "Annule les demandes, quitte le mode partFocus (retour à la caméra précédente, 'orbit' par défaut) et retire l'action map PartCamera.",
+      "params": {},
+      "returns": []
+    },
+    "isActive": {
+      "desc": "Indique si la caméra de pièces est active (un véhicule est cadré).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si active"}]
+    },
+    "zoomStep": {
+      "desc": "Ajoute des crans de molette (zoom) à appliquer par le mode caméra.",
+      "params": {"value": {"type": "number", "desc": "nombre de crans (signe = sens)"}},
+      "returns": []
+    },
+    "consumeZoomSteps": {
+      "desc": "Renvoie et remet à zéro les crans de zoom accumulés (appelée par le mode caméra).",
+      "params": {},
+      "returns": [{"type": "number", "desc": "crans accumulés"}]
+    },
+    "updateTarget": {
+      "desc": "Appelée par le mode caméra partFocus à chaque frame : remesure périodiquement la boîte, reconstruit la boîte en repère monde, la dessine et fixe le point de visée de la caméra.",
+      "params": {
+        "dt": {"type": "number", "desc": "temps écoulé (s)"},
+        "cam": {"type": "table|nil", "desc": "objet mode caméra (setRef, setDefaultDistance, retarget)"}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook par frame : décompte le délai d'attente (temps réel, car le menu de configuration tourne souvent en pause) puis applique la demande ou libère la caméra.",
+      "params": {"dtReal": {"type": "number", "desc": "temps réel écoulé (s)"}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleResetted": {"desc": "Hook : le véhicule est remis à zéro ; force une remesure immédiate de la boîte.", "params": {"resettedId": {"type": "integer", "desc": "véhicule"}}, "returns": [], "internal": true},
+    "onVehicleDestroyed": {"desc": "Hook : le véhicule cadré est détruit ; libère la caméra.", "params": {"destroyedId": {"type": "integer", "desc": "véhicule"}}, "returns": [], "internal": true},
+    "onVehicleSpawned": {"desc": "Hook : le véhicule cadré est recréé ; garde la dernière pose de caméra.", "params": {"spawnedId": {"type": "integer", "desc": "véhicule"}}, "returns": [], "internal": true},
+    "onVehicleSwitched": {"desc": "Hook : le joueur piloté quitte le véhicule cadré ; libère la caméra.", "params": {"oldId": {"type": "integer", "desc": "ancien véhicule"}, "newId": {"type": "integer", "desc": "nouveau véhicule"}, "player": {"type": "integer", "desc": "joueur"}}, "returns": [], "internal": true},
+    "onVehicleConfigTargetChanged": {"desc": "Hook : la cible de configuration change ; libère la caméra.", "params": {}, "returns": [], "internal": true}
+  }
+}

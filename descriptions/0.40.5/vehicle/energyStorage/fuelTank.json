@@ -1,0 +1,34 @@
+{
+  "path": "lua/vehicle/energyStorage/fuelTank.lua",
+  "module": "Type de stockage d'énergie 'fuelTank' : réservoir de carburant liquide (essence, diesel, kérosène). L'énergie est stockée en joules à partir du volume en litres, de la masse volumique et de la densité énergétique ; la masse des nœuds d'engine group est ajustée selon le niveau, et une fuite peut vider le réservoir en 60 s s'il est percé. Instancié par energyStorage.lua pour `type = \"fuelTank\"`.",
+  "usage": "local tank = energyStorage.getStorage(\"mainTank\")\ntank:setRemainingVolume(20)   -- 20 litres restants\nprint(tank.remainingVolume, tank.remainingRatio)",
+  "notes": [
+    "Champs jbeam lus : name, type, energyType ('gasoline' défaut, 'diesel', 'kerosene'), fuelCapacity (L), startingFuelCapacity (L, limité à fuelCapacity), energyDensity (J/kg), fuelLiquidDensity (kg/L), breakTriggerBeam, fuel._engineGroup_nodes (nœuds dont la masse varie avec le carburant).",
+    "Valeurs par défaut : essence 41,5 MJ/kg et 0,75 kg/L ; diesel 43 MJ/kg et 0,84 kg/L ; kérosène 43 MJ/kg et 0,80 kg/L. Un energyType inconnu sans energyDensity/fuelLiquidDensity dans le jbeam donne 0 et provoquera des divisions par zéro dans updateGFX.",
+    "Unités : storedEnergy et energyCapacity en J, remainingVolume en L, brokenLeakRate = capacité / 60 (L/s, vidange en 60 s).",
+    "Les nœuds de fuelNodes reçoivent chaque frame la masse = masse initiale + storedEnergy * fuelNodeMassCoef (1 / (energyDensity * nombre de nœuds), donc masse de carburant répartie).",
+    "La fuite après rupture n'est pas sauvegardée : getPartCondition renvoie toujours currentLeakRate = 0 dans l'état mais integrityValue = 0 si le réservoir fuit.",
+    "Utilise la globale `v` (données du véhicule) et `obj:setNodeMass` du moteur."
+  ],
+  "fields": {},
+  "functions": {
+    "new": {"desc": "Crée l'instance de réservoir à partir de l'entrée jbeam et applique tout de suite la masse de carburant aux nœuds concernés.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam fusionnées du stockage."}}, "returns": [{"type": "table", "desc": "Instance de stockage (classe 'storage')."}], "internal": true}
+  },
+  "classes": {
+    "storage": {
+      "desc": "Instance renvoyée par new(jbeamData). Champs publics notables : name, type, energyType, storedEnergy (J), energyCapacity (J), initialStoredEnergy (J), capacity (L), startingCapacity (L), remainingVolume (L), remainingRatio (0 à 1), currentLeakRate (L/s), brokenLeakRate, energyDensity, fuelLiquidDensity, assignedDevices.",
+      "functions": {
+        "updateGFX": {"desc": "Appelé chaque frame : recalcule remainingVolume/remainingRatio, applique la masse aux nœuds et retire du carburant si currentLeakRate > 0.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}},
+        "setRemainingVolume": {"desc": "Fixe le volume restant (borné entre 0 et capacity) et met à jour storedEnergy.", "params": {"volume": {"type": "number", "desc": "Litres."}}},
+        "setRemainingRatio": {"desc": "Fixe storedEnergy à energyCapacity * ratio (ratio borné entre 0 et 1).", "params": {"ratio": {"type": "number", "desc": "0 à 1."}}},
+        "onBreak": {"desc": "Appelé quand une poutre breakTriggerBeam casse : active la fuite (currentLeakRate = brokenLeakRate).", "params": {}},
+        "registerDevice": {"desc": "Enregistre un périphérique dans assignedDevices.", "params": {"device": {"type": "table", "desc": "Périphérique avec un champ name."}}},
+        "setPartCondition": {"desc": "Restaure l'état depuis la condition de pièce (nombre = fraction du réservoir, avec fuite si 0 ; ou table {storedEnergy, currentLeakRate}).", "params": {"odometer": {"type": "number", "desc": "Inutilisé."}, "integrity": {"type": "number|table", "desc": "Fraction 0 à 1 ou table d'état."}, "visual": {"type": "any", "desc": "Inutilisé."}}},
+        "getPartCondition": {"desc": "Renvoie l'intégrité (0 si fuite, 1 sinon) et l'état {storedEnergy, currentLeakRate = 0}.", "params": {}, "returns": [{"type": "number", "desc": "integrityValue."}, {"type": "table", "desc": "État sauvegardable."}]},
+        "reset": {"desc": "Remplit le réservoir au niveau de départ, supprime la fuite et réapplique la masse aux nœuds.", "params": {}},
+        "serialize": {"desc": "Renvoie {remainingVolume} pour la sauvegarde.", "params": {}, "returns": [{"type": "table", "desc": "{remainingVolume = L}."}]},
+        "deserialize": {"desc": "Restaure remainingVolume depuis des données sérialisées (si présent).", "params": {"data": {"type": "table", "desc": "Table contenant remainingVolume."}}}
+      }
+    }
+  }
+}

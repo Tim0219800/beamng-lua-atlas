@@ -1,0 +1,44 @@
+{
+  "path": "lua/ge/extensions/freeroam/gasStations.lua",
+  "module": "Gestion simple du ravitaillement aux stations-service (carburant ou recharge électrique). Fournit les points d'intérêt (POI) des stations pour la grande carte et les marqueurs, le bouton d'action « faire le plein » et le remplissage des réservoirs du véhicule ; en mode carrière, délègue la transaction à career_modules_fuel. Global : freeroam_gasStations. Dépend de gameplay_achievement.",
+  "notes": [
+    "Les POI de stations ne sont ajoutés que si career_career.isActive() ou si le réglage enableGasStationsInFreeroam est vrai. onGetRawPoiListForLevel appelle career_career.isActive() sans test de nil.",
+    "Types d'énergie : gasoline, diesel, kerosine, n2o, any, unknown -> « refuel » ; electricEnergy -> « recharge ». Le type `air` est ignoré (ignoreFuelTypes).",
+    "refuelCar hors carrière remplit chaque réservoir compatible à tank.maxEnergy via l'action véhicule setEnergyStorageEnergy ; en carrière, au premier réservoir compatible, lance career_modules_fuel.startTransaction(gasStation) puis arrête (return dans le callback).",
+    "Succès « VEHICLE_REFUELLED » débloqué quand au moins un réservoir est rempli ; messages via guihooks 'Message' (catégorie refueling).",
+    "gasStationCenterRadius divise par count même si aucune pompe n'a été trouvée (count = 0) : le centre devient alors NaN/inf."
+  ],
+  "functions": {
+    "gasStationCenterRadius": {
+      "desc": "Calcule le centre (moyenne des positions des pompes, objets de la scène nommés par pump[1]) et le rayon (distance max au centre) d'une station.",
+      "params": {"f": {"type": "table", "desc": "Facility station avec `pumps` : liste de paires dont le 1er élément est le nom d'objet de la pompe."}},
+      "returns": [{"type": "vec3", "desc": "Centre."}, {"type": "number", "desc": "Rayon (m)."}],
+      "internal": false
+    },
+    "formatGasStationPoi": {
+      "desc": "Construit l'élément POI d'une station : id, data {type='gasStation', facility}, markerInfo {gasStationMarker {pumps, pos, radius, electric}, bigmapMarker {pos, icon (poi_fuel_round ou poi_charge_round), name, description, thumbnail, previews, cardIcon}}. Station électrique si energyTypes contient electricEnergy.",
+      "params": {"gasStation": {"type": "table", "desc": "Facility de station."}},
+      "returns": [{"type": "table", "desc": "Élément POI."}],
+      "internal": false
+    },
+    "onGetRawPoiListForLevel": {
+      "desc": "Hook de collecte des POI d'un niveau : ajoute un POI par station de freeroam_facilities.getFacilities(levelIdentifier).gasStations (sous conditions, voir notes).",
+      "params": {"levelIdentifier": {"type": "string", "desc": "Nom du niveau."}, "elements": {"type": "table", "desc": "Liste à compléter."}},
+      "internal": true
+    },
+    "onActivityAcceptGatherData": {
+      "desc": "Hook de collecte des activités d'un POI : pour chaque élément de type gasStation, ajoute une fiche (icône, titre, props par type de carburant, bouton « refuel/recharge/refuelMixed » dont l'action appelle refuelCar sur le véhicule joueur 0).",
+      "params": {"elemData": {"type": "table[]", "desc": "Éléments du POI."}, "activityData": {"type": "table[]", "desc": "Liste à compléter."}},
+      "internal": true
+    },
+    "refuelCar": {
+      "desc": "Remplit le véhicule : demande ses réservoirs (core_vehicleBridge.requestValue 'energyStorage'), vérifie la compatibilité avec fuelTypes, remplit ou lance la transaction carrière, affiche les messages et joue le son de ravitaillement.",
+      "params": {
+        "gasStation": {"type": "table", "desc": "Élément POI de la station (utilisé aussi comme argument de career_modules_fuel.startTransaction)."},
+        "fuelTypes": {"type": "table<string, boolean>", "desc": "Types d'énergie fournis (ensemble)."},
+        "veh": {"type": "userdata", "desc": "Objet véhicule à ravitailler."}
+      },
+      "internal": false
+    }
+  }
+}

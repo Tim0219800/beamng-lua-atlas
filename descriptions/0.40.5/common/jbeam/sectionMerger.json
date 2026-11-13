@@ -1,0 +1,21 @@
+{
+  "path": "lua/common/jbeam/sectionMerger.lua",
+  "module": "Fusionne des sections jbeam entre elles pour la rétrocompatibilité : la section triggers2 est versée dans triggers et rails2 dans rails. Les lignes fusionnées reçoivent originSection (nom de la section d'origine), la section source est supprimée pour ne pas être traitée plus loin, et sectionRenames est mis à jour (triggers2 -> triggers, rails2 -> rails).",
+  "notes": [
+    "mergeNumberedSections existe dans le code mais est locale et jamais appelée (le commentaire du code dit « not tested, be careful »).",
+    "Si une clé existe déjà dans la section cible, la ligne est écrasée avec un avertissement de journal (le message nomme deux fois la section cible).",
+    "Pour rails, isTableCid vaut false : validTables n'est pas initialisé par la fonction avant l'accès vehicle.validTables[sectionNameSource] = nil ; ce n'est sans risque que si validTables a déjà été créé par l'étape précédente (triggers l'initialise juste avant)."
+  ],
+  "fields": {},
+  "functions": {
+    "process": {
+      "desc": "Fusionne triggers2 dans triggers et rails2 dans rails, et enregistre ces renommages dans sectionRenames.",
+      "params": {
+        "vehicle": {"type": "table", "desc": "Données jbeam du véhicule (modifiées en place)."},
+        "sectionRenames": {"type": "table<string, string>", "desc": "Table ancien nom vers nouveau nom, complétée par la fonction."}
+      },
+      "returns": [{"type": "boolean", "desc": "Toujours true."}],
+      "internal": true
+    }
+  }
+}

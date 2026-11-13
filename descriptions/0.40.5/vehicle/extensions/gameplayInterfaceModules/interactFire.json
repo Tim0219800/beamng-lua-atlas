@@ -1,0 +1,16 @@
+{
+  "path": "lua/vehicle/extensions/gameplayInterfaceModules/interactFire.lua",
+  "module": "Module de gameplayInterface donnant accès au système d'incendie : appel à distance d'une fonction sans argument du module fire par son nom.",
+  "usage": "gameplayInterface.executeAction(0, 13, 'interactFire', 'igniteVehicle')",
+  "notes": [
+    "Action 'interactFire'(methodName:string) : appelle fire[methodName]() sans argument ; {failReason} si la fonction n'existe pas. Le nom exact des méthodes valides dépend du module fire (voir sa page)."
+  ],
+  "fields": {
+    "moduleActions": {"type": "table<string, function>", "desc": "Actions : interactFire."},
+    "moduleLookups": {"type": "table<string, function>", "desc": "Lookups : aucun."}
+  },
+  "functions": {
+    "onExtensionLoaded": {"desc": "Appelé au chargement : remplit moduleActions.", "params": {}, "returns": [], "internal": true},
+    "requestRegistration": {"desc": "Enregistre les actions et lookups auprès de gameplayInterface.", "params": {"gi": {"type": "table", "desc": "Le module gameplayInterface."}}, "returns": [], "internal": true}
+  }
+}

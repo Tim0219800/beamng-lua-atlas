@@ -1,0 +1,95 @@
+{
+  "path": "lua/ge/extensions/mcp/tools/system.lua",
+  "module": "Outils MCP système : exécuter du Lua dans la VM GE, lire les logs, recharger l'UI ou le Lua, infos de rendu, captures d'écran, infos fichier, chargement de fichiers Lua et d'extensions, lecture/écriture de variables du VariableRegistry.",
+  "notes": [
+    "Attention sécurité : run_lua et load_file exécutent du code arbitraire dans le jeu ; set_var modifie des variables moteur.",
+    "get_logs : le premier appel renvoie les N dernières lignes de beamng.log (défaut 200, max 5000), les suivants seulement les nouvelles lignes depuis l'appel précédent (offset mémorisé).",
+    "screenshot enregistre sous <dossier utilisateur>/screenshots/mcp/ (PNG ou JPG) de façon asynchrone ; le chemin est renvoyé immédiatement, le fichier peut apparaître quelques frames plus tard.",
+    "screenshot_image : asynchrone en deux appels ; le résultat est une table {data=<base64 JPEG>, mimeType='image/jpeg'} que mcp_server convertit en contenu image.",
+    "unload_extension refuse de décharger mcp_server et mcp_tools.",
+    "reload_lua : le rechargement est différé à la frame suivante ; le serveur MCP redémarre (onSerialize/onDeserialize) mais la connexion peut sauter."
+  ],
+  "fields": {
+    "schemas": {"type": "table<string, table>", "desc": "Schémas des outils système."}
+  },
+  "functions": {
+    "run_lua": {
+      "desc": "Compile (loadstring) et exécute du code Lua dans la VM GE, renvoie tostring du résultat du chunk.",
+      "params": {"args": {"type": "table", "desc": "{code: string}. Le code doit faire `return …` pour renvoyer une valeur."}},
+      "returns": [{"type": "string", "desc": "Résultat ou « compile error / error: … »."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "get_logs": {
+      "desc": "Lit beamng.log (voir notes pour la logique premier appel / appels suivants).",
+      "params": {"args": {"type": "table|nil", "desc": "{lines?: integer}"}},
+      "returns": [{"type": "string", "desc": "Lignes de log."}, {"type": "boolean", "desc": "true si le fichier est illisible."}],
+      "internal": false
+    },
+    "reload_ui": {
+      "desc": "Recharge complètement l'UI (CEF) en ignorant le cache, via reloadUI().",
+      "params": {},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true si reloadUI absent."}],
+      "internal": false
+    },
+    "reload_lua": {
+      "desc": "Demande le rechargement du VM Lua GE (comme Ctrl+L) via Lua:requestReload ; différé à la frame suivante.",
+      "params": {},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true si indisponible."}],
+      "internal": false
+    },
+    "get_render_info": {
+      "desc": "Infos de rendu en JSON : adapterType, available, vulkanEnabled, gpu (Engine.Render / Engine.Platform).",
+      "params": {},
+      "returns": [{"type": "string", "desc": "JSON."}, {"type": "boolean", "desc": "false."}],
+      "internal": false
+    },
+    "screenshot": {
+      "desc": "Prend une capture (module `screenshot`, createScreenshotTracked) et renvoie son chemin absolu.",
+      "params": {"args": {"type": "table|nil", "desc": "{jpg?: boolean} (défaut PNG)."}},
+      "returns": [{"type": "string", "desc": "Chemin du fichier."}, {"type": "boolean", "desc": "true si la capture échoue."}],
+      "internal": false
+    },
+    "screenshot_image": {
+      "desc": "Capture un JPG réduit et le renvoie en base64 (asynchrone en deux appels).",
+      "params": {"args": {"type": "table|nil", "desc": "{scale?: number 0..1 (défaut 0.4)}"}},
+      "returns": [{"type": "table|string", "desc": "{data, mimeType} une fois prêt, sinon message « capturing… »."}, {"type": "boolean", "desc": "true si la capture échoue."}],
+      "internal": false
+    },
+    "file_info": {
+      "desc": "Informations sur un chemin : exists, isDir, realPath (VFS vers disque), virtualPath, expanded et stat.",
+      "params": {"args": {"type": "table", "desc": "{path: string} chemin VFS ou réel."}},
+      "returns": [{"type": "string", "desc": "JSON."}, {"type": "boolean", "desc": "true si path manquant."}],
+      "internal": false
+    },
+    "load_file": {
+      "desc": "Charge et exécute un fichier Lua dans la VM GE (le chemin VFS est résolu vers le chemin réel).",
+      "params": {"args": {"type": "table", "desc": "{path: string}"}},
+      "returns": [{"type": "string", "desc": "« loaded … » ou erreur."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "load_extension": {
+      "desc": "Charge une extension GE par son nom (forme avec underscore).",
+      "params": {"args": {"type": "table", "desc": "{name: string}"}},
+      "returns": [{"type": "string", "desc": "« loaded » ou « load failed for »."}, {"type": "boolean", "desc": "true si name manquant."}],
+      "internal": false
+    },
+    "unload_extension": {
+      "desc": "Décharge une extension GE (mcp_server et mcp_tools protégées).",
+      "params": {"args": {"type": "table", "desc": "{name: string}"}},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true en cas de refus ou d'erreur."}],
+      "internal": false
+    },
+    "get_var": {
+      "desc": "Lit une variable moteur/préférence (VariableRegistry.get), ex. $pref::Video::gpu.",
+      "params": {"args": {"type": "table", "desc": "{name: string, default?: any}"}},
+      "returns": [{"type": "string", "desc": "Valeur."}, {"type": "boolean", "desc": "true si name manquant."}],
+      "internal": false
+    },
+    "set_var": {
+      "desc": "Écrit une variable moteur (VariableRegistry.set) et renvoie la valeur relue.",
+      "params": {"args": {"type": "table", "desc": "{name: string, value: any}"}},
+      "returns": [{"type": "string", "desc": "« nom = valeur »."}, {"type": "boolean", "desc": "true si paramètre manquant."}],
+      "internal": false
+    }
+  }
+}

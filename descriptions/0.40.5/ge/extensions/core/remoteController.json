@@ -1,0 +1,47 @@
+{
+  "path": "lua/ge/extensions/core/remoteController.lua",
+  "module": "Serveur UDP qui permet de piloter le jeu avec l'application mobile BeamNG « remote controller ». getQRCode ouvre le port UDP 4444 et renvoie un code à 5 chiffres que l'appli doit envoyer ; ensuite chaque appareil reconnu devient un périphérique virtuel (core_input_virtualInput, type bngremotectrlv1, 1 axe, 2 boutons) alimenté par les paquets d'orientation reçus. Les données d'interface du véhicule sont renvoyées à l'appli (port 4445) via l'extension outgauge du véhicule.",
+  "notes": [
+    "Protocole : un paquet commençant par 'beamng' avec trois champs séparés par '|' (beamng|nomAppareil|code) est un paquet de découverte ; si le code correspond, le jeu répond 'beamng|code' sur le port 4445. Les autres paquets de 16 octets (struct ori_t w,x,y,z en float, ordre réseau) sont lus comme données : x > 0.5 = bouton 0, y > 0.5 = bouton 1, z = axe 0 ; x,y,z sont bornés à [0,1].",
+    "Un appareil sans paquet pendant 10 s est supprimé.",
+    "Nécessite FFI : onExtensionLoaded renvoie false sans lui.",
+    "BUG : M.onFirstUpdate = onFirstUpdate référence une variable locale non définie, donc ce champ vaut nil (sans conséquence).",
+    "Les paquets sont lus par rafale (boucle jusqu'à ce que receivefrom ne renvoie plus rien) dans onUpdate, à chaque image (un TODO propose de passer à 1 Hz).",
+    "Le code aléatoire est tiré une fois au chargement du module (random(10000, 99999))."
+  ],
+  "fields": {
+    "onFirstUpdate": {"type": "nil", "desc": "Vaut nil : référence à une variable non définie dans le fichier."}
+  },
+  "functions": {
+    "getQRCode": {
+      "desc": "Ouvre le socket UDP d'écoute (port 4444) s'il ne l'est pas, et renvoie le code d'appairage à afficher (sous forme de QR code par l'UI).",
+      "params": {},
+      "returns": [{"type": "integer|boolean", "desc": "Code à 5 chiffres, ou false si le socket n'a pas pu être ouvert."}],
+      "internal": false
+    },
+    "onUpdate": {
+      "desc": "Hook de mise à jour : supprime les appareils inactifs depuis plus de 10 s, lit les paquets UDP, crée les périphériques virtuels et émet leurs évènements (boutons, axe) vers core_input_virtualInput. Ne fait rien tant que le socket n'est pas ouvert.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook de chargement : vérifie la présence de FFI.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "false si FFI est indisponible (chargement refusé)."}],
+      "internal": true
+    },
+    "onInputBindingsChanged": {
+      "desc": "Hook appelé quand les liaisons d'entrée changent : mémorise à quel joueur est assigné chaque appareil virtuel (clé 'vinput<instance>'), ou l'oublie si le joueur est négatif.",
+      "params": {"players": {"type": "table<string, integer>", "desc": "Nom de périphérique -> index du joueur."}},
+      "returns": [],
+      "internal": true
+    },
+    "devicesConnected": {
+      "desc": "Indique si au moins un appareil distant est connecté.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true s'il y a au moins un périphérique virtuel."}],
+      "internal": false
+    }
+  }
+}

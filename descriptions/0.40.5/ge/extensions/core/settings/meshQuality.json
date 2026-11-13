@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/core/settings/meshQuality.lua",
+  "module": "Préréglages de qualité des maillages (niveau de détail des shapes), consommés par graphicsQualityGroup. Chaque niveau fixe $pref::TS::detailAdjust et $pref::TS::skipRenderDLs.",
+  "notes": ["skipRenderDLs vaut 0 à tous les niveaux. Pas de hook onApply."],
+  "fields": {
+    "qualityLevels": {
+      "type": "table<string, table<string, number>>",
+      "desc": "Niveaux Lowest (detailAdjust 0.5), Low (0.75), Normal (1.0), High (1.5), Ultra (2.0), clé $pref::TS::detailAdjust ; $pref::TS::skipRenderDLs = 0 partout."
+    }
+  },
+  "functions": {}
+}

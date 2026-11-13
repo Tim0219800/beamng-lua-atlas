@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/transition.lua",
+  "module": "Filtre global (runningOrder 0.2) qui adoucit les changements de caméra : mémorise la pose de l'image précédente (position relative au véhicule, rotation, FOV, nearClip) et, quand start() est appelé, mélange la nouvelle caméra avec l'ancienne pendant la durée configurée (réglages cameraTransitionTime, 300 ms par défaut, et cameraVehicleTransitionTime, 500 ms pour un changement de véhicule). Le mélange est quadratique (perc^2) avec nlerp de la rotation. Pas de fondu si les deux points ne se voient pas ou sont à plus de 100 m (pour les changements de caméra simples). Renvoie un constructeur.",
+  "notes": ["Utilisé aussi pour les transitions de chemin caméra : si camPathTransitionData est fourni, son callback reçoit une copie de data.res et la caméra reprend l'ancienne pose.", "Une demande reçue avant la première image enregistrée attend qu'une pose existe (camLastPosAbs différente de l'infini).", "La page extraite indique start(camPathTransitionData, duration) mais le code est start(isVehicleSwitch, camPathTransitionData, duration) ; canTransition(origin, target) a deux paramètres."],
+  "classes": {
+    "C": {
+      "desc": "Filtre de transition.",
+      "functions": {
+        "init": {"desc": "isGlobal, isFilter, hidden, runningOrder 0.2, état initial et lecture des réglages.", "internal": true},
+        "onSettingsChanged": {"desc": "Hook : relit cameraTransitionTime et cameraVehicleTransitionTime (millisecondes).", "internal": true},
+        "canTransition": {"desc": "Dit si le fondu est autorisé entre deux points : toujours pour une demande de type « caméra » (false), sinon seulement si distance <= 100 m et visibilité mutuelle (rayons statiques).", "params": {"origin": {"type": "vec3", "desc": "position de la nouvelle caméra"}, "target": {"type": "vec3", "desc": "position de l'ancienne caméra"}}, "returns": [{"type": "boolean", "desc": "true si autorisé"}]},
+        "start": {"desc": "Demande un fondu depuis la dernière pose ; il démarre à la prochaine image.", "params": {"isVehicleSwitch": {"type": "boolean", "desc": "vrai pour un changement de véhicule (durée véhicule, test de visibilité)"}, "camPathTransitionData": {"type": "table|nil", "desc": "données de transition de chemin caméra (avec callback(res))"}, "duration": {"type": "number|nil", "desc": "durée en secondes qui remplace la durée configurée pour cette transition"}}},
+        "update": {"desc": "Enregistre la pose ou applique le fondu à data.res.", "params": {"data": {"type": "table", "desc": "camData"}}, "returns": [{"type": "boolean", "desc": "true"}], "internal": true}
+      }
+    }
+  }
+}

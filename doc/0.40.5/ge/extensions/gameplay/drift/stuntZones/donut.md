@@ -1,0 +1,33 @@
+# `gameplay_drift_stuntZones_donut`
+
+*Fichier : `lua/ge/extensions/gameplay/drift/stuntZones/donut.lua` · VM : Game Engine (GE) · 103 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+
+**Accès :** `require("extensions/gameplay/drift/stuntZones/donut")` (fichier sous extensions/ mais pas une extension classique)
+
+## Classe `C`
+
+Le module renvoie un constructeur : `local obj = require("gameplay_drift_stuntZones_donut")(options)`.
+
+| Méthode | Description | Ligne |
+|---|---|---|
+| `C:accomplish()` |  | 25 |
+| `C:detectStunt()` |  | 39 |
+| `C:init(data)` |  | 20 |
+| `C:isAvailable()` |  | 49 |
+| `C:isPlayerInside()` |  | 53 |
+| `C:onUpdate()` |  | 61 |
+| `C:reset()` |  | 11 |
+| `C:sendDecals()` |  | 68 |
+
+## Hooks émis
+
+Évènements diffusés aux extensions par `extensions.hook` :
+
+- `onAnyStuntZoneAccomplished` — écouté par 3 module(s)
+
+## Appels vers le moteur (C++)
+
+- `debugDrawer:` `drawLineInstance`, `drawTextAdvanced`
+
+---
+*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/drift/stuntZones/donut.lua`.*

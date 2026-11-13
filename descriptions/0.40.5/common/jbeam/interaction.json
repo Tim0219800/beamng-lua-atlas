@@ -1,0 +1,19 @@
+{
+  "path": "lua/common/jbeam/interaction.lua",
+  "module": "Étape de post-traitement jbeam qui charge les fichiers *.interaction.json (dossier /vehicles/common/ puis dossier du véhicule) et en fusionne les groupes d'interaction, catégories d'actions et actions. Produit vehicle.interactionGroups, vehicle.actionCategories et vehicle.inputActions, utilisés ensuite par le système d'actions d'entrée (lua/ge/extensions/core/input/actions.lua d'après le commentaire du code).",
+  "notes": [
+    "Seuls les fichiers dont fileversion vaut 2 sont acceptés ; les autres sont ignorés avec une erreur dans le journal.",
+    "Chaque action reçoit un champ source = nom du fichier qui la définit.",
+    "La fusion se fait par tableMerge : le fichier du véhicule, lu en dernier, surcharge les définitions communes.",
+    "vehicle.components.actionIconOverrides (table nomAction -> icône) remplace l'icône des actions existantes.",
+    "Le module n'est exécuté que là où FS (système de fichiers) est disponible."
+  ],
+  "fields": {},
+  "functions": {
+    "process": {
+      "desc": "Lit les fichiers d'interaction, applique les surcharges d'icônes et stocke les résultats dans vehicle.interactionGroups, vehicle.actionCategories et vehicle.inputActions.",
+      "params": {"vehicle": {"type": "table", "desc": "Données du véhicule (vehicleDirectory requis ; modifiées en place)."}},
+      "internal": true
+    }
+  }
+}

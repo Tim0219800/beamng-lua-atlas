@@ -1,0 +1,83 @@
+{
+  "path": "lua/vehicle/controller/mechanics/beamChain.lua",
+  "module": "Contrôleur de mécanique (type \"auxiliary\") qui relie deux poutres en série : à chaque pas physique, si la somme de leurs longueurs dépasse leur longueur combinée initiale, l'excès est retiré à parts égales des deux (obj:setBeamLength). Utile pour simuler une chaîne ou un câble à deux tronçons. Si l'une des poutres casse, l'autre est cassée aussi et le système se désactive.",
+  "notes": [
+    "Clé jbeam : beamTag (obligatoire), tag de poutre qui doit correspondre à exactement 2 poutres (beamstate.tagBeamMap) ; sinon une erreur est journalisée et le contrôleur reste inactif (update et updateGFX restent nil).",
+    "Le hook beamBroken(id, energy) est appelé par le moteur quand une poutre casse."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "update": {
+      "type": "function|nil",
+      "desc": "Défini à l'init si la configuration est valide."
+    },
+    "updateGFX": {
+      "type": "function|nil",
+      "desc": "Défini (vide) à l'init si la configuration est valide."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Retrouve les deux poutres du tag et mémorise leur longueur combinée.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Réactive la chaîne.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "update": {
+      "desc": "Chaque pas physique : retire l'excès de longueur à parts égales des deux poutres.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Ne fait rien.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "beamBroken": {
+      "desc": "Hook : appelé quand une poutre casse ; si c'est l'une des deux, casse l'autre et désactive la chaîne.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "Identifiant (cid) de la poutre cassée."
+        },
+        "energy": {
+          "type": "number",
+          "desc": "Énergie de rupture."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

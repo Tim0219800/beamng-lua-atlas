@@ -1,0 +1,16 @@
+{
+  "path": "lua/common/jbeam/scaling.lua",
+  "module": "Étape de post-traitement jbeam qui applique les clés « scaleXxx » : pour toute clé numérique nommée scale suivie d'un nom (ex. scaleNodeWeight), multiplie la valeur de la clé voisine Xxx (ex. NodeWeight) par ce facteur, puis supprime la clé scale. Parcourt récursivement toutes les sections de type dictionnaire, sauf celles ignorées par jbeam/utils (ignoreSections).",
+  "notes": [
+    "Le test de la clé est strict : elle doit commencer par 'scale' (minuscules) et avoir au moins un caractère après ; 'scale' seul n'est pas traité.",
+    "Si la clé cible n'existe pas ou n'est pas un nombre, la clé scale est quand même supprimée sans effet."
+  ],
+  "fields": {},
+  "functions": {
+    "process": {
+      "desc": "Applique les clés scaleXxx sur tout le véhicule (en place).",
+      "params": {"vehicle": {"type": "table", "desc": "Données jbeam du véhicule."}},
+      "internal": true
+    }
+  }
+}

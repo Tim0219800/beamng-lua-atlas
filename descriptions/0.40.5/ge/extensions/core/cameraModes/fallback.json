@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/fallback.lua",
+  "module": "Caméra-filtre globale (isGlobal, isFilter, hidden, runningOrder 0.6) qui garantit que data.res.pos et data.res.rot sont définis : si aucune caméra n'a donné de position ou de rotation, elle prend la position du véhicule (data.pos) et la direction vers data.pos. Le module renvoie un constructeur : local cam = require('core/cameraModes/fallback')(options).",
+  "notes": ["Tous les modes de caméra suivent ce schéma : constructeur renvoyant un objet de classe C avec C:init() et C:update(data) ; data est la table camData construite par core_cameraUpdate (data.res = résultat pos/rot/fov/targetPos/nearClip, data.dt, data.veh, data.pos...)."],
+  "classes": {
+    "C": {
+      "desc": "Classe du mode de caméra fallback.",
+      "functions": {
+        "init": {"desc": "Définit isGlobal=true, runningOrder=0.6, isFilter=true, hidden=true.", "internal": true},
+        "update": {"desc": "Complète data.res.pos et data.res.rot s'ils sont nil.", "params": {"data": {"type": "table", "desc": "camData de l'image"}}, "internal": true}
+      }
+    }
+  }
+}

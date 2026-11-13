@@ -1,0 +1,26 @@
+{
+  "path": "lua/ge/extensions/scenario/raceMarkers/noneMarker.lua",
+  "module": "Marqueur de checkpoint « vide » : il implémente l'interface commune des marqueurs de course (init, update, setToCheckpoint, setMode, setVisibility, hide, show, createMarkers, clearMarkers) sans rien afficher. Sert à désactiver les marqueurs visuels. Le module renvoie un constructeur : require('scenario/raceMarkers/noneMarker')(id) donne un objet de la classe C.",
+  "notes": [
+    "C:init n'enregistre pas l'identifiant : self.id reste nil. Utilisé via scenario_race_marker.createRaceMarker (qui range le marqueur dans idToMarker[marker.id]), cela produit une clé nil et une erreur Lua : probable bug.",
+    "Toutes les méthodes sont vides, sauf hide et show qui appellent setVisibility (vide)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Marqueur sans effet visuel, interface identique aux autres marqueurs de course.",
+      "functions": {
+        "init": {"desc": "Constructeur appelé par le module : ne fait rien (l'id n'est pas mémorisé).", "params": {"id": {"type": "integer", "desc": "Identifiant de marqueur (ignoré)."}}, "internal": true},
+        "update": {"desc": "Appel par image : ne fait rien.", "params": {}, "internal": true},
+        "setToCheckpoint": {"desc": "Ne fait rien.", "params": {"wp": {"type": "table", "desc": "Données de checkpoint (ignorées)."}, "mode": {"type": "string|nil", "desc": "Ignoré."}}},
+        "setMode": {"desc": "Ne fait rien.", "params": {"mode": {"type": "string", "desc": "Ignoré."}}},
+        "setVisibility": {"desc": "Ne fait rien.", "params": {"v": {"type": "boolean", "desc": "Ignoré."}}},
+        "hide": {"desc": "Appelle setVisibility(false).", "params": {}},
+        "show": {"desc": "Appelle setVisibility(true).", "params": {}},
+        "createMarkers": {"desc": "Ne crée aucun objet.", "params": {}},
+        "clearMarkers": {"desc": "Ne supprime rien.", "params": {}}
+      }
+    }
+  }
+}

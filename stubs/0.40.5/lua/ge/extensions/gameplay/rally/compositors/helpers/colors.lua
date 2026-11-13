@@ -1,0 +1,56 @@
+---@meta
+-- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/compositors/helpers/colors.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
+-- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
+
+--- Accès : extension `gameplay_rally_compositors_helpers_colors` : `extensions.load("gameplay_rally_compositors_helpers_colors")`, puis la globale `gameplay_rally_compositors_helpers_colors`
+---@class gameplay_rally_compositors_helpers_colors
+---@field black string
+---@field blue500 string
+---@field blue600 string
+---@field careBg any
+---@field careIcon any
+---@field careStroke string
+---@field cautionBg any
+---@field cautionIcon any
+---@field cautionStroke string
+---@field cutBg any
+---@field cutStroke any
+---@field deepBlue string
+---@field deepCrimson string
+---@field deepCyan string
+---@field deepGold string
+---@field deepGreen string
+---@field deepOrange string
+---@field dontCutBg any
+---@field dontCutStroke any
+---@field doubleCautionBg any
+---@field doubleCautionIcon any
+---@field doubleCautionStroke string
+---@field green500 string
+---@field green600 string
+---@field iconAndTextDefault any
+---@field indigoblue650 string
+---@field indigoblue750 string
+---@field mainPaletteFg any
+---@field modifierBg string
+---@field modifierStroke string
+---@field neonBlue string
+---@field neonCrimson string
+---@field neonCyan string
+---@field neonGold string
+---@field neonGreen string
+---@field neonOrange string
+---@field offBlack string
+---@field offWhite string
+---@field orange string
+---@field orange500 string
+---@field peach300 string
+---@field peach400 string
+---@field red550 string
+---@field red650 string
+---@field red750 string
+---@field white string
+---@field yellow400 string
+---@field yellow500 string
+gameplay_rally_compositors_helpers_colors = {}
+

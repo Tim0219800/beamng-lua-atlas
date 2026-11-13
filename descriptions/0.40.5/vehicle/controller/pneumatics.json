@@ -1,0 +1,180 @@
+{
+  "path": "lua/vehicle/controller/pneumatics.lua",
+  "module": "Contrôleur auxiliaire de suspension/vérins pneumatiques simples (type \"auxiliary\") : il pilote la pression de poutres « pressurées » (obj:setBeamPressureRel) regroupées en groupes nommés, avec niveaux de pression nommés (minPressure, maxPressure, defaultPressure…), vitesses de montée/descente et sons de gonflage/dégonflage. Contrairement à pneumatics/actuators, aucune physique de gaz ni réservoir n'est modélisée : la pression suit simplement la cible à vitesse limitée. Les fonctions publiques s'appellent depuis des entrées ou d'autres contrôleurs avec une liste de noms de groupes.",
+  "usage": "local p = controller.getControllerSafe('pneumatics')\np.setBeamMax({\"suspension\"})        -- gonfle au maximum\np.setBeamPressure({\"suspension\"}, 30) -- 30 PSI brut",
+  "notes": [
+    "Unités : les pressions du jbeam et des fonctions sont en PSI ; la conversion en pascals (1 PSI = 6894.757 Pa) est faite en interne pour obj:setBeamPressureRel.",
+    "Clés jbeam du contrôleur : pressuredBeams (nom de la table de v.data qui liste les poutres ; chaque entrée contient beamName, groupName et éventuellement des champs se terminant par « Pressure » (niveaux propres), increaseRate, decreaseRate), pressureLevels (table d'en-tête name/pressure pour des niveaux communs ; minPressure et maxPressure valent 0 par défaut), increaseRate (0), decreaseRate (0) en PSI/s, groupSounds (nom de table de v.data pour les sons : groupName, node, volumeUp, volumeDown, soundUp, soundDown, stopVelocityThresholdPressureIncrease, stopVelocityThresholdPressureDecrease).",
+    "Champs de poutre lus sur la poutre elle-même : name, pressurePSI (pression par défaut), maxPressure, beamSpring, beamDamp.",
+    "Si un taux increaseRate/decreaseRate vaut 0, la pression ne bouge pas.",
+    "Les sons s'arrêtent soit quand la pression a atteint sa cible, soit quand la vitesse moyenne des poutres repasse sous un seuil (si défini). Les appels de son échouent si un groupe n'a pas de sons définis (soundLoopUp/soundLoopDown nil), déduit du code."
+  ],
+  "fields": {
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
+  },
+  "functions": {
+    "init": {
+      "desc": "Construit les groupes de poutres à partir des tables jbeam et des niveaux de pression.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "initSounds": {
+      "desc": "Crée les sources sonores de montée/descente de chaque groupe. Appelé par le gestionnaire de contrôleurs.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Données jbeam du contrôleur."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Remet toutes les poutres à leur pression par défaut.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "resetSounds": {
+      "desc": "Coupe le volume des sons et réinitialise leur état.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Chaque image : applique les augmentations/diminutions momentanées, fait avancer la pression courante vers la cible à vitesse limitée et gère l'arrêt des sons.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Pas de temps (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setBeamMin": {
+      "desc": "Cible la pression minimale (minPressure) des groupes.",
+      "params": {
+        "groupNames": {
+          "type": "string[]",
+          "desc": "Noms de groupes de poutres (groupName de la table des poutres sous pression)."
+        }
+      },
+      "returns": []
+    },
+    "setBeamMax": {
+      "desc": "Cible la pression maximale (maxPressure) des groupes.",
+      "params": {
+        "groupNames": {
+          "type": "string[]",
+          "desc": "Noms de groupes de poutres (groupName de la table des poutres sous pression)."
+        }
+      },
+      "returns": []
+    },
+    "setBeamDefault": {
+      "desc": "Cible la pression par défaut (defaultPressure) des groupes.",
+      "params": {
+        "groupNames": {
+          "type": "string[]",
+          "desc": "Noms de groupes de poutres (groupName de la table des poutres sous pression)."
+        }
+      },
+      "returns": []
+    },
+    "setBeamPressure": {
+      "desc": "Fixe directement la pression cible des groupes, bornée par le min et le max de chaque poutre.",
+      "params": {
+        "groupNames": {
+          "type": "string[]",
+          "desc": "Noms de groupes de poutres (groupName de la table des poutres sous pression)."
+        },
+        "pressure": {
+          "type": "number",
+          "desc": "Pression cible en PSI."
+        }
+      },
+      "returns": []
+    },
+    "setBeamPressureLevel": {
+      "desc": "Cible un niveau de pression nommé (clé de poutre, ex. \"maxPressure\" ou un niveau défini dans pressureLevels).",
+      "params": {
+        "groupNames": {
+          "type": "string[]",
+          "desc": "Noms de groupes de poutres (groupName de la table des poutres sous pression)."
+        },
+        "pressureName": {
+          "type": "string",
+          "desc": "Nom du niveau de pression."
+        }
+      },
+      "returns": []
+    },
+    "toggleBeamMinMax": {
+      "desc": "Pour chaque groupe : passe au minimum si tout est au maximum, sinon au maximum.",
+      "params": {
+        "groupNames": {
+          "type": "string[]",
+          "desc": "Noms de groupes de poutres (groupName de la table des poutres sous pression)."
+        }
+      },
+      "returns": []
+    },
+    "setBeamMomentaryIncrease": {
+      "desc": "Active/désactive l'augmentation continue de pression des groupes (tant que enabled est vrai) ; désactive la diminution.",
+      "params": {
+        "groupNames": {
+          "type": "string[]",
+          "desc": "Noms de groupes de poutres (groupName de la table des poutres sous pression)."
+        },
+        "enabled": {
+          "type": "boolean",
+          "desc": "Vrai pour augmenter."
+        }
+      },
+      "returns": []
+    },
+    "setBeamMomentaryDecrease": {
+      "desc": "Active/désactive la diminution continue de pression des groupes ; désactive l'augmentation.",
+      "params": {
+        "groupNames": {
+          "type": "string[]",
+          "desc": "Noms de groupes de poutres (groupName de la table des poutres sous pression)."
+        },
+        "enabled": {
+          "type": "boolean",
+          "desc": "Vrai pour diminuer."
+        }
+      },
+      "returns": []
+    },
+    "isBeamGroupAtPressureLevel": {
+      "desc": "Indique si toutes les poutres d'un groupe sont exactement au niveau de pression nommé.",
+      "params": {
+        "groupName": {
+          "type": "string",
+          "desc": "Nom du groupe."
+        },
+        "levelName": {
+          "type": "string",
+          "desc": "Nom du niveau (ex. \"maxPressure\")."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Vrai si le groupe est à ce niveau ; false aussi si le groupe n'existe pas."
+        }
+      ]
+    }
+  }
+}

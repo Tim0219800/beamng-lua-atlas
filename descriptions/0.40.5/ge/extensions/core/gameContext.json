@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/core/gameContext.lua",
+  "module": "Extension GE `core_gameContext` : petit relais vers `gameplay_markerInteraction` (contexte de jeu courant) et vers l'UI (changement de mission en avant-plan). Fournit aussi le libellé d'avertissement « expérimental » affiché pour la carrière et les missions de rallye.",
+  "notes": [
+    "getGameContext charge gameplay_markerInteraction à la demande et renvoie son contexte ; renvoie {} si l'extension n'est pas disponible. Le contenu du contexte est défini dans gameplay_markerInteraction.",
+    "toggleMenues est une fonction vide (corps vide) : probablement un reste de code.",
+    "getWIPWarningLabel suppose que gameplay_missions_missionManager, gameplay_missions_missions et career_career sont chargées (sinon erreur Lua)."
+  ],
+  "functions": {
+    "getGameContext": {
+      "desc": "Renvoie le contexte de jeu fourni par gameplay_markerInteraction.getGameContext(...) en chargeant l'extension si besoin.",
+      "params": {"...": {"type": "any", "desc": "Arguments transmis tels quels à gameplay_markerInteraction.getGameContext."}},
+      "returns": [{"type": "table", "desc": "Contexte de jeu, ou {} si l'extension est indisponible."}]
+    },
+    "getWIPWarningLabel": {
+      "desc": "Clé de traduction du bandeau « expérimental » : 'ui.rally.experimentalWarning' si la mission de premier plan est de type rallyStage, rallyLoop ou rallyLoop2 et que le réglage rallyHideExperimentalBanner est faux ; 'ui.career.experimentalWarning' si la carrière est active ; sinon nil.",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "Clé de traduction ou nil."}]
+    },
+    "onAnyMissionChanged": {
+      "desc": "Hook appelé quand l'état d'une mission change : transmet à l'UI l'évènement guihooks 'onAnyMissionChanged' (state, id de la mission).",
+      "params": {
+        "state": {"type": "string", "desc": "Nouvel état de la mission (valeur définie par le gestionnaire de missions)."},
+        "mission": {"type": "table|nil", "desc": "Mission concernée ; seul mission.id est envoyé."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "toggleMenues": {
+      "desc": "Ne fait rien (fonction vide).",
+      "params": {},
+      "returns": []
+    }
+  }
+}

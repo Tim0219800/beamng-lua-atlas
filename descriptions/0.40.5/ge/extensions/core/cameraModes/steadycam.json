@@ -1,0 +1,24 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/steadycam.lua",
+  "module": "Steadycam : caméra à pied à la première personne du groupe « world » (ordre 30, après free et smoothFree, masquée). Marche aux touches de déplacement, regard à la souris, course avec le modificateur rapide, saut avec la barre d'espace (action map « Steadycam »). Gravité et rayon vers le bas gardent l'opérateur au sol (marches jusqu'à 0.4 m franchies, plus haut = mur, chute plus basse = il tombe). Avec groundWalk = false, c'est un vol vertical libre. Balancement de marche via le filtre bobbing. Renvoie un constructeur.",
+  "notes": ["Constantes : vitesse de marche 2.45 m/s (réglable 1 à 12), course x2, gravité 14 m/s2, saut 5.5 m/s (environ 1.1 m), rayon du corps 0.35 m, hauteur des yeux 1.7 m (réglage cameraSteadycamEyeHeight, 1.0 à 2.5), FOV réglage cameraSteadycamFov (60).", "Sans sol sous la caméra (vide), elle flotte au lieu de tomber indéfiniment.", "data.res.collisionCompatible = false."],
+  "classes": {
+    "C": {
+      "desc": "Mode steadycam. Champs : pos (vec3 yeux), yaw, pitch (radians), vel, vz, grounded, walkSpeed, groundWalk, eyeHeight, manualzoom, bobbing.",
+      "functions": {
+        "init": {"desc": "Définit groupe, constantes de sensation et crée zoom et bobbing.", "internal": true},
+        "onSettingsChanged": {"desc": "Hook : relit hauteur des yeux, FOV et réglages de bobbing.", "internal": true},
+        "reset": {"desc": "Annule vitesses, saut et état au sol, réinitialise bobbing et zoom."},
+        "setPosition": {"desc": "Place la caméra (alimenté à l'entrée du groupe de caméras pour ne pas sauter) et annule la vitesse.", "params": {"p": {"type": "vec3", "desc": "position des yeux monde"}}},
+        "setRotation": {"desc": "Oriente le regard depuis un quaternion (la caméra regarde vers +Y).", "params": {"q": {"type": "quat", "desc": "orientation monde"}}},
+        "setFOV": {"desc": "Fixe le FOV configuré (10 à 140).", "params": {"fov": {"type": "number|nil", "desc": "degrés"}}},
+        "onCameraChanged": {"desc": "Hook : pousse l'action map « Steadycam » au gain de focus et la retire à la perte.", "params": {"focused": {"type": "boolean", "desc": "vrai si le mode prend le focus"}}, "internal": true},
+        "listParams": {"desc": "Réglages UI : height, walkSpeed, walkBob, standingBob, groundWalk, fov.", "returns": [{"type": "table[]", "desc": "descripteurs"}]},
+        "setParam": {"desc": "Modifie un réglage de listParams.", "params": {"key": {"type": "string", "desc": "height, walkSpeed, walkBob, standingBob, groundWalk, fov"}, "value": {"type": "any", "desc": "nouvelle valeur"}}},
+        "serialize": {"desc": "État pour les vues flux vidéo.", "returns": [{"type": "table", "desc": "{fov, height, walkSpeed, walkBob, standingBob, groundWalk}"}]},
+        "deserialize": {"desc": "Restaure l'état (accepte l'ancienne clé bob).", "params": {"s": {"type": "table", "desc": "table de serialize"}}},
+        "update": {"desc": "Intègre regard, marche, gravité, saut et écrit data.res (pos, rot, fov, targetPos 10 m devant).", "params": {"data": {"type": "table", "desc": "camData"}}, "returns": [{"type": "boolean", "desc": "true"}], "internal": true}
+      }
+    }
+  }
+}

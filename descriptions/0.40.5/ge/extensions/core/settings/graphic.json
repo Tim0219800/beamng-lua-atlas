@@ -1,0 +1,136 @@
+{
+  "path": "lua/ge/extensions/core/settings/graphic.lua",
+  "module": "Réglages graphiques : mode d'affichage (fenêtre, plein écran, sans bordure), résolution, fréquence, pilote d'affichage, HDR, anti-crénelage, upscaling, groupes de qualité (maillages, textures, éclairage, ombres, terrain, nuages, reflets et rétroviseurs dynamiques, éclairage clustered), post-traitement (DOF, flou de mouvement, SSAO, SSR, ombres écran) et préréglages globaux (settingsPresets.json). Il fournit à core_settings_settings les « option helpers » (get/set) de ces réglages et applique l'état vidéo au Canvas. Un moddeur l'utilise surtout via core_settings_settings.setValue ; setPresetOverride permet d'imposer temporairement un préréglage.",
+  "usage": "-- imposer le préréglage 'Low' sans changer le choix sauvegardé\ncore_settings_graphic.setPresetOverride({name = 'Low', enforce = true})\n-- relâcher\ncore_settings_graphic.setPresetOverride(nil)",
+  "notes": [
+    "Le fichier est très gros (plus de 2000 lignes) : l'essentiel est dans buildOptionHelpers, qui renvoie une table dont les clés sont : GraphicDisplayModes, GraphicDisplayResolutions, GraphicDisplayRefreshRates, GraphicDisplayDriver, GraphicGPU, WindowPlacement, uiUpscaling, vulkanEnabled, GraphicHDRSupported/Enabled/PaperWhiteNits/PeakWhiteNits/UiMultiplier/OutputModeName, GraphicEVCompensation, vsync, GraphicAntialiasType, GraphicUpscalingQuality, GraphicUpscalingSharpness, GraphicAntialias, GraphicAnisotropic, GraphicPlatformPreset, GraphicOverallQuality, GraphicMeshQuality, GraphicTerrainQuality, GraphicTextureQuality, GraphicLightingQuality, GraphicShadowsQuality, GraphicDynReflectionQuality, GraphicDynReflectionFacesPerupdate, GraphicDynMirrorsQuality, GraphicCloudsQuality, PostFXDOFGeneralEnabled, PostFXMotionBlurEnabled/Strength/PlayerVehicle, PostFXSSAOGeneralEnabled/Quality, PostFXSpecularOcclusionEnabled, PostFXSSRAvailable/Enabled/Quality, PostFXScreenSpaceShadowsAvailable/Enabled, GraphicGrassDensity, GraphicMaxDecalCount, lastSplitCastersEnabled, vehicleShadowEnabled, GraphicClusteredQuality.",
+    "Les groupes de qualité utilisent core_settings_graphicsQualityGroup avec les modules lightingQuality, shadowsQuality, textureQuality, meshQuality et terrainQuality ; clusteredQuality et dynCaptureQuality sont appelés directement.",
+    "autoDetectApplyGraphicsQuality est vide (tout le corps est commenté, avec un TODO de 2021) : appeler cette fonction ne fait rien. openMonitorConfiguration est aussi vide.",
+    "Dans onInitSettings, le réglage de Vulkan depuis les settings est désactivé par un 'if false'.",
+    "Les clés PostFXDOFGeneralEnabled et PostFXMotionBlur* gardent la valeur de l'utilisateur quand un préréglage de plateforme est appliqué (platformPresetUserOwnedKeys).",
+    "setPresetOverride : tant qu'un override est actif, le choix GraphicOverallQuality sauvegardé peut changer mais reste non appliqué ; avec enforce, les valeurs du préréglage sont ré-imposées à chaque changement de réglages."
+  ],
+  "fields": {
+    "triggered_manual_save": {"type": "boolean|nil", "desc": "Garde anti-réentrance de applyGraphicsState."},
+    "appliedChanges": {"type": "boolean|nil", "desc": "Vrai quand applyGraphicsState vient de s'exécuter ; remis à false à la sortie du menu options graphiques."},
+    "skipWindowPlacementRestore": {"type": "boolean|nil", "desc": "Si vrai, applyGraphicsState redimensionne la fenêtre à la résolution choisie au lieu de restaurer la position sauvegardée."},
+    "selected_displayMode": {"type": "string", "desc": "Dernier mode d'affichage connu (Window, Fullscreen, Borderless)."},
+    "selected_displayDriver": {"type": "string", "desc": "Dernier pilote d'affichage connu."},
+    "selected_resolution": {"type": "string", "desc": "Dernière résolution connue."},
+    "selected_refreshRate": {"type": "number|string", "desc": "Dernière fréquence connue."},
+    "current_windowPlacement": {"type": "string", "desc": "Dernier placement de fenêtre connu."}
+  },
+  "functions": {
+    "buildOptionHelpers": {
+      "desc": "Construit et mémorise la table des options graphiques (get/set/getModes et éventuellement sanitize, init, onSettingsChanged par option). Appelée par core_settings_settings.initSettings.",
+      "params": {},
+      "returns": [{"type": "table<string, table>", "desc": "Helpers par nom de réglage."}],
+      "internal": true
+    },
+    "onInitSettings": {
+      "desc": "Hook appelé par core_settings_settings.initSettings : appelle init(valeur) sur chaque option graphique qui en possède, avec la valeur lue.",
+      "params": {"data": {"type": "table<string, any>", "desc": "Valeurs lues des réglages."}},
+      "returns": [],
+      "internal": true
+    },
+    "onFirstUpdateSettings": {
+      "desc": "Hook appelé à la fin de l'initialisation des réglages : si $forceFullscreen est vrai, force les réglages par défaut en plein écran ; affiche la fenêtre (canvas:showWindow), collecte les informations d'affichage et nettoie le type d'anti-crénelage. Sans effet si le Canvas n'existe pas.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "refreshGraphicsState": {
+      "desc": "Synchronise l'état interne (mode, pilote, résolution, fréquence, placement de fenêtre) avec un nouvel état de réglages, nettoie les valeurs invalides (sanitize), notifie l'UI et émet le hook onDisplayModeChanged(ancienMode, nouveauMode) si le mode a changé. Un changement de WindowPlacement est sauvegardé tout de suite.",
+      "params": {"newState": {"type": "table<string, any>", "desc": "Réglages contenant GraphicDisplayDriver, GraphicDisplayModes, GraphicDisplayResolutions, GraphicDisplayRefreshRates, WindowPlacement (tous facultatifs)."}},
+      "returns": [],
+      "internal": false
+    },
+    "applyGraphicsState": {
+      "desc": "Applique au moteur le mode vidéo choisi : demande la sauvegarde, règle le périphérique d'affichage (GFXDevice.setDisplayDevice) et le mode vidéo (largeur, hauteur, fréquence, mode), applique le HDR, restaure la position de fenêtre, puis règle le mode de rendu (SingleMonitor ou MultiMonitor selon GraphicTripleMonitorEnabled et les FOV triple écran). Ignoré si déjà en cours, ou si le Canvas est absent (après la demande de sauvegarde).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "load": {
+      "desc": "Appelé par core_settings_settings.load : refreshGraphicsState(newState) puis applyGraphicsState().",
+      "params": {"newState": {"type": "table<string, any>", "desc": "Réglages complets."}},
+      "returns": [],
+      "internal": true
+    },
+    "onUiChangedState": {
+      "desc": "Hook de changement d'état de l'UI. À l'entrée dans 'menu.options.graphics', mémorise l'état d'affichage ; à la sortie, si les changements n'ont pas été appliqués, rétablit l'ancien mode, résolution et fréquence.",
+      "params": {
+        "toState": {"type": "string", "desc": "Nouvel état."},
+        "fromState": {"type": "string", "desc": "Ancien état."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onSettingsChanged": {
+      "desc": "Appelé après chaque sauvegarde des réglages. Avec un override actif : ré-impose le préréglage si enforce, sinon ne fait rien. Sans override : relance GraphicPlatformPreset.onSettingsChanged et GraphicOverallQuality.onSettingsChanged.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook de mise à jour : décompte les minuteurs différés pour l'échelle de rendu (render scale) et le mode de sortie HDR, puis les applique à l'expiration.",
+      "params": {"dtReal": {"type": "number|nil", "desc": "Durée réelle de l'image en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "toggleFullscreen": {
+      "desc": "Bascule plein écran/fenêtre sur le Canvas (canvas:toggleFullscreen) s'il existe.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "openMonitorConfiguration": {
+      "desc": "Corps vide : ne fait rien.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "openCoconutWindow": {
+      "desc": "Ouvre la fenêtre de debug « Coconut » du rendu (Engine.Render.setCoconutWindowOpen(true)). Sans effet dans un build shipping.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "autoDetectApplyGraphicsQuality": {
+      "desc": "Prévu pour choisir automatiquement une qualité selon la mémoire vidéo ; entièrement commenté dans le code, donc inactif.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "getOptions": {
+      "desc": "Renvoie un helper d'option précis ou toute la table des options graphiques.",
+      "params": {"optionName": {"type": "string|nil", "desc": "Nom de l'option (ex. 'GraphicDisplayModes'). nil = toute la table."}},
+      "returns": [{"type": "table|nil", "desc": "Helper de l'option, ou table complète."}],
+      "internal": false
+    },
+    "getDisplayInformation": {
+      "desc": "Renvoie les informations d'affichage collectées au démarrage (GPU, écrans…) pour l'UI.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Informations d'affichage (structure déduite de gatherDisplayInformation)."}],
+      "internal": false
+    },
+    "setPresetOverride": {
+      "desc": "Impose un préréglage global sans modifier le choix GraphicOverallQuality sauvegardé. Passer nil libère l'override et restaure le préréglage sauvegardé. Avec enforce = true, les valeurs sont ré-imposées à chaque changement de réglages.",
+      "params": {"override": {"type": "{name: string, enforce: boolean}|nil", "desc": "name = nom d'un préréglage de settingsPresets.json."}},
+      "returns": [{"type": "boolean", "desc": "false si le préréglage est introuvable, sinon true."}],
+      "internal": false
+    },
+    "getPresetOverride": {
+      "desc": "Renvoie l'override de préréglage actif.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "{name, enforce} ou nil."}],
+      "internal": false
+    },
+    "getOverallQualityPresets": {
+      "desc": "Renvoie la table des préréglages globaux lue dans lua/ge/extensions/core/settings/settingsPresets.json.",
+      "params": {},
+      "returns": [{"type": "table<string, table>", "desc": "Préréglages par nom."}],
+      "internal": false
+    }
+  }
+}

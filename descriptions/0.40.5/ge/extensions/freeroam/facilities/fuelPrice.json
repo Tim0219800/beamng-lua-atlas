@@ -1,0 +1,46 @@
+{
+  "path": "lua/ge/extensions/freeroam/facilities/fuelPrice.lua",
+  "module": "Génère les prix du carburant des stations-service du niveau et les affiche sur les panneaux à afficheurs 7 segments de la scène. Au démarrage du niveau, pour chaque station ayant `prices`, calcule un prix (base + aléa) et remplace les objets d'affichage par des copies TSStatic des chiffres (`art/shapes/quarter_mile_display/display_<c>.dae`). Se décharge tout seul si aucune donnée de prix. Global : freeroam_facilities_fuelPrice.",
+  "notes": [
+    "Prix = priceBaseline + priceRandomnessGain * (random() - priceRandomnessBias) quand gain et bias sont fournis. Un carburant `disabled` affiche « - » sur les afficheurs.",
+    "getFuelPrice renvoie toujours le prix métrique (par litre) ; pour l'affichage, si l'unité locale du niveau (localUnits) est gallonUS, le prix est multiplié par 3.78541. Le prix est formaté « %.3f » sans point ; us_9_10_tax force le 4e chiffre à 9.",
+    "Les objets d'affichage d'origine sont cachés ; les copies sont dans le SimGroup `fuelPrice_localCopies` (non sauvegardé).",
+    "restoreSign(hide) supprime les copies et remet les formes d'origine (display_8.dae) ; appelle pairs(cachedPriceData) sans test de nil, donc erreur si les prix n'ont jamais été générés.",
+    "Dans _set7CharDisplay, le chiffre est composé avec le caractère issu de la chaîne de prix ; si un objet est introuvable, l'erreur est loggée (tag setPrices)."
+  ],
+  "functions": {
+    "onSerialize": {
+      "desc": "Appelé avant un rechargement Lua : sauvegarde cachedPriceData, le niveau courant et l'unité locale.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{cachedPriceData, currentLevel, levelUnit}"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Appelé après rechargement Lua : restaure les prix si on est dans le même niveau, sinon régénère les prix (onClientStartMission).",
+      "params": {"data": {"type": "table", "desc": "Table renvoyée par onSerialize."}},
+      "internal": true
+    },
+    "onClientStartMission": {
+      "desc": "Hook au démarrage du niveau : appelle setDisplayPrices ; s'il n'y a pas de données de prix, décharge l'extension.",
+      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau (non utilisé)."}},
+      "internal": true
+    },
+    "setDisplayPrices": {
+      "desc": "Calcule les prix de toutes les stations du niveau courant et met à jour les afficheurs.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si au moins un prix a été généré."}],
+      "internal": false
+    },
+    "getFuelPrice": {
+      "desc": "Prix courant (unité métrique) d'un carburant dans une station.",
+      "params": {"stationId": {"type": "string", "desc": "Id de la station."}, "fuelType": {"type": "string", "desc": "Type d'énergie (ex. gasoline, diesel)."}},
+      "returns": [{"type": "number|nil", "desc": "Prix ou nil."}],
+      "internal": false
+    },
+    "restoreSign": {
+      "desc": "Supprime les copies de chiffres et restaure les panneaux d'origine (afficheur 8), éventuellement cachés. Utile avant de déplacer un panneau dans l'éditeur.",
+      "params": {"hide": {"type": "boolean|nil", "desc": "true = cacher les panneaux d'origine."}},
+      "internal": false
+    }
+  }
+}

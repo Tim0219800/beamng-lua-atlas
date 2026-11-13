@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/crash.lua",
+  "module": "Caméra de rediffusion d'accident (masquée). Selon camMode : 1 = caméra proche au-dessus du point d'impact (hitPoint + camOffset, fov 50) ; 2 = caméra fixe au sol à environ 10-20 m du point d'impact (fov aléatoire 20-25). Si veh2Id est fourni et que le conducteur du second véhicule regarde le premier, démarre en vue cockpit (fov 40) jusqu'à ce que les boîtes englobantes se touchent. Renvoie un constructeur.",
+  "classes": {
+    "C": {
+      "desc": "Caméra de crash. Champs : camMode, veh1Id, veh2Id, hitPoint, camOffset, camPos, fov, cockpitView.",
+      "functions": {
+        "init": {"desc": "camMode = 1, hidden = true, cockpitView = false."},
+        "setCustomData": {"desc": "Configure la prise de vue (appelé lors du choix de la caméra globale).", "params": {"data": {"type": "table", "desc": "veh1Id (véhicule touché), veh2Id (optionnel), camMode (1|2), hitPoint (vec3), camOffset (vec3, mode 1)"}}},
+        "update": {"desc": "Écrit data.res.pos / rot / fov selon le mode.", "params": {"data": {"type": "table", "desc": "camData"}}, "returns": [{"type": "boolean", "desc": "toujours true"}], "internal": true}
+      }
+    }
+  },
+  "notes": ["update ne vérifie pas que veh1Id existe (erreur Lua si le véhicule disparaît)."]
+}

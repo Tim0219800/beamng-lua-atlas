@@ -1,0 +1,99 @@
+{
+  "path": "lua/ge/extensions/core/lapTimes.lua",
+  "module": "Extension GE `core_lapTimes` : prépare pour l'UI (appli de temps au tour) les chronos d'une course du système de course « race » : temps courant, tour et segment courants, historique des tours et segments, meilleurs temps, écarts au précédent/meilleur. Elle est alimentée par les fonctions update*FromRace(race, playerId) appelées par le moteur de course, mémorise les résultats dans quatre tables (rapide, lente, statique, placements) et les envoie à l'UI dans onUpdate sous forme de streams guihooks `lapTimes_fast`, `lapTimes_slow`, `lapTimes_static`, `lapTimes_placement`.",
+  "notes": [
+    "Statut : 'stopped', 'started', 'paused', 'complete' (déduit de race.suspended, race.started, state.complete dans updateSlowFromRace).",
+    "Format des temps : formatTime(s) donne 'MM:SS.mmm' (minutes sur 2 chiffres min., millisecondes tronquées) ; avec addSign true, un '+' ou '-' est ajouté (écarts). getDiffFlavor renvoie 'worse' (>0, plus lent), 'better' (<0), 'same' (=0) ; dans les streams les valeurs sans écart ont le flavor 'default'.",
+    "Données lues dans race : race.time, race.suspended, race.started, race.lapCount, race.path.pathnodes.sorted (segments), race.path.config.closed, race.states[playerId] avec startTime, endTime, complete, currentLap (0-based), currentTimes[] (segments du tour en cours), historicTimes[] (tours finis : lap, beginTime, endTime, duration, segmentTimes[]). Les temps sont en secondes.",
+    "Stream rapide : currentTime (depuis state.startTime), currentLapTime, currentSegmentTime et leurs versions *Formatted. Stream lent : status, currentLap/currentSegment (1-based), bestLapTimeFormatted, bestLapIndex, bestSegmentTimesFormatted, lapTimes, segmentTimes, combinedTimes. Stream statique : totalLaps, totalSegments, closedCircuit. Stream de placement : placements, order (laissés vides).",
+    "Un tour/segment n'est marqué 'best' que si plusieurs tours/instances existent à comparer.",
+    "Incohérences : les champs currentLapDiffToBest*, currentLapDiffToPrevious*, currentSegmentDiffTo* du stream rapide sont toujours mis à nil (jamais calculés) ; updatePlacementFromRace ne construit rien (TODO dans le code) ; la configuration de la fermeture du circuit n'est pas lue au même endroit selon le chemin : onRaceStart(meta) lit meta.pathConfig.isClosed, newRaceStart et updateStaticFromRace lisent race.path.config.closed ; la liste de fonctions automatique signale onRaceStart(), mais c'est une fonction locale vide non exportée définie en fin de fichier (de même que onRaceWaypointReached et onRaceResult) : le vrai M.onRaceStart est celui qui prend meta ; le paramètre playerId de updateStaticFromRace et updatePlacementFromRace n'est pas utilisé."
+  ],
+  "functions": {
+    "initialize": {
+      "desc": "Réinitialise tout l'état (statut 'stopped', tours, segments, meilleurs temps, tables de streams) et demande un envoi complet des quatre streams à l'UI.",
+      "params": {},
+      "returns": []
+    },
+    "formatTime": {
+      "desc": "Formate un temps en secondes au format MM:SS.mmm ; avec addSign, préfixe '+' (>= 0) ou '-' pour les écarts.",
+      "params": {
+        "timeInSeconds": {"type": "number|nil", "desc": "Temps en secondes (négatif accepté avec addSign)."},
+        "addSign": {"type": "boolean|nil", "desc": "true = ajoute le signe."}
+      },
+      "returns": [{"type": "string|nil", "desc": "Texte formaté ; nil si timeInSeconds est nil."}]
+    },
+    "getDiffFlavor": {
+      "desc": "Qualifie un écart de temps pour l'affichage.",
+      "params": {"val": {"type": "number", "desc": "Écart en secondes (positif = plus lent)."}},
+      "returns": [{"type": "string", "desc": "'worse', 'better' ou 'same'."}]
+    },
+    "setConfiguration": {
+      "desc": "Met à jour totalLaps, totalSegments et closedCircuit pour les champs présents dans config.",
+      "params": {"config": {"type": "table", "desc": "{totalLaps?, totalSegments?, closedCircuit?}."}},
+      "returns": []
+    },
+    "onRaceStart": {
+      "desc": "Démarre le suivi d'une course : appelle initialize puis lit le nombre de tours et de segments dans meta, passe le statut à 'started' et demande l'envoi des quatre streams. Sans effet si meta est nil.",
+      "params": {"meta": {"type": "table", "desc": "{totalLaps, totalSegments, pathConfig = {isClosed}}."}},
+      "returns": []
+    },
+    "onRaceStop": {
+      "desc": "Passe le statut à 'stopped' et demande l'envoi des quatre streams.",
+      "params": {},
+      "returns": []
+    },
+    "newRaceStart": {
+      "desc": "Hook du nouveau système de course : configure totalLaps, totalSegments (nombre de pathnodes triés) et closedCircuit à partir de l'objet race.",
+      "params": {"race": {"type": "table", "desc": "Objet course (lapCount, path.pathnodes.sorted, path.config.closed)."}},
+      "returns": []
+    },
+    "newRaceStop": {
+      "desc": "Hook du nouveau système de course : appelle onRaceStop.",
+      "params": {},
+      "returns": []
+    },
+    "updateFastFromRace": {
+      "desc": "Calcule les valeurs rapides pour un joueur : temps depuis le départ, durée du tour et du segment courants (avec le temps de fin figé quand la course est terminée) et prépare le stream rapide.",
+      "params": {
+        "race": {"type": "table", "desc": "Objet course."},
+        "playerId": {"type": "integer", "desc": "Clé de race.states."}
+      },
+      "returns": []
+    },
+    "updateSlowFromRace": {
+      "desc": "Recalcule l'historique pour un joueur : statut, tour/segment courants, meilleur tour, meilleurs segments par index, diffs, listes lapTimes/segmentTimes/combinedTimes et prépare le stream lent.",
+      "params": {
+        "race": {"type": "table", "desc": "Objet course."},
+        "playerId": {"type": "integer", "desc": "Clé de race.states."}
+      },
+      "returns": []
+    },
+    "updateStaticFromRace": {
+      "desc": "Met à jour les valeurs statiques (nombre de tours, nombre de segments, circuit fermé) à partir de la course et prépare le stream statique.",
+      "params": {
+        "race": {"type": "table", "desc": "Objet course."},
+        "playerId": {"type": "integer", "desc": "Non utilisé."}
+      },
+      "returns": []
+    },
+    "updatePlacementFromRace": {
+      "desc": "Vide et prépare le stream de placements (vide : fonctionnalité non implémentée, TODO dans le code).",
+      "params": {
+        "race": {"type": "table", "desc": "Objet course."},
+        "playerId": {"type": "integer", "desc": "Non utilisé."}
+      },
+      "returns": []
+    },
+    "onUpdate": {
+      "desc": "Hook par image : envoie à l'UI (guihooks.queueStream) les streams marqués comme à envoyer puis efface les drapeaux.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Non utilisé."},
+        "dtSim": {"type": "number", "desc": "Non utilisé."},
+        "dtRaw": {"type": "number", "desc": "Non utilisé."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

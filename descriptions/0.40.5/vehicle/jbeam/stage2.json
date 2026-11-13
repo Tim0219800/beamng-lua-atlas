@@ -1,0 +1,25 @@
+{
+  "path": "lua/vehicle/jbeam/stage2.lua",
+  "module": "Deuxième étape du chargement d'un véhicule, côté VM véhicule : prend les données jbeam déjà assemblées par le jeu (stage 1, dans la VM du jeu) et les « pousse » dans la physique C++ en appelant obj:setNode, obj:setBeam, obj:setWheel, obj:addRail, obj:addSlidenode, obj:setTorsionbar, obj:setTriangle, obj:setReferenceNodes puis obj:finishLoading. main.lua le charge en globale `v` (v = require('jbeam/stage2')) : après loadVehicleStage2, `v.data` contient les données du véhicule (nodes, beams, wheels, hydros, powertrain, refNodes, input, information…), et `v.config` la configuration (pièces, peintures, additionalVehicleData…). C'est donc la source de toutes les lectures de jbeam par les autres modules.",
+  "usage": "-- dans un module du véhicule (après le spawn) :\nfor _, node in pairs(v.data.nodes) do print(node.name, node.cid, node.pos.x) end\nlocal wheelLock = v.data.input and v.data.input.steeringWheelLock\nlocal partConfig = v.config.parts",
+  "notes": [
+    "Ordre d'envoi à la physique (pushToPhysics) : obj:requestReset(RESET_PHYSICS), puis noeuds, poutres, roues, rails, slidenodes, torsionhydros, torsionbars, triangles de collision, noeuds de référence, enfin obj:finishLoading(). Chaque élément reçoit un champ `cid` (identifiant côté C++) assigné par les setXxx.",
+    "Types de poutres (valeurs définies en C, ne pas modifier) : normal 0, anisotropic 1, bounded 2, pressured 3, lbeam 4, broken 5, support 7. Types de noeud : normal 0, fixed 1, noncollidable 2.",
+    "Défauts utiles : beamStrength = vehicle.options.beamStrength ou math.huge (incassable) ; une beamStrength sous forme de chaîne est acceptée si elle représente un nombre. Un triangle dégénéré est signalé par un log d'erreur. Si les noeuds de référence (refNodes[0]) manquent, des noeuds fictifs (ref 0, back 1, left 2, up 0) sont installés avec un log d'erreur.",
+    "loadVehicleStage2 marque vdata.format = 'parsed', publie M.data, M.config et, pour compatibilité, M.vehicleDirectory = M.data.vehicleDirectory, mesure le temps de chargement (log 'Vehicle loading took: … ms').",
+    "Ce module ne s'exécute qu'une fois par spawn (appelé par main.lua:init). Les modifications de v.data après coup ne sont pas renvoyées à la physique C++ : elles n'affectent que les modules Lua."
+  ],
+  "fields": {
+    "data": {"type": "table|nil", "desc": "Données du véhicule (vdata stage 1) : nodes, beams, wheels, rails, slidenodes, torsionbars, torsionHydros, hydros, triangles, refNodes, powertrain, input, information, flexbodies, activeParts, activePartsData, etc. Défini par loadVehicleStage2 (main.lua crée une table vide si absent)."},
+    "config": {"type": "table|nil", "desc": "Configuration du véhicule (parts, paints, additionalVehicleData…). Défini par loadVehicleStage2."},
+    "vehicleDirectory": {"type": "string|nil", "desc": "Dossier du véhicule (copie de data.vehicleDirectory, pour compatibilité arrière)."}
+  },
+  "functions": {
+    "loadVehicleStage2": {
+      "desc": "Envoie les données jbeam à la physique (noeuds, poutres, roues, rails, slidenodes, torsions, triangles, noeuds de référence) puis publie v.data et v.config. Appelée une fois par main.lua:init avec les données de spawn décodées.",
+      "params": {"vdataStage1": {"type": "table", "desc": "Table de spawn {vdata = données jbeam assemblées, config = configuration du véhicule}."}},
+      "returns": [{"type": "table|nil", "desc": "vdata (les données du véhicule) en cas de succès ; nil si vdata n'est pas une table."}],
+      "internal": true
+    }
+  }
+}

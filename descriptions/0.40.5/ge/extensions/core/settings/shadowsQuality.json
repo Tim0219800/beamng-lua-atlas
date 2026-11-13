@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/core/settings/shadowsQuality.lua",
+  "module": "Préréglages de qualité des ombres, consommés par graphicsQualityGroup. Chaque niveau fixe $pref::Shadows::textureScalar et $pref::Shadows::disable. vehicleTexSizes donne en plus la taille de texture d'ombre des véhicules par niveau.",
+  "notes": [
+    "Le niveau Disabled met $pref::Shadows::disable à 2 ; les autres niveaux à 0.",
+    "vehicleTexSizes n'est pas appliqué par ce module : c'est une table de données lue ailleurs (graphic.lua)."
+  ],
+  "fields": {
+    "qualityLevels": {
+      "type": "table<string, table<string, number>>",
+      "desc": "Niveaux Disabled, Lowest, Low, Normal, High, Ultra. textureScalar : 0.25, 0.25, 0.5, 1.0, 2.0, 4.0."
+    },
+    "vehicleTexSizes": {
+      "type": "table<string, integer>",
+      "desc": "Taille de texture d'ombre véhicule par niveau : Disabled 512, Lowest 512, Low 1024, Normal 2048, High 4096, Ultra 8192."
+    }
+  },
+  "functions": {}
+}

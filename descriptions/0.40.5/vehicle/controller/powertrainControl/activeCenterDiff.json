@@ -1,0 +1,21 @@
+{
+  "path": "lua/vehicle/controller/powertrainControl/activeCenterDiff.lua",
+  "module": "Contrôleur auxiliaire de différentiel central piloté. Chaque pas physique, il combine plusieurs cartes jbeam (gaz, glissement entre essieux, frein, frein du pied gauche, braquage, frein à main) pour calculer un taux de blocage souhaité 0..1 et l'écrit dans centerDiff.activeLockCoef. En accélération la consigne mélange sous-virage/survirage (biasOversteerVsTraction) et traction ; en décélération elle dépend du frein et du braquage.",
+  "notes": [
+    "Clés jbeam lues dans init : biasOversteerVsTraction (0.5), throttleLockMap, allowedSlipMap, slipLockMap, brakeLockMap, leftFootBrakeLockMap, steeringLockMap, handbrakeLockMap (cartes pour interpolatedMap : entrée x = pédale/braquage/glissement, y = vitesse en m/s), centerDiffName, axleDiff1Name, axleDiff2Name (noms de devices du powertrain).",
+    "Lit electrics.values : wheelspeed, throttle_input, brake_input, parkingbrake, steering_input, absActive. Glissement = |AV_avant - AV_arrière| / max(|AV|, 0.1) avec les entrées inputAV des deux différentiels d'essieu.",
+    "Le blocage est mis à 0 quand l'ABS est actif (facteur 1 - absActive) et multiplié par la carte du frein à main.",
+    "Mode décélération si throttle_input - brake_input < -0.01, sinon accélération.",
+    "Si un des trois différentiels est introuvable : print « Diff(s) not found » et updateFixedStep/updateGFX sont mis à nil.",
+    "Les commentaires du source indiquent des fonctions initLastStage/resetLastStage non exportées dans M."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "init": {"desc": "Charge les sept cartes jbeam et récupère le différentiel central et les deux différentiels d'essieu.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
+    "reset": {"desc": "Ne fait rien.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
+    "updateFixedStep": {"desc": "Pas physique : calcule le blocage souhaité et le fixe sur centerDiff.activeLockCoef.", "params": {"dt": {"type": "number", "desc": "Pas physique en secondes."}}, "internal": true},
+    "updateGFX": {"desc": "Ne fait rien.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true}
+  }
+}
